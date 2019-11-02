@@ -38,8 +38,8 @@ func NewClient(conf *config.Config, token *oauth2.Token) Client {
 
 func GetOAuth2Config(conf *config.Config) *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     `c8b93992-c9e5-49d5-b49e-cde125ad2904`,
-		ClientSecret: `7BIAb3QJ5HLEzJCJa4WVGKXBzbRH@@?:`,
+		ClientID:     conf.OAuth2ClientId,
+		ClientSecret: conf.OAuth2ClientSecret,
 		RedirectURL:  conf.PluginURL + OAuth2RedirectPath,
 		Scopes: []string{
 			"User.Read",
@@ -47,8 +47,8 @@ func GetOAuth2Config(conf *config.Config) *oauth2.Config {
 			"Calendars.ReadWrite.Shared",
 		},
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  fmt.Sprintf(authURLEndpoint, "797c4cd6-c645-47e2-95e8-0ebd007d8119"),
-			TokenURL: fmt.Sprintf(tokenURLEndpoint, "797c4cd6-c645-47e2-95e8-0ebd007d8119"),
+			AuthURL:  fmt.Sprintf(authURLEndpoint, conf.OAuth2Authority),
+			TokenURL: fmt.Sprintf(tokenURLEndpoint, conf.OAuth2Authority),
 		},
 	}
 }

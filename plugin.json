@@ -16,7 +16,35 @@
     },
     "settings_schema": {
         "header": "",
-        "footer": "",
-        "settings": []
+        "settings": [
+            {
+                "key": "FutureBool",
+                "display_name": "Future boolean flag",
+                "type": "bool",
+                "help_text": "TODO",
+                "default": true
+            },
+            {
+                "key": "OAuth2Authority",
+                "display_name": "Microsoft Office Authority (\"common\", or application tenant ID)",
+                "type": "text",
+                "help_text": "\"common\", or application tenant ID.",
+                "default": "common"
+            },
+            {
+                "key": "OAuth2ClientId",
+                "display_name": "Microsoft Office Client ID",
+                "type": "text",
+                "help_text": "Microsoft Office Client ID.",
+                "default": ""
+            },
+            {
+                "key": "OAuth2ClientSecret",
+                "display_name": "Microsoft Office Client Secret",
+                "type": "text",
+                "help_text": "Microsoft Office Client Secret.",
+                "default": ""
+            }
+        ]
     }
 }

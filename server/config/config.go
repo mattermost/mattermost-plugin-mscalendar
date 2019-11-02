@@ -3,6 +3,10 @@ package config
 // StoredConfig represents the data stored in and managed with the Mattermost
 // config.
 type StoredConfig struct {
+	OAuth2Authority    string
+	OAuth2ClientId     string
+	OAuth2ClientSecret string
+
 	// Bot username
 	BotUserName string `json:"username"`
 }

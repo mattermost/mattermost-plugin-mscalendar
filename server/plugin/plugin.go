@@ -79,6 +79,12 @@ func (p *Plugin) OnConfigurationChange() error {
 		return errors.WithMessage(err, "failed to load plugin configuration")
 	}
 
+	if newStored.OAuth2Authority == "" ||
+		newStored.OAuth2ClientId == "" ||
+		newStored.OAuth2ClientSecret == "" {
+		return errors.WithMessage(err, "failed to configure: OAuth2 credentials to be set in the config")
+	}
+
 	botUserId := conf.BotUserId
 	if newStored.BotUserName != oldStored.BotUserName {
 		user, appErr := p.API.GetUserByUsername(newStored.BotUserName)
@@ -97,6 +103,8 @@ func (p *Plugin) OnConfigurationChange() error {
 	pluginURL := strings.TrimRight(mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateConfig(func(c *config.Config) {
+		c.StoredConfig = newStored
+
 		// TODO Update c.BotIconURL = ""
 		c.BotUserId = botUserId
 		c.MattermostSiteURL = mattermostSiteURL
