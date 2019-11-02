@@ -6,6 +6,7 @@ package plugin
 import (
 	"fmt"
 	gohttp "net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,23 +22,27 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/http"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 type Plugin struct {
 	plugin.MattermostPlugin
-	configLock *sync.RWMutex
-	config     *config.Config
+	configLock  *sync.RWMutex
+	config      *config.Config
+	httpHandler *http.Handler
 
-	httpProtoHandler *http.Handler
+	KVStore          kvstore.KVStore
+	UserStore        user.Store
+	OAuth2StateStore user.OAuth2StateStore
 
 	Templates map[string]*template.Template
 }
 
 func NewWithConfig(conf *config.Config) *Plugin {
 	return &Plugin{
-		configLock:       &sync.RWMutex{},
-		config:           conf,
-		httpProtoHandler: http.NewProtoHandler(),
+		configLock: &sync.RWMutex{},
+		config:     conf,
 	}
 }
 
@@ -52,14 +57,13 @@ func (p *Plugin) OnActivate() error {
 	// 	p.Templates = templates
 	// }
 
-	p.config.ImportedAPI = config.ImportedAPI{
-		Helpers:           p.Helpers,
-		PAPI:              p.API,
-		KVStore:           kvstore.NewPluginStore(p.API),
-		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
-	}
+	kv := kvstore.NewPluginStore(p.API)
+	p.KVStore = kv
+	p.UserStore = user.NewStore(kv)
+	p.OAuth2StateStore = user.NewOAuth2StateStore(p.API)
 
-	command.Init(p.API.RegisterCommand)
+	command.Register(p.API.RegisterCommand)
+	p.httpHandler = p.newHTTPHandler(&(*p.config))
 
 	p.API.LogInfo(p.config.PluginId + " activated")
 	return nil
@@ -85,16 +89,22 @@ func (p *Plugin) OnConfigurationChange() error {
 	}
 
 	mattermostSiteURL := *p.API.GetConfig().ServiceSettings.SiteURL
+	mattermostURL, err := url.Parse(mattermostSiteURL)
+	if err != nil {
+		return err
+	}
 	pluginURLPath := "/plugins/" + conf.PluginId
 	pluginURL := strings.TrimRight(mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateConfig(func(c *config.Config) {
 		// TODO Update c.BotIconURL = ""
 		c.BotUserId = botUserId
-
 		c.MattermostSiteURL = mattermostSiteURL
+		c.MattermostSiteHostname = mattermostURL.Hostname()
 		c.PluginURL = pluginURL
 		c.PluginURLPath = pluginURLPath
+
+		p.httpHandler = p.newHTTPHandler(&(*c))
 	})
 
 	return nil
@@ -102,31 +112,47 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	conf := p.getConfig()
+	poster := utils.NewBotPoster(conf, p.API)
 
 	h := command.Handler{
-		Config:    conf,
-		Context:   c,
-		Args:      args,
-		ChannelId: args.ChannelId,
+		Config:            conf,
+		UserStore:         p.UserStore,
+		API:               p.API,
+		BotPoster:         utils.NewBotPoster(conf, p.API),
+		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
+		Context:           c,
+		Args:              args,
+		ChannelId:         args.ChannelId,
+		MattermostUserId:  args.UserId,
 	}
 	out, err := h.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
 		return nil, model.NewAppError("msofficeplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
+	poster.PostEphemeral(args.UserId, args.ChannelId, out)
 
-	post := &model.Post{
-		UserId:    conf.BotUserId,
-		ChannelId: args.ChannelId,
-		Message:   out,
-	}
-	_ = conf.PAPI.SendEphemeralPost(args.UserId, post)
 	return &model.CommandResponse{}, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-	conf := p.getConfig()
-	p.httpProtoHandler.CloneWithConfig(conf).ServeHTTP(w, r)
+	p.configLock.RLock()
+	handler := p.httpHandler
+	p.configLock.RUnlock()
+
+	handler.ServeHTTP(w, r)
+}
+
+func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
+	h := &http.Handler{
+		Config:            conf,
+		UserStore:         p.UserStore,
+		API:               p.API,
+		BotPoster:         utils.NewBotPoster(conf, p.API),
+		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
+	}
+	h.InitRouter()
+	return h
 }
 
 func (p *Plugin) getConfig() *config.Config {

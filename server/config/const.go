@@ -3,6 +3,9 @@
 
 package config
 
-const ApplicationName = "Microsoft Office"
-const Repository = "mattermost-plugin-msoffice"
-const CommandTrigger = "msoffice"
+const (
+	ApplicationName = "Microsoft Office"
+	Repository      = "mattermost-plugin-msoffice"
+	CommandTrigger  = "msoffice"
+	GraphURL        = "https://graph.microsoft.com"
+)

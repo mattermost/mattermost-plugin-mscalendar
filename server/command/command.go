@@ -13,14 +13,23 @@ import (
 	"github.com/mattermost/mattermost-server/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 // Handler handles commands
 type Handler struct {
-	Config    *config.Config
-	Context   *plugin.Context
-	Args      *model.CommandArgs
-	ChannelId string
+	Config            *config.Config
+	UserStore         user.Store
+	API               plugin.API
+	BotPoster         utils.BotPoster
+	IsAuthorizedAdmin func(userId string) (bool, error)
+
+	Context          *plugin.Context
+	Args             *model.CommandArgs
+	ChannelId        string
+	MattermostUserId string
+	User             *user.User
 }
 
 func getHelp() string {
@@ -36,7 +45,7 @@ TODO: help text.
 type RegisterFunc func(*model.Command) error
 
 // Init should be called by the plugin to register all necessary commands
-func Init(registerFunc RegisterFunc) {
+func Register(registerFunc RegisterFunc) {
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
 		DisplayName:      "TODO display name",
@@ -54,7 +63,8 @@ func (h *Handler) Handle() (string, error) {
 		return "", err
 	}
 
-	auth, err := h.Config.IsAuthorizedAdmin(h.Args.UserId)
+	h.MattermostUserId = h.Args.UserId
+	auth, err := h.IsAuthorizedAdmin(h.MattermostUserId)
 	if err != nil {
 		return "", errors.WithMessage(err, "Failed to get authorization. Please contact your system administrator.\nFailure")
 	}
@@ -68,6 +78,8 @@ func (h *Handler) Handle() (string, error) {
 		handler = h.info
 	case "connect":
 		handler = h.connect
+	case "viewcal":
+		handler = h.viewCalendar
 	}
 	out, err := handler(parameters...)
 	if err != nil {
@@ -75,6 +87,15 @@ func (h *Handler) Handle() (string, error) {
 	}
 
 	return out, nil
+}
+
+func (h *Handler) loadRemoteUser() (*user.User, error) {
+	user := user.User{}
+	err := h.UserStore.LoadRemoteUser(h.MattermostUserId, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (h *Handler) isValid() (subcommand string, parameters []string, err error) {

@@ -10,39 +10,37 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/mattermost/mattermost-server/model"
+	"github.com/mattermost/mattermost-server/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 // Handler is an http.Handler for interacting with workflows through a REST API
 type Handler struct {
-	Config *config.Config
-	root   *mux.Router
+	Config            *config.Config
+	UserStore         user.Store
+	API               plugin.API
+	BotPoster         utils.BotPoster
+	IsAuthorizedAdmin func(userId string) (bool, error)
+	root              *mux.Router
 }
 
-// NewHandler constructs a new handler.
-func NewProtoHandler() *Handler {
-	h := &Handler{
-		root: mux.NewRouter(),
-	}
-
+// InitRouter initializes the router.
+func (h *Handler) InitRouter() {
+	h.root = mux.NewRouter()
 	api := h.root.PathPrefix("/api/v1").Subrouter()
 	api.Use(authorizationRequired)
-	api.HandleFunc("/authorized", h.getAuthorized).Methods("GET")
+	api.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
 
-	user := h.root.PathPrefix("/user").Subrouter()
-	user.Use(authorizationRequired)
+	oauth2 := h.root.PathPrefix("/oauth2").Subrouter()
+	oauth2.Use(authorizationRequired)
+	oauth2.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
+	oauth2.HandleFunc("/complete", h.oauth2Complete).Methods("GET")
 
 	h.root.Handle("{anything:.*}", http.NotFoundHandler())
-	return h
-}
-
-// CloneWithConfig creates a clone to use for handling a single request,
-// with the current context
-func (h *Handler) CloneWithConfig(conf *config.Config) *Handler {
-	hh := *h
-	hh.Config = conf
-	return &hh
+	return
 }
 
 func (h *Handler) jsonError(w http.ResponseWriter, err error) {
@@ -72,9 +70,9 @@ func authorizationRequired(next http.Handler) http.Handler {
 func (h *Handler) adminAuthorizationRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Header.Get("Mattermost-User-ID")
-		authorized, err := h.Config.IsAuthorizedAdmin(userID)
+		authorized, err := h.IsAuthorizedAdmin(userID)
 		if err != nil {
-			h.Config.PAPI.LogError("Admin authorization failed", "error", err.Error())
+			h.API.LogError("Admin authorization failed", "error", err.Error())
 			http.Error(w, "Not authorized", http.StatusUnauthorized)
 			return
 		}
@@ -92,7 +90,7 @@ func (h *Handler) SendEphemeralPost(channelID, userID, message string) {
 		UserId:    h.Config.BotUserId,
 		Message:   message,
 	}
-	_ = h.Config.PAPI.SendEphemeralPost(userID, ephemeralPost)
+	_ = h.API.SendEphemeralPost(userID, ephemeralPost)
 }
 
 // ServeHTTP implements http.Handler

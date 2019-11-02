@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Handler) connect(parameters ...string) (string, error) {
-	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth/connect)",
+	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
 		config.ApplicationName,
 		r.Config.PluginURL)
 	return out, nil

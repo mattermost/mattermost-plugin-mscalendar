@@ -30,8 +30,8 @@ func NewOneTimeStore(kv KVStore) OneTimeStore {
 
 func (s ots) Load(key string) (data []byte, returnErr error) {
 	data, err := s.KVStore.Load(key)
-
-	_ = s.Delete(key)
-
+	if len(data) == 0 {
+		_ = s.Delete(key)
+	}
 	return data, err
 }
