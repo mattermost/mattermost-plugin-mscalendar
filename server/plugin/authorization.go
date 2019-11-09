@@ -13,18 +13,18 @@ func (p *Plugin) IsAuthorizedAdmin(mattermostID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if strings.Contains(user.Roles, "system_admin") { // || p.userAuthorized(mattermostID) {
+	if strings.Contains(user.Roles, "system_admin") || p.userAuthorized(mattermostID) {
 		return true, nil
 	}
 	return false, nil
 }
 
-// func (p *Plugin) userAuthorized(userName string) bool {
-// 	list := strings.Split(p.getConfig().AllowedUserIDs, ",")
-// 	for _, u := range list {
-// 		if userName == strings.TrimSpace(u) {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
+func (p *Plugin) userAuthorized(mattermostID string) bool {
+	list := strings.Split(p.getConfig().AdminUserIDs, ",")
+	for _, u := range list {
+		if mattermostID == strings.TrimSpace(u) {
+			return true
+		}
+	}
+	return false
+}

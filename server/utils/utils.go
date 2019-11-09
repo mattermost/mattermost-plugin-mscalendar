@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func NormalizeInstallURL(mattermostSiteURL, jiraURL string) (string, error) {
-	u, err := url.Parse(jiraURL)
+func NormalizeInstallURL(mattermostSiteURL, remoteURL string) (string, error) {
+	u, err := url.Parse(remoteURL)
 	if err != nil {
 		return "", err
 	}
@@ -28,18 +28,18 @@ func NormalizeInstallURL(mattermostSiteURL, jiraURL string) (string, error) {
 		}
 	}
 	if u.Host == "" {
-		return "", errors.Errorf("Invalid URL, no hostname: %q", jiraURL)
+		return "", errors.Errorf("Invalid URL, no hostname: %q", remoteURL)
 	}
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
 
-	jiraURL = strings.TrimSuffix(u.String(), "/")
-	if jiraURL == strings.TrimSuffix(mattermostSiteURL, "/") {
-		return "", errors.Errorf("%s is the Mattermost site URL. Please use your Jira URL with `/jira install`.", jiraURL)
+	remoteURL = strings.TrimSuffix(u.String(), "/")
+	if remoteURL == strings.TrimSuffix(mattermostSiteURL, "/") {
+		return "", errors.Errorf("%s is the Mattermost site URL. Please use the remote application's URL.", remoteURL)
 	}
 
-	return jiraURL, nil
+	return remoteURL, nil
 }
 
 // Reference: https://gobyexample.com/collection-functions

@@ -16,13 +16,13 @@ func TestNormalizeInstallURL(t *testing.T) {
 		in, siteURL, out, err string
 	}{
 		// Happy
-		{"http://mmtest.atlassian.net", "", "http://mmtest.atlassian.net", ""},
-		{"https://mmtest.atlassian.net", "", "https://mmtest.atlassian.net", ""},
-		{"some://mmtest.atlassian.net", "", "some://mmtest.atlassian.net", ""},
-		{"mmtest.atlassian.net", "", "https://mmtest.atlassian.net", ""},
-		{"mmtest.atlassian.net/", "", "https://mmtest.atlassian.net", ""},
-		{"mmtest.atlassian.net/abc", "", "https://mmtest.atlassian.net/abc", ""},
-		{"mmtest.atlassian.net/abc/", "", "https://mmtest.atlassian.net/abc", ""},
+		{"http://mmtest.somedomain.net", "", "http://mmtest.somedomain.net", ""},
+		{"https://mmtest.somedomain.net", "", "https://mmtest.somedomain.net", ""},
+		{"some://mmtest.somedomain.net", "", "some://mmtest.somedomain.net", ""},
+		{"mmtest.somedomain.net", "", "https://mmtest.somedomain.net", ""},
+		{"mmtest.somedomain.net/", "", "https://mmtest.somedomain.net", ""},
+		{"mmtest.somedomain.net/abc", "", "https://mmtest.somedomain.net/abc", ""},
+		{"mmtest.somedomain.net/abc/", "", "https://mmtest.somedomain.net/abc", ""},
 		{"mmtest", "", "https://mmtest", ""},
 		{"mmtest/", "", "https://mmtest", ""},
 		{"//xyz.com", "", "https://xyz.com", ""},
@@ -40,7 +40,7 @@ func TestNormalizeInstallURL(t *testing.T) {
 		{"hƒƒp://xyz.com", "", "",
 			`parse hƒƒp://xyz.com: first path segment in URL cannot contain colon`},
 		{"https://mattermost.site.url", "https://mattermost.site.url/", "",
-			"https://mattermost.site.url is the Mattermost site URL. Please use your Jira URL with `/jira install`."},
+			"https://mattermost.site.url is the Mattermost site URL. Please use the remote application's URL."},
 	} {
 		t.Run(tc.in, func(t *testing.T) {
 			out, err := NormalizeInstallURL(tc.siteURL, tc.in)

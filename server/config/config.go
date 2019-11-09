@@ -9,6 +9,10 @@ type StoredConfig struct {
 
 	// Bot username
 	BotUserName string `json:"username"`
+
+	// AdminUserIDs contains a comma-separated list of user IDs that are allowed
+	// to administer plugin functions, even if not Mattermost sysadmins.
+	AdminUserIDs string
 }
 
 // Config represents the the metadata handed to all request runners (command,

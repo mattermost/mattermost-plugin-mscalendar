@@ -18,11 +18,10 @@
         "header": "",
         "settings": [
             {
-                "key": "FutureBool",
-                "display_name": "Future boolean flag",
-                "type": "bool",
-                "help_text": "TODO",
-                "default": true
+                "key": "AdminUserIDs",
+                "display_name": "Admin User IDs:",
+                "type": "text",
+                "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \nUser IDs can be found by navigating to **System Console** > **User Management**. After clicking into a user's name, their ID is on the right-hand side of the blue header."
             },
             {
                 "key": "OAuth2Authority",
