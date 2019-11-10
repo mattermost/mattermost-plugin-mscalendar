@@ -13,6 +13,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 const Kind = "msgraph"
@@ -24,12 +25,13 @@ func init() {
 }
 
 // NewMicrosoftGraphClient creates a new client.
-func (r *impl) NewClient(ctx context.Context, conf *config.Config, token *oauth2.Token) remote.Client {
+func (r *impl) NewClient(ctx context.Context, conf *config.Config, token *oauth2.Token, logger utils.Logger) remote.Client {
 	httpClient := r.NewOAuth2Config(conf).Client(ctx, token)
 	c := &client{
 		ctx:        ctx,
-		rbuilder:   msgraph.NewClient(httpClient),
 		httpClient: httpClient,
+		Logger:     logger,
+		rbuilder:   msgraph.NewClient(httpClient),
 	}
 	return c
 }

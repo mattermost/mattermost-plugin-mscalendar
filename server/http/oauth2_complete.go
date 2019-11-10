@@ -29,8 +29,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := r.URL.Query().Get("state")
-	stateStore := user.NewOAuth2StateStore(h.API)
-	err := stateStore.Verify(state)
+	err := h.OAuth2StateStore.Verify(state)
 	if err != nil {
 		http.Error(w, "missing stored state: "+err.Error(), http.StatusBadRequest)
 		return
@@ -50,7 +49,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := h.Remote.NewClient(ctx, h.Config, tok)
+	client := h.Remote.NewClient(ctx, h.Config, tok, h.Logger)
 	me, err := client.GetMe()
 	if err != nil {
 		log.Println(err)
@@ -59,6 +58,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := &user.User{
+		Remote:        me,
 		PluginVersion: h.Config.PluginVersion,
 		OAuth2Token:   tok,
 		Settings: &user.Settings{

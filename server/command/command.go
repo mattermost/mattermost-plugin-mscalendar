@@ -22,7 +22,7 @@ import (
 type Handler struct {
 	Config            *config.Config
 	UserStore         user.Store
-	API               plugin.API
+	Logger            utils.Logger
 	BotPoster         utils.BotPoster
 	IsAuthorizedAdmin func(userId string) (bool, error)
 	Remote            remote.Remote

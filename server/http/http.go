@@ -9,8 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/mattermost/mattermost-server/plugin"
-
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
@@ -21,7 +19,8 @@ import (
 type Handler struct {
 	Config            *config.Config
 	UserStore         user.Store
-	API               plugin.API
+	OAuth2StateStore  user.OAuth2StateStore
+	Logger            utils.Logger
 	BotPoster         utils.BotPoster
 	IsAuthorizedAdmin func(userId string) (bool, error)
 	Remote            remote.Remote
@@ -73,7 +72,7 @@ func (h *Handler) adminAuthorizationRequired(next http.Handler) http.Handler {
 		userID := r.Header.Get("Mattermost-User-ID")
 		authorized, err := h.IsAuthorizedAdmin(userID)
 		if err != nil {
-			h.API.LogError("Admin authorization failed", "error", err.Error())
+			h.Logger.LogError("Admin authorization failed", "error", err.Error())
 			http.Error(w, "Not authorized", http.StatusUnauthorized)
 			return
 		}

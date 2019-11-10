@@ -128,8 +128,8 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	h := command.Handler{
 		Config:            conf,
 		UserStore:         p.UserStore,
-		API:               p.API,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
+		Logger:            p.API,
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
 		Remote:            p.Remote,
 		Context:           c,
@@ -159,8 +159,9 @@ func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
 	h := &http.Handler{
 		Config:            conf,
 		UserStore:         p.UserStore,
-		API:               p.API,
+		OAuth2StateStore:  user.NewOAuth2StateStore(p.API),
 		BotPoster:         utils.NewBotPoster(conf, p.API),
+		Logger:            p.API,
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
 		Remote:            p.Remote,
 	}

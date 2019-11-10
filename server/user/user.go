@@ -6,12 +6,13 @@ package user
 import (
 	"fmt"
 
-	graph "github.com/jkrecek/msgraph-go"
 	"golang.org/x/oauth2"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
 type User struct {
-	graph.Me
+	Remote        *remote.User
 	PluginVersion string
 	OAuth2Token   *oauth2.Token `json:",omitempty"`
 	Settings      *Settings

@@ -3,7 +3,10 @@
 
 package remote
 
+import "time"
+
 type Client interface {
 	GetMe() (*User, error)
-	GetUserCalendars(userId string) ([]*Calendar, error)
+	GetUserCalendars(userID string) ([]*Calendar, error)
+	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
 }

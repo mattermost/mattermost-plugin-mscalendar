@@ -6,6 +6,7 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"time"
 )
 
 func (h *Handler) viewCalendar(parameters ...string) (string, error) {
@@ -14,14 +15,18 @@ func (h *Handler) viewCalendar(parameters ...string) (string, error) {
 		return "", err
 	}
 
-	ctx := context.Background()
-	client := h.Remote.NewClient(ctx, h.Config, user.OAuth2Token)
-	cals, err := client.GetUserCalendars("")
+	client := h.Remote.NewClient(context.Background(), h.Config, user.OAuth2Token, h.Logger)
+
+	events, err := client.GetUserDefaultCalendarView(user.Remote.ID, time.Now(), time.Now().Add(14*24*time.Hour))
 	if err != nil {
 		return "", err
 	}
 
-	bb, _ := json.MarshalIndent(cals, "", "  ")
-	resp := "<><>" + string(bb)
+	resp := ""
+	for _, e := range events {
+		bb, _ := json.MarshalIndent(e, "", "  ")
+		resp += "  - ```\n" + string(bb) + "\n```\n"
+	}
+
 	return resp, nil
 }

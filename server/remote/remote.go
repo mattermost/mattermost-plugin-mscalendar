@@ -9,10 +9,11 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 type Remote interface {
-	NewClient(ctx context.Context, conf *config.Config, token *oauth2.Token) Client
+	NewClient(context.Context, *config.Config, *oauth2.Token, utils.Logger) Client
 	NewOAuth2Config(conf *config.Config) *oauth2.Config
 }
 

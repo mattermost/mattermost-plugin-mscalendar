@@ -44,7 +44,7 @@ func (s *store) Store(mattermostUserId string, user *User) error {
 		return err
 	}
 
-	err = s.kv.Store(user.Me.Id, []byte(mattermostUserId))
+	err = s.kv.Store(user.Remote.ID, []byte(mattermostUserId))
 	if err != nil {
 		_ = s.kv.Delete(mattermostUserId)
 		return err
@@ -63,7 +63,7 @@ func (s *store) Delete(mattermostUserId string) error {
 	if err != nil {
 		return err
 	}
-	err = s.kv.Delete(u.Me.Id)
+	err = s.kv.Delete(u.Remote.ID)
 	if err != nil {
 		return err
 	}
