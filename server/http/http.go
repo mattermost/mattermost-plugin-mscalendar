@@ -12,6 +12,7 @@ import (
 	"github.com/mattermost/mattermost-server/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
@@ -23,6 +24,7 @@ type Handler struct {
 	API               plugin.API
 	BotPoster         utils.BotPoster
 	IsAuthorizedAdmin func(userId string) (bool, error)
+	Remote            remote.Remote
 	root              *mux.Router
 }
 
@@ -33,10 +35,10 @@ func (h *Handler) InitRouter() {
 	api.Use(authorizationRequired)
 	api.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
 
-	oauth2 := h.root.PathPrefix("/oauth2").Subrouter()
+	oauth2 := h.root.PathPrefix(config.OAuth2Path).Subrouter()
 	oauth2.Use(authorizationRequired)
 	oauth2.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
-	oauth2.HandleFunc("/complete", h.oauth2Complete).Methods("GET")
+	oauth2.HandleFunc(config.OAuth2CompletePath, h.oauth2Complete).Methods("GET")
 
 	h.root.Handle("{anything:.*}", http.NotFoundHandler())
 	return

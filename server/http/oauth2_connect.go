@@ -11,7 +11,6 @@ import (
 
 	"github.com/mattermost/mattermost-server/model"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 )
 
@@ -22,7 +21,7 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conf := msgraph.GetOAuth2Config(h.Config)
+	conf := h.Remote.NewOAuth2Config(h.Config)
 	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
 	stateStore := user.NewOAuth2StateStore(h.API)
 	err := stateStore.Store(state)

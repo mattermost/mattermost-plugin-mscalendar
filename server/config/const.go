@@ -4,8 +4,9 @@
 package config
 
 const (
-	ApplicationName = "Microsoft Office"
-	Repository      = "mattermost-plugin-msoffice"
-	CommandTrigger  = "msoffice"
-	GraphURL        = "https://graph.microsoft.com"
+	ApplicationName    = "Microsoft Office"
+	Repository         = "mattermost-plugin-msoffice"
+	CommandTrigger     = "msoffice"
+	OAuth2Path         = "/oauth2"
+	OAuth2CompletePath = "/complete"
 )

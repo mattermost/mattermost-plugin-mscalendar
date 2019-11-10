@@ -22,6 +22,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/http"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
@@ -35,6 +37,7 @@ type Plugin struct {
 	KVStore          kvstore.KVStore
 	UserStore        user.Store
 	OAuth2StateStore user.OAuth2StateStore
+	Remote           remote.Remote
 
 	Templates map[string]*template.Template
 }
@@ -56,6 +59,8 @@ func (p *Plugin) OnActivate() error {
 	p.KVStore = kv
 	p.UserStore = user.NewStore(kv)
 	p.OAuth2StateStore = user.NewOAuth2StateStore(p.API)
+
+	p.Remote = remote.Known[msgraph.Kind]
 
 	command.Register(p.API.RegisterCommand)
 	p.httpHandler = p.newHTTPHandler(&(*p.config))
@@ -126,6 +131,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		API:               p.API,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
+		Remote:            p.Remote,
 		Context:           c,
 		Args:              args,
 		ChannelId:         args.ChannelId,
@@ -156,6 +162,7 @@ func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
 		API:               p.API,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
+		Remote:            p.Remote,
 	}
 	h.InitRouter()
 	return h
@@ -180,7 +187,7 @@ func (p *Plugin) loadTemplates() error {
 		return nil
 	}
 	templatesPath := filepath.Join(*(p.API.GetConfig().PluginSettings.Directory),
-		p.config.PluginId, "server", "dist", "templates")
+		p.config.PluginId, "assets", "templates")
 
 	templates := make(map[string]*template.Template)
 	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {

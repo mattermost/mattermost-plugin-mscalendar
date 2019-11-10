@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 )
 
@@ -21,8 +20,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.Background()
-	oconf := msgraph.GetOAuth2Config(h.Config)
+	oconf := h.Remote.NewOAuth2Config(h.Config)
 
 	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
@@ -44,6 +42,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := context.Background()
 	tok, err := oconf.Exchange(ctx, code)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -51,8 +50,8 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msclient := msgraph.NewClient(h.Config, tok)
-	me, err := msclient.GetMe()
+	client := h.Remote.NewClient(ctx, h.Config, tok)
+	me, err := client.GetMe()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

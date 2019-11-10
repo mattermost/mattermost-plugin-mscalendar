@@ -13,6 +13,7 @@ import (
 	"github.com/mattermost/mattermost-server/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
@@ -24,6 +25,7 @@ type Handler struct {
 	API               plugin.API
 	BotPoster         utils.BotPoster
 	IsAuthorizedAdmin func(userId string) (bool, error)
+	Remote            remote.Remote
 
 	Context          *plugin.Context
 	Args             *model.CommandArgs

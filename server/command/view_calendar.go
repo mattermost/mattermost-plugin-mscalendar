@@ -4,9 +4,8 @@
 package command
 
 import (
+	"context"
 	"encoding/json"
-
-	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
 )
 
 func (h *Handler) viewCalendar(parameters ...string) (string, error) {
@@ -15,8 +14,9 @@ func (h *Handler) viewCalendar(parameters ...string) (string, error) {
 		return "", err
 	}
 
-	msgraphClient := msgraph.NewClient(h.Config, user.OAuth2Token)
-	cals, err := msgraphClient.GetUserCalendar("")
+	ctx := context.Background()
+	client := h.Remote.NewClient(ctx, h.Config, user.OAuth2Token)
+	cals, err := client.GetUserCalendars("")
 	if err != nil {
 		return "", err
 	}

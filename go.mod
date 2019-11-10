@@ -9,5 +9,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spkg/bom v0.0.0-20160624110644-59b7046e48ad // indirect
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914
+	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 )
