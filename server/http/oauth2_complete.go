@@ -10,8 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 )
 
 func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
@@ -21,8 +20,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.Background()
-	oconf := msgraph.GetOAuth2Config(h.Config)
+	oconf := h.Remote.NewOAuth2Config()
 
 	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
@@ -31,19 +29,19 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := r.URL.Query().Get("state")
-	stateStore := user.NewOAuth2StateStore(h.API)
-	err := stateStore.Verify(state)
+	err := h.OAuth2StateStore.VerifyOAuth2State(state)
 	if err != nil {
 		http.Error(w, "missing stored state: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	userID := strings.Split(state, "_")[1]
-	if userID != authedUserID {
+	mattermostUserID := strings.Split(state, "_")[1]
+	if mattermostUserID != authedUserID {
 		http.Error(w, "Not authorized, user ID mismatch.", http.StatusUnauthorized)
 		return
 	}
 
+	ctx := context.Background()
 	tok, err := oconf.Exchange(ctx, code)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -51,23 +49,22 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msclient := msgraph.NewClient(h.Config, tok)
-	me, err := msclient.GetMe()
+	client := h.Remote.NewClient(ctx, tok)
+	me, err := client.GetMe()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	u := &user.User{
-		PluginVersion: h.Config.PluginVersion,
-		OAuth2Token:   tok,
-		Settings: &user.Settings{
-			Notifications: true,
-		},
+	u := &store.User{
+		PluginVersion:    h.Config.PluginVersion,
+		MattermostUserID: mattermostUserID,
+		Remote:           me,
+		OAuth2Token:      tok,
 	}
 
-	err = h.UserStore.Store(userID, u)
+	err = h.UserStore.StoreUser(u)
 	if err != nil {
 		http.Error(w, "Unable to connect: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -76,7 +73,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("### Welcome to the Microsoft Office plugin!\n"+
 		"Here is some info to prove we got you logged in\n"+
 		"Name: %s \n", me.DisplayName)
-	h.BotPoster.PostDirect(userID, message, "custom_TODO")
+	h.Poster.PostDirect(mattermostUserID, message, "custom_TODO")
 
 	html := `
 		<!DOCTYPE html>

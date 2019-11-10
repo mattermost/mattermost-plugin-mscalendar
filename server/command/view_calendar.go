@@ -4,24 +4,29 @@
 package command
 
 import (
-	"encoding/json"
+	"context"
+	"time"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 func (h *Handler) viewCalendar(parameters ...string) (string, error) {
-	user, err := h.loadRemoteUser()
+	user, err := h.UserStore.LoadUser(h.MattermostUserID)
 	if err != nil {
 		return "", err
 	}
 
-	msgraphClient := msgraph.NewClient(h.Config, user.OAuth2Token)
-	cals, err := msgraphClient.GetUserCalendar("")
+	client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
+
+	events, err := client.GetUserDefaultCalendarView(user.Remote.ID, time.Now(), time.Now().Add(14*24*time.Hour))
 	if err != nil {
 		return "", err
 	}
 
-	bb, _ := json.MarshalIndent(cals, "", "  ")
-	resp := "<><>" + string(bb)
+	resp := ""
+	for _, e := range events {
+		resp += "  - " + e.ID + utils.JSONBlock(e)
+	}
+
 	return resp, nil
 }

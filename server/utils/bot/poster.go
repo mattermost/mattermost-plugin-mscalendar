@@ -1,7 +1,7 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-package utils
+package bot
 
 import (
 	"github.com/mattermost/mattermost-server/mlog"
@@ -11,32 +11,33 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 )
 
-type BotPoster interface {
+type Poster interface {
 	PostDirect(userID, message, postType string) error
 	PostEphemeral(userID, channelId, message string)
 }
 
-type botPoster struct {
-	config *config.Config
+type poster struct {
 	API    plugin.API
+	config *config.Config
 }
 
-func NewBotPoster(conf *config.Config, api plugin.API) BotPoster {
-	return &botPoster{
-		config: conf,
+// NewPoster creates a new bot poster.
+func NewPoster(api plugin.API, conf *config.Config) Poster {
+	return &poster{
 		API:    api,
+		config: conf,
 	}
 }
 
-func (poster *botPoster) PostDirect(userID, message, postType string) error {
-	channel, err := poster.API.GetDirectChannel(userID, poster.config.BotUserId)
+func (poster *poster) PostDirect(userID, message, postType string) error {
+	channel, err := poster.API.GetDirectChannel(userID, poster.config.BotUserID)
 	if err != nil {
 		poster.API.LogInfo("Couldn't get bot's DM channel", "user_id", userID)
 		return err
 	}
 
 	post := &model.Post{
-		UserId:    poster.config.BotUserId,
+		UserId:    poster.config.BotUserID,
 		ChannelId: channel.Id,
 		Message:   message,
 		Type:      postType,
@@ -50,9 +51,9 @@ func (poster *botPoster) PostDirect(userID, message, postType string) error {
 	return nil
 }
 
-func (poster *botPoster) PostEphemeral(userId, channelId, message string) {
+func (poster *poster) PostEphemeral(userId, channelId, message string) {
 	post := &model.Post{
-		UserId:    poster.config.BotUserId,
+		UserId:    poster.config.BotUserID,
 		ChannelId: channelId,
 		Message:   message,
 	}

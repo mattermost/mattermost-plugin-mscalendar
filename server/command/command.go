@@ -13,38 +13,42 @@ import (
 	"github.com/mattermost/mattermost-server/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 // Handler handles commands
 type Handler struct {
 	Config            *config.Config
-	UserStore         user.Store
-	API               plugin.API
-	BotPoster         utils.BotPoster
+	UserStore         store.UserStore
+	SubscriptionStore store.SubscriptionStore
+	Logger            utils.Logger
+	Poster            bot.Poster
 	IsAuthorizedAdmin func(userId string) (bool, error)
+	Remote            remote.Remote
 
 	Context          *plugin.Context
 	Args             *model.CommandArgs
-	ChannelId        string
-	MattermostUserId string
-	User             *user.User
+	ChannelID        string
+	MattermostUserID string
+	User             *store.User
 }
 
 func getHelp() string {
 	help := `
 TODO: help text.
 `
-	return codeBlock(fmt.Sprintf(
+	return utils.CodeBlock(fmt.Sprintf(
 		help,
 	))
 }
 
-// Register is a function that allows the runner to register commands with the mattermost server.
+// RegisterFunc is a function that allows the runner to register commands with the mattermost server.
 type RegisterFunc func(*model.Command) error
 
-// Init should be called by the plugin to register all necessary commands
+// Register should be called by the plugin to register all necessary commands
 func Register(registerFunc RegisterFunc) {
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
@@ -56,15 +60,15 @@ func Register(registerFunc RegisterFunc) {
 	})
 }
 
-// Execute should be called by the plugin when a command invocation is received from the Mattermost server.
+// Handle should be called by the plugin when a command invocation is received from the Mattermost server.
 func (h *Handler) Handle() (string, error) {
 	cmd, parameters, err := h.isValid()
 	if err != nil {
 		return "", err
 	}
 
-	h.MattermostUserId = h.Args.UserId
-	auth, err := h.IsAuthorizedAdmin(h.MattermostUserId)
+	h.MattermostUserID = h.Args.UserId
+	auth, err := h.IsAuthorizedAdmin(h.MattermostUserID)
 	if err != nil {
 		return "", errors.WithMessage(err, "Failed to get authorization. Please contact your system administrator.\nFailure")
 	}
@@ -80,6 +84,8 @@ func (h *Handler) Handle() (string, error) {
 		handler = h.connect
 	case "viewcal":
 		handler = h.viewCalendar
+	case "subscribe":
+		handler = h.subscribe
 	}
 	out, err := handler(parameters...)
 	if err != nil {
@@ -87,15 +93,6 @@ func (h *Handler) Handle() (string, error) {
 	}
 
 	return out, nil
-}
-
-func (h *Handler) loadRemoteUser() (*user.User, error) {
-	user := user.User{}
-	err := h.UserStore.LoadRemoteUser(h.MattermostUserId, &user)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
 }
 
 func (h *Handler) isValid() (subcommand string, parameters []string, err error) {
@@ -119,8 +116,4 @@ func (h *Handler) isValid() (subcommand string, parameters []string, err error) 
 	}
 
 	return subcommand, parameters, nil
-}
-
-func codeBlock(in string) string {
-	return fmt.Sprintf("```\n%s\n```", in)
 }

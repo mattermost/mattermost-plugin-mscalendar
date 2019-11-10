@@ -15,7 +15,7 @@ func main() {
 	mattermost.ClientMain(
 		msoffice.NewWithConfig(
 			&config.Config{
-				PluginId:       manifest.ID,
+				PluginID:       manifest.ID,
 				PluginVersion:  manifest.Version,
 				BuildHash:      BuildHash,
 				BuildHashShort: BuildHashShort,
