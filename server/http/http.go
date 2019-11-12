@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
@@ -17,7 +16,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
-// Handler is an http.Handler for interacting with workflows through a REST API
+// Handler is an http.Handler for all plugin HTTP endpoints
 type Handler struct {
 	Config            *config.Config
 	UserStore         user.Store
@@ -83,15 +82,6 @@ func (h *Handler) adminAuthorizationRequired(next http.Handler) http.Handler {
 		}
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 	})
-}
-
-func (h *Handler) SendEphemeralPost(channelID, userID, message string) {
-	ephemeralPost := &model.Post{
-		ChannelId: channelID,
-		UserId:    h.Config.BotUserId,
-		Message:   message,
-	}
-	_ = h.API.SendEphemeralPost(userID, ephemeralPost)
 }
 
 // ServeHTTP implements http.Handler

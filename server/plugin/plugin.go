@@ -47,15 +47,10 @@ func NewWithConfig(conf *config.Config) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	// if p.Templates == nil {
-	// 	templatesPath := filepath.Join(*(p.API.GetConfig().PluginSettings.Directory),
-	// 		p.config.PluginId, "server", "dist", "templates")
-	// 	templates, err := loadTemplates(templatesPath)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	p.Templates = templates
-	// }
+	err := p.loadTemplates()
+	if err != nil {
+		return err
+	}
 
 	kv := kvstore.NewPluginStore(p.API)
 	p.KVStore = kv
@@ -94,20 +89,23 @@ func (p *Plugin) OnConfigurationChange() error {
 		botUserId = user.Id
 	}
 
-	mattermostSiteURL := *p.API.GetConfig().ServiceSettings.SiteURL
-	mattermostURL, err := url.Parse(mattermostSiteURL)
+	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
+	if mattermostSiteURL == nil {
+		return errors.New("plugin requires Mattermost Site URL to be set")
+	}
+	mattermostURL, err := url.Parse(*mattermostSiteURL)
 	if err != nil {
 		return err
 	}
 	pluginURLPath := "/plugins/" + conf.PluginId
-	pluginURL := strings.TrimRight(mattermostSiteURL, "/") + pluginURLPath
+	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateConfig(func(c *config.Config) {
 		c.StoredConfig = newStored
 
 		// TODO Update c.BotIconURL = ""
 		c.BotUserId = botUserId
-		c.MattermostSiteURL = mattermostSiteURL
+		c.MattermostSiteURL = *mattermostSiteURL
 		c.MattermostSiteHostname = mattermostURL.Hostname()
 		c.PluginURL = pluginURL
 		c.PluginURLPath = pluginURLPath
@@ -178,9 +176,15 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 	return *p.config
 }
 
-func loadTemplates(dir string) (map[string]*template.Template, error) {
+func (p *Plugin) loadTemplates() error {
+	if p.Templates != nil {
+		return nil
+	}
+	templatesPath := filepath.Join(*(p.API.GetConfig().PluginSettings.Directory),
+		p.config.PluginId, "server", "dist", "templates")
+
 	templates := make(map[string]*template.Template)
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -191,12 +195,13 @@ func loadTemplates(dir string) (map[string]*template.Template, error) {
 		if err != nil {
 			return nil
 		}
-		key := path[len(dir):]
+		key := path[len(templatesPath):]
 		templates[key] = template
 		return nil
 	})
 	if err != nil {
-		return nil, errors.WithMessage(err, "OnActivate: failed to load templates")
+		return errors.WithMessage(err, "OnActivate/loadTemplates failed")
 	}
-	return templates, nil
+	p.Templates = templates
+	return nil
 }
