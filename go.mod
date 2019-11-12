@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/gorilla/mux v1.7.3
+	github.com/jarcoal/httpmock v1.0.4
 	github.com/jkrecek/msgraph-go v0.0.0-20190328140430-9f7466d8cb1f
 	github.com/mattermost/mattermost-server v0.0.0-20190927121038-340287890a78
 	github.com/pkg/errors v0.8.1

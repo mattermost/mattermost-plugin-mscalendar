@@ -47,10 +47,15 @@ func NewWithConfig(conf *config.Config) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	err := p.loadTemplates()
-	if err != nil {
-		return err
-	}
+	// if p.Templates == nil {
+	// 	templatesPath := filepath.Join(*(p.API.GetConfig().PluginSettings.Directory),
+	// 		p.config.PluginId, "server", "dist", "templates")
+	// 	templates, err := loadTemplates(templatesPath)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	p.Templates = templates
+	// }
 
 	kv := kvstore.NewPluginStore(p.API)
 	p.KVStore = kv
@@ -89,23 +94,20 @@ func (p *Plugin) OnConfigurationChange() error {
 		botUserId = user.Id
 	}
 
-	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
-	if mattermostSiteURL == nil {
-		return errors.New("plugin requires Mattermost Site URL to be set")
-	}
-	mattermostURL, err := url.Parse(*mattermostSiteURL)
+	mattermostSiteURL := *p.API.GetConfig().ServiceSettings.SiteURL
+	mattermostURL, err := url.Parse(mattermostSiteURL)
 	if err != nil {
 		return err
 	}
 	pluginURLPath := "/plugins/" + conf.PluginId
-	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
+	pluginURL := strings.TrimRight(mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateConfig(func(c *config.Config) {
 		c.StoredConfig = newStored
 
 		// TODO Update c.BotIconURL = ""
 		c.BotUserId = botUserId
-		c.MattermostSiteURL = *mattermostSiteURL
+		c.MattermostSiteURL = mattermostSiteURL
 		c.MattermostSiteHostname = mattermostURL.Hostname()
 		c.PluginURL = pluginURL
 		c.PluginURLPath = pluginURLPath
@@ -156,6 +158,7 @@ func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
 		API:               p.API,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
+		OAuth2StateStore:  p.OAuth2StateStore,
 	}
 	h.InitRouter()
 	return h
@@ -175,15 +178,9 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 	return *p.config
 }
 
-func (p *Plugin) loadTemplates() error {
-	if p.Templates != nil {
-		return nil
-	}
-	templatesPath := filepath.Join(*(p.API.GetConfig().PluginSettings.Directory),
-		p.config.PluginId, "server", "dist", "templates")
-
+func loadTemplates(dir string) (map[string]*template.Template, error) {
 	templates := make(map[string]*template.Template)
-	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -194,13 +191,12 @@ func (p *Plugin) loadTemplates() error {
 		if err != nil {
 			return nil
 		}
-		key := path[len(templatesPath):]
+		key := path[len(dir):]
 		templates[key] = template
 		return nil
 	})
 	if err != nil {
-		return errors.WithMessage(err, "OnActivate/loadTemplates failed")
+		return nil, errors.WithMessage(err, "OnActivate: failed to load templates")
 	}
-	p.Templates = templates
-	return nil
+	return templates, nil
 }
