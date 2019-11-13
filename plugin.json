@@ -1,9 +1,9 @@
 {
-    "id": "com.mattermost.plugin-starter-template",
-    "name": "Plugin Starter Template",
-    "description": "This plugin serves as a starting point for writing a Mattermost plugin.",
+    "id": "com.mattermost.msoffice",
+    "name": "TODO:name",
+    "description": "TODO: description.",
     "version": "0.1.0",
-    "min_server_version": "5.12.0",
+    "min_server_version": "5.16.0",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
@@ -16,7 +16,34 @@
     },
     "settings_schema": {
         "header": "",
-        "footer": "",
-        "settings": []
+        "settings": [
+            {
+                "key": "AdminUserIDs",
+                "display_name": "Admin User IDs:",
+                "type": "text",
+                "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \nUser IDs can be found by navigating to **System Console** > **User Management**. After clicking into a user's name, their ID is on the right-hand side of the blue header."
+            },
+            {
+                "key": "OAuth2Authority",
+                "display_name": "Microsoft Office Authority (\"common\", or application tenant ID)",
+                "type": "text",
+                "help_text": "\"common\", or application tenant ID.",
+                "default": "common"
+            },
+            {
+                "key": "OAuth2ClientId",
+                "display_name": "Microsoft Office Client ID",
+                "type": "text",
+                "help_text": "Microsoft Office Client ID.",
+                "default": ""
+            },
+            {
+                "key": "OAuth2ClientSecret",
+                "display_name": "Microsoft Office Client Secret",
+                "type": "text",
+                "help_text": "Microsoft Office Client Secret.",
+                "default": ""
+            }
+        ]
     }
 }
