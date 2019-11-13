@@ -36,8 +36,8 @@ func (h *Handler) InitRouter() {
 
 	oauth2 := h.root.PathPrefix("/oauth2").Subrouter()
 	oauth2.Use(authorizationRequired)
-	oauth2.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
-	oauth2.HandleFunc("/complete", h.oauth2Complete).Methods("GET")
+	oauth2.HandleFunc("/connect", h.OAuth2Connect).Methods("GET")
+	oauth2.HandleFunc("/complete", h.OAuth2Complete).Methods("GET")
 
 	h.root.Handle("{anything:.*}", http.NotFoundHandler())
 	return

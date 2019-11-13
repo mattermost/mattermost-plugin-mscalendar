@@ -14,7 +14,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
 )
 
-func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) OAuth2Connect(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("Mattermost-User-ID")
 	if userID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)

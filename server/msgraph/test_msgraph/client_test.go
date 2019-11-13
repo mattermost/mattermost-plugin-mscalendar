@@ -1,11 +1,16 @@
-package msgraph
+package testmsgraph
 
 import (
 	"testing"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
 	"golang.org/x/oauth2"
+)
+
+const (
+	tokenURLEndpoint = "https://login.microsoftonline.com/%s/oauth2/v2.0/token"
 )
 
 func testConfig() *config.Config {
@@ -33,7 +38,7 @@ func TestNewClient(t *testing.T) {
 
 	token := getToken(time.Now().Add(time.Hour))
 
-	client := NewClient(conf, token)
+	client := msgraph.NewClient(conf, token)
 
 	if client == nil {
 		t.Errorf("expected client to be non-nil but got: %+v", client)

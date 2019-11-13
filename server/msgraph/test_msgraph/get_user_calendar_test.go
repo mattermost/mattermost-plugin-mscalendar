@@ -1,4 +1,4 @@
-package msgraph
+package testmsgraph
 
 import (
 	"errors"
@@ -10,20 +10,21 @@ import (
 
 	"github.com/jarcoal/httpmock"
 	graph "github.com/jkrecek/msgraph-go"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetUserCalendar(t *testing.T) {
 	tcs := []struct {
 		name                  string
-		client                Client
+		client                msgraph.Client
 		registerResponderFunc func()
 		expectedCalendars     []*graph.Calendar
 		expectedErr           error
 	}{
 		{
 			name:                  "successful get calendars api call (no token refresh)",
-			client:                NewClient(testConfig(), getToken(time.Now().Add(time.Hour))),
+			client:                msgraph.NewClient(testConfig(), getToken(time.Now().Add(time.Hour))),
 			registerResponderFunc: statusOKGraphAPICalendarResponderFunc,
 			expectedCalendars: []*graph.Calendar{
 				&graph.Calendar{
@@ -37,7 +38,7 @@ func TestGetUserCalendar(t *testing.T) {
 		},
 		{
 			name:                  "unsuccessful get calendars api call (token refresh needed)",
-			client:                NewClient(testConfig(), getToken(time.Now())),
+			client:                msgraph.NewClient(testConfig(), getToken(time.Now())),
 			registerResponderFunc: statusOKGraphAPICalendarResponderFunc,
 			expectedCalendars:     nil,
 			expectedErr: &url.Error{
@@ -52,7 +53,7 @@ func TestGetUserCalendar(t *testing.T) {
 		},
 		{
 			name:   "successful get calendars api call (with token refresh)",
-			client: NewClient(testConfig(), getToken(time.Now())),
+			client: msgraph.NewClient(testConfig(), getToken(time.Now())),
 			registerResponderFunc: func() {
 				statusOKTokenRefreshResponderFunc()
 				statusOKGraphAPICalendarResponderFunc()

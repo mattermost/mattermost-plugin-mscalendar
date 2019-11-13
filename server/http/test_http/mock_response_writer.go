@@ -1,11 +1,13 @@
-package mocks
+package testhttp
 
 import "net/http"
 
-var _ http.ResponseWriter = &MockResponseWriter{}
+var (
+	_ http.ResponseWriter = &mockResponseWriter{}
+)
 
-func DefaultMockResponseWriter() *MockResponseWriter {
-	return &MockResponseWriter{
+func defaultMockResponseWriter() *mockResponseWriter {
+	return &mockResponseWriter{
 		HeaderMap:  make(http.Header),
 		Bytes:      make([]byte, 0),
 		Err:        nil,
@@ -13,18 +15,18 @@ func DefaultMockResponseWriter() *MockResponseWriter {
 	}
 }
 
-type MockResponseWriter struct {
+type mockResponseWriter struct {
 	HeaderMap  http.Header
 	Bytes      []byte
 	Err        error
 	StatusCode int
 }
 
-func (rw *MockResponseWriter) Header() http.Header {
+func (rw *mockResponseWriter) Header() http.Header {
 	return rw.HeaderMap
 }
 
-func (rw *MockResponseWriter) Write(bytes []byte) (int, error) {
+func (rw *mockResponseWriter) Write(bytes []byte) (int, error) {
 	if rw.Err != nil {
 		return 0, rw.Err
 	}
@@ -34,6 +36,6 @@ func (rw *MockResponseWriter) Write(bytes []byte) (int, error) {
 	return len(rw.Bytes), nil
 }
 
-func (rw *MockResponseWriter) WriteHeader(statusCode int) {
+func (rw *mockResponseWriter) WriteHeader(statusCode int) {
 	rw.StatusCode = statusCode
 }

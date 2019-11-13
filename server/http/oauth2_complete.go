@@ -14,7 +14,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 )
 
-func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) OAuth2Complete(w http.ResponseWriter, r *http.Request) {
 	authedUserID := r.Header.Get("Mattermost-User-ID")
 	if authedUserID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)

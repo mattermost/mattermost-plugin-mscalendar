@@ -1,4 +1,4 @@
-package http
+package testhttp
 
 import (
 	"errors"
@@ -8,13 +8,13 @@ import (
 
 	"github.com/jarcoal/httpmock"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/mocks"
+	shttp "github.com/mattermost/mattermost-plugin-msoffice/server/http"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 	"github.com/mattermost/mattermost-server/app"
 	"github.com/stretchr/testify/assert"
 )
 
-func getHTTPRequest(userID, rawQuery string) *http.Request {
+func getUserRequest(userID, rawQuery string) *http.Request {
 	r := &http.Request{
 		Header: make(http.Header),
 	}
@@ -27,12 +27,9 @@ func getHTTPRequest(userID, rawQuery string) *http.Request {
 	return r
 }
 
-func TestOauth2Complete(t *testing.T) {
+func TestOAuth2Complete(t *testing.T) {
 	api := &app.PluginAPI{}
-	kv := &mocks.MockKVStore{
-		KVStore: make(map[string][]byte),
-		Err:     nil,
-	}
+	kv := newMockKVStore(nil, nil)
 
 	config := &config.Config{}
 
@@ -46,93 +43,93 @@ func TestOauth2Complete(t *testing.T) {
 
 	tcs := []struct {
 		name                  string
-		handler               Handler
+		handler               shttp.Handler
 		r                     *http.Request
-		w                     *mocks.MockResponseWriter
+		w                     *mockResponseWriter
 		registerResponderFunc func()
 		expectedHTTPResponse  string
 		expectedHTTPCode      int
 	}{
 		{
 			name: "unauthorized user",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
 				API:              api,
 			},
 			r: &http.Request{},
-			w: mocks.DefaultMockResponseWriter(),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "Not authorized\n",
 			expectedHTTPCode:      http.StatusUnauthorized,
 		},
 		{
 			name: "missing authorization code",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code="),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code="),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "missing authorization code\n",
 			expectedHTTPCode:      http.StatusBadRequest,
 		},
 		{
 			name: "missing state",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{Err: errors.New("unable to verify state")},
+				OAuth2StateStore: newMockOAuth2StateStore(errors.New("unable to verify state")),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code=fakecode&state="),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code=fakecode&state="),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "missing stored state: unable to verify state\n",
 			expectedHTTPCode:      http.StatusBadRequest,
 		},
 		{
 			name: "user state not authorized",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code=fakecode&state=user_nomatch@mattermost.com"),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_nomatch@mattermost.com"),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "Not authorized, user ID mismatch.\n",
 			expectedHTTPCode:      http.StatusUnauthorized,
 		},
 		{
 			name: "unable to exchange auth code for token",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: badTokenExchangeResponderFunc,
 			expectedHTTPResponse:  "oauth2: cannot fetch token: 400\nResponse: {\"error\":\"invalid request\"}\n",
 			expectedHTTPCode:      http.StatusInternalServerError,
 		},
 		{
 			name: "microsoft graph api client unable to get user info",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: unauthorizedTokenGraphAPIResponderFunc,
 			expectedHTTPResponse: `Request to url 'https://graph.microsoft.com/v1.0/me' returned error.
     Code: InvalidAuthenticationToken
@@ -142,32 +139,29 @@ func TestOauth2Complete(t *testing.T) {
 		},
 		{
 			name: "UserStore unable to store user info",
-			handler: Handler{
-				Config: config,
-				UserStore: user.NewStore(&mocks.MockKVStore{
-					KVStore: make(map[string][]byte),
-					Err:     errors.New("forced kvstore error"),
-				}),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
+			handler: shttp.Handler{
+				Config:           config,
+				UserStore:        user.NewStore(newMockKVStore(nil, errors.New("forced kvstore error"))),
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: statusOKGraphAPIResponderFunc,
 			expectedHTTPResponse:  "Unable to connect: forced kvstore error\n",
 			expectedHTTPCode:      http.StatusInternalServerError,
 		},
 		{
 			name: "successfully completed oauth2 login",
-			handler: Handler{
+			handler: shttp.Handler{
 				Config:           config,
 				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: &mocks.MockOAuth2StateStore{},
-				BotPoster:        &mocks.MockBotPoster{},
+				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				BotPoster:        newMockBotPoster(nil),
 				API:              api,
 			},
-			r: getHTTPRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
-			w: mocks.DefaultMockResponseWriter(),
+			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			w: defaultMockResponseWriter(),
 			registerResponderFunc: statusOKGraphAPIResponderFunc,
 			expectedHTTPResponse: `
 		<!DOCTYPE html>
@@ -190,7 +184,7 @@ func TestOauth2Complete(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.registerResponderFunc()
 
-			tc.handler.oauth2Complete(tc.w, tc.r)
+			tc.handler.OAuth2Complete(tc.w, tc.r)
 
 			assert.Equal(t, tc.expectedHTTPCode, tc.w.StatusCode)
 			assert.Equal(t, tc.expectedHTTPResponse, string(tc.w.Bytes))
