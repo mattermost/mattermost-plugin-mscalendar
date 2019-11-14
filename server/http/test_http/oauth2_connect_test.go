@@ -3,7 +3,6 @@ package testhttp
 import (
 	"errors"
 	"net/http"
-	"net/textproto"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -40,10 +39,8 @@ func TestOAuth2Connect(t *testing.T) {
 		},
 		{
 			name: "unable to store user state",
-			r: &http.Request{
-				Header: http.Header{textproto.CanonicalMIMEHeaderKey("mattermost-user-id"): []string{"fake@mattermost.com"}},
-			},
-			w: defaultMockResponseWriter(),
+			r:    getUserRequest("fake@mattermost.com", ""),
+			w:    defaultMockResponseWriter(),
 			handler: shttp.Handler{
 				Config:           &config.Config{},
 				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
@@ -54,10 +51,8 @@ func TestOAuth2Connect(t *testing.T) {
 		},
 		{
 			name: "successful redirect",
-			r: &http.Request{
-				Header: http.Header{textproto.CanonicalMIMEHeaderKey("mattermost-user-id"): []string{"fake@mattermost.com"}},
-			},
-			w: defaultMockResponseWriter(),
+			r:    getUserRequest("fake@mattermost.com", ""),
+			w:    defaultMockResponseWriter(),
 			handler: shttp.Handler{
 				Config:           &config.Config{},
 				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
