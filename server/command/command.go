@@ -16,6 +16,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 // Handler handles commands
@@ -24,14 +25,14 @@ type Handler struct {
 	UserStore         store.UserStore
 	SubscriptionStore store.SubscriptionStore
 	Logger            utils.Logger
-	BotPoster         utils.BotPoster
+	Poster            bot.Poster
 	IsAuthorizedAdmin func(userId string) (bool, error)
 	Remote            remote.Remote
 
 	Context          *plugin.Context
 	Args             *model.CommandArgs
-	ChannelId        string
-	MattermostUserId string
+	ChannelID        string
+	MattermostUserID string
 	User             *store.User
 }
 
@@ -44,10 +45,10 @@ TODO: help text.
 	))
 }
 
-// Register is a function that allows the runner to register commands with the mattermost server.
+// RegisterFunc is a function that allows the runner to register commands with the mattermost server.
 type RegisterFunc func(*model.Command) error
 
-// Init should be called by the plugin to register all necessary commands
+// Register should be called by the plugin to register all necessary commands
 func Register(registerFunc RegisterFunc) {
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
@@ -59,15 +60,15 @@ func Register(registerFunc RegisterFunc) {
 	})
 }
 
-// Execute should be called by the plugin when a command invocation is received from the Mattermost server.
+// Handle should be called by the plugin when a command invocation is received from the Mattermost server.
 func (h *Handler) Handle() (string, error) {
 	cmd, parameters, err := h.isValid()
 	if err != nil {
 		return "", err
 	}
 
-	h.MattermostUserId = h.Args.UserId
-	auth, err := h.IsAuthorizedAdmin(h.MattermostUserId)
+	h.MattermostUserID = h.Args.UserId
+	auth, err := h.IsAuthorizedAdmin(h.MattermostUserID)
 	if err != nil {
 		return "", errors.WithMessage(err, "Failed to get authorization. Please contact your system administrator.\nFailure")
 	}

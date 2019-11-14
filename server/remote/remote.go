@@ -5,6 +5,7 @@ package remote
 
 import (
 	"context"
+	"net/http"
 
 	"golang.org/x/oauth2"
 
@@ -13,9 +14,9 @@ import (
 )
 
 type Remote interface {
-	NewClient(context.Context, *config.Config, *oauth2.Token, utils.Logger) Client
-	NewOAuth2Config(conf *config.Config) *oauth2.Config
-	ParseEventWebhook(data []byte, conf *config.Config) ([]string, []*Event, error)
+	NewClient(context.Context, *oauth2.Token) Client
+	NewOAuth2Config() *oauth2.Config
+	ProcessEventWebhook(w http.ResponseWriter, req *http.Request, creator func(subID string) (*User, *oauth2.Token, string, *Subscription, error)) []*EventNotification
 }
 
-var Known = map[string]Remote{}
+var Makers = map[string]func(*config.Config, utils.Logger) Remote{}

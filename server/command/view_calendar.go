@@ -11,12 +11,12 @@ import (
 )
 
 func (h *Handler) viewCalendar(parameters ...string) (string, error) {
-	user, err := h.UserStore.LoadUser(h.MattermostUserId)
+	user, err := h.UserStore.LoadUser(h.MattermostUserID)
 	if err != nil {
 		return "", err
 	}
 
-	client := h.Remote.NewClient(context.Background(), h.Config, user.OAuth2Token, h.Logger)
+	client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
 
 	events, err := client.GetUserDefaultCalendarView(user.Remote.ID, time.Now(), time.Now().Add(14*24*time.Hour))
 	if err != nil {

@@ -4,11 +4,8 @@ package config
 // config.
 type StoredConfig struct {
 	OAuth2Authority    string
-	OAuth2ClientId     string
+	OAuth2ClientID     string
 	OAuth2ClientSecret string
-
-	// Bot username
-	BotUserName string `json:"username"`
 
 	// AdminUserIDs contains a comma-separated list of user IDs that are allowed
 	// to administer plugin functions, even if not Mattermost sysadmins.
@@ -20,17 +17,14 @@ type StoredConfig struct {
 type Config struct {
 	StoredConfig
 
-	BuildHash      string
-	BuildHashShort string
-	BuildDate      string
-
+	BotUserID              string
+	BuildDate              string
+	BuildHash              string
+	BuildHashShort         string
 	MattermostSiteHostname string
 	MattermostSiteURL      string
-	PluginId               string
+	PluginID               string
 	PluginURL              string
 	PluginURLPath          string
 	PluginVersion          string
-
-	BotIconURL string
-	BotUserId  string
 }

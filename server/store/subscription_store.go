@@ -4,7 +4,7 @@
 package store
 
 import (
-	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 	"github.com/pkg/errors"
 )
 

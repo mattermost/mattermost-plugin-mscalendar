@@ -4,7 +4,6 @@
 package plugin
 
 import (
-	"fmt"
 	gohttp "net/http"
 	"net/url"
 	"os"
@@ -24,7 +23,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 type Plugin struct {
@@ -50,49 +49,57 @@ func NewWithConfig(conf *config.Config) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	err := p.loadTemplates()
+	bundlePath, err := p.API.GetBundlePath()
+	if err != nil {
+		return errors.Wrap(err, "couldn't get bundle path")
+	}
+
+	// Set up or update the plugin's bot account
+	botUserID, err := bot.EnsureWithProfileImage(
+		p.API, p.Helpers,
+		config.BotUserName, config.BotDisplayName, config.BotDescription,
+		filepath.Join(bundlePath, "assets", "profile.png"))
+	if err != nil {
+		return err
+	}
+	p.updateConfig(func(conf *config.Config) {
+		conf.BotUserID = botUserID
+	})
+
+	// Templates
+	err = p.loadTemplates(bundlePath)
 	if err != nil {
 		return err
 	}
 
+	// API dependencies
 	store := store.NewPluginStore(p.API)
 	p.UserStore = store
 	p.OAuth2StateStore = store
 	p.SubscriptionStore = store
 
-	p.Remote = remote.Known[msgraph.Kind]
-
+	// Handlers
 	command.Register(p.API.RegisterCommand)
 
 	p.httpHandler = p.newHTTPHandler(&(*p.config))
 
-	p.API.LogInfo(p.config.PluginId + " activated")
+	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil
 }
 
 // OnConfigurationChange is invoked when configuration changes may have been made.
 func (p *Plugin) OnConfigurationChange() error {
 	conf := p.getConfig()
-	oldStored := conf.StoredConfig
-	newStored := config.StoredConfig{}
-	err := p.API.LoadPluginConfiguration(&newStored)
+	stored := config.StoredConfig{}
+	err := p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
 		return errors.WithMessage(err, "failed to load plugin configuration")
 	}
 
-	if newStored.OAuth2Authority == "" ||
-		newStored.OAuth2ClientId == "" ||
-		newStored.OAuth2ClientSecret == "" {
+	if stored.OAuth2Authority == "" ||
+		stored.OAuth2ClientID == "" ||
+		stored.OAuth2ClientSecret == "" {
 		return errors.WithMessage(err, "failed to configure: OAuth2 credentials to be set in the config")
-	}
-
-	botUserId := conf.BotUserId
-	if newStored.BotUserName != oldStored.BotUserName {
-		user, appErr := p.API.GetUserByUsername(newStored.BotUserName)
-		if appErr != nil {
-			return errors.WithMessage(appErr, fmt.Sprintf("unable to load user %s", newStored.BotUserName))
-		}
-		botUserId = user.Id
 	}
 
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
@@ -103,20 +110,20 @@ func (p *Plugin) OnConfigurationChange() error {
 	if err != nil {
 		return err
 	}
-	pluginURLPath := "/plugins/" + conf.PluginId
+	pluginURLPath := "/plugins/" + conf.PluginID
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateConfig(func(c *config.Config) {
-		c.StoredConfig = newStored
+		c.StoredConfig = stored
 
-		// TODO Update c.BotIconURL = ""
-		c.BotUserId = botUserId
 		c.MattermostSiteURL = *mattermostSiteURL
 		c.MattermostSiteHostname = mattermostURL.Hostname()
 		c.PluginURL = pluginURL
 		c.PluginURLPath = pluginURLPath
 
-		p.httpHandler = p.newHTTPHandler(&(*c))
+		clone := &(*c)
+		p.httpHandler = p.newHTTPHandler(clone)
+		p.Remote = remote.Makers[msgraph.Kind](clone, p.API)
 	})
 
 	return nil
@@ -124,27 +131,26 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	conf := p.getConfig()
-	poster := utils.NewBotPoster(conf, p.API)
 
 	h := command.Handler{
 		Config:            conf,
 		UserStore:         p.UserStore,
 		SubscriptionStore: p.SubscriptionStore,
-		BotPoster:         utils.NewBotPoster(conf, p.API),
+		Poster:            bot.NewPoster(p.API, conf),
 		Logger:            p.API,
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
 		Remote:            p.Remote,
 		Context:           c,
 		Args:              args,
-		ChannelId:         args.ChannelId,
-		MattermostUserId:  args.UserId,
+		ChannelID:         args.ChannelId,
+		MattermostUserID:  args.UserId,
 	}
 	out, err := h.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
 		return nil, model.NewAppError("msofficeplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
-	poster.PostEphemeral(args.UserId, args.ChannelId, out)
+	h.Poster.PostEphemeral(args.UserId, args.ChannelId, out)
 
 	return &model.CommandResponse{}, nil
 }
@@ -163,7 +169,7 @@ func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
 		UserStore:         p.UserStore,
 		OAuth2StateStore:  p.OAuth2StateStore,
 		SubscriptionStore: p.SubscriptionStore,
-		BotPoster:         utils.NewBotPoster(conf, p.API),
+		Poster:            bot.NewPoster(p.API, conf),
 		Logger:            p.API,
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
 		Remote:            p.Remote,
@@ -186,13 +192,12 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 	return *p.config
 }
 
-func (p *Plugin) loadTemplates() error {
+func (p *Plugin) loadTemplates(bundlePath string) error {
 	if p.Templates != nil {
 		return nil
 	}
-	templatesPath := filepath.Join(*(p.API.GetConfig().PluginSettings.Directory),
-		p.config.PluginId, "assets", "templates")
 
+	templatesPath := filepath.Join(bundlePath, "assets", "templates")
 	templates := make(map[string]*template.Template)
 	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

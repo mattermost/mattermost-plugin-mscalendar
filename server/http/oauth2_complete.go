@@ -20,7 +20,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oconf := h.Remote.NewOAuth2Config(h.Config)
+	oconf := h.Remote.NewOAuth2Config()
 
 	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
@@ -49,7 +49,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := h.Remote.NewClient(ctx, h.Config, tok, h.Logger)
+	client := h.Remote.NewClient(ctx, tok)
 	me, err := client.GetMe()
 	if err != nil {
 		log.Println(err)
@@ -73,7 +73,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("### Welcome to the Microsoft Office plugin!\n"+
 		"Here is some info to prove we got you logged in\n"+
 		"Name: %s \n", me.DisplayName)
-	h.BotPoster.PostDirect(mattermostUserID, message, "custom_TODO")
+	h.Poster.PostDirect(mattermostUserID, message, "custom_TODO")
 
 	html := `
 		<!DOCTYPE html>

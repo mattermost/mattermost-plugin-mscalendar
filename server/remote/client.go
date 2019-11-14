@@ -6,7 +6,7 @@ package remote
 import "time"
 
 type Client interface {
-	CreateUserEventSubscription(userID string) (*Subscription, error)
+	CreateUserEventSubscription(userID, notificationURL string) (*Subscription, error)
 	RenewEventSubscription(subscriptionID string, expires time.Time) error
 	DeleteEventSubscription(subscriptionID string) error
 	GetMe() (*User, error)

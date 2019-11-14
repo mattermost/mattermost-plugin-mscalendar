@@ -7,27 +7,30 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/pkg/errors"
 )
 
 func (h *Handler) subscribe(parameters ...string) (string, error) {
-	user, err := h.UserStore.LoadUser(h.MattermostUserId)
+	user, err := h.UserStore.LoadUser(h.MattermostUserID)
 	if err != nil {
 		return "", err
 	}
 
 	switch {
 	case len(parameters) == 0:
-		client := h.Remote.NewClient(context.Background(), h.Config, user.OAuth2Token, h.Logger)
-		sub, err := client.CreateUserEventSubscription(user.Remote.ID)
+		client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
+		notificationURL := h.Config.PluginURL + config.EventWebhookFullPath
+		sub, err := client.CreateUserEventSubscription(user.Remote.ID, notificationURL)
 		if err != nil {
 			return "", err
 		}
 
 		storedSub := &store.Subscription{
 			Remote:              sub,
-			MattermostCreatorID: h.MattermostUserId,
+			MattermostCreatorID: h.MattermostUserID,
 			PluginVersion:       h.Config.PluginVersion,
 		}
 		err = h.SubscriptionStore.StoreUserSubscription(user, storedSub)
@@ -37,11 +40,31 @@ func (h *Handler) subscribe(parameters ...string) (string, error) {
 		return fmt.Sprintf("Subscription %s created.", sub.ID), nil
 
 	case len(parameters) == 1 && parameters[0] == "show":
-		return fmt.Sprintf("Subscription: %s", utils.PrettyJSON(user.Settings.EventSubscriptionID)), nil
+		sub, err := h.SubscriptionStore.LoadSubscription(user.Settings.EventSubscriptionID)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("Subscription:\n%s", utils.PrettyJSON(sub)), nil
 
-	case len(parameters) == 2 && parameters[0] == "delete":
-		client := h.Remote.NewClient(context.Background(), h.Config, user.OAuth2Token, h.Logger)
-		err := client.DeleteEventSubscription(parameters[1])
+	case len(parameters) == 1 && parameters[0] == "renew":
+		sub, err := h.SubscriptionStore.LoadSubscription(user.Settings.EventSubscriptionID)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("Subscription:\n%s", utils.PrettyJSON(sub)), nil
+
+	case len(parameters) >= 1 && parameters[0] == "delete":
+		subscriptionID := ""
+		if len(parameters) > 1 {
+			subscriptionID = parameters[1]
+		} else {
+			subscriptionID = user.Settings.EventSubscriptionID
+		}
+		if subscriptionID == "" {
+			return "", errors.New("no subscription specified")
+		}
+		client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
+		err := client.DeleteEventSubscription(subscriptionID)
 		if err != nil {
 			return "", err
 		}

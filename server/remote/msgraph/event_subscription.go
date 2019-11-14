@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
-func (c *client) CreateUserEventSubscription(userID string) (*remote.Subscription, error) {
+func (c *client) CreateUserEventSubscription(userID, notificationURL string) (*remote.Subscription, error) {
 	resource := "me/events"
 	changeType := "created,updated,deleted"
 	expirationDateTime := time.Now().Add(4230 * time.Minute)
-	notificationURL := c.conf.PluginURL + config.WebhookPath + config.WebhookEventPath
+
+	c.LogError("<><>", "NotificationURL", notificationURL)
 
 	sub := &remote.Subscription{
 		Resource:           resource,
@@ -37,7 +37,7 @@ func (c *client) DeleteEventSubscription(subscriptionID string) error {
 	if err != nil {
 		return err
 	}
-	c.LogDebug("msgraph: eleted subscription", "subscriptionID", subscriptionID)
+	c.LogDebug("msgraph: deleted subscription", "subscriptionID", subscriptionID)
 	return nil
 }
 

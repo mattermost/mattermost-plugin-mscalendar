@@ -18,36 +18,46 @@ import (
 
 const Kind = "msgraph"
 
-type impl struct{}
+type impl struct {
+	conf   *config.Config
+	logger utils.Logger
+}
 
 func init() {
-	remote.Known[Kind] = &impl{}
+	remote.Makers[Kind] = NewRemote
+}
+
+func NewRemote(conf *config.Config, logger utils.Logger) remote.Remote {
+	return &impl{
+		conf:   conf,
+		logger: logger,
+	}
 }
 
 // NewMicrosoftGraphClient creates a new client.
-func (r *impl) NewClient(ctx context.Context, conf *config.Config, token *oauth2.Token, logger utils.Logger) remote.Client {
-	httpClient := r.NewOAuth2Config(conf).Client(ctx, token)
+func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client {
+	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{
-		conf:       conf,
+		conf:       r.conf,
 		ctx:        ctx,
 		httpClient: httpClient,
-		Logger:     logger,
+		Logger:     r.logger,
 		rbuilder:   msgraph.NewClient(httpClient),
 	}
 	return c
 }
 
-func (r *impl) NewOAuth2Config(conf *config.Config) *oauth2.Config {
+func (r *impl) NewOAuth2Config() *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     conf.OAuth2ClientId,
-		ClientSecret: conf.OAuth2ClientSecret,
-		RedirectURL:  conf.PluginURL + config.OAuth2Path + config.OAuth2CompletePath,
+		ClientID:     r.conf.OAuth2ClientID,
+		ClientSecret: r.conf.OAuth2ClientSecret,
+		RedirectURL:  r.conf.PluginURL + config.OAuth2RedirectFullPath,
 		Scopes: []string{
 			"offline_access",
 			"User.Read",
 			"Calendars.ReadWrite",
 			"Calendars.ReadWrite.Shared",
 		},
-		Endpoint: microsoft.AzureADEndpoint(conf.OAuth2Authority),
+		Endpoint: microsoft.AzureADEndpoint(r.conf.OAuth2Authority),
 	}
 }
