@@ -5,12 +5,13 @@ package command
 
 import (
 	"context"
-	"encoding/json"
 	"time"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 func (h *Handler) viewCalendar(parameters ...string) (string, error) {
-	user, err := h.loadRemoteUser()
+	user, err := h.UserStore.LoadUser(h.MattermostUserId)
 	if err != nil {
 		return "", err
 	}
@@ -24,8 +25,7 @@ func (h *Handler) viewCalendar(parameters ...string) (string, error) {
 
 	resp := ""
 	for _, e := range events {
-		bb, _ := json.MarshalIndent(e, "", "  ")
-		resp += "  - ```\n" + string(bb) + "\n```\n"
+		resp += "  - " + e.ID + "\n```\n" + utils.PrettyJSON(e) + "\n```\n"
 	}
 
 	return resp, nil

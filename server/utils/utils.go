@@ -4,6 +4,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"net/url"
 	"path"
 	"strings"
@@ -49,4 +50,9 @@ func Map(vs []string, f func(string) string) []string {
 		vsm[i] = f(v)
 	}
 	return vsm
+}
+
+func PrettyJSON(ref interface{}) string {
+	bb, _ := json.MarshalIndent(ref, "", "  ")
+	return string(bb)
 }

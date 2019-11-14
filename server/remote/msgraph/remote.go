@@ -28,6 +28,7 @@ func init() {
 func (r *impl) NewClient(ctx context.Context, conf *config.Config, token *oauth2.Token, logger utils.Logger) remote.Client {
 	httpClient := r.NewOAuth2Config(conf).Client(ctx, token)
 	c := &client{
+		conf:       conf,
 		ctx:        ctx,
 		httpClient: httpClient,
 		Logger:     logger,

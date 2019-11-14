@@ -15,6 +15,7 @@ import (
 type Remote interface {
 	NewClient(context.Context, *config.Config, *oauth2.Token, utils.Logger) Client
 	NewOAuth2Config(conf *config.Config) *oauth2.Config
+	ParseEventWebhook(data []byte, conf *config.Config) ([]string, []*Event, error)
 }
 
 var Known = map[string]Remote{}

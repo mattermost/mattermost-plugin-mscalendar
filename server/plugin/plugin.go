@@ -21,10 +21,9 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/command"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/http"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
@@ -34,10 +33,11 @@ type Plugin struct {
 	config      *config.Config
 	httpHandler *http.Handler
 
-	KVStore          kvstore.KVStore
-	UserStore        user.Store
-	OAuth2StateStore user.OAuth2StateStore
-	Remote           remote.Remote
+	// KVStore           kvstore.KVStore
+	UserStore         store.UserStore
+	OAuth2StateStore  store.OAuth2StateStore
+	SubscriptionStore store.SubscriptionStore
+	Remote            remote.Remote
 
 	Templates map[string]*template.Template
 }
@@ -55,14 +55,15 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	kv := kvstore.NewPluginStore(p.API)
-	p.KVStore = kv
-	p.UserStore = user.NewStore(kv)
-	p.OAuth2StateStore = user.NewOAuth2StateStore(p.API)
+	store := store.NewPluginStore(p.API)
+	p.UserStore = store
+	p.OAuth2StateStore = store
+	p.SubscriptionStore = store
 
 	p.Remote = remote.Known[msgraph.Kind]
 
 	command.Register(p.API.RegisterCommand)
+
 	p.httpHandler = p.newHTTPHandler(&(*p.config))
 
 	p.API.LogInfo(p.config.PluginId + " activated")
@@ -128,6 +129,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	h := command.Handler{
 		Config:            conf,
 		UserStore:         p.UserStore,
+		SubscriptionStore: p.SubscriptionStore,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
 		Logger:            p.API,
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
@@ -159,7 +161,8 @@ func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
 	h := &http.Handler{
 		Config:            conf,
 		UserStore:         p.UserStore,
-		OAuth2StateStore:  user.NewOAuth2StateStore(p.API),
+		OAuth2StateStore:  p.OAuth2StateStore,
+		SubscriptionStore: p.SubscriptionStore,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
 		Logger:            p.API,
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,

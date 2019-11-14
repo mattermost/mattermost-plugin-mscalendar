@@ -21,9 +21,9 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 
 	conf := h.Remote.NewOAuth2Config(h.Config)
 	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
-	err := h.OAuth2StateStore.Store(state)
+	err := h.OAuth2StateStore.StoreOAuth2State(state)
 	if err != nil {
-		h.jsonError(w, err)
+		h.internalServerError(w, err)
 		return
 	}
 

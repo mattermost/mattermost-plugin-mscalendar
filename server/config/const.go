@@ -9,4 +9,7 @@ const (
 	CommandTrigger     = "msoffice"
 	OAuth2Path         = "/oauth2"
 	OAuth2CompletePath = "/complete"
+	APIPath            = "/api/v1"
+	WebhookPath        = "/webhook"
+	WebhookEventPath   = "/event"
 )

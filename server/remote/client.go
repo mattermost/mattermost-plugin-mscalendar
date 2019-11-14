@@ -6,7 +6,11 @@ package remote
 import "time"
 
 type Client interface {
+	CreateUserEventSubscription(userID string) (*Subscription, error)
+	RenewEventSubscription(subscriptionID string, expires time.Time) error
+	DeleteEventSubscription(subscriptionID string) error
 	GetMe() (*User, error)
 	GetUserCalendars(userID string) ([]*Calendar, error)
 	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
+	GetUserEvent(userID, eventID string) (*Event, error)
 }

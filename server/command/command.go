@@ -14,14 +14,15 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 // Handler handles commands
 type Handler struct {
 	Config            *config.Config
-	UserStore         user.Store
+	UserStore         store.UserStore
+	SubscriptionStore store.SubscriptionStore
 	Logger            utils.Logger
 	BotPoster         utils.BotPoster
 	IsAuthorizedAdmin func(userId string) (bool, error)
@@ -31,7 +32,7 @@ type Handler struct {
 	Args             *model.CommandArgs
 	ChannelId        string
 	MattermostUserId string
-	User             *user.User
+	User             *store.User
 }
 
 func getHelp() string {
@@ -82,6 +83,8 @@ func (h *Handler) Handle() (string, error) {
 		handler = h.connect
 	case "viewcal":
 		handler = h.viewCalendar
+	case "subscribe":
+		handler = h.subscribe
 	}
 	out, err := handler(parameters...)
 	if err != nil {
@@ -89,15 +92,6 @@ func (h *Handler) Handle() (string, error) {
 	}
 
 	return out, nil
-}
-
-func (h *Handler) loadRemoteUser() (*user.User, error) {
-	user := user.User{}
-	err := h.UserStore.LoadRemoteUser(h.MattermostUserId, &user)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
 }
 
 func (h *Handler) isValid() (subcommand string, parameters []string, err error) {

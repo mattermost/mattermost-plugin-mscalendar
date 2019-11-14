@@ -7,8 +7,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 type client struct {
@@ -19,5 +21,6 @@ type client struct {
 	httpClient *http.Client
 	rbuilder   *msgraph.GraphServiceRequestBuilder
 
+	conf *config.Config
 	utils.Logger
 }

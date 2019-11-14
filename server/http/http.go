@@ -11,15 +11,16 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
 // Handler is an http.Handler for all plugin HTTP endpoints
 type Handler struct {
 	Config            *config.Config
-	UserStore         user.Store
-	OAuth2StateStore  user.OAuth2StateStore
+	UserStore         store.UserStore
+	OAuth2StateStore  store.OAuth2StateStore
+	SubscriptionStore store.SubscriptionStore
 	Logger            utils.Logger
 	BotPoster         utils.BotPoster
 	IsAuthorizedAdmin func(userId string) (bool, error)
@@ -30,12 +31,15 @@ type Handler struct {
 // InitRouter initializes the router.
 func (h *Handler) InitRouter() {
 	h.root = mux.NewRouter()
-	api := h.root.PathPrefix("/api/v1").Subrouter()
-	api.Use(authorizationRequired)
+	api := h.root.PathPrefix(config.APIPath).Subrouter()
+	api.Use(h.authorizationRequired)
 	api.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
 
+	webhook := api.PathPrefix(config.WebhookPath).Subrouter()
+	webhook.HandleFunc(config.WebhookEventPath, h.apiEventWebhook).Methods("POST")
+
 	oauth2 := h.root.PathPrefix(config.OAuth2Path).Subrouter()
-	oauth2.Use(authorizationRequired)
+	oauth2.Use(h.authorizationRequired)
 	oauth2.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
 	oauth2.HandleFunc(config.OAuth2CompletePath, h.oauth2Complete).Methods("GET")
 
@@ -43,26 +47,45 @@ func (h *Handler) InitRouter() {
 	return
 }
 
-func (h *Handler) jsonError(w http.ResponseWriter, err error) {
+// ServeHTTP implements http.Handler
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.root.ServeHTTP(w, r)
+}
+
+func (h *Handler) jsonError(w http.ResponseWriter, statusCode int, summary string, err error) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusInternalServerError)
+	w.WriteHeader(statusCode)
 	b, _ := json.Marshal(struct {
 		Error   string `json:"error"`
-		Details string `json:"details"`
+		Summary string `json:"details"`
 	}{
-		Error:   "An internal error has occurred. Check app server logs for details.",
-		Details: err.Error(),
+		Summary: summary,
+		// Summary:   "An internal error has occurred. Check app server logs for details.",
+		Error: err.Error(),
 	})
 	_, _ = w.Write(b)
 }
 
-func authorizationRequired(next http.Handler) http.Handler {
+func (h *Handler) internalServerError(w http.ResponseWriter, err error) {
+	h.jsonError(w, http.StatusInternalServerError, "An internal error has occurred. Check app server logs for details.", err)
+}
+
+func (h *Handler) badRequest(w http.ResponseWriter, err error) {
+	h.jsonError(w, http.StatusBadRequest, "Invalid request.", err)
+}
+
+func (h *Handler) notFound(w http.ResponseWriter, err error) {
+	h.jsonError(w, http.StatusNotFound, "Not found.", err)
+}
+
+func (h *Handler) authorizationRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Header.Get("Mattermost-User-ID")
 		if userID != "" {
 			next.ServeHTTP(w, r)
 			return
 		}
+		h.Logger.LogInfo("Not authorised", "userID", userID)
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 	})
 }
@@ -82,9 +105,4 @@ func (h *Handler) adminAuthorizationRequired(next http.Handler) http.Handler {
 		}
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 	})
-}
-
-// ServeHTTP implements http.Handler
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.root.ServeHTTP(w, r)
 }
