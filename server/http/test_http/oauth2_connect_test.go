@@ -6,32 +6,34 @@ import (
 	"net/textproto"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	shttp "github.com/mattermost/mattermost-plugin-msoffice/server/http"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/mocks"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/user/mock_user"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOAuth2Connect(t *testing.T) {
-	kv := newMockKVStore(nil, nil)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
 	tcs := []struct {
 		name                 string
 		handler              shttp.Handler
 		r                    *http.Request
-		w                    *mocks.MockResponseWriter
+		w                    *mockResponseWriter
 		expectedHTTPResponse string
 		expectedHTTPCode     int
 	}{
 		{
 			name: "unauthorized user",
 			r:    &http.Request{},
-			w:    mocks.DefaultMockResponseWriter(),
+			w:    defaultMockResponseWriter(),
 			handler: shttp.Handler{
 				Config:           &config.Config{},
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
 			},
 			expectedHTTPResponse: "Not authorized\n",
 			expectedHTTPCode:     http.StatusUnauthorized,
@@ -41,11 +43,11 @@ func TestOAuth2Connect(t *testing.T) {
 			r: &http.Request{
 				Header: http.Header{textproto.CanonicalMIMEHeaderKey("mattermost-user-id"): []string{"fake@mattermost.com"}},
 			},
-			w: mocks.DefaultMockResponseWriter(),
+			w: defaultMockResponseWriter(),
 			handler: shttp.Handler{
 				Config:           &config.Config{},
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(errors.New("unable to store state")),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, errors.New("unable to store state")),
 			},
 			expectedHTTPResponse: "{\"error\":\"An internal error has occurred. Check app server logs for details.\",\"details\":\"unable to store state\"}",
 			expectedHTTPCode:     http.StatusInternalServerError,
@@ -55,11 +57,11 @@ func TestOAuth2Connect(t *testing.T) {
 			r: &http.Request{
 				Header: http.Header{textproto.CanonicalMIMEHeaderKey("mattermost-user-id"): []string{"fake@mattermost.com"}},
 			},
-			w: mocks.DefaultMockResponseWriter(),
+			w: defaultMockResponseWriter(),
 			handler: shttp.Handler{
 				Config:           &config.Config{},
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 			},
 			expectedHTTPResponse: "",
 			expectedHTTPCode:     http.StatusFound,

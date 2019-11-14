@@ -6,10 +6,16 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	shttp "github.com/mattermost/mattermost-plugin-msoffice/server/http"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore/mock_kvstore"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/user/mock_user"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/mock_utils"
 	"github.com/mattermost/mattermost-server/app"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,8 +34,10 @@ func getUserRequest(userID, rawQuery string) *http.Request {
 }
 
 func TestOAuth2Complete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	api := &app.PluginAPI{}
-	kv := newMockKVStore(nil, nil)
 
 	config := &config.Config{}
 
@@ -54,8 +62,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "unauthorized user",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 				API:              api,
 			},
 			r: &http.Request{},
@@ -68,8 +76,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "missing authorization code",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code="),
@@ -82,8 +90,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "missing state",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(errors.New("unable to verify state")),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, errors.New("unable to verify state")),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code=fakecode&state="),
@@ -96,8 +104,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "user state not authorized",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_nomatch@mattermost.com"),
@@ -110,8 +118,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "unable to exchange auth code for token",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
@@ -124,8 +132,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "microsoft graph api client unable to get user info",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
@@ -141,8 +149,8 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "UserStore unable to store user info",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(newMockKVStore(nil, errors.New("forced kvstore error"))),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, errors.New("forced kvstore error"))),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
@@ -155,9 +163,9 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "successfully completed oauth2 login",
 			handler: shttp.Handler{
 				Config:           config,
-				UserStore:        user.NewStore(kv),
-				OAuth2StateStore: newMockOAuth2StateStore(nil),
-				BotPoster:        newMockBotPoster(nil),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
+				BotPoster:        getMockBotPoster(ctrl, nil),
 				API:              api,
 			},
 			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
@@ -261,4 +269,26 @@ func statusOKGraphAPIResponderFunc() {
 }`)
 
 	httpmock.RegisterResponder("GET", meRequestURL, meResponder)
+}
+
+func getMockBotPoster(ctrl *gomock.Controller, err error) utils.BotPoster {
+	m := mock_utils.NewMockBotPoster(ctrl)
+	m.EXPECT().PostDirect(gomock.Any(), gomock.Any(), gomock.Any()).Return(err).AnyTimes()
+	m.EXPECT().PostEphemeral(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	return m
+}
+
+func getMockKVStore(ctrl *gomock.Controller, bytes []byte, err error) kvstore.KVStore {
+	m := mock_kvstore.NewMockKVStore(ctrl)
+	m.EXPECT().Load(gomock.Any()).Return(bytes, err).AnyTimes()
+	m.EXPECT().Store(gomock.Any(), gomock.Any()).Return(err).AnyTimes()
+	m.EXPECT().Delete(gomock.Any()).Return(err).AnyTimes()
+	return m
+}
+
+func getMockOAuth2StateStore(ctrl *gomock.Controller, err error) user.OAuth2StateStore {
+	m := mock_user.NewMockOAuth2StateStore(ctrl)
+	m.EXPECT().Store(gomock.Any()).Return(err).AnyTimes()
+	m.EXPECT().Verify(gomock.Any()).Return(err).AnyTimes()
+	return m
 }

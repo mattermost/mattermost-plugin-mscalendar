@@ -3,6 +3,7 @@ module github.com/mattermost/mattermost-plugin-msoffice
 go 1.13
 
 require (
+	github.com/golang/mock v1.2.0
 	github.com/gorilla/mux v1.7.3
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/jkrecek/msgraph-go v0.0.0-20190328140430-9f7466d8cb1f
