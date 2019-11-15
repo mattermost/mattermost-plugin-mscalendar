@@ -22,6 +22,9 @@ const (
 type Client interface {
 	GetMe() (*graph.Me, error)
 	GetUserCalendar(remoteUserId string) ([]*graph.Calendar, error)
+	CreateCalendarEvent(calendarId string, event *graph.Event) (*graph.Event, error)
+	CreateCalendar(calendar *graph.Calendar) (*graph.Calendar, error)
+	GetCalendarEvents(calendarId string) ([]*graph.Event, error)
 }
 
 type client struct {

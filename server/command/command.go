@@ -80,6 +80,12 @@ func (h *Handler) Handle() (string, error) {
 		handler = h.connect
 	case "viewcal":
 		handler = h.viewCalendar
+	case "createmeeting":
+		handler = h.createMeeting
+	case "createcalendar":
+		handler = h.createCalendar
+	case "calgetevents":
+		handler = h.getEvents
 	}
 	out, err := handler(parameters...)
 	if err != nil {

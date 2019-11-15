@@ -18,6 +18,12 @@ func (r *Handler) help(parameters ...string) (string, error) {
 		r.Config.BuildHash,
 		r.Config.BuildDate)
 	resp += "\n"
-	resp += "TODO help"
+	resp += "TODO help\n"
+	resp += "/msoffice connect\n"
+	resp += "/msoffice viewcal\n"
+	resp += "/msoffice createmeeting <Subject> <Body> <CalendarId>\n"
+	// resp += "/msoffice createmeeting <Subject> <Body> <CalendarId> <Start> <End>\n"
+	resp += "/msoffice createcalendar <calendar_name>\n"
+	resp += "/msoffice calgetevents\n"
 	return resp, nil
 }
