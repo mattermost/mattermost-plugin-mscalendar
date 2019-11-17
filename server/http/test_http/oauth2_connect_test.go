@@ -31,7 +31,7 @@ func TestOAuth2Connect(t *testing.T) {
 			w:    defaultMockResponseWriter(),
 			handler: shttp.Handler{
 				Config:           &config.Config{},
-				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
+				UserStore:        user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
 				OAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
 			},
 			expectedHTTPResponse: "Not authorized\n",
@@ -42,9 +42,13 @@ func TestOAuth2Connect(t *testing.T) {
 			r:    getUserRequest("fake@mattermost.com", ""),
 			w:    defaultMockResponseWriter(),
 			handler: shttp.Handler{
-				Config:           &config.Config{},
-				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, errors.New("unable to store state")),
+				Config:    &config.Config{},
+				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
+					useAnyStoreKey: true,
+					storeErr:       errors.New("unable to store state"),
+					maxTimesStore:  1,
+				}),
 			},
 			expectedHTTPResponse: "{\"error\":\"An internal error has occurred. Check app server logs for details.\",\"details\":\"unable to store state\"}",
 			expectedHTTPCode:     http.StatusInternalServerError,
@@ -54,9 +58,13 @@ func TestOAuth2Connect(t *testing.T) {
 			r:    getUserRequest("fake@mattermost.com", ""),
 			w:    defaultMockResponseWriter(),
 			handler: shttp.Handler{
-				Config:           &config.Config{},
-				UserStore:        user.NewStore(getMockKVStore(ctrl, []byte{}, nil)),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, nil),
+				Config:    &config.Config{},
+				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
+				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
+					useAnyStoreKey: true,
+					storeErr:       nil,
+					maxTimesStore:  1,
+				}),
 			},
 			expectedHTTPResponse: "",
 			expectedHTTPCode:     http.StatusFound,
