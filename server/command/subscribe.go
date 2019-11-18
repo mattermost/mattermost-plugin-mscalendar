@@ -22,8 +22,9 @@ func (h *Handler) subscribe(parameters ...string) (string, error) {
 	switch {
 	case len(parameters) == 0:
 		client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
-		notificationURL := h.Config.PluginURL + config.EventWebhookFullPath
-		sub, err := client.CreateUserEventSubscription(user.Remote.ID, notificationURL)
+		// sub, err := client.CreateEventSubscription(
+		sub, err := client.CreateEventMessageSubscription(
+			h.Config.PluginURL + config.EventWebhookFullPath)
 		if err != nil {
 			return "", err
 		}
@@ -44,32 +45,39 @@ func (h *Handler) subscribe(parameters ...string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("Subscription:\n%s", utils.PrettyJSON(sub)), nil
+		return fmt.Sprintf("Subscription:%s", utils.JSONBlock(sub)), nil
 
 	case len(parameters) == 1 && parameters[0] == "renew":
 		sub, err := h.SubscriptionStore.LoadSubscription(user.Settings.EventSubscriptionID)
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("Subscription:\n%s", utils.PrettyJSON(sub)), nil
+		return fmt.Sprintf("Subscription:%s", utils.JSONBlock(sub)), nil
 
 	case len(parameters) >= 1 && parameters[0] == "delete":
 		subscriptionID := ""
+		var updateUser *store.User
 		if len(parameters) > 1 {
 			subscriptionID = parameters[1]
 		} else {
 			subscriptionID = user.Settings.EventSubscriptionID
+			updateUser = user
 		}
 		if subscriptionID == "" {
-			return "", errors.New("no subscription specified")
+			return "", errors.New("subscription is not specified")
 		}
 		client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
-		err := client.DeleteEventSubscription(subscriptionID)
+		err := client.DeleteSubscription(subscriptionID)
 		if err != nil {
-			return "", err
+			return "", errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 		}
-		return fmt.Sprintf("Subscription %s deleted.", parameters[1]), nil
-	}
 
+		err = h.SubscriptionStore.DeleteUserSubscription(updateUser, subscriptionID)
+		if err != nil {
+			return "", errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
+		}
+
+		return fmt.Sprintf("Subscription %s deleted.", subscriptionID), nil
+	}
 	return "bad syntax", nil
 }

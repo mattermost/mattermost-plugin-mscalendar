@@ -10,29 +10,41 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
-func (c *client) CreateUserEventSubscription(userID, notificationURL string) (*remote.Subscription, error) {
-	resource := "me/events"
-	changeType := "created,updated,deleted"
-	expirationDateTime := time.Now().Add(4230 * time.Minute)
+const subscribeTTL = 10 * time.Minute
 
-	c.LogError("<><>", "NotificationURL", notificationURL)
-
+func (c *client) createSubscription(resource, changeType, notificationURL string) (*remote.Subscription, error) {
 	sub := &remote.Subscription{
 		Resource:           resource,
 		ChangeType:         changeType,
-		ExpirationDateTime: expirationDateTime.Format(time.RFC3339),
 		NotificationURL:    notificationURL,
+		ExpirationDateTime: time.Now().Add(subscribeTTL).Format(time.RFC3339),
 	}
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
 		return nil, err
 	}
-
-	c.LogDebug("msgraph: created subscription", "userID", userID, "subscriptionID", sub.ID)
+	c.LogDebug("msgraph: created subscription", "subscriptionID", sub.ID, "resource", sub.Resource, "changeType", sub.ChangeType)
 	return sub, nil
 }
 
-func (c *client) DeleteEventSubscription(subscriptionID string) error {
+func (c *client) CreateEventMessageSubscription(notificationURL string) (*remote.Subscription, error) {
+	return c.createSubscription(
+		// TODO make work: "me/messages?filter=microsoft.graph.eventMessage/meetingMessageType ne ''",
+		"me/messages",
+		"created",
+		notificationURL,
+	)
+}
+
+func (c *client) CreateEventSubscription(notificationURL string) (*remote.Subscription, error) {
+	return c.createSubscription(
+		"me/events",
+		"created,updated,deleted",
+		notificationURL,
+	)
+}
+
+func (c *client) DeleteSubscription(subscriptionID string) error {
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().Delete(c.ctx)
 	if err != nil {
 		return err
@@ -41,7 +53,7 @@ func (c *client) DeleteEventSubscription(subscriptionID string) error {
 	return nil
 }
 
-func (c *client) RenewEventSubscription(subscriptionID string, expires time.Time) error {
+func (c *client) RenewSubscription(subscriptionID string, expires time.Time) error {
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
 	}{

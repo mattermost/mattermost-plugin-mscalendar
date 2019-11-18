@@ -25,7 +25,7 @@ func (h *Handler) viewCalendar(parameters ...string) (string, error) {
 
 	resp := ""
 	for _, e := range events {
-		resp += "  - " + e.ID + "\n```\n" + utils.PrettyJSON(e) + "\n```\n"
+		resp += "  - " + e.ID + utils.JSONBlock(e)
 	}
 
 	return resp, nil

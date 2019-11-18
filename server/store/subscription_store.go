@@ -50,14 +50,18 @@ func (s *pluginStore) DeleteUserSubscription(user *User, subscriptionID string) 
 	if err != nil {
 		return err
 	}
-	user.Settings.EventSubscriptionID = ""
-	err = s.StoreUser(user)
-	if err != nil {
-		return err
+	mattermostUserID := ""
+	if user != nil {
+		user.Settings.EventSubscriptionID = ""
+		err = s.StoreUser(user)
+		if err != nil {
+			return err
+		}
+		mattermostUserID = user.MattermostUserID
 	}
 
 	s.Logger.LogDebug("Deleted user subscription",
-		"mattermostUserID", user.MattermostUserID,
+		"mattermostUserID", mattermostUserID,
 		"subscriptionID", subscriptionID)
 	return nil
 }

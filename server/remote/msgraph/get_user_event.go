@@ -4,7 +4,6 @@
 package msgraph
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
@@ -12,7 +11,6 @@ import (
 
 func (c *client) GetUserEvent(userID, eventID string) (*remote.Event, error) {
 	e := &remote.Event{}
-	c.LogInfo(fmt.Sprintf("<><> GetUserEvent: %s %s", userID, eventID))
 
 	err := c.rbuilder.Users().ID(userID).Events().ID(eventID).Request().JSONRequest(
 		c.ctx, http.MethodGet, "", nil, &e)

@@ -13,10 +13,12 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
+type LoadSubscriptionCreatorF func(subscriptionID string) (*User, *oauth2.Token, string, *Subscription, error)
+
 type Remote interface {
 	NewClient(context.Context, *oauth2.Token) Client
 	NewOAuth2Config() *oauth2.Config
-	ProcessEventWebhook(w http.ResponseWriter, req *http.Request, creator func(subID string) (*User, *oauth2.Token, string, *Subscription, error)) []*EventNotification
+	HandleEventNotification(http.ResponseWriter, *http.Request, LoadSubscriptionCreatorF) []*EventNotification
 }
 
 var Makers = map[string]func(*config.Config, utils.Logger) Remote{}

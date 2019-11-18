@@ -40,7 +40,7 @@ func getHelp() string {
 	help := `
 TODO: help text.
 `
-	return codeBlock(fmt.Sprintf(
+	return utils.CodeBlock(fmt.Sprintf(
 		help,
 	))
 }
@@ -116,8 +116,4 @@ func (h *Handler) isValid() (subcommand string, parameters []string, err error) 
 	}
 
 	return subcommand, parameters, nil
-}
-
-func codeBlock(in string) string {
-	return fmt.Sprintf("```\n%s\n```", in)
 }
