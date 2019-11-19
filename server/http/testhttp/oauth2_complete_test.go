@@ -11,17 +11,15 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	shttp "github.com/mattermost/mattermost-plugin-msoffice/server/http"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/kvstore/mock_kvstore"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user/mock_user"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/mock_utils"
 	"github.com/mattermost/mattermost-server/app"
 	"github.com/stretchr/testify/assert"
 )
 
-func getUserRequest(userID, rawQuery string) *http.Request {
+func makeUserRequest(userID, rawQuery string) *http.Request {
 	r := &http.Request{
 		Header: make(http.Header),
 	}
@@ -55,6 +53,10 @@ func TestOAuth2Complete(t *testing.T) {
 		handler               shttp.Handler
 		r                     *http.Request
 		w                     *mockResponseWriter
+		mockKVStore           *mock_kvstore.MockKVStore
+		mockOAuth2StateStore  *mock_user.MockOAuth2StateStore
+		mockBotPoster         *mock_utils.MockBotPoster
+		setupMocks            func(*mock_kvstore.MockKVStore, *mock_user.MockOAuth2StateStore, *mock_utils.MockBotPoster)
 		registerResponderFunc func()
 		expectedHTTPResponse  string
 		expectedHTTPCode      int
@@ -62,13 +64,15 @@ func TestOAuth2Complete(t *testing.T) {
 		{
 			name: "unauthorized user",
 			handler: shttp.Handler{
-				Config:           config,
-				UserStore:        user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{}),
-				API:              api,
+				Config: config,
+				API:    api,
 			},
-			r: &http.Request{},
-			w: defaultMockResponseWriter(),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks:           func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
+			r:                    &http.Request{},
+			w:                    defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "Not authorized\n",
 			expectedHTTPCode:      http.StatusUnauthorized,
@@ -76,13 +80,15 @@ func TestOAuth2Complete(t *testing.T) {
 		{
 			name: "missing authorization code",
 			handler: shttp.Handler{
-				Config:           config,
-				UserStore:        user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{}),
-				API:              api,
+				Config: config,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code="),
-			w: defaultMockResponseWriter(),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks:           func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
+			r:                    makeUserRequest("fake@mattermost.com", "code="),
+			w:                    defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "missing authorization code\n",
 			expectedHTTPCode:      http.StatusBadRequest,
@@ -90,16 +96,16 @@ func TestOAuth2Complete(t *testing.T) {
 		{
 			name: "missing state",
 			handler: shttp.Handler{
-				Config:    config,
-				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
-					verifyKey:      "",
-					verifyErr:      errors.New("unable to verify state"),
-					maxTimesVerify: 1,
-				}),
-				API: api,
+				Config: config,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code=fakecode&state="),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
+				ss.EXPECT().Verify(gomock.Eq("")).Return(errors.New("unable to verify state")).Times(1)
+			},
+			r: makeUserRequest("fake@mattermost.com", "code=fakecode&state="),
 			w: defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "missing stored state: unable to verify state\n",
@@ -108,16 +114,16 @@ func TestOAuth2Complete(t *testing.T) {
 		{
 			name: "user state not authorized",
 			handler: shttp.Handler{
-				Config:    config,
-				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
-					verifyKey:      "user_nomatch@mattermost.com",
-					verifyErr:      nil,
-					maxTimesVerify: 1,
-				}),
-				API: api,
+				Config: config,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_nomatch@mattermost.com"),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
+				ss.EXPECT().Verify(gomock.Eq("user_nomatch@mattermost.com")).Return(nil).Times(1)
+			},
+			r: makeUserRequest("fake@mattermost.com", "code=fakecode&state=user_nomatch@mattermost.com"),
 			w: defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "Not authorized, user ID mismatch.\n",
@@ -126,16 +132,16 @@ func TestOAuth2Complete(t *testing.T) {
 		{
 			name: "unable to exchange auth code for token",
 			handler: shttp.Handler{
-				Config:    config,
-				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
-					verifyKey:      "user_fake@mattermost.com",
-					verifyErr:      nil,
-					maxTimesVerify: 1,
-				}),
-				API: api,
+				Config: config,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
+				ss.EXPECT().Verify(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+			},
+			r: makeUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
 			w: defaultMockResponseWriter(),
 			registerResponderFunc: badTokenExchangeResponderFunc,
 			expectedHTTPResponse:  "oauth2: cannot fetch token: 400\nResponse: {\"error\":\"invalid request\"}\n",
@@ -144,16 +150,16 @@ func TestOAuth2Complete(t *testing.T) {
 		{
 			name: "microsoft graph api client unable to get user info",
 			handler: shttp.Handler{
-				Config:    config,
-				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
-					verifyKey:      "user_fake@mattermost.com",
-					verifyErr:      nil,
-					maxTimesVerify: 1,
-				}),
-				API: api,
+				Config: config,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
+				ss.EXPECT().Verify(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+			},
+			r: makeUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
 			w: defaultMockResponseWriter(),
 			registerResponderFunc: unauthorizedTokenGraphAPIResponderFunc,
 			expectedHTTPResponse: `Request to url 'https://graph.microsoft.com/v1.0/me' returned error.
@@ -166,20 +172,16 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "UserStore unable to store user info",
 			handler: shttp.Handler{
 				Config: config,
-				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{
-					useStoreAnyKey:   true,
-					useStoreAnyValue: true,
-					storeErr:         errors.New("forced kvstore error"),
-					maxTimesStore:    1,
-				})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
-					verifyKey:      "user_fake@mattermost.com",
-					verifyErr:      nil,
-					maxTimesVerify: 1,
-				}),
-				API: api,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
+				kv.EXPECT().Store(gomock.Any(), gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
+				ss.EXPECT().Verify(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+			},
+			r: makeUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
 			w: defaultMockResponseWriter(),
 			registerResponderFunc: statusOKGraphAPIResponderFunc,
 			expectedHTTPResponse:  "Unable to connect: forced kvstore error\n",
@@ -189,28 +191,31 @@ func TestOAuth2Complete(t *testing.T) {
 			name: "successfully completed oauth2 login",
 			handler: shttp.Handler{
 				Config: config,
-				UserStore: user.NewStore(getMockKVStore(ctrl, &mockKVStoreConfig{
-					useStoreAnyKey:   true,
-					useStoreAnyValue: true,
-					storeErr:         nil,
-					maxTimesStore:    2,
-				})),
-				OAuth2StateStore: getMockOAuth2StateStore(ctrl, &mockOAuth2StateStoreConfig{
-					verifyKey:      "user_fake@mattermost.com",
-					verifyErr:      nil,
-					maxTimesVerify: 1,
-				}),
-				BotPoster: getMockBotPoster(ctrl, &mockBotPosterConfig{
-					userID:         "fake@mattermost.com",
-					channelID:      "",
-					message:        getBotPosterMessage("displayName-value"),
-					postType:       "custom_TODO",
-					err:            nil,
-					maxTimesDirect: 1,
-				}),
-				API: api,
+				API:    api,
 			},
-			r: getUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
+			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
+			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
+			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
+				kv.
+					EXPECT().
+					Store(gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(2)
+
+				ss.
+					EXPECT().
+					Verify(gomock.Eq("user_fake@mattermost.com")).
+					Return(nil).
+					Times(1)
+
+				bp.
+					EXPECT().
+					PostDirect(gomock.Eq("fake@mattermost.com"), gomock.Eq(getBotPosterMessage("displayName-value")), gomock.Eq("custom_TODO")).
+					Return(nil).
+					Times(1)
+			},
+			r: makeUserRequest("fake@mattermost.com", "code=fakecode&state=user_fake@mattermost.com"),
 			w: defaultMockResponseWriter(),
 			registerResponderFunc: statusOKGraphAPIResponderFunc,
 			expectedHTTPResponse: `
@@ -233,6 +238,11 @@ func TestOAuth2Complete(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.registerResponderFunc()
+			tc.setupMocks(tc.mockKVStore, tc.mockOAuth2StateStore, tc.mockBotPoster)
+
+			tc.handler.UserStore = user.NewStore(tc.mockKVStore)
+			tc.handler.OAuth2StateStore = tc.mockOAuth2StateStore
+			tc.handler.BotPoster = tc.mockBotPoster
 
 			tc.handler.OAuth2Complete(tc.w, tc.r)
 
@@ -253,19 +263,21 @@ func badTokenExchangeResponderFunc() {
 func unauthorizedTokenGraphAPIResponderFunc() {
 	tokenURL := "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 
-	tokenResponder := httpmock.NewStringResponder(http.StatusOK, `{
+	tokenResponse := `{
     "token_type": "Bearer",
     "scope": "user.read%20Fmail.read",
     "expires_in": 3600,
     "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik5HVEZ2ZEstZnl0aEV1Q...",
     "refresh_token": "AwABAAAAvPM1KaPlrEqdFSBzjqfTGAMxZGUTdM0t4B4..."
-}`)
+}`
+
+	tokenResponder := httpmock.NewStringResponder(http.StatusOK, tokenResponse)
 
 	httpmock.RegisterResponder("POST", tokenURL, tokenResponder)
 
 	meRequestURL := "https://graph.microsoft.com/v1.0/me"
 
-	meResponder := httpmock.NewStringResponder(http.StatusUnauthorized, `{
+	meResponse := `{
     "error": {
         "code": "InvalidAuthenticationToken",
         "message": "Access token is empty.",
@@ -274,7 +286,9 @@ func unauthorizedTokenGraphAPIResponderFunc() {
             "date": "2019-11-12T00:49:46"
         }
     }
-}`)
+}`
+
+	meResponder := httpmock.NewStringResponder(http.StatusUnauthorized, meResponse)
 
 	httpmock.RegisterResponder("GET", meRequestURL, meResponder)
 }
@@ -282,19 +296,21 @@ func unauthorizedTokenGraphAPIResponderFunc() {
 func statusOKGraphAPIResponderFunc() {
 	tokenURL := "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 
-	tokenResponder := httpmock.NewStringResponder(http.StatusOK, `{
+	tokenResponse := `{
     "token_type": "Bearer",
     "scope": "user.read%20Fmail.read",
     "expires_in": 3600,
     "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik5HVEZ2ZEstZnl0aEV1Q...",
     "refresh_token": "AwABAAAAvPM1KaPlrEqdFSBzjqfTGAMxZGUTdM0t4B4..."
-}`)
+}`
+
+	tokenResponder := httpmock.NewStringResponder(http.StatusOK, tokenResponse)
 
 	httpmock.RegisterResponder("POST", tokenURL, tokenResponder)
 
 	meRequestURL := "https://graph.microsoft.com/v1.0/me"
 
-	meResponder := httpmock.NewStringResponder(http.StatusOK, `{
+	meResponse := `{
     "businessPhones": [
         "businessPhones-value"
     ],
@@ -308,7 +324,9 @@ func statusOKGraphAPIResponderFunc() {
     "surname": "surname-value",
     "userPrincipalName": "userPrincipalName-value",
     "id": "id-value"
-}`)
+}`
+
+	meResponder := httpmock.NewStringResponder(http.StatusOK, meResponse)
 
 	httpmock.RegisterResponder("GET", meRequestURL, meResponder)
 }
@@ -317,79 +335,4 @@ func getBotPosterMessage(displayName string) string {
 	return fmt.Sprintf("### Welcome to the Microsoft Office plugin!\n"+
 		"Here is some info to prove we got you logged in\n"+
 		"Name: %s \n", displayName)
-}
-
-type mockBotPosterConfig struct {
-	userID            string
-	channelID         string
-	message           string
-	postType          string
-	err               error
-	maxTimesDirect    int
-	maxTimesEphemeral int
-}
-
-func getMockBotPoster(ctrl *gomock.Controller, config *mockBotPosterConfig) utils.BotPoster {
-	m := mock_utils.NewMockBotPoster(ctrl)
-	m.EXPECT().PostDirect(config.userID, config.message, config.postType).Return(config.err).MaxTimes(config.maxTimesDirect)
-	m.EXPECT().PostEphemeral(config.userID, config.channelID, config.message).MaxTimes(config.maxTimesEphemeral)
-	return m
-}
-
-type mockKVStoreConfig struct {
-	bytes            []byte
-	loadKey          string
-	loadBytes        []byte
-	loadErr          error
-	useStoreAnyKey   bool
-	useStoreAnyValue bool
-	storeKey         string
-	storeValue       []byte
-	storeErr         error
-	deleteKey        string
-	deleteErr        error
-	maxTimesLoad     int
-	maxTimesStore    int
-	maxTimesDelete   int
-}
-
-func getMockKVStore(ctrl *gomock.Controller, config *mockKVStoreConfig) kvstore.KVStore {
-	m := mock_kvstore.NewMockKVStore(ctrl)
-	m.EXPECT().Load(config.loadKey).Return(config.loadBytes, config.loadErr).MaxTimes(config.maxTimesLoad)
-
-	if config.useStoreAnyValue {
-		if config.useStoreAnyKey {
-			m.EXPECT().Store(gomock.Any(), gomock.Any()).Return(config.storeErr).MaxTimes(config.maxTimesStore)
-		} else {
-			m.EXPECT().Store(config.storeKey, gomock.Any()).Return(config.storeErr).MaxTimes(config.maxTimesStore)
-		}
-	} else {
-		m.EXPECT().Store(config.storeKey, config.storeValue).Return(config.storeErr).MaxTimes(config.maxTimesStore)
-	}
-
-	m.EXPECT().Delete(config.deleteKey).Return(config.deleteErr).MaxTimes(config.maxTimesDelete)
-
-	return m
-}
-
-type mockOAuth2StateStoreConfig struct {
-	useAnyStoreKey bool
-	storeKey       string
-	verifyKey      string
-	storeErr       error
-	verifyErr      error
-	maxTimesStore  int
-	maxTimesVerify int
-}
-
-func getMockOAuth2StateStore(ctrl *gomock.Controller, config *mockOAuth2StateStoreConfig) user.OAuth2StateStore {
-	m := mock_user.NewMockOAuth2StateStore(ctrl)
-	if config.useAnyStoreKey {
-		m.EXPECT().Store(gomock.Any()).Return(config.storeErr).MaxTimes(config.maxTimesStore)
-	} else {
-		m.EXPECT().Store(config.storeKey).Return(config.storeErr).MaxTimes(config.maxTimesStore)
-	}
-
-	m.EXPECT().Verify(config.verifyKey).Return(config.verifyErr).MaxTimes(config.maxTimesVerify)
-	return m
 }
