@@ -17,26 +17,24 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/command"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/http"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/command"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/http"
 )
 
 type Plugin struct {
 	plugin.MattermostPlugin
-	configLock  *sync.RWMutex
-	config      *config.Config
-	httpHandler *http.Handler
 
-	// KVStore           kvstore.KVStore
-	UserStore         store.UserStore
-	OAuth2StateStore  store.OAuth2StateStore
-	SubscriptionStore store.SubscriptionStore
-	Remote            remote.Remote
+	configLock   *sync.RWMutex
+	config       *config.Config
+	dependencies api.Dependencies
+	httpHandler  *http.Handler
 
 	Templates map[string]*template.Template
 }
@@ -74,14 +72,15 @@ func (p *Plugin) OnActivate() error {
 
 	// API dependencies
 	store := store.NewPluginStore(p.API)
-	p.UserStore = store
-	p.OAuth2StateStore = store
-	p.SubscriptionStore = store
+	p.dependencies = api.Dependencies{
+		UserStore:         store,
+		OAuth2StateStore:  store,
+		SubscriptionStore: store,
+		Logger:            p.API,
+	}
+	p.httpHandler = http.NewHandler()
 
-	// Handlers
 	command.Register(p.API.RegisterCommand)
-
-	p.httpHandler = p.newHTTPHandler(&(*p.config))
 
 	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil
@@ -121,9 +120,9 @@ func (p *Plugin) OnConfigurationChange() error {
 		c.PluginURL = pluginURL
 		c.PluginURLPath = pluginURLPath
 
-		clone := &(*c)
-		p.httpHandler = p.newHTTPHandler(clone)
-		p.Remote = remote.Makers[msgraph.Kind](clone, p.API)
+		cc := &(*c)
+		p.dependencies.Poster = bot.NewPoster(p.API, cc)
+		p.dependencies.Remote = remote.Makers[msgraph.Kind](cc, p.dependencies.Logger)
 	})
 
 	return nil
@@ -131,51 +130,32 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	conf := p.getConfig()
-
-	h := command.Handler{
-		Config:            conf,
-		UserStore:         p.UserStore,
-		SubscriptionStore: p.SubscriptionStore,
-		Poster:            bot.NewPoster(p.API, conf),
-		Logger:            p.API,
-		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
-		Remote:            p.Remote,
-		Context:           c,
-		Args:              args,
-		ChannelID:         args.ChannelId,
-		MattermostUserID:  args.UserId,
+	command := command.Command{
+		Context:   c,
+		Args:      args,
+		ChannelID: args.ChannelId,
+		Config:    conf,
+		API:       api.New(p.dependencies, conf, args.UserId),
 	}
-	out, err := h.Handle()
+
+	out, err := command.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
 		return nil, model.NewAppError("msofficeplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
-	h.Poster.PostEphemeral(args.UserId, args.ChannelId, out)
 
+	p.dependencies.Poster.PostEphemeral(args.UserId, args.ChannelId, out)
 	return &model.CommandResponse{}, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-	p.configLock.RLock()
-	handler := p.httpHandler
-	p.configLock.RUnlock()
+	mattermostUserID := r.Header.Get("Mattermost-User-ID")
+	conf := p.getConfig()
+	ctx := r.Context()
+	ctx = api.Context(ctx, api.New(p.dependencies, conf, mattermostUserID))
+	ctx = config.Context(ctx, conf)
 
-	handler.ServeHTTP(w, r)
-}
-
-func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
-	h := &http.Handler{
-		Config:            conf,
-		UserStore:         p.UserStore,
-		OAuth2StateStore:  p.OAuth2StateStore,
-		SubscriptionStore: p.SubscriptionStore,
-		Poster:            bot.NewPoster(p.API, conf),
-		Logger:            p.API,
-		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
-		Remote:            p.Remote,
-	}
-	h.InitRouter()
-	return h
+	p.httpHandler.ServeHTTP(w, r.WithContext(ctx))
 }
 
 func (p *Plugin) getConfig() *config.Config {

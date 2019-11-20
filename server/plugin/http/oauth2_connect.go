@@ -4,12 +4,8 @@
 package http
 
 import (
-	"fmt"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"net/http"
-
-	"golang.org/x/oauth2"
-
-	"github.com/mattermost/mattermost-server/model"
 )
 
 func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
@@ -19,14 +15,11 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conf := h.Remote.NewOAuth2Config()
-	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
-	err := h.OAuth2StateStore.StoreOAuth2State(state)
+	api := api.FromContext(r.Context())
+	url, err := api.InitOAuth2(userID)
 	if err != nil {
-		h.internalServerError(w, err)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-
-	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusFound)
 }

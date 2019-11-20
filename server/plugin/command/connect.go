@@ -9,9 +9,9 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 )
 
-func (r *Handler) connect(parameters ...string) (string, error) {
+func (c *Command) connect(parameters ...string) (string, error) {
 	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
 		config.ApplicationName,
-		r.Config.PluginURL)
+		c.Config.PluginURL)
 	return out, nil
 }

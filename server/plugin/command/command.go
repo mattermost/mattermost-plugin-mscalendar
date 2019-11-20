@@ -12,28 +12,18 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 
+	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 // Handler handles commands
-type Handler struct {
-	Config            *config.Config
-	UserStore         store.UserStore
-	SubscriptionStore store.SubscriptionStore
-	Logger            utils.Logger
-	Poster            bot.Poster
-	IsAuthorizedAdmin func(userId string) (bool, error)
-	Remote            remote.Remote
-
-	Context          *plugin.Context
-	Args             *model.CommandArgs
-	ChannelID        string
-	MattermostUserID string
-	User             *store.User
+type Command struct {
+	Context   *plugin.Context
+	Args      *model.CommandArgs
+	ChannelID string
+	Config    *config.Config
+	API       api.API
 }
 
 func getHelp() string {
@@ -61,31 +51,22 @@ func Register(registerFunc RegisterFunc) {
 }
 
 // Handle should be called by the plugin when a command invocation is received from the Mattermost server.
-func (h *Handler) Handle() (string, error) {
-	cmd, parameters, err := h.isValid()
+func (c *Command) Handle() (string, error) {
+	cmd, parameters, err := c.isValid()
 	if err != nil {
 		return "", err
 	}
 
-	h.MattermostUserID = h.Args.UserId
-	auth, err := h.IsAuthorizedAdmin(h.MattermostUserID)
-	if err != nil {
-		return "", errors.WithMessage(err, "Failed to get authorization. Please contact your system administrator.\nFailure")
-	}
-	if !auth {
-		return "", errors.New("You must be authorized to use the plugin. Please contact your system administrator.")
-	}
-
-	handler := h.help
+	handler := c.help
 	switch cmd {
 	case "info":
-		handler = h.info
+		handler = c.info
 	case "connect":
-		handler = h.connect
+		handler = c.connect
 	case "viewcal":
-		handler = h.viewCalendar
+		handler = c.viewCalendar
 	case "subscribe":
-		handler = h.subscribe
+		handler = c.subscribe
 	}
 	out, err := handler(parameters...)
 	if err != nil {
@@ -95,12 +76,11 @@ func (h *Handler) Handle() (string, error) {
 	return out, nil
 }
 
-func (h *Handler) isValid() (subcommand string, parameters []string, err error) {
-	if h.Context == nil || h.Args == nil || h.Config.MattermostSiteURL == "" {
+func (c *Command) isValid() (subcommand string, parameters []string, err error) {
+	if c.Context == nil || c.Args == nil {
 		return "", nil, errors.New("Invalid arguments to command.Handler")
 	}
-
-	split := strings.Fields(h.Args.Command)
+	split := strings.Fields(c.Args.Command)
 	command := split[0]
 	if command != "/"+config.CommandTrigger {
 		return "", nil, errors.Errorf("%q is not a supported command. Please contact your system administrator.", command)

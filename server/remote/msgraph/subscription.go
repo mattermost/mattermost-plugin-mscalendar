@@ -53,7 +53,8 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 	return nil
 }
 
-func (c *client) RenewSubscription(subscriptionID string, expires time.Time) error {
+func (c *client) RenewSubscription(subscriptionID string) (time.Time, error) {
+	expires := time.Now().Add(subscribeTTL)
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
 	}{
@@ -61,8 +62,8 @@ func (c *client) RenewSubscription(subscriptionID string, expires time.Time) err
 	}
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, "PATCH", "", v, nil)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
-	c.LogDebug("msgraph: renewed subscription until "+expires.Format(time.RFC3339), "subscriptionID", subscriptionID)
-	return nil
+	c.LogDebug("msgraph: renewed subscription until "+v.ExpirationDateTime, "subscriptionID", subscriptionID)
+	return expires, nil
 }

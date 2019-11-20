@@ -1,7 +1,7 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-package http
+package api
 
 import (
 	"errors"
@@ -10,30 +10,44 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"golang.org/x/oauth2"
 )
 
-func (h *Handler) webhookEvent(w http.ResponseWriter, req *http.Request) {
-	notifications := h.Remote.HandleEventNotification(w, req, h.loadUserSub)
+func (api *api) HandleEventNotification(w http.ResponseWriter, req *http.Request) {
+	notifications := api.Remote.HandleEventNotification(w, req, api.loadUserSubscription)
+
 	go func() {
 		for _, n := range notifications {
-			message := h.formatNotification(n)
+			message := api.formatEventNotification(n)
 			if message == "" {
 				continue
 			}
-			err := h.Poster.PostDirect(n.SubscriptionCreatorMattermostUserID, message, "")
+			err := api.Poster.PostDirect(n.SubscriptionCreatorMattermostUserID, message, "")
 			if err != nil {
-				h.internalServerError(w, err)
-				return
+				api.Logger.LogInfo("Failed to post notification message: " + err.Error())
+				continue
 			}
 		}
 	}()
-	return
 }
 
-func (h *Handler) formatNotification(n *remote.EventNotification) string {
+func (api *api) loadUserSubscription(subscriptionID string) (*remote.User, *oauth2.Token, string, *remote.Subscription, error) {
+	sub, err := api.SubscriptionStore.LoadSubscription(subscriptionID)
+	if err != nil {
+		return nil, nil, "", nil, err
+	}
+	creator, err := api.UserStore.LoadUser(sub.MattermostCreatorID)
+	if err != nil {
+		return nil, nil, "", nil, err
+	}
+	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
+		return nil, nil, "", nil, errors.New("Subscription is orphaned")
+	}
+	return creator.Remote, creator.OAuth2Token, creator.MattermostUserID, sub.Remote, nil
+}
+
+func (api *api) formatEventNotification(n *remote.EventNotification) string {
 	//TODO: make work with nil Events (deleted)
 	// isAttendee := false
 	// for _, a := range n.Event.Attendees {
@@ -155,19 +169,4 @@ func (h *Handler) formatNotification(n *remote.EventNotification) string {
 	out := fmt.Sprintf("%s\n- Subject: %s\n- Summary: %s\n", headline, subject, body)
 
 	return out
-}
-
-func (h *Handler) loadUserSub(subID string) (*remote.User, *oauth2.Token, string, *remote.Subscription, error) {
-	sub, err := h.SubscriptionStore.LoadSubscription(subID)
-	if err != nil {
-		return nil, nil, "", nil, err
-	}
-	creator, err := h.UserStore.LoadUser(sub.MattermostCreatorID)
-	if err != nil {
-		return nil, nil, "", nil, err
-	}
-	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
-		return nil, nil, "", nil, errors.New("Subscription is orphaned")
-	}
-	return creator.Remote, creator.OAuth2Token, creator.MattermostUserID, sub.Remote, nil
 }
