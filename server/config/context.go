@@ -4,7 +4,7 @@ import "fmt"
 
 import "context"
 
-var contextKey = fmt.Sprintf("%T", Config{})
+var contextKey = Repository + "/" + fmt.Sprintf("%T", Config{})
 
 func Context(ctx context.Context, conf *Config) context.Context {
 	return context.WithValue(ctx, contextKey, conf)

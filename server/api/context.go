@@ -1,10 +1,13 @@
 package api
 
-import "fmt"
+import (
+	"context"
+	"fmt"
 
-import "context"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+)
 
-var contextKey = fmt.Sprintf("%T", api{})
+var contextKey = config.Repository + "/" + fmt.Sprintf("%T", api{})
 
 func Context(ctx context.Context, api API) context.Context {
 	return context.WithValue(ctx, contextKey, api)
