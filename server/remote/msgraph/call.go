@@ -17,12 +17,6 @@ import (
 )
 
 func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
-	// parts := strings.Split(path, "/")
-	// if len(parts) != 4 || !strings.EqualFold(k1, parts[0]) || !strings.EqualFold(k2, parts[2]) {
-	// 	return errors.Errorf("invalid resource format %q, expected /%s/{id}/%s/{id}", path, k1, k2)
-	// }
-	// id1, id2 := parts[1], parts[3]
-
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	baseURL, err := url.Parse(c.rbuilder.URL())
 	if err != nil {

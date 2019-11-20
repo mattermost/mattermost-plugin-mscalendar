@@ -28,13 +28,11 @@ func (dt DateTime) String() string {
 func (dt DateTime) Time() time.Time {
 	loc, err := time.LoadLocation(dt.TimeZone)
 	if err != nil {
-		panic(err.Error())
 		return time.Time{}
 	}
 
 	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999999", dt.DateTime, loc)
 	if err != nil {
-		panic(err.Error())
 		return time.Time{}
 	}
 	return t

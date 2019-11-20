@@ -86,7 +86,7 @@ func (h *Handler) authorizationRequired(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		h.Logger.LogInfo("Not authorised", "userID", userID)
+		h.Logger.LogInfo("Not authorized", "userID", userID)
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 	})
 }
