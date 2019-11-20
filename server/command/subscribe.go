@@ -24,7 +24,7 @@ func (h *Handler) subscribe(parameters ...string) (string, error) {
 		client := h.Remote.NewClient(context.Background(), user.OAuth2Token)
 		// sub, err := client.CreateEventSubscription(
 		sub, err := client.CreateEventMessageSubscription(
-			h.Config.PluginURL + config.EventWebhookFullPath)
+			h.Config.PluginURL + config.EventNotificationFullPath)
 		if err != nil {
 			return "", err
 		}

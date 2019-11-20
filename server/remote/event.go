@@ -22,40 +22,6 @@ type Event struct {
 	Organizer         *EventAttendee       `json:"organizer,omitempty"`
 }
 
-const (
-	ChangeInvitedMe           = "invited.me"
-	ChangeAccepted            = "accepted"
-	ChangeTentativelyAccepted = "tentativelyAccepted"
-	ChangeMeetingCancelled    = "meetingCancelled"
-	ChangeDeclined            = "declined"
-	ChangeEventCreated        = "eventCreated"
-	ChangeEventUpdated        = "eventUpdated"
-	ChangeEventDeleted        = "eventDeleted"
-)
-
-type EventNotification struct {
-	Change                              string
-	GraphChangeType                     string
-	Event                               *Event
-	EventMessage                        *EventMessage
-	SubscriptionID                      string
-	Subscription                        *Subscription
-	SubscriptionCreator                 *User
-	SubscriptionCreatorMattermostUserID string
-}
-type EventMessage struct {
-	ID                 string        `json:"id"`
-	SentDateTime       string        `json:"sentDateTime,omitrmpty"`
-	Subject            string        `json:"subject,omitempty"`
-	BodyPreview        string        `json:"bodyPreview,omitempty"`
-	Importance         string        `json:"importance,omitempty"`
-	Weblink            string        `json:"weblink,omitempty"`
-	MeetingMessageType string        `json:"meetingMessageType,omitempty"`
-	Sender             *EmailAddress `json:"sender,omitempty"`
-	From               *EmailAddress `json:"from,omitempty"`
-	Event              *Event        `json:"event,omitempty"`
-}
-
 type EventResponseStatus struct {
 	Response string `json:"response,omitempty"`
 	Time     string `json:"time,omitempty"`

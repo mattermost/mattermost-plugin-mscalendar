@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -15,7 +16,7 @@ import (
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 
-func (c *client) Call(method, path string, in, out interface{}) error {
+func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
 	// parts := strings.Split(path, "/")
 	// if len(parts) != 4 || !strings.EqualFold(k1, parts[0]) || !strings.EqualFold(k2, parts[2]) {
 	// 	return errors.Errorf("invalid resource format %q, expected /%s/{id}/%s/{id}", path, k1, k2)
@@ -25,7 +26,7 @@ func (c *client) Call(method, path string, in, out interface{}) error {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	baseURL, err := url.Parse(c.rbuilder.URL())
 	if err != nil {
-		return errors.WithMessage(err, errContext)
+		return nil, errors.WithMessage(err, errContext)
 	}
 	if len(path) > 0 && path[0] != '/' {
 		path = "/" + path
@@ -37,12 +38,12 @@ func (c *client) Call(method, path string, in, out interface{}) error {
 		buf := &bytes.Buffer{}
 		err = json.NewEncoder(buf).Encode(in)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	req, err := http.NewRequest(method, path, inBody)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if inBody != nil {
 		req.Header.Add("Content-Type", "application/json")
@@ -53,35 +54,38 @@ func (c *client) Call(method, path string, in, out interface{}) error {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Body == nil {
-		return nil
+		return nil, nil
 	}
 	defer resp.Body.Close()
 
+	responseData, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
 		if out != nil {
-			err := json.NewDecoder(resp.Body).Decode(out)
+			err = json.Unmarshal(responseData, out)
 			if err != nil {
-				return err
+				return responseData, err
 			}
 		}
-		return nil
+		return responseData, nil
 
 	case http.StatusNoContent:
-		return nil
-
+		return nil, nil
 	}
 
 	errResp := msgraph.ErrorResponse{Response: resp}
-	err = json.NewDecoder(resp.Body).Decode(&errResp)
+	err = json.Unmarshal(responseData, &errResp)
 	if err != nil {
-		return errors.WithMessagef(err, "status: %s", resp.Status)
+		return responseData, errors.WithMessagef(err, "status: %s", resp.Status)
 	}
 	if err != nil {
-		return err
+		return responseData, err
 	}
-	return &errResp
+	return responseData, &errResp
 }

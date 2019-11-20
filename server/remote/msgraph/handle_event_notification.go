@@ -55,20 +55,18 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 			"error", err.Error())
 		return nil
 	}
+	defer w.WriteHeader(http.StatusAccepted)
 
 	notifications := []*remote.EventNotification{}
 	for _, wh := range v.Value {
 		creator, token, creatorMattermostID, sub, err := loadf(wh.SubscriptionID)
 		if err != nil {
-			// w.WriteHeader(http.StatusNotFound)
-			w.WriteHeader(http.StatusAccepted)
 			r.logger.LogInfo("Failed to process webhook",
 				"error", err.Error())
 			return nil
 		}
 
 		if sub.ClientState != "" && sub.ClientState != wh.ClientState {
-			w.WriteHeader(http.StatusUnauthorized)
 			r.logger.LogInfo("Unauthorized webhook")
 			return nil
 		}
@@ -85,18 +83,18 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 		case "#Microsoft.Graph.Message":
 			em := remote.EventMessage{}
 			path := wh.Resource + "?$expand=microsoft.graph.eventMessage/Event"
-			err = client.Call(http.MethodGet, path, nil, &em)
+			var entityData []byte
+			entityData, err = client.Call(http.MethodGet, path, nil, &em)
 			if err != nil {
 				r.logger.LogInfo("Error fetching resource",
 					"error", err.Error(),
 					"subscriptionID", wh.SubscriptionID,
 					"creatorID", creator.ID)
-				w.WriteHeader(http.StatusAccepted)
-				// w.WriteHeader(http.StatusInternalServerError)
 				return nil
 			}
 			n.EventMessage = &em
 			n.Event = em.Event
+			n.EntityRawData = entityData
 
 			switch em.MeetingMessageType {
 			case "meetingRequest":
@@ -114,22 +112,22 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 					"subscriptionID", wh.SubscriptionID,
 					"creatorID", creator.ID,
 					"subject", em.Subject)
-				w.WriteHeader(http.StatusAccepted)
 				return nil
 			}
 
 		case "#Microsoft.Graph.Event":
 			event := remote.Event{}
-			err = client.Call(http.MethodGet, wh.Resource, nil, &event)
+			var entityData []byte
+			entityData, err = client.Call(http.MethodGet, wh.Resource, nil, &event)
 			if err != nil {
 				r.logger.LogInfo("Error fetching resource",
 					"error", err.Error(),
 					"subscriptionID", wh.SubscriptionID,
 					"creatorID", creator.ID)
-				w.WriteHeader(http.StatusAccepted)
 				return nil
 			}
 			n.Event = &event
+			n.EntityRawData = entityData
 
 			switch wh.ChangeType {
 			case "created":
@@ -142,7 +140,6 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 				r.logger.LogInfo("Unrecognized Event change type: "+wh.ChangeType,
 					"subscriptionID", wh.SubscriptionID,
 					"creatorID", creator.ID)
-				w.WriteHeader(http.StatusAccepted)
 				return nil
 			}
 
@@ -150,7 +147,6 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 			r.logger.LogInfo("Unknown resource type: "+wh.ResourceData.DataType,
 				"subscriptionID", wh.SubscriptionID,
 				"creatorID", creator.ID)
-			w.WriteHeader(http.StatusAccepted)
 			return nil
 		}
 

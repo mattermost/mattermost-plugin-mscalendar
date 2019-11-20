@@ -6,7 +6,7 @@ package remote
 import "time"
 
 type Client interface {
-	Call(method, path string, in, out interface{}) error
+	Call(method, path string, in, out interface{}) (responseData []byte, err error)
 	CreateEventSubscription(notificationURL string) (*Subscription, error)
 	CreateEventMessageSubscription(notificationURL string) (*Subscription, error)
 	RenewSubscription(subscriptionID string, expires time.Time) error

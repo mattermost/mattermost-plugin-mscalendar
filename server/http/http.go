@@ -32,17 +32,17 @@ type Handler struct {
 // InitRouter initializes the router.
 func (h *Handler) InitRouter() {
 	h.root = mux.NewRouter()
-	api := h.root.PathPrefix(config.APIPath).Subrouter()
-	api.Use(h.authorizationRequired)
-	api.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
+	apiRouter := h.root.PathPrefix(config.APIPath).Subrouter()
+	apiRouter.Use(h.authorizationRequired)
+	apiRouter.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
 
-	webhook := h.root.PathPrefix(config.WebhookPath).Subrouter()
-	webhook.HandleFunc(config.WebhookEventPath, h.webhookEvent).Methods("POST")
+	notificationRouter := h.root.PathPrefix(config.NotificationPath).Subrouter()
+	notificationRouter.HandleFunc(config.EventNotificationPath, h.webhookEvent).Methods("POST")
 
-	oauth2 := h.root.PathPrefix(config.OAuth2Path).Subrouter()
-	oauth2.Use(h.authorizationRequired)
-	oauth2.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
-	oauth2.HandleFunc(config.OAuth2CompletePath, h.oauth2Complete).Methods("GET")
+	oauth2Router := h.root.PathPrefix(config.OAuth2Path).Subrouter()
+	oauth2Router.Use(h.authorizationRequired)
+	oauth2Router.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
+	oauth2Router.HandleFunc(config.OAuth2CompletePath, h.oauth2Complete).Methods("GET")
 
 	h.root.Handle("{anything:.*}", http.NotFoundHandler())
 	return
