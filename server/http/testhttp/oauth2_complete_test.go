@@ -53,9 +53,6 @@ func TestOAuth2Complete(t *testing.T) {
 		handler               shttp.Handler
 		r                     *http.Request
 		w                     *mockResponseWriter
-		mockKVStore           *mock_kvstore.MockKVStore
-		mockOAuth2StateStore  *mock_user.MockOAuth2StateStore
-		mockBotPoster         *mock_utils.MockBotPoster
 		setupMocks            func(*mock_kvstore.MockKVStore, *mock_user.MockOAuth2StateStore, *mock_utils.MockBotPoster)
 		registerResponderFunc func()
 		expectedHTTPResponse  string
@@ -67,12 +64,9 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
-			setupMocks:           func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
-			r:                    &http.Request{},
-			w:                    defaultMockResponseWriter(),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
+			r:          &http.Request{},
+			w:          defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "Not authorized\n",
 			expectedHTTPCode:      http.StatusUnauthorized,
@@ -83,12 +77,9 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
-			setupMocks:           func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
-			r:                    makeUserRequest("fake@mattermost.com", "code="),
-			w:                    defaultMockResponseWriter(),
+			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
+			r:          makeUserRequest("fake@mattermost.com", "code="),
+			w:          defaultMockResponseWriter(),
 			registerResponderFunc: func() {},
 			expectedHTTPResponse:  "missing authorization code\n",
 			expectedHTTPCode:      http.StatusBadRequest,
@@ -99,9 +90,6 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Verify(gomock.Eq("")).Return(errors.New("unable to verify state")).Times(1)
 			},
@@ -117,9 +105,6 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Verify(gomock.Eq("user_nomatch@mattermost.com")).Return(nil).Times(1)
 			},
@@ -135,9 +120,6 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Verify(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
@@ -153,9 +135,6 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Verify(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
@@ -174,9 +153,6 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				kv.EXPECT().Store(gomock.Any(), gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
 				ss.EXPECT().Verify(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
@@ -193,9 +169,6 @@ func TestOAuth2Complete(t *testing.T) {
 				Config: config,
 				API:    api,
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				kv.
 					EXPECT().
@@ -238,11 +211,16 @@ func TestOAuth2Complete(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.registerResponderFunc()
-			tc.setupMocks(tc.mockKVStore, tc.mockOAuth2StateStore, tc.mockBotPoster)
 
-			tc.handler.UserStore = user.NewStore(tc.mockKVStore)
-			tc.handler.OAuth2StateStore = tc.mockOAuth2StateStore
-			tc.handler.BotPoster = tc.mockBotPoster
+			mockKVStore := mock_kvstore.NewMockKVStore(ctrl)
+			mockOAuth2StateStore := mock_user.NewMockOAuth2StateStore(ctrl)
+			mockBotPoster := mock_utils.NewMockBotPoster(ctrl)
+
+			tc.setupMocks(mockKVStore, mockOAuth2StateStore, mockBotPoster)
+
+			tc.handler.UserStore = user.NewStore(mockKVStore)
+			tc.handler.OAuth2StateStore = mockOAuth2StateStore
+			tc.handler.BotPoster = mockBotPoster
 
 			tc.handler.OAuth2Complete(tc.w, tc.r)
 

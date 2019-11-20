@@ -24,9 +24,6 @@ func TestOAuth2Connect(t *testing.T) {
 		handler              shttp.Handler
 		r                    *http.Request
 		w                    *mockResponseWriter
-		mockKVStore          *mock_kvstore.MockKVStore
-		mockOAuth2StateStore *mock_user.MockOAuth2StateStore
-		mockBotPoster        *mock_utils.MockBotPoster
 		setupMocks           func(*mock_kvstore.MockKVStore, *mock_user.MockOAuth2StateStore, *mock_utils.MockBotPoster)
 		expectedHTTPResponse string
 		expectedHTTPCode     int
@@ -38,9 +35,6 @@ func TestOAuth2Connect(t *testing.T) {
 			handler: shttp.Handler{
 				Config: &config.Config{},
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks:           func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
 			expectedHTTPResponse: "Not authorized\n",
 			expectedHTTPCode:     http.StatusUnauthorized,
@@ -52,9 +46,6 @@ func TestOAuth2Connect(t *testing.T) {
 			handler: shttp.Handler{
 				Config: &config.Config{},
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Store(gomock.Any()).Return(errors.New("unable to store state")).Times(1)
 			},
@@ -68,9 +59,6 @@ func TestOAuth2Connect(t *testing.T) {
 			handler: shttp.Handler{
 				Config: &config.Config{},
 			},
-			mockKVStore:          mock_kvstore.NewMockKVStore(ctrl),
-			mockOAuth2StateStore: mock_user.NewMockOAuth2StateStore(ctrl),
-			mockBotPoster:        mock_utils.NewMockBotPoster(ctrl),
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Store(gomock.Any()).Return(nil).Times(1)
 			},
@@ -81,10 +69,14 @@ func TestOAuth2Connect(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setupMocks(tc.mockKVStore, tc.mockOAuth2StateStore, tc.mockBotPoster)
+			mockKVStore := mock_kvstore.NewMockKVStore(ctrl)
+			mockOAuth2StateStore := mock_user.NewMockOAuth2StateStore(ctrl)
+			mockBotPoster := mock_utils.NewMockBotPoster(ctrl)
 
-			tc.handler.UserStore = user.NewStore(tc.mockKVStore)
-			tc.handler.OAuth2StateStore = tc.mockOAuth2StateStore
+			tc.setupMocks(mockKVStore, mockOAuth2StateStore, mockBotPoster)
+
+			tc.handler.UserStore = user.NewStore(mockKVStore)
+			tc.handler.OAuth2StateStore = mockOAuth2StateStore
 
 			tc.handler.OAuth2Connect(tc.w, tc.r)
 
