@@ -21,20 +21,14 @@ func TestOAuth2Connect(t *testing.T) {
 
 	tcs := []struct {
 		name                 string
-		handler              shttp.Handler
 		r                    *http.Request
-		w                    *mockResponseWriter
 		setupMocks           func(*mock_kvstore.MockKVStore, *mock_user.MockOAuth2StateStore, *mock_utils.MockBotPoster)
 		expectedHTTPResponse string
 		expectedHTTPCode     int
 	}{
 		{
-			name: "unauthorized user",
-			r:    &http.Request{},
-			w:    defaultMockResponseWriter(),
-			handler: shttp.Handler{
-				Config: &config.Config{},
-			},
+			name:                 "unauthorized user",
+			r:                    &http.Request{},
 			setupMocks:           func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {},
 			expectedHTTPResponse: "Not authorized\n",
 			expectedHTTPCode:     http.StatusUnauthorized,
@@ -42,10 +36,6 @@ func TestOAuth2Connect(t *testing.T) {
 		{
 			name: "unable to store user state",
 			r:    makeUserRequest("fake@mattermost.com", ""),
-			w:    defaultMockResponseWriter(),
-			handler: shttp.Handler{
-				Config: &config.Config{},
-			},
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Store(gomock.Any()).Return(errors.New("unable to store state")).Times(1)
 			},
@@ -55,10 +45,6 @@ func TestOAuth2Connect(t *testing.T) {
 		{
 			name: "successful redirect",
 			r:    makeUserRequest("fake@mattermost.com", ""),
-			w:    defaultMockResponseWriter(),
-			handler: shttp.Handler{
-				Config: &config.Config{},
-			},
 			setupMocks: func(kv *mock_kvstore.MockKVStore, ss *mock_user.MockOAuth2StateStore, bp *mock_utils.MockBotPoster) {
 				ss.EXPECT().Store(gomock.Any()).Return(nil).Times(1)
 			},
@@ -75,13 +61,19 @@ func TestOAuth2Connect(t *testing.T) {
 
 			tc.setupMocks(mockKVStore, mockOAuth2StateStore, mockBotPoster)
 
-			tc.handler.UserStore = user.NewStore(mockKVStore)
-			tc.handler.OAuth2StateStore = mockOAuth2StateStore
+			handler := shttp.Handler{
+				Config: &config.Config{},
+			}
 
-			tc.handler.OAuth2Connect(tc.w, tc.r)
+			w := defaultMockResponseWriter()
 
-			assert.Equal(t, tc.expectedHTTPCode, tc.w.StatusCode)
-			assert.Equal(t, tc.expectedHTTPResponse, string(tc.w.Bytes))
+			handler.UserStore = user.NewStore(mockKVStore)
+			handler.OAuth2StateStore = mockOAuth2StateStore
+
+			handler.OAuth2Connect(w, tc.r)
+
+			assert.Equal(t, tc.expectedHTTPCode, w.StatusCode)
+			assert.Equal(t, tc.expectedHTTPResponse, string(w.Bytes))
 		})
 	}
 }
