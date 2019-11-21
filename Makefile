@@ -79,6 +79,15 @@ golint:
 	$(GOPATH)/bin/golint -set_exit_status ./...
 	@echo lint success
 
+## Generates mock golang interfaces for testing
+mock:
+ifneq ($(HAS_SERVER),)
+	go install github.com/golang/mock/mockgen
+	mockgen -destination server/user/mock_user/mock_oauth2_store.go github.com/mattermost/mattermost-plugin-msoffice/server/user OAuth2StateStore
+	mockgen -destination server/utils/mock_utils/mock_bot_poster.go github.com/mattermost/mattermost-plugin-msoffice/server/utils BotPoster
+	mockgen -destination server/kvstore/mock_kvstore/mock_kvstore.go github.com/mattermost/mattermost-plugin-msoffice/server/kvstore KVStore
+endif
+
 ## Builds the server, if it exists, including support for multiple architectures.
 .PHONY: server
 server:

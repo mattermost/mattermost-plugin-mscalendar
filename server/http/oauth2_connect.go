@@ -12,10 +12,9 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/msgraph"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 )
 
-func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) OAuth2Connect(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("Mattermost-User-ID")
 	if userID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
@@ -24,8 +23,7 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 
 	conf := msgraph.GetOAuth2Config(h.Config)
 	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
-	stateStore := user.NewOAuth2StateStore(h.API)
-	err := stateStore.Store(state)
+	err := h.OAuth2StateStore.Store(state)
 	if err != nil {
 		h.jsonError(w, err)
 		return

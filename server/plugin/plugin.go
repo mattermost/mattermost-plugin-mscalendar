@@ -156,6 +156,7 @@ func (p *Plugin) newHTTPHandler(conf *config.Config) *http.Handler {
 		API:               p.API,
 		BotPoster:         utils.NewBotPoster(conf, p.API),
 		IsAuthorizedAdmin: p.IsAuthorizedAdmin,
+		OAuth2StateStore:  p.OAuth2StateStore,
 	}
 	h.InitRouter()
 	return h

@@ -14,7 +14,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/user"
 )
 
-func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) OAuth2Complete(w http.ResponseWriter, r *http.Request) {
 	authedUserID := r.Header.Get("Mattermost-User-ID")
 	if authedUserID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
@@ -31,8 +31,7 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := r.URL.Query().Get("state")
-	stateStore := user.NewOAuth2StateStore(h.API)
-	err := stateStore.Verify(state)
+	err := h.OAuth2StateStore.Verify(state)
 	if err != nil {
 		http.Error(w, "missing stored state: "+err.Error(), http.StatusBadRequest)
 		return
