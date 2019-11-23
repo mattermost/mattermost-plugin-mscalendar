@@ -47,24 +47,24 @@ func NewWithConfig(conf *config.Config) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	bundlePath, err := p.API.GetBundlePath()
+	botUserID, err := p.Helpers.EnsureBot(&model.Bot{
+		Username:    config.BotUserName,
+		DisplayName: config.BotDisplayName,
+		Description: config.BotDescription,
+	}, plugin.ProfileImagePath("assets/profile.png"))
 	if err != nil {
-		return errors.Wrap(err, "couldn't get bundle path")
+		return errors.Wrap(err, "failed to ensure bot account")
 	}
 
-	// Set up or update the plugin's bot account
-	botUserID, err := bot.EnsureWithProfileImage(
-		p.API, p.Helpers,
-		config.BotUserName, config.BotDisplayName, config.BotDescription,
-		filepath.Join(bundlePath, "assets", "profile.png"))
-	if err != nil {
-		return err
-	}
 	p.updateConfig(func(conf *config.Config) {
 		conf.BotUserID = botUserID
 	})
 
 	// Templates
+	bundlePath, err := p.API.GetBundlePath()
+	if err != nil {
+		return errors.Wrap(err, "couldn't get bundle path")
+	}
 	err = p.loadTemplates(bundlePath)
 	if err != nil {
 		return err
