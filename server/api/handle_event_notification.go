@@ -15,6 +15,7 @@ import (
 )
 
 func (api *api) HandleEventNotification(w http.ResponseWriter, req *http.Request) {
+	api.Logger.LogDebug("<><> webhookEvent: " + req.URL.String())
 	notifications := api.Remote.HandleEventNotification(w, req, api.loadUserSubscription)
 
 	go func() {
@@ -23,6 +24,11 @@ func (api *api) HandleEventNotification(w http.ResponseWriter, req *http.Request
 			if message == "" {
 				continue
 			}
+			api.Logger.LogDebug("Processed event notification",
+				"MattermostUserID", n.SubscriptionCreatorMattermostUserID,
+				"SubsriptionID", n.SubscriptionID,
+				"Message", message)
+
 			err := api.Poster.PostDirect(n.SubscriptionCreatorMattermostUserID, message, "")
 			if err != nil {
 				api.Logger.LogInfo("Failed to post notification message: " + err.Error())

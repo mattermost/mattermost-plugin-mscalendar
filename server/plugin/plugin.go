@@ -148,14 +148,15 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	return &model.CommandResponse{}, nil
 }
 
-func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-	mattermostUserID := r.Header.Get("Mattermost-User-ID")
+func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *gohttp.Request) {
+	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 	conf := p.getConfig()
-	ctx := r.Context()
+	ctx := req.Context()
 	ctx = api.Context(ctx, api.New(p.dependencies, conf, mattermostUserID))
 	ctx = config.Context(ctx, conf)
 
-	p.httpHandler.ServeHTTP(w, r.WithContext(ctx))
+	p.API.LogDebug("<><> ServeHTTP: " + req.URL.String())
+	p.httpHandler.ServeHTTP(w, req.WithContext(ctx))
 }
 
 func (p *Plugin) getConfig() *config.Config {
