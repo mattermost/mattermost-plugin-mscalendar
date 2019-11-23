@@ -4,8 +4,9 @@
 package http
 
 import (
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"net/http"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 )
 
 func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
@@ -15,13 +16,11 @@ func (h *Handler) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
-
 	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
 		http.Error(w, "missing authorization code", http.StatusBadRequest)
 		return
 	}
-
 	state := r.URL.Query().Get("state")
 
 	err := api.CompleteOAuth2(mattermostUserID, code, state)

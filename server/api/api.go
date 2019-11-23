@@ -33,9 +33,12 @@ type Calendar interface {
 	ViewCalendar(from, to time.Time) ([]*remote.Event, error)
 }
 
-type API interface {
+type Client interface {
 	MakeClient() (remote.Client, error)
+}
 
+type API interface {
+	Client
 	OAuth2
 	Subscriptions
 	Calendar

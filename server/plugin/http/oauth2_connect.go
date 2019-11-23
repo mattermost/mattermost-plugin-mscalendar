@@ -18,7 +18,7 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 	api := api.FromContext(r.Context())
 	url, err := api.InitOAuth2(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, url, http.StatusFound)

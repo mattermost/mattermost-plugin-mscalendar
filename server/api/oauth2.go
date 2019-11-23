@@ -32,12 +32,12 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 
 	err := api.OAuth2StateStore.VerifyOAuth2State(state)
 	if err != nil {
-		return errors.WithMessage(err, "missing stored state: "+err.Error())
+		return errors.WithMessage(err, "missing stored state")
 	}
 
 	mattermostUserID := strings.Split(state, "_")[1]
 	if mattermostUserID != authedUserID {
-		return errors.WithMessage(err, "not authorized")
+		return errors.New("not authorized, user ID mismatch")
 	}
 
 	ctx := context.Background()
