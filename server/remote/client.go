@@ -9,6 +9,7 @@ type Client interface {
 	Call(method, path string, in, out interface{}) (responseData []byte, err error)
 	CreateEventSubscription(notificationURL string) (*Subscription, error)
 	CreateEventMessageSubscription(notificationURL string) (*Subscription, error)
+	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (time.Time, error)
 	DeleteSubscription(subscriptionID string) error
 	GetMe() (*User, error)

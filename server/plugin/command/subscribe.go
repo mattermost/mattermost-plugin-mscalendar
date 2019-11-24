@@ -18,6 +18,13 @@ func (c *Command) subscribe(parameters ...string) (string, error) {
 		}
 		return fmt.Sprintf("Subscription %s created.", storedSub.Remote.ID), nil
 
+	case len(parameters) == 1 && parameters[0] == "list":
+		subs, err := c.API.ListRemoteSubscriptions()
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("Subscriptions:%s", utils.JSONBlock(subs)), nil
+
 	case len(parameters) == 1 && parameters[0] == "show":
 		storedSub, err := c.API.LoadUserEventSubscription()
 		if err != nil {

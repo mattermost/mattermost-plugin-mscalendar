@@ -25,6 +25,7 @@ type Subscriptions interface {
 	RenewUserEventSubscription() (*store.Subscription, error)
 	DeleteOrphanedSubscription(ID string) error
 	DeleteUserEventSubscription() error
+	ListRemoteSubscriptions() ([]*remote.Subscription, error)
 	LoadUserEventSubscription() (*store.Subscription, error)
 	HandleEventNotification(w http.ResponseWriter, req *http.Request)
 }

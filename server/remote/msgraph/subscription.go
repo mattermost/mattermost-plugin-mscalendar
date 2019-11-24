@@ -4,6 +4,7 @@
 package msgraph
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -60,10 +61,22 @@ func (c *client) RenewSubscription(subscriptionID string) (time.Time, error) {
 	}{
 		expires.Format(time.RFC3339),
 	}
-	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, "PATCH", "", v, nil)
+	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, nil)
 	if err != nil {
 		return time.Time{}, err
 	}
 	c.LogDebug("msgraph: renewed subscription until "+v.ExpirationDateTime, "subscriptionID", subscriptionID)
 	return expires, nil
+}
+
+func (c *client) ListSubscriptions() ([]*remote.Subscription, error) {
+	var v struct {
+		Value []*remote.Subscription `json:"value"`
+	}
+	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
+	if err != nil {
+		return nil, err
+	}
+	c.LogDebug(fmt.Sprintf("GetSubscriptions: returned %d subscriptions", len(v.Value)))
+	return v.Value, nil
 }

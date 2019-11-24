@@ -4,21 +4,19 @@
 package api
 
 import (
-	"context"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/pkg/errors"
 )
 
 func (api *api) CreateUserEventSubscription() (*store.Subscription, error) {
-	err := api.Filter(withUser)
+	client, err := api.MakeClient()
 	if err != nil {
 		return nil, err
 	}
-
-	client := api.Remote.NewClient(context.Background(), api.user.OAuth2Token)
 	// sub, err := client.CreateEventSubscription(
 	sub, err := client.CreateEventMessageSubscription(
 		api.Config.PluginURL + config.EventNotificationFullPath)
@@ -50,6 +48,18 @@ func (api *api) LoadUserEventSubscription() (*store.Subscription, error) {
 		return nil, err
 	}
 	return storedSub, err
+}
+
+func (api *api) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
+	client, err := api.MakeClient()
+	if err != nil {
+		return nil, err
+	}
+	subs, err := client.ListSubscriptions()
+	if err != nil {
+		return nil, err
+	}
+	return subs, nil
 }
 
 func (api *api) RenewUserEventSubscription() (*store.Subscription, error) {
@@ -98,12 +108,10 @@ func (api *api) DeleteUserEventSubscription() error {
 }
 
 func (api *api) DeleteOrphanedSubscription(subscriptionID string) error {
-	err := api.Filter(withUser)
+	client, err := api.MakeClient()
 	if err != nil {
-		return err
+		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 	}
-
-	client := api.Remote.NewClient(context.Background(), api.user.OAuth2Token)
 	err = client.DeleteSubscription(subscriptionID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
