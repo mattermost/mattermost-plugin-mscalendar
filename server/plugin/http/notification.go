@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 )
 
-func (h *Handler) notificationEvent(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) notification(w http.ResponseWriter, req *http.Request) {
 	handler := api.NotificationHandlerFromContext(req.Context())
 	handler.ServeHTTP(w, req)
 	return

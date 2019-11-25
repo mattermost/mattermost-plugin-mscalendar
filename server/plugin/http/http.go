@@ -28,7 +28,7 @@ func NewHandler() *Handler {
 	apiRouter.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
 
 	notificationRouter := h.Router.PathPrefix(config.NotificationPath).Subrouter()
-	notificationRouter.HandleFunc(config.EventNotificationPath, h.notificationEvent).Methods("POST")
+	notificationRouter.HandleFunc(config.EventNotificationPath, h.notification).Methods("POST")
 
 	oauth2Router := h.Router.PathPrefix(config.OAuth2Path).Subrouter()
 	oauth2Router.HandleFunc("/connect", h.oauth2Connect).Methods("GET")

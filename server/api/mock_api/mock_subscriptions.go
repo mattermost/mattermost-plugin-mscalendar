@@ -6,8 +6,8 @@ package mock_api
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	remote "github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	store "github.com/mattermost/mattermost-plugin-msoffice/server/store"
-	http "net/http"
 	reflect "reflect"
 )
 
@@ -77,16 +77,19 @@ func (mr *MockSubscriptionsMockRecorder) DeleteUserEventSubscription() *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserEventSubscription", reflect.TypeOf((*MockSubscriptions)(nil).DeleteUserEventSubscription))
 }
 
-// HandleEventNotification mocks base method
-func (m *MockSubscriptions) HandleEventNotification(arg0 http.ResponseWriter, arg1 *http.Request) {
+// ListRemoteSubscriptions mocks base method
+func (m *MockSubscriptions) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "HandleEventNotification", arg0, arg1)
+	ret := m.ctrl.Call(m, "ListRemoteSubscriptions")
+	ret0, _ := ret[0].([]*remote.Subscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// HandleEventNotification indicates an expected call of HandleEventNotification
-func (mr *MockSubscriptionsMockRecorder) HandleEventNotification(arg0, arg1 interface{}) *gomock.Call {
+// ListRemoteSubscriptions indicates an expected call of ListRemoteSubscriptions
+func (mr *MockSubscriptionsMockRecorder) ListRemoteSubscriptions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleEventNotification", reflect.TypeOf((*MockSubscriptions)(nil).HandleEventNotification), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRemoteSubscriptions", reflect.TypeOf((*MockSubscriptions)(nil).ListRemoteSubscriptions))
 }
 
 // LoadUserEventSubscription mocks base method

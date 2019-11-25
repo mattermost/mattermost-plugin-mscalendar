@@ -153,6 +153,21 @@ func (mr *MockClientMockRecorder) GetUserEvent(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserEvent", reflect.TypeOf((*MockClient)(nil).GetUserEvent), arg0, arg1)
 }
 
+// ListSubscriptions mocks base method
+func (m *MockClient) ListSubscriptions() ([]*remote.Subscription, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSubscriptions")
+	ret0, _ := ret[0].([]*remote.Subscription)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSubscriptions indicates an expected call of ListSubscriptions
+func (mr *MockClientMockRecorder) ListSubscriptions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSubscriptions", reflect.TypeOf((*MockClient)(nil).ListSubscriptions))
+}
+
 // RenewSubscription mocks base method
 func (m *MockClient) RenewSubscription(arg0 string) (time.Time, error) {
 	m.ctrl.T.Helper()

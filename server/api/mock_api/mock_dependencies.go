@@ -12,8 +12,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot/mock_bot"
 )
 
-func NewMockDependencies(ctrl *gomock.Controller) api.Dependencies {
-	return api.Dependencies{
+func NewMockDependencies(ctrl *gomock.Controller) *api.Dependencies {
+	return &api.Dependencies{
 		UserStore:         mock_store.NewMockUserStore(ctrl),
 		OAuth2StateStore:  mock_store.NewMockOAuth2StateStore(ctrl),
 		SubscriptionStore: mock_store.NewMockSubscriptionStore(ctrl),

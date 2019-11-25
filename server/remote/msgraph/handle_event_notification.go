@@ -23,7 +23,7 @@ type webhook struct {
 	} `json:"resourceData"`
 }
 
-func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request, loadf remote.LoadSubscriptionCreatorF) []*remote.EventNotification {
+func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request, loadf remote.LoadSubscriptionCreatorF) []*remote.Notification {
 
 	// Microsoft graph requires webhook endpoint validation, see
 	// https://docs.microsoft.com/en-us/graph/webhooks#notification-endpoint-validation
@@ -57,7 +57,7 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 	}
 	defer w.WriteHeader(http.StatusAccepted)
 
-	notifications := []*remote.EventNotification{}
+	notifications := []*remote.Notification{}
 	for _, wh := range v.Value {
 		creator, token, creatorMattermostID, sub, err := loadf(wh.SubscriptionID)
 		if err != nil {
@@ -71,7 +71,7 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 			return nil
 		}
 
-		n := &remote.EventNotification{
+		n := &remote.Notification{
 			SubscriptionID:                      wh.SubscriptionID,
 			Subscription:                        sub,
 			SubscriptionCreator:                 creator,
@@ -80,41 +80,6 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 
 		client := r.NewClient(context.Background(), token)
 		switch wh.ResourceData.DataType {
-		case "#Microsoft.Graph.Message":
-			em := remote.EventMessage{}
-			path := wh.Resource + "?$expand=microsoft.graph.eventMessage/Event"
-			var entityData []byte
-			entityData, err = client.Call(http.MethodGet, path, nil, &em)
-			if err != nil {
-				r.logger.LogInfo("Error fetching resource",
-					"error", err.Error(),
-					"subscriptionID", wh.SubscriptionID,
-					"creatorID", creator.ID)
-				return nil
-			}
-			n.EventMessage = &em
-			n.Event = em.Event
-			n.EntityRawData = entityData
-
-			switch em.MeetingMessageType {
-			case "meetingRequest":
-				n.Change = remote.ChangeInvitedMe
-			case "meetingCancelled":
-				n.Change = remote.ChangeMeetingCancelled
-			case "meetingAccepted":
-				n.Change = remote.ChangeAccepted
-			case "meetingTenativelyAccepted":
-				n.Change = remote.ChangeTentativelyAccepted
-			case "meetingDeclined":
-				n.Change = remote.ChangeDeclined
-			default:
-				r.logger.LogInfo("Non-calendar message",
-					"subscriptionID", wh.SubscriptionID,
-					"creatorID", creator.ID,
-					"subject", em.Subject)
-				return nil
-			}
-
 		case "#Microsoft.Graph.Event":
 			event := remote.Event{}
 			var entityData []byte
@@ -128,20 +93,7 @@ func (r *impl) HandleEventNotification(w http.ResponseWriter, req *http.Request,
 			}
 			n.Event = &event
 			n.EntityRawData = entityData
-
-			switch wh.ChangeType {
-			case "created":
-				n.Change = remote.ChangeEventCreated
-			case "updated":
-				n.Change = remote.ChangeEventUpdated
-			case "deleted":
-				n.Change = remote.ChangeEventDeleted
-			default:
-				r.logger.LogInfo("Unrecognized Event change type: "+wh.ChangeType,
-					"subscriptionID", wh.SubscriptionID,
-					"creatorID", creator.ID)
-				return nil
-			}
+			n.ChangeType = wh.ChangeType
 
 		default:
 			r.logger.LogInfo("Unknown resource type: "+wh.ResourceData.DataType,

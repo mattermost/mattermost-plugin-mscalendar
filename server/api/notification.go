@@ -38,8 +38,8 @@ type NotificationHandler interface {
 
 type notificationHandler struct {
 	Config
-	incoming   chan *remote.EventNotification
-	queue      chan *remote.EventNotification
+	incoming   chan *remote.Notification
+	queue      chan *remote.Notification
 	queueSize  int
 	configChan chan Config
 	quit       chan bool
@@ -48,8 +48,8 @@ type notificationHandler struct {
 func NewNotificationHandler(apiConfig Config) NotificationHandler {
 	h := &notificationHandler{
 		Config:     apiConfig,
-		incoming:   make(chan (*remote.EventNotification)),
-		queue:      make(chan (*remote.EventNotification), maxQueueSize),
+		incoming:   make(chan (*remote.Notification)),
+		queue:      make(chan (*remote.Notification), maxQueueSize),
 		configChan: make(chan (Config)),
 		quit:       make(chan (bool)),
 	}
@@ -58,7 +58,7 @@ func NewNotificationHandler(apiConfig Config) NotificationHandler {
 }
 
 func (h *notificationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	notifications := h.Remote.HandleEventNotification(w, req, h.loadUserSubscription)
+	notifications := h.Remote.HandleNotification(w, req, h.loadUserSubscription)
 	for _, n := range notifications {
 		h.incoming <- n
 	}
@@ -78,7 +78,7 @@ func (h *notificationHandler) work() {
 		case n := <-h.incoming:
 			if h.queueSize >= maxQueueSize {
 				h.Logger.LogError(
-					fmt.Sprintf("Notification queue full (%v), dropped notification"), h.queueSize)
+					fmt.Sprintf("Notification queue full (%v), dropped notification", h.queueSize))
 				continue
 			}
 			h.queueSize++
@@ -97,7 +97,7 @@ func (h *notificationHandler) work() {
 	}
 }
 
-func (h *notificationHandler) processNotification(n *remote.EventNotification) {
+func (h *notificationHandler) processNotification(n *remote.Notification) {
 	message := ""
 	changed := false
 	prior, err := h.EventStore.LoadUserEvent(n.Subscription.CreatorID, n.Event.ID)
@@ -133,7 +133,7 @@ func (h *notificationHandler) processNotification(n *remote.EventNotification) {
 	return
 }
 
-func (h *notificationHandler) formatUpdatedEventNotification(n *remote.EventNotification, prior *store.Event) (bool, string) {
+func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notification, prior *store.Event) (bool, string) {
 	priorFields := eventFields(prior.Remote)
 	newFields := eventFields(n.Event)
 	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
@@ -160,9 +160,9 @@ func (h *notificationHandler) formatUpdatedEventNotification(n *remote.EventNoti
 	return true, message
 }
 
-func (h *notificationHandler) formatNewEventNotification(n *remote.EventNotification) string {
+func (h *notificationHandler) formatNewEventNotification(n *remote.Notification) string {
 	message := ""
-	if n.Change == remote.ChangeEventCreated {
+	if n.ChangeType == "crated" {
 		message = fmt.Sprintf("New event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
 	} else {
 		message = fmt.Sprintf("Previously unseen event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)

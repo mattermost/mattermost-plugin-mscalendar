@@ -32,7 +32,7 @@ func TestOAuth2Complete(t *testing.T) {
 		name                 string
 		mattermostUserID     string
 		queryStr             string
-		setup                func(api.Dependencies)
+		setup                func(*api.Dependencies)
 		registerResponder    func()
 		expectedHTTPCode     int
 		expectedHTTPResponse string
@@ -53,7 +53,7 @@ func TestOAuth2Complete(t *testing.T) {
 			name:             "missing state",
 			mattermostUserID: "fake@mattermost.com",
 			queryStr:         "code=fakecode&state=",
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("")).Return(errors.New("unable to verify state")).Times(1)
 			},
@@ -64,7 +64,7 @@ func TestOAuth2Complete(t *testing.T) {
 			name:             "user state not authorized",
 			mattermostUserID: "fake@mattermost.com",
 			queryStr:         "code=fakecode&state=user_nomatch@mattermost.com",
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_nomatch@mattermost.com")).Return(nil).Times(1)
 			},
@@ -76,7 +76,7 @@ func TestOAuth2Complete(t *testing.T) {
 			mattermostUserID:  "fake@mattermost.com",
 			queryStr:          "code=fakecode&state=user_fake@mattermost.com",
 			registerResponder: badTokenExchangeResponder,
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
@@ -88,7 +88,7 @@ func TestOAuth2Complete(t *testing.T) {
 			mattermostUserID:  "fake@mattermost.com",
 			queryStr:          "code=fakecode&state=user_fake@mattermost.com",
 			registerResponder: unauthorizedTokenGraphAPIResponder,
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
@@ -100,7 +100,7 @@ func TestOAuth2Complete(t *testing.T) {
 			mattermostUserID:  "fake@mattermost.com",
 			queryStr:          "code=fakecode&state=user_fake@mattermost.com",
 			registerResponder: statusOKGraphAPIResponder,
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				us := d.UserStore.(*mock_store.MockUserStore)
 				us.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
@@ -114,7 +114,7 @@ func TestOAuth2Complete(t *testing.T) {
 			mattermostUserID:  "fake@mattermost.com",
 			queryStr:          "code=fakecode&state=user_fake@mattermost.com",
 			registerResponder: statusOKGraphAPIResponder,
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				us := d.UserStore.(*mock_store.MockUserStore)
 				poster := d.Poster.(*mock_bot.MockPoster)
@@ -165,7 +165,12 @@ func TestOAuth2Complete(t *testing.T) {
 				tc.setup(dependencies)
 			}
 
-			r := newHTTPRequest(conf, dependencies, tc.mattermostUserID, tc.queryStr)
+			apiconf := api.Config{
+				Config:       conf,
+				Dependencies: dependencies,
+			}
+
+			r := newHTTPRequest(apiconf, tc.mattermostUserID, tc.queryStr)
 			w := defaultMockResponseWriter()
 
 			handler.oauth2Complete(w, r)
@@ -261,14 +266,14 @@ func getBotPosterMessage(displayName string) string {
 		"Name: %s \n", displayName)
 }
 
-func newHTTPRequest(conf *config.Config, dependencies api.Dependencies, mattermostUserID, rawQuery string) *http.Request {
+func newHTTPRequest(apiconf api.Config, mattermostUserID, rawQuery string) *http.Request {
 	r := &http.Request{
 		Header: make(http.Header),
 	}
 
 	ctx := r.Context()
-	ctx = api.Context(ctx, api.New(dependencies, conf, mattermostUserID))
-	ctx = config.Context(ctx, conf)
+	ctx = api.Context(ctx, api.New(apiconf, mattermostUserID), nil)
+	ctx = config.Context(ctx, apiconf.Config)
 
 	r.URL = &url.URL{
 		RawQuery: rawQuery,

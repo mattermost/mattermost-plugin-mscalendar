@@ -25,7 +25,7 @@ func TestOAuth2Connect(t *testing.T) {
 		name                 string
 		mattermostUserID     string
 		queryStr             string
-		setup                func(dependencies api.Dependencies)
+		setup                func(dependencies *api.Dependencies)
 		expectedHTTPResponse string
 		expectedHTTPCode     int
 	}{
@@ -37,7 +37,7 @@ func TestOAuth2Connect(t *testing.T) {
 		{
 			name:             "unable to store user state",
 			mattermostUserID: "fake@mattermost.com",
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(errors.New("unable to store state")).Times(1)
 			},
@@ -47,7 +47,7 @@ func TestOAuth2Connect(t *testing.T) {
 		{
 			name:             "successful redirect",
 			mattermostUserID: "fake@mattermost.com",
-			setup: func(d api.Dependencies) {
+			setup: func(d *api.Dependencies) {
 				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
 			},
@@ -75,7 +75,11 @@ func TestOAuth2Connect(t *testing.T) {
 				tc.setup(dependencies)
 			}
 
-			r := newHTTPRequest(conf, dependencies, tc.mattermostUserID, tc.queryStr)
+			apiconf := api.Config{
+				Config:       conf,
+				Dependencies: dependencies,
+			}
+			r := newHTTPRequest(apiconf, tc.mattermostUserID, tc.queryStr)
 			w := defaultMockResponseWriter()
 
 			handler.oauth2Connect(w, r)

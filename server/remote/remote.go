@@ -13,12 +13,15 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
 
+// LoadSubscriptionCreatorF is a function that is supposed to verify that the
+// subscription exists, and matches the user record. Returns user data and the
+// stored subscription.
 type LoadSubscriptionCreatorF func(subscriptionID string) (*User, *oauth2.Token, string, *Subscription, error)
 
 type Remote interface {
 	NewClient(context.Context, *oauth2.Token) Client
 	NewOAuth2Config() *oauth2.Config
-	HandleEventNotification(http.ResponseWriter, *http.Request, LoadSubscriptionCreatorF) []*EventNotification
+	HandleNotification(http.ResponseWriter, *http.Request, LoadSubscriptionCreatorF) []*Notification
 }
 
 var Makers = map[string]func(*config.Config, utils.Logger) Remote{}
