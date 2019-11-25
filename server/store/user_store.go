@@ -4,7 +4,11 @@
 package store
 
 import (
+	"fmt"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
+	"golang.org/x/oauth2"
 )
 
 type UserStore interface {
@@ -12,6 +16,26 @@ type UserStore interface {
 	LoadMattermostUserId(remoteUserId string) (string, error)
 	StoreUser(user *User) error
 	DeleteUser(mattermostUserId string) error
+}
+
+type User struct {
+	PluginVersion    string
+	Remote           *remote.User
+	MattermostUserID string
+	OAuth2Token      *oauth2.Token
+	Settings         Settings `json:"mattermostSettings,omitempty"`
+}
+
+type Settings struct {
+	EventSubscriptionID string
+}
+
+func (settings Settings) String() string {
+	sub := "no subscription"
+	if settings.EventSubscriptionID != "" {
+		sub = "subscription ID: " + settings.EventSubscriptionID
+	}
+	return fmt.Sprintf(" - %s", sub)
 }
 
 func (s *pluginStore) LoadUser(mattermostUserId string) (*User, error) {

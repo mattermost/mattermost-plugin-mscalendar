@@ -17,6 +17,7 @@ const (
 	MattermostUserIDKeyPrefix = "mmuid_"
 	OAuth2KeyPrefix           = "oauth2_"
 	SubscriptionKeyPrefix     = "sub_"
+	EventKeyPrefix            = "ev_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -25,6 +26,7 @@ type Store interface {
 	UserStore
 	OAuth2StateStore
 	SubscriptionStore
+	EventStore
 }
 
 type pluginStore struct {
@@ -33,6 +35,7 @@ type pluginStore struct {
 	userKV             kvstore.KVStore
 	mattermostUserIDKV kvstore.KVStore
 	subscriptionKV     kvstore.KVStore
+	eventKV            kvstore.KVStore
 	Logger             utils.Logger
 }
 
@@ -43,6 +46,7 @@ func NewPluginStore(api plugin.API) Store {
 		userKV:             kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix),
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
+		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
 		Logger:             api,
 	}

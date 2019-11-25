@@ -30,6 +30,10 @@ func (s hashedKeyStore) Store(key string, data []byte) error {
 	return s.store.Store(hashKey(s.prefix, key), data)
 }
 
+func (s hashedKeyStore) StoreTTL(key string, data []byte, ttlSeconds int64) error {
+	return s.store.StoreTTL(hashKey(s.prefix, key), data, ttlSeconds)
+}
+
 func (s hashedKeyStore) Delete(key string) error {
 	return s.store.Delete(hashKey(s.prefix, key))
 }

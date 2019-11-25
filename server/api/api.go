@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
@@ -27,7 +26,6 @@ type Subscriptions interface {
 	DeleteUserEventSubscription() error
 	ListRemoteSubscriptions() ([]*remote.Subscription, error)
 	LoadUserEventSubscription() (*store.Subscription, error)
-	HandleEventNotification(w http.ResponseWriter, req *http.Request)
 }
 
 type Calendar interface {
@@ -50,24 +48,27 @@ type Dependencies struct {
 	UserStore         store.UserStore
 	OAuth2StateStore  store.OAuth2StateStore
 	SubscriptionStore store.SubscriptionStore
+	EventStore        store.EventStore
 	Logger            utils.Logger
 	Poster            bot.Poster
 	Remote            remote.Remote
 	IsAuthorizedAdmin func(userId string) (bool, error)
 }
 
-type api struct {
+type Config struct {
 	*Dependencies
 	*config.Config
+}
 
+type api struct {
+	Config
 	mattermostUserID string
 	user             *store.User
 }
 
-func New(d Dependencies, c *config.Config, mattermostUserID string) API {
+func New(apiConfig Config, mattermostUserID string) API {
 	return &api{
-		Dependencies:     &d,
-		Config:           c,
+		Config:           apiConfig,
 		mattermostUserID: mattermostUserID,
 	}
 }

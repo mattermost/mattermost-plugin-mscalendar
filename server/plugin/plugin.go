@@ -30,11 +30,11 @@ import (
 
 type Plugin struct {
 	plugin.MattermostPlugin
+	configLock *sync.RWMutex
+	config     *config.Config
 
-	configLock   *sync.RWMutex
-	config       *config.Config
-	dependencies api.Dependencies
-	httpHandler  *http.Handler
+	httpHandler         *http.Handler
+	notificationHandler api.NotificationHandler
 
 	Templates map[string]*template.Template
 }
@@ -55,10 +55,7 @@ func (p *Plugin) OnActivate() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure bot account")
 	}
-
-	p.updateConfig(func(conf *config.Config) {
-		conf.BotUserID = botUserID
-	})
+	p.config.BotUserID = botUserID
 
 	// Templates
 	bundlePath, err := p.API.GetBundlePath()
@@ -70,15 +67,8 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	// API dependencies
-	store := store.NewPluginStore(p.API)
-	p.dependencies = api.Dependencies{
-		UserStore:         store,
-		OAuth2StateStore:  store,
-		SubscriptionStore: store,
-		Logger:            p.API,
-	}
 	p.httpHandler = http.NewHandler()
+	p.notificationHandler = api.NewNotificationHandler(p.getAPIConfig())
 
 	command.Register(p.API.RegisterCommand)
 
@@ -114,28 +104,27 @@ func (p *Plugin) OnConfigurationChange() error {
 
 	p.updateConfig(func(c *config.Config) {
 		c.StoredConfig = stored
-
 		c.MattermostSiteURL = *mattermostSiteURL
 		c.MattermostSiteHostname = mattermostURL.Hostname()
 		c.PluginURL = pluginURL
 		c.PluginURLPath = pluginURLPath
-
-		cc := &(*c)
-		p.dependencies.Poster = bot.NewPoster(p.API, cc)
-		p.dependencies.Remote = remote.Makers[msgraph.Kind](cc, p.dependencies.Logger)
 	})
 
+	if p.notificationHandler != nil {
+		p.notificationHandler.Configure(p.getAPIConfig())
+	}
 	return nil
 }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	conf := p.getConfig()
+	apiconf := p.getAPIConfig()
+	api := api.New(apiconf, args.UserId)
 	command := command.Command{
 		Context:   c,
 		Args:      args,
 		ChannelID: args.ChannelId,
-		Config:    conf,
-		API:       api.New(p.dependencies, conf, args.UserId),
+		Config:    apiconf.Config,
+		API:       api,
 	}
 
 	out, err := command.Handle()
@@ -144,18 +133,17 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("msofficeplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
 
-	p.dependencies.Poster.PostEphemeral(args.UserId, args.ChannelId, out)
+	apiconf.Poster.PostEphemeral(args.UserId, args.ChannelId, out)
 	return &model.CommandResponse{}, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *gohttp.Request) {
+	apiconf := p.getAPIConfig()
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
-	conf := p.getConfig()
 	ctx := req.Context()
-	ctx = api.Context(ctx, api.New(p.dependencies, conf, mattermostUserID))
-	ctx = config.Context(ctx, conf)
+	ctx = api.Context(ctx, api.New(apiconf, mattermostUserID), p.notificationHandler)
+	ctx = config.Context(ctx, apiconf.Config)
 
-	p.API.LogDebug("<><> ServeHTTP: " + req.URL.String())
 	p.httpHandler.ServeHTTP(w, req.WithContext(ctx))
 }
 
@@ -171,6 +159,24 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 
 	f(p.config)
 	return *p.config
+}
+
+func (p *Plugin) getAPIConfig() api.Config {
+	conf := p.getConfig()
+	store := store.NewPluginStore(p.API)
+
+	return api.Config{
+		Config: conf,
+		Dependencies: &api.Dependencies{
+			UserStore:         store,
+			OAuth2StateStore:  store,
+			SubscriptionStore: store,
+			EventStore:        store,
+			Logger:            p.API,
+			Poster:            bot.NewPoster(p.API, conf),
+			Remote:            remote.Makers[msgraph.Kind](conf, p.API),
+		},
+	}
 }
 
 func (p *Plugin) loadTemplates(bundlePath string) error {

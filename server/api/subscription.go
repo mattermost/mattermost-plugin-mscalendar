@@ -17,8 +17,7 @@ func (api *api) CreateUserEventSubscription() (*store.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
-	// sub, err := client.CreateEventSubscription(
-	sub, err := client.CreateEventMessageSubscription(
+	sub, err := client.CreateEventSubscription(
 		api.Config.PluginURL + config.EventNotificationFullPath)
 	if err != nil {
 		return nil, err

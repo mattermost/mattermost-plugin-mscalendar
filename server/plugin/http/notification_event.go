@@ -9,8 +9,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 )
 
-func (h *Handler) webhookEvent(w http.ResponseWriter, req *http.Request) {
-	api := api.FromContext(req.Context())
-	api.HandleEventNotification(w, req)
+func (h *Handler) notificationEvent(w http.ResponseWriter, req *http.Request) {
+	handler := api.NotificationHandlerFromContext(req.Context())
+	handler.ServeHTTP(w, req)
 	return
 }

@@ -4,6 +4,7 @@
 package store
 
 import (
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 	"github.com/pkg/errors"
 )
@@ -14,13 +15,19 @@ type SubscriptionStore interface {
 	DeleteUserSubscription(user *User, subscriptionID string) error
 }
 
+type Subscription struct {
+	PluginVersion       string
+	Remote              *remote.Subscription
+	MattermostCreatorID string
+}
+
 func (s *pluginStore) LoadSubscription(subscriptionID string) (*Subscription, error) {
-	sub := &Subscription{}
+	sub := Subscription{}
 	err := kvstore.LoadJSON(s.subscriptionKV, subscriptionID, &sub)
 	if err != nil {
 		return nil, err
 	}
-	return sub, nil
+	return &sub, nil
 }
 
 func (s *pluginStore) StoreUserSubscription(user *User, subscription *Subscription) error {

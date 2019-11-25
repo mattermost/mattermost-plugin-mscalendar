@@ -54,6 +54,14 @@ func (s pluginStore) Store(key string, data []byte) error {
 	return nil
 }
 
+func (s pluginStore) StoreTTL(key string, data []byte, ttlSeconds int64) error {
+	appErr := s.api.KVSetWithExpiry(key, data, ttlSeconds)
+	if appErr != nil {
+		return errors.WithMessagef(appErr, "failed plugin KVSet (ttl: %vs) %q", s.ttlSeconds, key)
+	}
+	return nil
+}
+
 func (s pluginStore) Delete(key string) error {
 	appErr := s.api.KVDelete(key)
 	if appErr != nil {
