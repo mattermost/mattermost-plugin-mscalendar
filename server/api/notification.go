@@ -126,7 +126,8 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 	}
 
 	if !n.RecommendRenew {
-		renewed, err := client.RenewSubscription(n.SubscriptionID)
+		var renewed *remote.Subscription
+		renewed, err = client.RenewSubscription(n.SubscriptionID)
 		if err != nil {
 			return err
 		}

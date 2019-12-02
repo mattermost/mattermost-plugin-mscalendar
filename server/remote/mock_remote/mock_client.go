@@ -49,34 +49,19 @@ func (mr *MockClientMockRecorder) Call(arg0, arg1, arg2, arg3 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockClient)(nil).Call), arg0, arg1, arg2, arg3)
 }
 
-// CreateEventMessageSubscription mocks base method
-func (m *MockClient) CreateEventMessageSubscription(arg0 string) (*remote.Subscription, error) {
+// CreateSubscription mocks base method
+func (m *MockClient) CreateSubscription(arg0 string) (*remote.Subscription, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEventMessageSubscription", arg0)
+	ret := m.ctrl.Call(m, "CreateSubscription", arg0)
 	ret0, _ := ret[0].(*remote.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateEventMessageSubscription indicates an expected call of CreateEventMessageSubscription
-func (mr *MockClientMockRecorder) CreateEventMessageSubscription(arg0 interface{}) *gomock.Call {
+// CreateSubscription indicates an expected call of CreateSubscription
+func (mr *MockClientMockRecorder) CreateSubscription(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEventMessageSubscription", reflect.TypeOf((*MockClient)(nil).CreateEventMessageSubscription), arg0)
-}
-
-// CreateEventSubscription mocks base method
-func (m *MockClient) CreateEventSubscription(arg0 string) (*remote.Subscription, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEventSubscription", arg0)
-	ret0, _ := ret[0].(*remote.Subscription)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateEventSubscription indicates an expected call of CreateEventSubscription
-func (mr *MockClientMockRecorder) CreateEventSubscription(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEventSubscription", reflect.TypeOf((*MockClient)(nil).CreateEventSubscription), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSubscription", reflect.TypeOf((*MockClient)(nil).CreateSubscription), arg0)
 }
 
 // DeleteSubscription mocks base method
@@ -106,6 +91,21 @@ func (m *MockClient) GetMe() (*remote.User, error) {
 func (mr *MockClientMockRecorder) GetMe() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMe", reflect.TypeOf((*MockClient)(nil).GetMe))
+}
+
+// GetNotificationData mocks base method
+func (m *MockClient) GetNotificationData(arg0 *remote.Notification) (*remote.Notification, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNotificationData", arg0)
+	ret0, _ := ret[0].(*remote.Notification)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotificationData indicates an expected call of GetNotificationData
+func (mr *MockClientMockRecorder) GetNotificationData(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationData", reflect.TypeOf((*MockClient)(nil).GetNotificationData), arg0)
 }
 
 // GetUserCalendars mocks base method
@@ -169,10 +169,10 @@ func (mr *MockClientMockRecorder) ListSubscriptions() *gomock.Call {
 }
 
 // RenewSubscription mocks base method
-func (m *MockClient) RenewSubscription(arg0 string) (time.Time, error) {
+func (m *MockClient) RenewSubscription(arg0 string) (*remote.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RenewSubscription", arg0)
-	ret0, _ := ret[0].(time.Time)
+	ret0, _ := ret[0].(*remote.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

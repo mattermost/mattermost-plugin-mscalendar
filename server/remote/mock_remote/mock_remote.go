@@ -37,17 +37,17 @@ func (m *MockRemote) EXPECT() *MockRemoteMockRecorder {
 }
 
 // HandleNotification mocks base method
-func (m *MockRemote) HandleNotification(arg0 http.ResponseWriter, arg1 *http.Request, arg2 remote.LoadSubscriptionCreatorF) []*remote.Notification {
+func (m *MockRemote) HandleNotification(arg0 http.ResponseWriter, arg1 *http.Request) []*remote.Notification {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleNotification", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "HandleNotification", arg0, arg1)
 	ret0, _ := ret[0].([]*remote.Notification)
 	return ret0
 }
 
 // HandleNotification indicates an expected call of HandleNotification
-func (mr *MockRemoteMockRecorder) HandleNotification(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockRemoteMockRecorder) HandleNotification(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleNotification", reflect.TypeOf((*MockRemote)(nil).HandleNotification), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleNotification", reflect.TypeOf((*MockRemote)(nil).HandleNotification), arg0, arg1)
 }
 
 // NewClient mocks base method
