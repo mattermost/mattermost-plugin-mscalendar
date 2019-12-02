@@ -6,7 +6,7 @@ require (
 	github.com/golang/mock v1.2.0
 	github.com/gorilla/mux v1.7.3
 	github.com/jarcoal/httpmock v1.0.4
-	github.com/mattermost/mattermost-server v0.0.0-20191122150651-5c41c8b1733b // 5.18 current master
+	github.com/mattermost/mattermost-server/v5 v5.18.0-rc.test
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2

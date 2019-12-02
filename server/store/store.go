@@ -6,7 +6,7 @@ package store
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-server/plugin"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
