@@ -4,6 +4,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/fields"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 )
 
 const maxQueueSize = 1024
@@ -58,7 +58,7 @@ func NewNotificationHandler(apiConfig Config) NotificationHandler {
 }
 
 func (h *notificationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	notifications := h.Remote.HandleNotification(w, req, h.loadUserSubscription)
+	notifications := h.Remote.HandleNotification(w, req)
 	for _, n := range notifications {
 		h.incoming <- n
 	}
@@ -86,7 +86,11 @@ func (h *notificationHandler) work() {
 
 		case n := <-h.queue:
 			h.queueSize--
-			h.processNotification(n)
+			err := h.processNotification(n)
+			if err != nil {
+				h.Logger.LogInfo("Failed to process notification: "+err.Error(),
+					"SubsriptionID", n.SubscriptionID)
+			}
 
 		case apiConfig := <-h.configChan:
 			h.Config = apiConfig
@@ -97,10 +101,60 @@ func (h *notificationHandler) work() {
 	}
 }
 
-func (h *notificationHandler) processNotification(n *remote.Notification) {
+func (h *notificationHandler) processNotification(n *remote.Notification) error {
+	sub, err := h.SubscriptionStore.LoadSubscription(n.SubscriptionID)
+	if err != nil {
+		return err
+	}
+	creator, err := h.UserStore.LoadUser(sub.MattermostCreatorID)
+	if err != nil {
+		return err
+	}
+	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
+		return errors.New("Subscription is orphaned")
+	}
+	if sub.Remote.ClientState != "" && sub.Remote.ClientState != n.ClientState {
+		return errors.New("Unauthorized webhook")
+	}
+
+	n.Subscription = sub.Remote
+	n.SubscriptionCreator = creator.Remote
+
+	var client remote.Client
+	if !n.RecommendRenew || n.IsBare {
+		client = h.Remote.NewClient(context.Background(), creator.OAuth2Token)
+	}
+
+	if !n.RecommendRenew {
+		renewed, err := client.RenewSubscription(n.SubscriptionID)
+		if err != nil {
+			return err
+		}
+
+		storedSub := &store.Subscription{
+			Remote:              renewed,
+			MattermostCreatorID: creator.MattermostUserID,
+			PluginVersion:       h.Config.PluginVersion,
+		}
+		err = h.SubscriptionStore.StoreUserSubscription(creator, storedSub)
+		if err != nil {
+			return err
+		}
+		h.Logger.LogDebug("Renewed user subscription",
+			"MattermostUserID", creator.MattermostUserID,
+			"SubsriptionID", n.SubscriptionID)
+	}
+
+	if n.IsBare {
+		n, err = client.GetNotificationData(n)
+		if err != nil {
+			return err
+		}
+	}
+
 	message := ""
 	changed := false
-	prior, err := h.EventStore.LoadUserEvent(n.Subscription.CreatorID, n.Event.ID)
+	prior, err := h.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
 	switch err {
 	case kvstore.ErrNotFound:
 		changed = true
@@ -109,28 +163,30 @@ func (h *notificationHandler) processNotification(n *remote.Notification) {
 	case nil:
 		changed, message = h.formatUpdatedEventNotification(n, prior)
 	default:
-		return
+		return err
 	}
 	if !changed {
-		return
+		h.Logger.LogDebug("No changes detected in event",
+			"MattermostUserID", creator.MattermostUserID,
+			"SubsriptionID", n.SubscriptionID)
+		return nil
 	}
 
-	err = h.Poster.PostDirect(n.SubscriptionCreatorMattermostUserID, message, "")
+	err = h.Poster.PostDirect(creator.MattermostUserID, message, "")
 	if err != nil {
-		h.Logger.LogInfo("Failed to post notification message: " + err.Error())
+		return err
 	}
 
 	prior.Remote = n.Event
-	err = h.EventStore.StoreUserEvent(n.Subscription.CreatorID, prior)
+	err = h.EventStore.StoreUserEvent(creator.MattermostUserID, prior)
 	if err != nil {
-		return
+		return err
 	}
 
-	h.Logger.LogDebug("Processed event notification",
-		"MattermostUserID", n.SubscriptionCreatorMattermostUserID,
-		"SubsriptionID", n.SubscriptionID,
-		"Message", message)
-	return
+	h.Logger.LogDebug("Processed notification: "+message,
+		"MattermostUserID", creator.MattermostUserID,
+		"SubsriptionID", n.SubscriptionID)
+	return nil
 }
 
 func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notification, prior *store.Event) (bool, string) {
@@ -154,7 +210,6 @@ func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notificat
 	}
 
 	h.Logger.LogDebug("Processed event notification",
-		"MattermostUserID", n.SubscriptionCreatorMattermostUserID,
 		"SubsriptionID", n.SubscriptionID,
 		"Message", message)
 	return true, message
@@ -245,17 +300,17 @@ func eventFields(e *remote.Event) fields.Fields {
 	return ff
 }
 
-func (h *notificationHandler) loadUserSubscription(subscriptionID string) (*remote.User, *oauth2.Token, string, *remote.Subscription, error) {
-	sub, err := h.SubscriptionStore.LoadSubscription(subscriptionID)
-	if err != nil {
-		return nil, nil, "", nil, err
-	}
-	creator, err := h.UserStore.LoadUser(sub.MattermostCreatorID)
-	if err != nil {
-		return nil, nil, "", nil, err
-	}
-	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
-		return nil, nil, "", nil, errors.New("Subscription is orphaned")
-	}
-	return creator.Remote, creator.OAuth2Token, creator.MattermostUserID, sub.Remote, nil
-}
+// func (h *notificationHandler) loadUserSubscription(subscriptionID string) (*remote.User, *oauth2.Token, string, *remote.Subscription, error) {
+// 	sub, err := h.SubscriptionStore.LoadSubscription(subscriptionID)
+// 	if err != nil {
+// 		return nil, nil, "", nil, err
+// 	}
+// 	creator, err := h.UserStore.LoadUser(sub.MattermostCreatorID)
+// 	if err != nil {
+// 		return nil, nil, "", nil, err
+// 	}
+// 	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
+// 		return nil, nil, "", nil, errors.New("Subscription is orphaned")
+// 	}
+// 	return creator.Remote, creator.OAuth2Token, creator.MattermostUserID, sub.Remote, nil
+// }

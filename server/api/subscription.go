@@ -4,12 +4,11 @@
 package api
 
 import (
-	"time"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
-	"github.com/pkg/errors"
 )
 
 func (api *api) CreateUserEventSubscription() (*store.Subscription, error) {
@@ -17,7 +16,7 @@ func (api *api) CreateUserEventSubscription() (*store.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
-	sub, err := client.CreateEventSubscription(
+	sub, err := client.CreateSubscription(
 		api.Config.PluginURL + config.EventNotificationFullPath)
 	if err != nil {
 		return nil, err
@@ -68,7 +67,7 @@ func (api *api) RenewUserEventSubscription() (*store.Subscription, error) {
 	}
 
 	subscriptionID := api.user.Settings.EventSubscriptionID
-	expires, err := client.RenewSubscription(subscriptionID)
+	renewed, err := client.RenewSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +76,7 @@ func (api *api) RenewUserEventSubscription() (*store.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	storedSub.Remote.ExpirationDateTime = expires.Format(time.RFC3339)
+	storedSub.Remote = renewed
 
 	err = api.SubscriptionStore.StoreUserSubscription(api.user, storedSub)
 	if err != nil {

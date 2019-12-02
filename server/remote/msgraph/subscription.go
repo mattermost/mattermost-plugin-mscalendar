@@ -13,10 +13,10 @@ import (
 
 const subscribeTTL = 10 * time.Minute
 
-func (c *client) createSubscription(resource, changeType, notificationURL string) (*remote.Subscription, error) {
+func (c *client) CreateSubscription(notificationURL string) (*remote.Subscription, error) {
 	sub := &remote.Subscription{
-		Resource:           resource,
-		ChangeType:         changeType,
+		Resource:           "me/events",
+		ChangeType:         "created,updated,deleted",
 		NotificationURL:    notificationURL,
 		ExpirationDateTime: time.Now().Add(subscribeTTL).Format(time.RFC3339),
 	}
@@ -24,25 +24,12 @@ func (c *client) createSubscription(resource, changeType, notificationURL string
 	if err != nil {
 		return nil, err
 	}
-	c.LogDebug("msgraph: created subscription", "subscriptionID", sub.ID, "resource", sub.Resource, "changeType", sub.ChangeType)
+	c.LogDebug("msgraph: created subscription",
+		"subscriptionID", sub.ID,
+		"resource", sub.Resource,
+		"changeType", sub.ChangeType,
+		"expirationDateTime", sub.ExpirationDateTime)
 	return sub, nil
-}
-
-func (c *client) CreateEventMessageSubscription(notificationURL string) (*remote.Subscription, error) {
-	return c.createSubscription(
-		// TODO make work: "me/messages?filter=microsoft.graph.eventMessage/meetingMessageType ne ''",
-		"me/messages",
-		"created",
-		notificationURL,
-	)
-}
-
-func (c *client) CreateEventSubscription(notificationURL string) (*remote.Subscription, error) {
-	return c.createSubscription(
-		"me/events",
-		"created,updated,deleted",
-		notificationURL,
-	)
 }
 
 func (c *client) DeleteSubscription(subscriptionID string) error {
@@ -54,19 +41,20 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 	return nil
 }
 
-func (c *client) RenewSubscription(subscriptionID string) (time.Time, error) {
+func (c *client) RenewSubscription(subscriptionID string) (*remote.Subscription, error) {
 	expires := time.Now().Add(subscribeTTL)
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
 	}{
 		expires.Format(time.RFC3339),
 	}
-	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, nil)
+	sub := remote.Subscription{}
+	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
 	if err != nil {
-		return time.Time{}, err
+		return nil, err
 	}
-	c.LogDebug("msgraph: renewed subscription until "+v.ExpirationDateTime, "subscriptionID", subscriptionID)
-	return expires, nil
+	c.LogDebug("msgraph: renewed subscription until "+sub.ExpirationDateTime, "subscriptionID", subscriptionID)
+	return &sub, nil
 }
 
 func (c *client) ListSubscriptions() ([]*remote.Subscription, error) {

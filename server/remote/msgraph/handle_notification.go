@@ -4,15 +4,17 @@
 package msgraph
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
-type webhook struct {
+const renewSubscriptionBeforeExpiration = 12 * time.Hour
+
+type webhookNotification struct {
 	ChangeType                     string `json:"changeType"`
 	ClientState                    string `json:"clientState,omitempty"`
 	Resource                       string `json:"resource,omitempty"`
@@ -23,8 +25,7 @@ type webhook struct {
 	} `json:"resourceData"`
 }
 
-func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request, loadf remote.LoadSubscriptionCreatorF) []*remote.Notification {
-
+func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request) []*remote.Notification {
 	// Microsoft graph requires webhook endpoint validation, see
 	// https://docs.microsoft.com/en-us/graph/webhooks#notification-endpoint-validation
 	vtok := req.FormValue("validationToken")
@@ -46,7 +47,7 @@ func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request, load
 
 	// Get the list of webhooks
 	var v struct {
-		Value []*webhook `json:"value"`
+		Value []*webhookNotification `json:"value"`
 	}
 	err = json.Unmarshal(rawData, &v)
 	if err != nil {
@@ -55,55 +56,32 @@ func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request, load
 			"error", err.Error())
 		return nil
 	}
-	defer w.WriteHeader(http.StatusAccepted)
 
 	notifications := []*remote.Notification{}
 	for _, wh := range v.Value {
-		creator, token, creatorMattermostID, sub, err := loadf(wh.SubscriptionID)
-		if err != nil {
-			r.logger.LogInfo("Failed to process webhook",
-				"error", err.Error())
-			return nil
-		}
-
-		if sub.ClientState != "" && sub.ClientState != wh.ClientState {
-			r.logger.LogInfo("Unauthorized webhook")
-			return nil
-		}
-
 		n := &remote.Notification{
-			SubscriptionID:                      wh.SubscriptionID,
-			Subscription:                        sub,
-			SubscriptionCreator:                 creator,
-			SubscriptionCreatorMattermostUserID: creatorMattermostID,
+			SubscriptionID:      wh.SubscriptionID,
+			ChangeType:          wh.ChangeType,
+			ClientState:         wh.ClientState,
+			IsBare:              true,
+			WebhookRawData:      rawData,
+			WebhookNotification: wh,
 		}
 
-		client := r.NewClient(context.Background(), token)
-		switch wh.ResourceData.DataType {
-		case "#Microsoft.Graph.Event":
-			event := remote.Event{}
-			var entityData []byte
-			entityData, err = client.Call(http.MethodGet, wh.Resource, nil, &event)
-			if err != nil {
-				r.logger.LogInfo("Error fetching resource",
-					"error", err.Error(),
-					"subscriptionID", wh.SubscriptionID,
-					"creatorID", creator.ID)
-				return nil
-			}
-			n.Event = &event
-			n.EntityRawData = entityData
-			n.ChangeType = wh.ChangeType
-
-		default:
-			r.logger.LogInfo("Unknown resource type: "+wh.ResourceData.DataType,
-				"subscriptionID", wh.SubscriptionID,
-				"creatorID", creator.ID)
+		expires, err := time.Parse("2006-01-02T15:04:05Z", wh.SubscriptionExpirationDateTime)
+		if err != nil {
+			r.logger.LogInfo("Invalid subscription expiration in webhook: "+err.Error(),
+				"SubscriptionID", wh.SubscriptionID)
 			return nil
+		}
+		expires = expires.Add(-renewSubscriptionBeforeExpiration)
+		if time.Now().After(expires) {
+			n.RecommendRenew = true
 		}
 
 		notifications = append(notifications, n)
 	}
 
+	w.WriteHeader(http.StatusAccepted)
 	return notifications
 }
