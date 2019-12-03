@@ -68,7 +68,7 @@ func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request) []*r
 			WebhookNotification: wh,
 		}
 
-		expires, err := time.Parse("2006-01-02T15:04:05Z", wh.SubscriptionExpirationDateTime)
+		expires, err := time.Parse(time.RFC3339, wh.SubscriptionExpirationDateTime)
 		if err != nil {
 			r.logger.LogInfo("Invalid subscription expiration in webhook: "+err.Error(),
 				"SubscriptionID", wh.SubscriptionID)

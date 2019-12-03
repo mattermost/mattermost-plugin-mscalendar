@@ -4,7 +4,6 @@
 package plugin
 
 import (
-	"fmt"
 	gohttp "net/http"
 	"net/url"
 	"os"
@@ -145,7 +144,6 @@ func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *goh
 	ctx = api.Context(ctx, api.New(apiconf, mattermostUserID), p.notificationHandler)
 	ctx = config.Context(ctx, apiconf.Config)
 
-	fmt.Println("<><> URL: ", req.URL.String())
 	p.httpHandler.ServeHTTP(w, req.WithContext(ctx))
 }
 

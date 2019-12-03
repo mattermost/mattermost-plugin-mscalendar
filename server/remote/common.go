@@ -5,14 +5,20 @@ package remote
 
 import "time"
 
+type EmailAddress struct {
+	Address string `json:"address"`
+	Name    string `json:"name,omitempty"`
+}
 type DateTime struct {
 	DateTime string `json:"dateTime"`
 	TimeZone string `json:"timeZone,omitempty"`
 }
 
+const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
+
 func NewDateTime(t time.Time) *DateTime {
 	return &DateTime{
-		DateTime: t.Format("2006-01-02T15:04:05.999999999"), // time.RFC3339Nano sans timezone
+		DateTime: t.Format(RFC3339NanoNoTimezone),
 		TimeZone: t.Format("MST"),
 	}
 }
@@ -31,14 +37,9 @@ func (dt DateTime) Time() time.Time {
 		return time.Time{}
 	}
 
-	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999999", dt.DateTime, loc)
+	t, err := time.ParseInLocation(RFC3339NanoNoTimezone, dt.DateTime, loc)
 	if err != nil {
 		return time.Time{}
 	}
 	return t
-}
-
-type EmailAddress struct {
-	Address string `json:"address"`
-	Name    string `json:"name,omitempty"`
 }

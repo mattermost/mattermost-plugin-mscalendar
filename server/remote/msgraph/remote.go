@@ -34,7 +34,7 @@ func NewRemote(conf *config.Config, logger utils.Logger) remote.Remote {
 	}
 }
 
-// NewMicrosoftGraphClient creates a new client.
+// NewClient creates a new client.
 func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client {
 	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{

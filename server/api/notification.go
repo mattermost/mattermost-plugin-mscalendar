@@ -125,7 +125,7 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		client = h.Remote.NewClient(context.Background(), creator.OAuth2Token)
 	}
 
-	if !n.RecommendRenew {
+	if n.RecommendRenew {
 		var renewed *remote.Subscription
 		renewed, err = client.RenewSubscription(n.SubscriptionID)
 		if err != nil {
@@ -191,8 +191,8 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 }
 
 func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notification, prior *store.Event) (bool, string) {
-	priorFields := eventFields(prior.Remote)
-	newFields := eventFields(n.Event)
+	priorFields := eventToFields(prior.Remote)
+	newFields := eventToFields(n.Event)
 	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
 	if !changed {
 		return false, ""
@@ -218,18 +218,18 @@ func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notificat
 
 func (h *notificationHandler) formatNewEventNotification(n *remote.Notification) string {
 	message := ""
-	if n.ChangeType == "crated" {
+	if n.ChangeType == "created" {
 		message = fmt.Sprintf("New event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
 	} else {
 		message = fmt.Sprintf("Previously unseen event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
 	}
-	for k, v := range eventFields(n.Event) {
+	for k, v := range eventToFields(n.Event) {
 		message += fmt.Sprintf("- %s: %s\n", k, v.Strings())
 	}
 	return message
 }
 
-func eventFields(e *remote.Event) fields.Fields {
+func eventToFields(e *remote.Event) fields.Fields {
 	date := func(dt *remote.DateTime) (time.Time, string) {
 		if dt == nil {
 			return time.Time{}, "n/a"
@@ -288,8 +288,7 @@ func eventFields(e *remote.Event) fields.Fields {
 		FieldSubject:     fields.NewStringValue(e.Subject),
 		FieldBodyPreview: fields.NewStringValue(e.BodyPreview),
 		FieldImportance:  fields.NewStringValue(e.Importance),
-		// TODO "if recurring"
-		FieldWhen: fields.NewStringValue(startDate),
+		FieldWhen:        fields.NewStringValue(startDate),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),
@@ -300,18 +299,3 @@ func eventFields(e *remote.Event) fields.Fields {
 
 	return ff
 }
-
-// func (h *notificationHandler) loadUserSubscription(subscriptionID string) (*remote.User, *oauth2.Token, string, *remote.Subscription, error) {
-// 	sub, err := h.SubscriptionStore.LoadSubscription(subscriptionID)
-// 	if err != nil {
-// 		return nil, nil, "", nil, err
-// 	}
-// 	creator, err := h.UserStore.LoadUser(sub.MattermostCreatorID)
-// 	if err != nil {
-// 		return nil, nil, "", nil, err
-// 	}
-// 	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
-// 		return nil, nil, "", nil, errors.New("Subscription is orphaned")
-// 	}
-// 	return creator.Remote, creator.OAuth2Token, creator.MattermostUserID, sub.Remote, nil
-// }
