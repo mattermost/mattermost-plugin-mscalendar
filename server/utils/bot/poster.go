@@ -4,7 +4,8 @@
 package bot
 
 import (
-	"github.com/mattermost/mattermost-server/v5/mlog"
+	"fmt"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
@@ -12,7 +13,8 @@ import (
 )
 
 type Poster interface {
-	PostDirect(userID, message, postType string) error
+	PostDirectf(userID, format string, args ...interface{}) error
+	PostDirectAttachments(userID string, attachments ...*model.SlackAttachment) error
 	PostEphemeral(userID, channelId, message string)
 }
 
@@ -29,25 +31,29 @@ func NewPoster(api plugin.API, conf *config.Config) Poster {
 	}
 }
 
-func (poster *poster) PostDirect(userID, message, postType string) error {
+func (poster *poster) PostDirectf(userID, format string, args ...interface{}) error {
+	return poster.postDirect(userID, &model.Post{
+		Message: fmt.Sprintf(format, args...),
+	})
+}
+
+func (poster *poster) PostDirectAttachments(userID string, attachments ...*model.SlackAttachment) error {
+	post := model.Post{}
+	model.ParseSlackAttachment(&post, attachments)
+	return poster.postDirect(userID, &post)
+}
+
+func (poster *poster) postDirect(userID string, post *model.Post) error {
 	channel, err := poster.API.GetDirectChannel(userID, poster.config.BotUserID)
 	if err != nil {
 		poster.API.LogInfo("Couldn't get bot's DM channel", "user_id", userID)
 		return err
 	}
-
-	post := &model.Post{
-		UserId:    poster.config.BotUserID,
-		ChannelId: channel.Id,
-		Message:   message,
-		Type:      postType,
-	}
-
+	post.ChannelId = channel.Id
+	post.UserId = poster.config.BotUserID
 	if _, err := poster.API.CreatePost(post); err != nil {
-		mlog.Error(err.Error())
 		return err
 	}
-
 	return nil
 }
 

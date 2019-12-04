@@ -9,11 +9,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/fields"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
-	"github.com/pkg/errors"
 )
 
 const maxQueueSize = 1024
@@ -153,27 +156,26 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		}
 	}
 
-	message := ""
-	changed := false
+	var sa *model.SlackAttachment
 	prior, err := h.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
-	switch err {
-	case kvstore.ErrNotFound:
-		changed = true
-		message = h.formatNewEventNotification(n)
-		prior = &store.Event{}
-	case nil:
-		changed, message = h.formatUpdatedEventNotification(n, prior)
-	default:
+	if err != nil && err != kvstore.ErrNotFound {
 		return err
 	}
-	if !changed {
-		h.Logger.LogDebug("No changes detected in event",
-			"MattermostUserID", creator.MattermostUserID,
-			"SubsriptionID", n.SubscriptionID)
-		return nil
+	if prior != nil {
+		var changed bool
+		changed, sa = updatedEventSlackAttachment(n, prior.Remote)
+		if !changed {
+			h.Logger.LogDebug("No changes detected in event",
+				"MattermostUserID", creator.MattermostUserID,
+				"SubsriptionID", n.SubscriptionID)
+			return nil
+		}
+	} else {
+		sa = newEventSlackAttachment(n)
+		prior = &store.Event{}
 	}
 
-	err = h.Poster.PostDirect(creator.MattermostUserID, message, "")
+	err = h.Poster.PostDirectAttachments(creator.MattermostUserID, sa)
 	if err != nil {
 		return err
 	}
@@ -184,49 +186,77 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		return err
 	}
 
-	h.Logger.LogDebug("Processed notification: "+message,
+	h.Logger.LogDebug("Processed notification: "+sa.Title,
 		"MattermostUserID", creator.MattermostUserID,
 		"SubsriptionID", n.SubscriptionID)
 	return nil
 }
 
-func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notification, prior *store.Event) (bool, string) {
-	priorFields := eventToFields(prior.Remote)
-	newFields := eventToFields(n.Event)
-	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
-	if !changed {
-		return false, ""
+func newEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	sa := &model.SlackAttachment{
+		AuthorName: n.Event.Organizer.EmailAddress.Name,
+		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
+		Title:      "New event: " + n.Event.Subject,
+		TitleLink:  n.Event.Weblink,
+		Text:       n.Event.BodyPreview,
 	}
 
-	message := fmt.Sprintf("Updated event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
-	for _, k := range added {
-		message += fmt.Sprintf("- %s: %s\n", k, newFields[k].Strings())
-	}
-	for _, k := range updated {
-		message += fmt.Sprintf("- %s: ~~%s~~ \u2192 %s\n",
-			k, priorFields[k].Strings(), newFields[k].Strings())
-	}
-	for _, k := range deleted {
-		message += fmt.Sprintf("- %s: ~~%s~~\n", k, newFields[k].Strings())
+	for n, v := range eventToFields(n.Event) {
+		// skip some fields
+		switch n {
+		case FieldBodyPreview, FieldSubject, FieldOrganizer, FieldResponseStatus:
+			continue
+		}
+
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: n,
+			Value: fmt.Sprintf("%s", v.Strings()),
+			Short: true,
+		})
 	}
 
-	h.Logger.LogDebug("Processed event notification",
-		"SubsriptionID", n.SubscriptionID,
-		"Message", message)
-	return true, message
+	return sa
 }
 
-func (h *notificationHandler) formatNewEventNotification(n *remote.Notification) string {
-	message := ""
-	if n.ChangeType == "created" {
-		message = fmt.Sprintf("New event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
-	} else {
-		message = fmt.Sprintf("Previously unseen event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
+func updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event) (bool, *model.SlackAttachment) {
+	sa := &model.SlackAttachment{
+		AuthorName: n.Event.Organizer.EmailAddress.Name,
+		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
+		Title:      "Updated: " + n.Event.Subject,
+		TitleLink:  n.Event.Weblink,
+		Text:       n.Event.BodyPreview,
 	}
-	for k, v := range eventToFields(n.Event) {
-		message += fmt.Sprintf("- %s: %s\n", k, v.Strings())
+
+	newFields := eventToFields(n.Event)
+	priorFields := eventToFields(prior)
+	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
+	if !changed {
+		return false, nil
 	}
-	return message
+
+	for _, k := range added {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: k,
+			Value: newFields[k].Strings(),
+			Short: true,
+		})
+	}
+	for _, k := range updated {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: k,
+			Value: fmt.Sprintf("~~%s~~ \u2192 %s", priorFields[k].Strings(), newFields[k].Strings()),
+			Short: true,
+		})
+	}
+	for _, k := range deleted {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: k,
+			Value: fmt.Sprintf("~~%s~~", priorFields[k].Strings()),
+			Short: true,
+		})
+	}
+
+	return true, sa
 }
 
 func eventToFields(e *remote.Event) fields.Fields {
@@ -268,12 +298,12 @@ func eventToFields(e *remote.Event) fields.Fields {
 			dur = "one hour"
 		default:
 			dur = fmt.Sprintf("%v hours", hours)
-			if minutes > 0 {
-				if dur != "" {
-					dur += ", "
-				}
-				dur += fmt.Sprintf("%v minutes", minutes)
+		}
+		if minutes > 0 {
+			if dur != "" {
+				dur += ", "
 			}
+			dur += fmt.Sprintf("%v minutes", minutes)
 		}
 	}
 
@@ -289,6 +319,7 @@ func eventToFields(e *remote.Event) fields.Fields {
 		FieldBodyPreview: fields.NewStringValue(e.BodyPreview),
 		FieldImportance:  fields.NewStringValue(e.Importance),
 		FieldWhen:        fields.NewStringValue(startDate),
+		FieldDuration:    fields.NewStringValue(dur),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),

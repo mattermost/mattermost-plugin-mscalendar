@@ -67,7 +67,7 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 	message := fmt.Sprintf("### Welcome to the Microsoft Office plugin!\n"+
 		"Here is some info to prove we got you logged in\n"+
 		"Name: %s \n", me.DisplayName)
-	api.Poster.PostDirect(mattermostUserID, message, "custom_TODO")
+	api.Poster.PostDirectf(mattermostUserID, message)
 
 	return nil
 }
