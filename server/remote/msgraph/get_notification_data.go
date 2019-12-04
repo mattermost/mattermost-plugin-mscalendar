@@ -12,7 +12,7 @@ import (
 
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
 	n := *orig
-	wh := n.WebhookNotification.(*webhookNotification)
+	wh := n.Webhook.(*webhook)
 	switch wh.ResourceData.DataType {
 	case "#Microsoft.Graph.Event":
 		event := remote.Event{}
@@ -26,6 +26,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		}
 		n.Event = &event
 		n.ChangeType = wh.ChangeType
+		n.IsBare = false
 
 	default:
 		c.LogInfo("Unknown resource type: "+wh.ResourceData.DataType,

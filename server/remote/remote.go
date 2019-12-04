@@ -20,7 +20,7 @@ import (
 type Remote interface {
 	NewClient(context.Context, *oauth2.Token) Client
 	NewOAuth2Config() *oauth2.Config
-	HandleNotification(http.ResponseWriter, *http.Request) []*Notification
+	HandleWebhook(http.ResponseWriter, *http.Request) []*Notification
 }
 
 var Makers = map[string]func(*config.Config, utils.Logger) Remote{}

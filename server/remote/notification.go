@@ -26,8 +26,8 @@ type Notification struct {
 
 	// Remote-specific data: full raw JSON of the webhook, and the decoded
 	// backend-specific struct.
-	WebhookRawData      []byte
-	WebhookNotification interface{}
+	WebhookRawData []byte
+	Webhook        interface{}
 
 	// Notification data
 	Subscription        *Subscription

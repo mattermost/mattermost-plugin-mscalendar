@@ -14,7 +14,7 @@ import (
 
 const renewSubscriptionBeforeExpiration = 12 * time.Hour
 
-type webhookNotification struct {
+type webhook struct {
 	ChangeType                     string `json:"changeType"`
 	ClientState                    string `json:"clientState,omitempty"`
 	Resource                       string `json:"resource,omitempty"`
@@ -25,7 +25,7 @@ type webhookNotification struct {
 	} `json:"resourceData"`
 }
 
-func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request) []*remote.Notification {
+func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote.Notification {
 	// Microsoft graph requires webhook endpoint validation, see
 	// https://docs.microsoft.com/en-us/graph/webhooks#notification-endpoint-validation
 	vtok := req.FormValue("validationToken")
@@ -47,7 +47,7 @@ func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request) []*r
 
 	// Get the list of webhooks
 	var v struct {
-		Value []*webhookNotification `json:"value"`
+		Value []*webhook `json:"value"`
 	}
 	err = json.Unmarshal(rawData, &v)
 	if err != nil {
@@ -60,12 +60,12 @@ func (r *impl) HandleNotification(w http.ResponseWriter, req *http.Request) []*r
 	notifications := []*remote.Notification{}
 	for _, wh := range v.Value {
 		n := &remote.Notification{
-			SubscriptionID:      wh.SubscriptionID,
-			ChangeType:          wh.ChangeType,
-			ClientState:         wh.ClientState,
-			IsBare:              true,
-			WebhookRawData:      rawData,
-			WebhookNotification: wh,
+			SubscriptionID: wh.SubscriptionID,
+			ChangeType:     wh.ChangeType,
+			ClientState:    wh.ClientState,
+			IsBare:         true,
+			WebhookRawData: rawData,
+			Webhook:        wh,
 		}
 
 		expires, err := time.Parse(time.RFC3339, wh.SubscriptionExpirationDateTime)

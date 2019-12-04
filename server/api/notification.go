@@ -58,7 +58,7 @@ func NewNotificationHandler(apiConfig Config) NotificationHandler {
 }
 
 func (h *notificationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	notifications := h.Remote.HandleNotification(w, req)
+	notifications := h.Remote.HandleWebhook(w, req)
 	for _, n := range notifications {
 		h.incoming <- n
 	}
