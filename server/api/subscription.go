@@ -107,7 +107,7 @@ func (api *api) DeleteUserEventSubscription() error {
 func (api *api) DeleteOrphanedSubscription(subscriptionID string) error {
 	client, err := api.MakeClient()
 	if err != nil {
-		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
+		return err
 	}
 	err = client.DeleteSubscription(subscriptionID)
 	if err != nil {
