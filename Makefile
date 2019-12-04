@@ -83,9 +83,16 @@ golint:
 mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen
-	mockgen -destination server/user/mock_user/mock_oauth2_store.go github.com/mattermost/mattermost-plugin-msoffice/server/user OAuth2StateStore
-	mockgen -destination server/utils/mock_utils/mock_bot_poster.go github.com/mattermost/mattermost-plugin-msoffice/server/utils BotPoster
-	mockgen -destination server/kvstore/mock_kvstore/mock_kvstore.go github.com/mattermost/mattermost-plugin-msoffice/server/kvstore KVStore
+	mockgen -destination server/api/mock_api/mock_oauth2.go github.com/mattermost/mattermost-plugin-msoffice/server/api OAuth2
+	mockgen -destination server/api/mock_api/mock_subscriptions.go github.com/mattermost/mattermost-plugin-msoffice/server/api Subscriptions
+	mockgen -destination server/api/mock_api/mock_calendar.go github.com/mattermost/mattermost-plugin-msoffice/server/api Calendar
+	mockgen -destination server/api/mock_api/mock_client.go github.com/mattermost/mattermost-plugin-msoffice/server/api Client
+	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-msoffice/server/remote Remote
+	mockgen -destination server/remote/mock_remote/mock_client.go github.com/mattermost/mattermost-plugin-msoffice/server/remote Client
+	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot Poster
+	mockgen -destination server/store/mock_store/mock_oauth2_store.go github.com/mattermost/mattermost-plugin-msoffice/server/store OAuth2StateStore
+	mockgen -destination server/store/mock_store/mock_subscription_store.go github.com/mattermost/mattermost-plugin-msoffice/server/store SubscriptionStore
+	mockgen -destination server/store/mock_store/mock_user_store.go github.com/mattermost/mattermost-plugin-msoffice/server/store UserStore
 endif
 
 ## Builds the server, if it exists, including support for multiple architectures.

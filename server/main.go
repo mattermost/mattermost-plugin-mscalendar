@@ -1,7 +1,7 @@
 package main
 
 import (
-	mattermost "github.com/mattermost/mattermost-server/plugin"
+	mattermost "github.com/mattermost/mattermost-server/v5/plugin"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	msoffice "github.com/mattermost/mattermost-plugin-msoffice/server/plugin"
@@ -15,7 +15,7 @@ func main() {
 	mattermost.ClientMain(
 		msoffice.NewWithConfig(
 			&config.Config{
-				PluginId:       manifest.ID,
+				PluginID:       manifest.ID,
 				PluginVersion:  manifest.Version,
 				BuildHash:      BuildHash,
 				BuildHashShort: BuildHashShort,
