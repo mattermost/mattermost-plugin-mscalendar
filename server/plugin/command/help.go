@@ -18,6 +18,15 @@ func (c *Command) help(parameters ...string) (string, error) {
 		c.Config.BuildHash,
 		c.Config.BuildDate)
 	resp += "\n"
-	resp += "TODO help"
+	resp += "TODO help\n"
+	resp += "/msoffice\n"
+	resp += "/msoffice connect\n"
+	resp += "/msoffice help\n"
+	resp += "/msoffice info\n"
+	resp += "/msoffice viewcal\n"
+	resp += "/msoffice subscribe\n"
+	resp += "/msoffice createcal <name>\n"
+	resp += "/msoffice deletecal <id>\n"
+	resp += "/msoffice createevent <Subject> <Start> <End> <Reminder (minutes)>\n"
 	return resp, nil
 }

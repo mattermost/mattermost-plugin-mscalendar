@@ -11,6 +11,9 @@ type Client interface {
 	CreateSubscription(notificationURL string) (*Subscription, error)
 	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error
+	CreateCalendar(calendarName string) (*Calendar, error)
+	CreateEvent(calendarEvent *Event) (*Event, error)
+	DeleteCalendarByID(calendarID string) error
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
 	GetUserCalendars(userID string) ([]*Calendar, error)
