@@ -51,7 +51,7 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     r.conf.OAuth2ClientID,
 		ClientSecret: r.conf.OAuth2ClientSecret,
-		RedirectURL:  r.conf.PluginURL + config.OAuth2RedirectFullPath,
+		RedirectURL:  r.conf.PluginURL + config.FullPathOAuth2Redirect,
 		Scopes: []string{
 			"offline_access",
 			"User.Read",

@@ -32,15 +32,23 @@ type Calendar interface {
 	ViewCalendar(from, to time.Time) ([]*remote.Event, error)
 }
 
+type Event interface {
+	AcceptEvent(eventID string) error
+	DeclineEvent(eventID string) error
+	TentativelyAcceptEvent(eventID string) error
+	RespondToEvent(eventID, response string) error
+}
+
 type Client interface {
 	MakeClient() (remote.Client, error)
 }
 
 type API interface {
+	Calendar
 	Client
+	Event
 	OAuth2
 	Subscriptions
-	Calendar
 }
 
 // Dependencies contains all API dependencies

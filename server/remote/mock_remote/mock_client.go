@@ -34,6 +34,20 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
+// AcceptUserEvent mocks base method
+func (m *MockClient) AcceptUserEvent(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AcceptUserEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AcceptUserEvent indicates an expected call of AcceptUserEvent
+func (mr *MockClientMockRecorder) AcceptUserEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptUserEvent", reflect.TypeOf((*MockClient)(nil).AcceptUserEvent), arg0, arg1)
+}
+
 // Call mocks base method
 func (m *MockClient) Call(arg0, arg1 string, arg2, arg3 interface{}) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -62,6 +76,20 @@ func (m *MockClient) CreateSubscription(arg0 string) (*remote.Subscription, erro
 func (mr *MockClientMockRecorder) CreateSubscription(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSubscription", reflect.TypeOf((*MockClient)(nil).CreateSubscription), arg0)
+}
+
+// DeclineUserEvent mocks base method
+func (m *MockClient) DeclineUserEvent(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeclineUserEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeclineUserEvent indicates an expected call of DeclineUserEvent
+func (mr *MockClientMockRecorder) DeclineUserEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeclineUserEvent", reflect.TypeOf((*MockClient)(nil).DeclineUserEvent), arg0, arg1)
 }
 
 // DeleteSubscription mocks base method
@@ -181,4 +209,18 @@ func (m *MockClient) RenewSubscription(arg0 string) (*remote.Subscription, error
 func (mr *MockClientMockRecorder) RenewSubscription(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewSubscription", reflect.TypeOf((*MockClient)(nil).RenewSubscription), arg0)
+}
+
+// TentativelyAcceptUserEvent mocks base method
+func (m *MockClient) TentativelyAcceptUserEvent(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TentativelyAcceptUserEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TentativelyAcceptUserEvent indicates an expected call of TentativelyAcceptUserEvent
+func (mr *MockClientMockRecorder) TentativelyAcceptUserEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TentativelyAcceptUserEvent", reflect.TypeOf((*MockClient)(nil).TentativelyAcceptUserEvent), arg0, arg1)
 }

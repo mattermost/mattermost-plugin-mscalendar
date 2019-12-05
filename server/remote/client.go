@@ -6,8 +6,10 @@ package remote
 import "time"
 
 type Client interface {
+	AcceptUserEvent(userID, eventID string) error
 	Call(method, path string, in, out interface{}) (responseData []byte, err error)
 	CreateSubscription(notificationURL string) (*Subscription, error)
+	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
@@ -16,4 +18,5 @@ type Client interface {
 	GetUserEvent(userID, eventID string) (*Event, error)
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
+	TentativelyAcceptUserEvent(userID, eventID string) error
 }

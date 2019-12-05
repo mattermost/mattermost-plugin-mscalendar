@@ -8,15 +8,23 @@ const (
 	BotDisplayName = "Microsoft Office TODO"
 	BotDescription = "Created by the Microsoft Office Plugin. TODO"
 
-	ApplicationName       = "Microsoft Office"
-	Repository            = "mattermost-plugin-msoffice"
-	CommandTrigger        = "msoffice"
-	OAuth2Path            = "/oauth2"
-	OAuth2CompletePath    = "/complete"
-	APIPath               = "/api/v1"
-	NotificationPath      = "/notification/v1"
-	EventNotificationPath = "/event"
+	ApplicationName = "Microsoft Office"
+	Repository      = "mattermost-plugin-msoffice"
+	CommandTrigger  = "msoffice"
 
-	EventNotificationFullPath = NotificationPath + EventNotificationPath
-	OAuth2RedirectFullPath    = OAuth2Path + OAuth2CompletePath
+	PathOAuth2       = "/oauth2"
+	PathComplete     = "/complete"
+	PathAPI          = "/api/v1"
+	PathPostAction   = "/action"
+	PathRespond      = "/respond"
+	PathAccept       = "/accept"
+	PathDecline      = "/decline"
+	PathTentative    = "/tentative"
+	PathNotification = "/notification/v1"
+	PathEvent        = "/event"
+
+	FullPathEventNotification = PathNotification + PathEvent
+	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete
+
+	EventIDKey = "EventID"
 )

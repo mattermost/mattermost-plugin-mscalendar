@@ -121,8 +121,8 @@ func TestOAuth2Complete(t *testing.T) {
 
 				us.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
-				poster.EXPECT().PostDirect(
-					gomock.Eq("fake@mattermost.com"), gomock.Eq(getBotPosterMessage("displayName-value")), gomock.Eq("custom_TODO")).
+				poster.EXPECT().PostDirectf(
+					gomock.Eq("fake@mattermost.com"), gomock.Eq(getBotPosterMessage("displayName-value"))).
 					Return(nil).Times(1)
 			},
 			expectedHTTPCode: http.StatusOK,

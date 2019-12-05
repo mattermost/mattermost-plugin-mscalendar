@@ -24,15 +24,22 @@ func NewHandler() *Handler {
 		Router: mux.NewRouter(),
 	}
 
-	apiRouter := h.Router.PathPrefix(config.APIPath).Subrouter()
+	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", h.apiGetAuthorized).Methods("GET")
 
-	notificationRouter := h.Router.PathPrefix(config.NotificationPath).Subrouter()
-	notificationRouter.HandleFunc(config.EventNotificationPath, h.notification).Methods("POST")
+	// TODO Refactor this to api/notification.go, remove consts
+	notificationRouter := h.Router.PathPrefix(config.PathNotification).Subrouter()
+	notificationRouter.HandleFunc(config.PathEvent, h.notification).Methods("POST")
 
-	oauth2Router := h.Router.PathPrefix(config.OAuth2Path).Subrouter()
+	actionRouter := h.Router.PathPrefix(config.PathPostAction).Subrouter()
+	actionRouter.HandleFunc(config.PathAccept, h.actionAccept).Methods("POST")
+	actionRouter.HandleFunc(config.PathDecline, h.actionDecline).Methods("POST")
+	actionRouter.HandleFunc(config.PathTentative, h.actionTentative).Methods("POST")
+	actionRouter.HandleFunc(config.PathRespond, h.actionRespond).Methods("POST")
+
+	oauth2Router := h.Router.PathPrefix(config.PathOAuth2).Subrouter()
 	oauth2Router.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
-	oauth2Router.HandleFunc(config.OAuth2CompletePath, h.oauth2Complete).Methods("GET")
+	oauth2Router.HandleFunc(config.PathComplete, h.oauth2Complete).Methods("GET")
 
 	h.Router.Handle("{anything:.*}", http.NotFoundHandler())
 	return h
