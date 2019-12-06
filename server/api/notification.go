@@ -9,11 +9,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-server/v5/model"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/fields"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
-	"github.com/pkg/errors"
 )
 
 const maxQueueSize = 1024
@@ -28,6 +32,13 @@ const (
 	FieldAttendees      = "Attendees"
 	FieldOrganizer      = "Organizer"
 	FieldResponseStatus = "ResponseStatus"
+)
+
+const (
+	OptionYes          = "Yes"
+	OptionNotResponded = "Not responded"
+	OptionNo           = "No"
+	OptionMaybe        = "Maybe"
 )
 
 type NotificationHandler interface {
@@ -153,27 +164,26 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		}
 	}
 
-	message := ""
-	changed := false
+	var sa *model.SlackAttachment
 	prior, err := h.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
-	switch err {
-	case kvstore.ErrNotFound:
-		changed = true
-		message = h.formatNewEventNotification(n)
-		prior = &store.Event{}
-	case nil:
-		changed, message = h.formatUpdatedEventNotification(n, prior)
-	default:
+	if err != nil && err != kvstore.ErrNotFound {
 		return err
 	}
-	if !changed {
-		h.Logger.LogDebug("No changes detected in event",
-			"MattermostUserID", creator.MattermostUserID,
-			"SubsriptionID", n.SubscriptionID)
-		return nil
+	if prior != nil {
+		var changed bool
+		changed, sa = h.updatedEventSlackAttachment(n, prior.Remote)
+		if !changed {
+			h.Logger.LogDebug("No changes detected in event",
+				"MattermostUserID", creator.MattermostUserID,
+				"SubsriptionID", n.SubscriptionID)
+			return nil
+		}
+	} else {
+		sa = h.newEventSlackAttachment(n)
+		prior = &store.Event{}
 	}
 
-	err = h.Poster.PostDirect(creator.MattermostUserID, message, "")
+	err = h.Poster.PostDirectAttachments(creator.MattermostUserID, sa)
 	if err != nil {
 		return err
 	}
@@ -184,49 +194,153 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		return err
 	}
 
-	h.Logger.LogDebug("Processed notification: "+message,
+	h.Logger.LogDebug("Processed notification: "+sa.Title,
 		"MattermostUserID", creator.MattermostUserID,
 		"SubsriptionID", n.SubscriptionID)
 	return nil
 }
 
-func (h *notificationHandler) formatUpdatedEventNotification(n *remote.Notification, prior *store.Event) (bool, string) {
-	priorFields := eventToFields(prior.Remote)
-	newFields := eventToFields(n.Event)
-	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
-	if !changed {
-		return false, ""
+func (h *notificationHandler) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	return &model.SlackAttachment{
+		AuthorName: n.Event.Organizer.EmailAddress.Name,
+		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
+		TitleLink:  n.Event.Weblink,
+		Title:      n.Event.Subject,
+		Text:       n.Event.BodyPreview,
 	}
-
-	message := fmt.Sprintf("Updated event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
-	for _, k := range added {
-		message += fmt.Sprintf("- %s: %s\n", k, newFields[k].Strings())
-	}
-	for _, k := range updated {
-		message += fmt.Sprintf("- %s: ~~%s~~ \u2192 %s\n",
-			k, priorFields[k].Strings(), newFields[k].Strings())
-	}
-	for _, k := range deleted {
-		message += fmt.Sprintf("- %s: ~~%s~~\n", k, newFields[k].Strings())
-	}
-
-	h.Logger.LogDebug("Processed event notification",
-		"SubsriptionID", n.SubscriptionID,
-		"Message", message)
-	return true, message
 }
 
-func (h *notificationHandler) formatNewEventNotification(n *remote.Notification) string {
-	message := ""
-	if n.ChangeType == "created" {
-		message = fmt.Sprintf("New event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
-	} else {
-		message = fmt.Sprintf("Previously unseen event: [%s](%s)\n", n.Event.Subject, n.Event.Weblink)
+func (h *notificationHandler) newEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	sa := h.newSlackAttachment(n)
+	sa.Title = "(new) " + sa.Title
+
+	for n, v := range eventToFields(n.Event) {
+		// skip some fields
+		switch n {
+		case FieldBodyPreview, FieldSubject, FieldOrganizer, FieldResponseStatus:
+			continue
+		}
+
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: n,
+			Value: fmt.Sprintf("%s", v.Strings()),
+			Short: true,
+		})
 	}
-	for k, v := range eventToFields(n.Event) {
-		message += fmt.Sprintf("- %s: %s\n", k, v.Strings())
+
+	h.addPostActionSelect(sa, n.Event)
+	return sa
+}
+
+func (h *notificationHandler) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event) (bool, *model.SlackAttachment) {
+	sa := h.newSlackAttachment(n)
+	sa.Title = "(updated) " + sa.Title
+
+	newFields := eventToFields(n.Event)
+	priorFields := eventToFields(prior)
+	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
+	if !changed {
+		return false, nil
 	}
-	return message
+
+	for _, k := range added {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: k,
+			Value: newFields[k].Strings(),
+			Short: true,
+		})
+	}
+	for _, k := range updated {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: k,
+			Value: fmt.Sprintf("~~%s~~ \u2192 %s", priorFields[k].Strings(), newFields[k].Strings()),
+			Short: true,
+		})
+	}
+	for _, k := range deleted {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: k,
+			Value: fmt.Sprintf("~~%s~~", priorFields[k].Strings()),
+			Short: true,
+		})
+	}
+
+	h.addPostActionSelect(sa, n.Event)
+	return true, sa
+}
+
+func (h *notificationHandler) actionURL(action string) string {
+	return fmt.Sprintf("%s/%s/%s", h.Config.PluginURLPath, config.PathPostAction, action)
+}
+
+func (h *notificationHandler) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
+	if !event.ResponseRequested {
+		return
+	}
+	context := map[string]interface{}{
+		config.EventIDKey: event.ID,
+	}
+	sa.Actions = []*model.PostAction{
+		{
+			Name: "Accept",
+			Type: model.POST_ACTION_TYPE_BUTTON,
+			Integration: &model.PostActionIntegration{
+				URL:     h.actionURL(config.PathAccept),
+				Context: context,
+			},
+		},
+		{
+			Name: "Tentatively Accept",
+			Type: model.POST_ACTION_TYPE_BUTTON,
+			Integration: &model.PostActionIntegration{
+				URL:     h.actionURL(config.PathTentative),
+				Context: context,
+			},
+		},
+		{
+			Name: "Decline",
+			Type: model.POST_ACTION_TYPE_BUTTON,
+			Integration: &model.PostActionIntegration{
+				URL:     h.actionURL(config.PathDecline),
+				Context: context,
+			},
+		},
+	}
+}
+
+func (h *notificationHandler) addPostActionSelect(sa *model.SlackAttachment, event *remote.Event) {
+	if !event.ResponseRequested {
+		return
+	}
+
+	context := map[string]interface{}{
+		config.EventIDKey: event.ID,
+	}
+
+	pa := &model.PostAction{
+		Name: "Response",
+		Type: model.POST_ACTION_TYPE_SELECT,
+		Integration: &model.PostActionIntegration{
+			URL:     h.actionURL(config.PathRespond),
+			Context: context,
+		},
+	}
+
+	for _, o := range []string{OptionNotResponded, OptionYes, OptionNo, OptionMaybe} {
+		pa.Options = append(pa.Options, &model.PostActionOptions{Text: o, Value: o})
+	}
+	switch event.ResponseStatus.Response {
+	case "notResponded":
+		pa.DefaultOption = OptionNotResponded
+	case "accepted":
+		pa.DefaultOption = OptionYes
+	case "declined":
+		pa.DefaultOption = OptionNo
+	case "tentativelyAccepted":
+		pa.DefaultOption = OptionMaybe
+	}
+
+	sa.Actions = []*model.PostAction{pa}
 }
 
 func eventToFields(e *remote.Event) fields.Fields {
@@ -268,12 +382,12 @@ func eventToFields(e *remote.Event) fields.Fields {
 			dur = "one hour"
 		default:
 			dur = fmt.Sprintf("%v hours", hours)
-			if minutes > 0 {
-				if dur != "" {
-					dur += ", "
-				}
-				dur += fmt.Sprintf("%v minutes", minutes)
+		}
+		if minutes > 0 {
+			if dur != "" {
+				dur += ", "
 			}
+			dur += fmt.Sprintf("%v minutes", minutes)
 		}
 	}
 
@@ -289,6 +403,7 @@ func eventToFields(e *remote.Event) fields.Fields {
 		FieldBodyPreview: fields.NewStringValue(e.BodyPreview),
 		FieldImportance:  fields.NewStringValue(e.Importance),
 		FieldWhen:        fields.NewStringValue(startDate),
+		FieldDuration:    fields.NewStringValue(dur),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),

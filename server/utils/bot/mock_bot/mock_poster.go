@@ -6,6 +6,7 @@ package mock_bot
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/mattermost/mattermost-server/v5/model"
 	reflect "reflect"
 )
 
@@ -32,18 +33,42 @@ func (m *MockPoster) EXPECT() *MockPosterMockRecorder {
 	return m.recorder
 }
 
-// PostDirect mocks base method
-func (m *MockPoster) PostDirect(arg0, arg1, arg2 string) error {
+// PostDirectAttachments mocks base method
+func (m *MockPoster) PostDirectAttachments(arg0 string, arg1 ...*model.SlackAttachment) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PostDirect", arg0, arg1, arg2)
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PostDirectAttachments", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// PostDirect indicates an expected call of PostDirect
-func (mr *MockPosterMockRecorder) PostDirect(arg0, arg1, arg2 interface{}) *gomock.Call {
+// PostDirectAttachments indicates an expected call of PostDirectAttachments
+func (mr *MockPosterMockRecorder) PostDirectAttachments(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostDirect", reflect.TypeOf((*MockPoster)(nil).PostDirect), arg0, arg1, arg2)
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostDirectAttachments", reflect.TypeOf((*MockPoster)(nil).PostDirectAttachments), varargs...)
+}
+
+// PostDirectf mocks base method
+func (m *MockPoster) PostDirectf(arg0, arg1 string, arg2 ...interface{}) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PostDirectf", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PostDirectf indicates an expected call of PostDirectf
+func (mr *MockPosterMockRecorder) PostDirectf(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostDirectf", reflect.TypeOf((*MockPoster)(nil).PostDirectf), varargs...)
 }
 
 // PostEphemeral mocks base method
