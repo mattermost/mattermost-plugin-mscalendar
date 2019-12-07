@@ -10,7 +10,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
@@ -57,7 +56,7 @@ type Dependencies struct {
 	OAuth2StateStore  store.OAuth2StateStore
 	SubscriptionStore store.SubscriptionStore
 	EventStore        store.EventStore
-	Logger            utils.Logger
+	Logger            bot.Logger
 	Poster            bot.Poster
 	Remote            remote.Remote
 	IsAuthorizedAdmin func(userId string) (bool, error)

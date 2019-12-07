@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 const renewSubscriptionBeforeExpiration = 12 * time.Hour
@@ -33,15 +34,14 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(vtok))
-		r.logger.LogDebug("Validated event webhook endpoint")
+		r.logger.Debugf("msgraph: validated event webhook endpoint.")
 		return nil
 	}
 
 	rawData, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		r.logger.LogInfo("Failed to process webhook",
-			"error", err.Error())
+		r.logger.Infof("msgraph: failed to process webhook: `%v`.", err)
 		return nil
 	}
 
@@ -52,8 +52,7 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 	err = json.Unmarshal(rawData, &v)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		r.logger.LogInfo("Failed to process webhook",
-			"error", err.Error())
+		r.logger.Infof("msgraph: failed to process webhook: `%v`.", err)
 		return nil
 	}
 
@@ -70,8 +69,9 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 
 		expires, err := time.Parse(time.RFC3339, wh.SubscriptionExpirationDateTime)
 		if err != nil {
-			r.logger.LogInfo("Invalid subscription expiration in webhook: "+err.Error(),
-				"SubscriptionID", wh.SubscriptionID)
+			r.logger.With(bot.LogContext{
+				"SubscriptionID": wh.SubscriptionID,
+			}).Infof("msgraph: invalid subscription expiration in webhook: `%v`.", err)
 			return nil
 		}
 		expires = expires.Add(-renewSubscriptionBeforeExpiration)

@@ -4,11 +4,11 @@
 package msgraph
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 const subscribeTTL = 10 * time.Minute
@@ -24,11 +24,14 @@ func (c *client) CreateSubscription(notificationURL string) (*remote.Subscriptio
 	if err != nil {
 		return nil, err
 	}
-	c.LogDebug("msgraph: created subscription",
-		"subscriptionID", sub.ID,
-		"resource", sub.Resource,
-		"changeType", sub.ChangeType,
-		"expirationDateTime", sub.ExpirationDateTime)
+
+	c.Logger.With(bot.LogContext{
+		"subscriptionID":     sub.ID,
+		"resource":           sub.Resource,
+		"changeType":         sub.ChangeType,
+		"expirationDateTime": sub.ExpirationDateTime,
+	}).Debugf("msgraph: created subscription.")
+
 	return sub, nil
 }
 
@@ -37,7 +40,11 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 	if err != nil {
 		return err
 	}
-	c.LogDebug("msgraph: deleted subscription", "subscriptionID", subscriptionID)
+
+	c.Logger.With(bot.LogContext{
+		"subscriptionID": subscriptionID,
+	}).Debugf("msgraph: deleted subscription.")
+
 	return nil
 }
 
@@ -53,7 +60,12 @@ func (c *client) RenewSubscription(subscriptionID string) (*remote.Subscription,
 	if err != nil {
 		return nil, err
 	}
-	c.LogDebug("msgraph: renewed subscription until "+sub.ExpirationDateTime, "subscriptionID", subscriptionID)
+
+	c.Logger.With(bot.LogContext{
+		"subscriptionID":     subscriptionID,
+		"expirationDateTime": expires.Format(time.RFC3339),
+	}).Debugf("msgraph: renewed subscription.")
+
 	return &sub, nil
 }
 
@@ -65,6 +77,5 @@ func (c *client) ListSubscriptions() ([]*remote.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.LogDebug(fmt.Sprintf("GetSubscriptions: returned %d subscriptions", len(v.Value)))
 	return v.Value, nil
 }

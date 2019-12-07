@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 )
 
@@ -60,10 +61,12 @@ func (s *pluginStore) StoreUserEvent(userID string, event *Event) error {
 		return err
 	}
 
-	s.Logger.LogDebug("Stored event",
-		"eventID", event.Remote.ID,
-		"userID", userID,
-		"expires", end.String())
+	s.Logger.With(bot.LogContext{
+		"UserID":  userID,
+		"eventID": event.Remote.ID,
+		"expires": end.String(),
+	}).Debugf("store: stored user event.")
+
 	return nil
 }
 
@@ -73,8 +76,10 @@ func (s *pluginStore) DeleteUserEvent(userID, eventID string) error {
 		return err
 	}
 
-	s.Logger.LogDebug("Deleted event",
-		"eventID", eventID,
-		"userID", userID)
+	s.Logger.With(bot.LogContext{
+		"UserID":  userID,
+		"eventID": eventID,
+	}).Debugf("store: deleted event.")
+
 	return nil
 }

@@ -5,63 +5,71 @@ package bot
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
-
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 )
 
 type Poster interface {
-	PostDirectf(userID, format string, args ...interface{}) error
-	PostDirectAttachments(userID string, attachments ...*model.SlackAttachment) error
-	PostEphemeral(userID, channelId, message string)
+	// DM posts a simple Direct Message to the specified user
+	DM(userID, format string, args ...interface{}) error
+
+	// DMWithAttachments posts a Direct Message that contains Slack attachments.
+	// Often used to include post actions.
+	DMWithAttachments(userID string, attachments ...*model.SlackAttachment) error
+
+	// Ephemeral sends an ephemeral message to a user
+	Ephemeral(userID, channelID, format string, args ...interface{})
 }
 
-type poster struct {
-	API    plugin.API
-	config *config.Config
-}
-
-// NewPoster creates a new bot poster.
-func NewPoster(api plugin.API, conf *config.Config) Poster {
-	return &poster{
-		API:    api,
-		config: conf,
-	}
-}
-
-func (poster *poster) PostDirectf(userID, format string, args ...interface{}) error {
-	return poster.postDirect(userID, &model.Post{
+// DM posts a simple Direct Message to the specified user
+func (bot *bot) DM(userID, format string, args ...interface{}) error {
+	return bot.dm(userID, &model.Post{
 		Message: fmt.Sprintf(format, args...),
 	})
 }
 
-func (poster *poster) PostDirectAttachments(userID string, attachments ...*model.SlackAttachment) error {
+// DMWithAttachments posts a Direct Message that contains Slack attachments.
+// Often used to include post actions.
+func (bot *bot) DMWithAttachments(userID string, attachments ...*model.SlackAttachment) error {
 	post := model.Post{}
 	model.ParseSlackAttachment(&post, attachments)
-	return poster.postDirect(userID, &post)
+	return bot.dm(userID, &post)
 }
 
-func (poster *poster) postDirect(userID string, post *model.Post) error {
-	channel, err := poster.API.GetDirectChannel(userID, poster.config.BotUserID)
+func (bot *bot) dm(userID string, post *model.Post) error {
+	channel, err := bot.pluginAPI.GetDirectChannel(userID, bot.mattermostUserID)
 	if err != nil {
-		poster.API.LogInfo("Couldn't get bot's DM channel", "user_id", userID)
+		bot.pluginAPI.LogInfo("Couldn't get bot's DM channel", "user_id", userID)
 		return err
 	}
 	post.ChannelId = channel.Id
-	post.UserId = poster.config.BotUserID
-	if _, err := poster.API.CreatePost(post); err != nil {
+	post.UserId = bot.mattermostUserID
+	if _, err := bot.pluginAPI.CreatePost(post); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (poster *poster) PostEphemeral(userId, channelId, message string) {
-	post := &model.Post{
-		UserId:    poster.config.BotUserID,
-		ChannelId: channelId,
-		Message:   message,
+// DM posts a simple Direct Message to the specified user
+func (bot *bot) dmAdmins(format string, args ...interface{}) error {
+	for _, id := range strings.Split(bot.AdminUserIDs, ",") {
+		err := bot.dm(id, &model.Post{
+			Message: fmt.Sprintf(format, args...),
+		})
+		if err != nil {
+			return err
+		}
 	}
-	_ = poster.API.SendEphemeralPost(userId, post)
+	return nil
+}
+
+// Ephemeral sends an ephemeral message to a user
+func (bot *bot) Ephemeral(userId, channelId, format string, args ...interface{}) {
+	post := &model.Post{
+		UserId:    bot.mattermostUserID,
+		ChannelId: channelId,
+		Message:   fmt.Sprintf(format, args...),
+	}
+	_ = bot.pluginAPI.SendEphemeralPost(userId, post)
 }

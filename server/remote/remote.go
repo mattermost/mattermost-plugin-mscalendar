@@ -10,7 +10,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 type Remote interface {
@@ -19,4 +19,4 @@ type Remote interface {
 	HandleWebhook(http.ResponseWriter, *http.Request) []*Notification
 }
 
-var Makers = map[string]func(*config.Config, utils.Logger) Remote{}
+var Makers = map[string]func(*config.Config, bot.Logger) Remote{}

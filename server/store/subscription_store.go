@@ -4,9 +4,11 @@
 package store
 
 import (
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 )
 
 type SubscriptionStore interface {
@@ -45,10 +47,11 @@ func (s *pluginStore) StoreUserSubscription(user *User, subscription *Subscripti
 		return err
 	}
 
-	s.Logger.LogDebug("Stored user subscription",
-		"mattermostUserID", user.MattermostUserID,
-		"remoteUserID", subscription.Remote.CreatorID,
-		"subscriptionID", subscription.Remote.ID)
+	s.Logger.With(bot.LogContext{
+		"mattermostUserID": user.MattermostUserID,
+		"remoteUserID":     subscription.Remote.CreatorID,
+		"subscriptionID":   subscription.Remote.ID,
+	}).Debugf("store: stored mattermost user subscription.")
 	return nil
 }
 
@@ -67,8 +70,9 @@ func (s *pluginStore) DeleteUserSubscription(user *User, subscriptionID string) 
 		mattermostUserID = user.MattermostUserID
 	}
 
-	s.Logger.LogDebug("Deleted user subscription",
-		"mattermostUserID", mattermostUserID,
-		"subscriptionID", subscriptionID)
+	s.Logger.With(bot.LogContext{
+		"mattermostUserID": mattermostUserID,
+		"subscriptionID":   subscriptionID,
+	}).Debugf("store: deleted mattermost user subscription.")
 	return nil
 }

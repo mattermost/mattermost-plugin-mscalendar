@@ -14,7 +14,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 func TestOAuth2Connect(t *testing.T) {
@@ -70,7 +70,7 @@ func TestOAuth2Connect(t *testing.T) {
 			}
 
 			dependencies := mock_api.NewMockDependencies(ctrl)
-			dependencies.Remote = remote.Makers[msgraph.Kind](conf, utils.NilLogger)
+			dependencies.Remote = remote.Makers[msgraph.Kind](conf, &bot.NilLogger{})
 			if tc.setup != nil {
 				tc.setup(dependencies)
 			}
