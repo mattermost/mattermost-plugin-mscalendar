@@ -22,10 +22,11 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 	if err != nil {
 		return nil, errors.WithMessage(err, errContext)
 	}
-	if len(path) > 0 && path[0] != '/' {
-		path = "/" + path
+
+	// prepend baseURL to relative paths
+	if len(path) > 0 && path[0] == '/' {
+		path = baseURL.String() + path
 	}
-	path = baseURL.String() + path
 
 	var inBody io.Reader
 	if in != nil {
@@ -34,6 +35,7 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 		if err != nil {
 			return nil, err
 		}
+		inBody = buf
 	}
 	req, err := http.NewRequest(method, path, inBody)
 	if err != nil {
