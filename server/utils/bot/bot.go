@@ -34,8 +34,8 @@ type bot struct {
 	logContext       LogContext
 }
 
-// NewBot creates a new bot poster.
-func NewBot(api plugin.API, botUserID string) Bot {
+// GetBot creates a new bot API instance.
+func GetBot(api plugin.API, botUserID string) Bot {
 	return &bot{
 		pluginAPI:        api,
 		mattermostUserID: botUserID,

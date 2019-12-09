@@ -9,7 +9,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
-// isAuthorized returns true if the user is authorized to use the workflow plugin's admin-level APIs/commands.
+// IsAuthorizedAdmin returns true if the user is either a Mattermost sysadmin,
+// or is a designated plugin administrator (see config.StoredConfig).
 func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 	user, err := p.API.GetUser(mattermostUserID)
 	if err != nil {
@@ -19,6 +20,6 @@ func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 		return true, nil
 	}
 	conf := p.getConfig()
-	bot := bot.NewBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
+	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
 	return bot.IsUserAdmin(mattermostUserID), nil
 }

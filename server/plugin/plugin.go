@@ -162,7 +162,7 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 
 func (p *Plugin) newAPIConfig() api.Config {
 	conf := p.getConfig()
-	bot := bot.NewBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
+	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
 	store := store.NewPluginStore(p.API, bot)
 
 	return api.Config{
