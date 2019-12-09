@@ -1,5 +1,7 @@
 package config
 
+import "github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+
 // StoredConfig represents the data stored in and managed with the Mattermost
 // config.
 type StoredConfig struct {
@@ -7,9 +9,7 @@ type StoredConfig struct {
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
 
-	// AdminUserIDs contains a comma-separated list of user IDs that are allowed
-	// to administer plugin functions, even if not Mattermost sysadmins.
-	AdminUserIDs string
+	bot.BotConfig
 }
 
 // Config represents the the metadata handed to all request runners (command,

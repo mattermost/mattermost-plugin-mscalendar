@@ -8,7 +8,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot/mock_bot"
 )
 
@@ -17,7 +17,7 @@ func NewMockDependencies(ctrl *gomock.Controller) *api.Dependencies {
 		UserStore:         mock_store.NewMockUserStore(ctrl),
 		OAuth2StateStore:  mock_store.NewMockOAuth2StateStore(ctrl),
 		SubscriptionStore: mock_store.NewMockSubscriptionStore(ctrl),
-		Logger:            utils.NilLogger,
+		Logger:            &bot.NilLogger{},
 		Poster:            mock_bot.NewMockPoster(ctrl),
 		Remote:            mock_remote.NewMockRemote(ctrl),
 	}

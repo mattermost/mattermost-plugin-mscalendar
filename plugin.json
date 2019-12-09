@@ -24,6 +24,42 @@
                 "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \nUser IDs can be found by navigating to **System Console** > **User Management**. After clicking into a user's name, their ID is on the right-hand side of the blue header."
             },
             {
+                "key": "AdminLogLevel",
+                "display_name": "Copy plugin logs to admins, as bot messages",
+                "type": "dropdown",
+                "help_text": "Select the log level",
+                "default": "none",
+                "options": [
+                    {
+                        "display_name": "None",
+                        "value": "none"
+                    },
+                    {
+                        "display_name": "Debug",
+                        "value": "debug"
+                    },
+                    {
+                        "display_name": "Info",
+                        "value": "info"
+                    },
+                    {
+                        "display_name": "Warning",
+                        "value": "warn"
+                    },
+                    {
+                        "display_name": "Error",
+                        "value": "error"
+                    }
+                ]
+            },
+            {
+                "key": "AdminLogVerbose",
+                "display_name": "Display full context for each admin log message",
+                "type": "bool",
+                "help_text": "",
+                "default": false
+            },
+            {
                 "key": "OAuth2Authority",
                 "display_name": "Microsoft Office Authority (\"common\", or application tenant ID)",
                 "type": "text",

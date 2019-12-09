@@ -19,13 +19,12 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/command"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/http"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
-
-	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/command"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/http"
 )
 
 type Plugin struct {
@@ -68,7 +67,7 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	p.httpHandler = http.NewHandler()
-	p.notificationHandler = api.NewNotificationHandler(p.getAPIConfig())
+	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())
 
 	command.Register(p.API.RegisterCommand)
 
@@ -111,13 +110,13 @@ func (p *Plugin) OnConfigurationChange() error {
 	})
 
 	if p.notificationHandler != nil {
-		p.notificationHandler.Configure(p.getAPIConfig())
+		p.notificationHandler.Configure(p.newAPIConfig())
 	}
 	return nil
 }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	apiconf := p.getAPIConfig()
+	apiconf := p.newAPIConfig()
 	api := api.New(apiconf, args.UserId)
 	command := command.Command{
 		Context:   c,
@@ -133,12 +132,12 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("msofficeplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
 
-	apiconf.Poster.PostEphemeral(args.UserId, args.ChannelId, out)
+	apiconf.Poster.Ephemeral(args.UserId, args.ChannelId, out)
 	return &model.CommandResponse{}, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *gohttp.Request) {
-	apiconf := p.getAPIConfig()
+	apiconf := p.newAPIConfig()
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 	ctx := req.Context()
 	ctx = api.Context(ctx, api.New(apiconf, mattermostUserID), p.notificationHandler)
@@ -161,9 +160,10 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 	return *p.config
 }
 
-func (p *Plugin) getAPIConfig() api.Config {
+func (p *Plugin) newAPIConfig() api.Config {
 	conf := p.getConfig()
-	store := store.NewPluginStore(p.API)
+	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
+	store := store.NewPluginStore(p.API, bot)
 
 	return api.Config{
 		Config: conf,
@@ -172,9 +172,9 @@ func (p *Plugin) getAPIConfig() api.Config {
 			OAuth2StateStore:  store,
 			SubscriptionStore: store,
 			EventStore:        store,
-			Logger:            p.API,
-			Poster:            bot.NewPoster(p.API, conf),
-			Remote:            remote.Makers[msgraph.Kind](conf, p.API),
+			Logger:            bot,
+			Poster:            bot,
+			Remote:            remote.Makers[msgraph.Kind](conf, bot),
 		},
 	}
 }

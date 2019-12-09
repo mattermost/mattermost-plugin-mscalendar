@@ -16,6 +16,11 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
 )
 
+const WelcomeMessage = `### Welcome to the Microsoft Office plugin!
+Here is some info to prove we got you logged in
+- Name: %s
+`
+
 func (api *api) InitOAuth2(userID string) (url string, err error) {
 	conf := api.Remote.NewOAuth2Config()
 	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
@@ -64,10 +69,7 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	message := fmt.Sprintf("### Welcome to the Microsoft Office plugin!\n"+
-		"Here is some info to prove we got you logged in\n"+
-		"Name: %s \n", me.DisplayName)
-	api.Poster.PostDirectf(mattermostUserID, message)
+	api.Poster.DM(mattermostUserID, WelcomeMessage, me.DisplayName)
 
 	return nil
 }

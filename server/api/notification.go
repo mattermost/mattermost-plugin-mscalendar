@@ -16,8 +16,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/fields"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 )
 
 const maxQueueSize = 1024
@@ -88,8 +88,7 @@ func (h *notificationHandler) work() {
 		select {
 		case n := <-h.incoming:
 			if h.queueSize >= maxQueueSize {
-				h.Logger.LogError(
-					fmt.Sprintf("Notification queue full (%v), dropped notification", h.queueSize))
+				h.Logger.Errorf("webhook notification: queue full (`%v`), dropped notification", h.queueSize)
 				continue
 			}
 			h.queueSize++
@@ -99,8 +98,9 @@ func (h *notificationHandler) work() {
 			h.queueSize--
 			err := h.processNotification(n)
 			if err != nil {
-				h.Logger.LogInfo("Failed to process notification: "+err.Error(),
-					"SubsriptionID", n.SubscriptionID)
+				h.Logger.With(bot.LogContext{
+					"subscriptionID": n.SubscriptionID,
+				}).Infof("webhook notification: failed: `%v`.", err)
 			}
 
 		case apiConfig := <-h.configChan:
@@ -152,9 +152,10 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		if err != nil {
 			return err
 		}
-		h.Logger.LogDebug("Renewed user subscription",
-			"MattermostUserID", creator.MattermostUserID,
-			"SubsriptionID", n.SubscriptionID)
+		h.Logger.With(bot.LogContext{
+			"MattermostUserID": creator.MattermostUserID,
+			"SubsriptionID":    n.SubscriptionID,
+		}).Debugf("webhook notification: renewed user subscription.")
 	}
 
 	if n.IsBare {
@@ -166,16 +167,19 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 
 	var sa *model.SlackAttachment
 	prior, err := h.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
-	if err != nil && err != kvstore.ErrNotFound {
+	if err != nil && err != store.ErrNotFound {
 		return err
 	}
 	if prior != nil {
 		var changed bool
 		changed, sa = h.updatedEventSlackAttachment(n, prior.Remote)
 		if !changed {
-			h.Logger.LogDebug("No changes detected in event",
-				"MattermostUserID", creator.MattermostUserID,
-				"SubsriptionID", n.SubscriptionID)
+			h.Logger.With(bot.LogContext{
+				"MattermostUserID": creator.MattermostUserID,
+				"SubsriptionID":    n.SubscriptionID,
+				"ChangeType":       n.ChangeType,
+				"EventID":          n.Event.ID,
+			}).Debugf("webhook notification: no changes detected in event.")
 			return nil
 		}
 	} else {
@@ -183,7 +187,7 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		prior = &store.Event{}
 	}
 
-	err = h.Poster.PostDirectAttachments(creator.MattermostUserID, sa)
+	err = h.Poster.DMWithAttachments(creator.MattermostUserID, sa)
 	if err != nil {
 		return err
 	}
@@ -194,9 +198,11 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		return err
 	}
 
-	h.Logger.LogDebug("Processed notification: "+sa.Title,
-		"MattermostUserID", creator.MattermostUserID,
-		"SubsriptionID", n.SubscriptionID)
+	h.Logger.With(bot.LogContext{
+		"MattermostUserID": creator.MattermostUserID,
+		"SubsriptionID":    n.SubscriptionID,
+	}).Debugf("Notified: %s.", sa.Title)
+
 	return nil
 }
 

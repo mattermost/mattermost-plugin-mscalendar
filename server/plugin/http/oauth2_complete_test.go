@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -17,7 +16,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot/mock_bot"
 )
 
@@ -121,9 +120,11 @@ func TestOAuth2Complete(t *testing.T) {
 
 				us.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
-				poster.EXPECT().PostDirectf(
-					gomock.Eq("fake@mattermost.com"), gomock.Eq(getBotPosterMessage("displayName-value"))).
-					Return(nil).Times(1)
+				poster.EXPECT().DM(
+					gomock.Eq("fake@mattermost.com"),
+					gomock.Eq(api.WelcomeMessage),
+					gomock.Eq("displayName-value"),
+				).Return(nil).Times(1)
 			},
 			expectedHTTPCode: http.StatusOK,
 			expectedHTTPResponse: `
@@ -160,7 +161,7 @@ func TestOAuth2Complete(t *testing.T) {
 			}
 
 			dependencies := mock_api.NewMockDependencies(ctrl)
-			dependencies.Remote = remote.Makers[msgraph.Kind](conf, utils.NilLogger)
+			dependencies.Remote = remote.Makers[msgraph.Kind](conf, &bot.NilLogger{})
 			if tc.setup != nil {
 				tc.setup(dependencies)
 			}
@@ -258,12 +259,6 @@ func statusOKGraphAPIResponder() {
 	meResponder := httpmock.NewStringResponder(http.StatusOK, meResponse)
 
 	httpmock.RegisterResponder("GET", meRequestURL, meResponder)
-}
-
-func getBotPosterMessage(displayName string) string {
-	return fmt.Sprintf("### Welcome to the Microsoft Office plugin!\n"+
-		"Here is some info to prove we got you logged in\n"+
-		"Name: %s \n", displayName)
 }
 
 func newHTTPRequest(apiconf api.Config, mattermostUserID, rawQuery string) *http.Request {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
@@ -18,10 +19,10 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		event := remote.Event{}
 		_, err := c.Call(http.MethodGet, wh.Resource, nil, &event)
 		if err != nil {
-			c.LogDebug("Error fetching notification data resource",
-				"URL", wh.Resource,
-				"error", err.Error(),
-				"subscriptionID", wh.SubscriptionID)
+			c.Logger.With(bot.LogContext{
+				"Resource":       wh.Resource,
+				"subscriptionID": wh.SubscriptionID,
+			}).Infof("msgraph: failed to fetch notification data resource: `%v`.", err)
 			return nil, err
 		}
 		n.Event = &event
@@ -29,9 +30,10 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		n.IsBare = false
 
 	default:
-		c.LogInfo("Unknown resource type: "+wh.ResourceData.DataType,
-			"subscriptionID", wh.SubscriptionID)
-		return nil, errors.New("Unknown resource type: " + wh.ResourceData.DataType)
+		c.Logger.With(bot.LogContext{
+			"subscriptionID": wh.SubscriptionID,
+		}).Infof("msgraph: unknown resource type: `%s`.", wh.ResourceData.DataType)
+		return nil, errors.New("unknown resource type: " + wh.ResourceData.DataType)
 	}
 
 	return &n, nil

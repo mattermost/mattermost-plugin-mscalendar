@@ -8,7 +8,7 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
 )
 
@@ -21,6 +21,8 @@ const (
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
+
+var ErrNotFound = kvstore.ErrNotFound
 
 type Store interface {
 	UserStore
@@ -36,10 +38,10 @@ type pluginStore struct {
 	mattermostUserIDKV kvstore.KVStore
 	subscriptionKV     kvstore.KVStore
 	eventKV            kvstore.KVStore
-	Logger             utils.Logger
+	Logger             bot.Logger
 }
 
-func NewPluginStore(api plugin.API) Store {
+func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	return &pluginStore{
 		basicKV:            basicKV,
@@ -48,6 +50,6 @@ func NewPluginStore(api plugin.API) Store {
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
-		Logger:             api,
+		Logger:             logger,
 	}
 }

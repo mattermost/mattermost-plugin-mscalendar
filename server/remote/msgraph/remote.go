@@ -13,21 +13,21 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 const Kind = "msgraph"
 
 type impl struct {
 	conf   *config.Config
-	logger utils.Logger
+	logger bot.Logger
 }
 
 func init() {
 	remote.Makers[Kind] = NewRemote
 }
 
-func NewRemote(conf *config.Config, logger utils.Logger) remote.Remote {
+func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 	return &impl{
 		conf:   conf,
 		logger: logger,

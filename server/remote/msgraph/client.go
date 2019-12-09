@@ -10,7 +10,7 @@ import (
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 type client struct {
@@ -22,5 +22,5 @@ type client struct {
 	rbuilder   *msgraph.GraphServiceRequestBuilder
 
 	conf *config.Config
-	utils.Logger
+	bot.Logger
 }

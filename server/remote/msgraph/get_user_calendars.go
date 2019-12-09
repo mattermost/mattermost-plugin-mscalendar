@@ -4,10 +4,10 @@
 package msgraph
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 func (c *client) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
@@ -20,6 +20,8 @@ func (c *client) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.LogDebug(fmt.Sprintf("GetUserCalendars: returned %d calendars", len(v.Value)), "userID", userID)
+	c.Logger.With(bot.LogContext{
+		"UserID": userID,
+	}).Infof("msgraph: GetUserCalendars returned `%d` calendars.", len(v.Value))
 	return v.Value, nil
 }
