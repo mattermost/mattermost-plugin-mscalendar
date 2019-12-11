@@ -1,5 +1,7 @@
 package command
 
+import "fmt"
+
 func (c *Command) deleteCalendar(parameters ...string) (string, error) {
 	if len(parameters) != 1 {
 		return "Please provide the ID of only one calendar ", nil
@@ -9,5 +11,5 @@ func (c *Command) deleteCalendar(parameters ...string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "", nil
+	return fmt.Sprintf("Deleted Calendar \"%+v\"\n", parameters[0]), nil
 }
