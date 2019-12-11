@@ -18,13 +18,13 @@ func (api *api) ViewCalendar(from, to time.Time) ([]*remote.Event, error) {
 	return client.GetUserDefaultCalendarView(api.user.Remote.ID, from, to)
 }
 
-func (api *api) CreateCalendar(calendarName string) (*remote.Calendar, error) {
+func (api *api) CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error) {
 	client, err := api.MakeClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return client.CreateCalendar(calendarName)
+	return client.CreateCalendar(calendar)
 }
 
 func (api *api) CreateEvent(calendarEvent *remote.Event) (*remote.Event, error) {
@@ -36,11 +36,11 @@ func (api *api) CreateEvent(calendarEvent *remote.Event) (*remote.Event, error) 
 	return client.CreateEvent(calendarEvent)
 }
 
-func (api *api) DeleteCalendarByID(calendarId string) error {
+func (api *api) DeleteCalendar(calendarID string) error {
 	client, err := api.MakeClient()
 	if err != nil {
 		return err
 	}
 
-	return client.DeleteCalendarByID(calendarId)
+	return client.DeleteCalendar(calendarID)
 }

@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
 func (c *Command) createCalendar(parameters ...string) (string, error) {
@@ -9,10 +11,13 @@ func (c *Command) createCalendar(parameters ...string) (string, error) {
 		return "Please provide the name of one calendar to create", nil
 	}
 
-	calendar, err := c.API.CreateCalendar(parameters[0])
+	calIn := &remote.Calendar{
+		Name: parameters[0],
+	}
+
+	calOut, err := c.API.CreateCalendar(calIn)
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("calendar = %+v\n", calendar)
-	return "", nil
+	return fmt.Sprintf("Created Calendar \"%+v\"\n", calOut.Name), nil
 }

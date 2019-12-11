@@ -3,10 +3,10 @@
 
 package msgraph
 
-func (c *client) DeleteCalendarByID(calendarID string) error {
+func (c *client) DeleteCalendar(calID string) error {
 	// TODO: Implement
 
-	err := c.rbuilder.Me().Calendars().ID(calendarID).Request().Delete(c.ctx)
+	err := c.rbuilder.Me().Calendars().ID(calID).Request().Delete(c.ctx)
 	if err != nil {
 		return err
 	}

@@ -12,20 +12,15 @@ import (
 )
 
 // CreateCalendar creates a calendar
-func (c *client) CreateCalendar(calendarName string) (*remote.Calendar, error) {
-	var calendar = &remote.Calendar{
-		Name: calendarName,
-	}
+func (c *client) CreateCalendar(calIn *remote.Calendar) (*remote.Calendar, error) {
 	var calOut = remote.Calendar{}
-	req := c.rbuilder.Me().Calendars().Request()
-	err := req.JSONRequest(c.ctx, http.MethodPost, "", &calendar, &calOut)
-
-	calD, _ := json.MarshalIndent(calOut, "", "    ")
-	fmt.Printf("cal = %+v\n", string(calD))
-
+	err := c.rbuilder.Me().Calendars().Request().JSONRequest(c.ctx, http.MethodPost, "", &calIn, &calOut)
 	if err != nil {
 		return nil, err
 	}
+
+	calD, _ := json.MarshalIndent(calOut, "", "    ")
+	fmt.Printf("cal = %+v\n", string(calD))
 
 	return &calOut, nil
 }

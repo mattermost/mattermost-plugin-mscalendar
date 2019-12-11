@@ -67,7 +67,7 @@ func (c *Command) Handle() (string, error) {
 		handler = c.viewCalendar
 	case "createcal":
 		handler = c.createCalendar
-	case "createevent":
+	case "testcreateevent":
 		handler = c.createEvent
 	case "deletecal":
 		handler = c.deleteCalendar

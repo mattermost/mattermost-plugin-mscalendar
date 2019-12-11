@@ -18,10 +18,10 @@ type Event struct {
 	Start                      *DateTime            `json:"start,omitempty"`
 	End                        *DateTime            `json:"end,omitempty"`
 	ReminderMinutesBeforeStart int32                `json:"reminderMinutesBeforeStart,omitempty"`
-	Location                   *EventLocation       `json:"location,omitempty"`
+	Location                   *Location            `json:"location,omitempty"`
 	ResponseStatus             *EventResponseStatus `json:"responseStatus,omitempty"`
-	Attendees                  []*EventAttendee     `json:"attendees,omitempty"`
-	Organizer                  *EventAttendee       `json:"organizer,omitempty"`
+	Attendees                  []*Attendee          `json:"attendees,omitempty"`
+	Organizer                  *Attendee            `json:"organizer,omitempty"`
 }
 
 type ItemBody struct {
@@ -34,14 +34,14 @@ type EventResponseStatus struct {
 	Time     string `json:"time,omitempty"`
 }
 
-type EventLocation struct {
-	DisplayName  string            `json:"displayName,omitempty"`
-	Address      *EventAddress     `json:"address"`
-	Coordinates  *EventCoordinates `json:"coordinates"`
-	LocationType string            `json:"locationType"`
+type Location struct {
+	DisplayName  string       `json:"displayName,omitempty"`
+	Address      *Address     `json:"address"`
+	Coordinates  *Coordinates `json:"coordinates"`
+	LocationType string       `json:"locationType"`
 }
 
-type EventAddress struct {
+type Address struct {
 	Street          string `json:"street,omitempty"`
 	City            string `json:"city,omitempty"`
 	State           string `json:"state,omitempty"`
@@ -49,12 +49,12 @@ type EventAddress struct {
 	PostalCode      string `json:"postalCode,omitempty"`
 }
 
-type EventCoordinates struct {
+type Coordinates struct {
 	Latitude  float32 `json:"latitude,omitempty"`
 	Longitude float32 `json:"longitude,omitempty"`
 }
 
-type EventAttendee struct {
+type Attendee struct {
 	Type         string               `json:"type,omitempty"`
 	Status       *EventResponseStatus `json:"status,omitempty"`
 	EmailAddress *EmailAddress        `json:"emailAddress,omitempty"`

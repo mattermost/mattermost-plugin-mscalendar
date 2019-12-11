@@ -30,8 +30,8 @@ type Subscriptions interface {
 type Calendar interface {
 	ViewCalendar(from, to time.Time) ([]*remote.Event, error)
 	CreateEvent(event *remote.Event) (*remote.Event, error)
-	CreateCalendar(calendarName string) (*remote.Calendar, error)
-	DeleteCalendarByID(ID string) error
+	CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error)
+	DeleteCalendar(calendarID string) error
 }
 
 type Event interface {

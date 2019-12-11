@@ -29,9 +29,9 @@ func (c *Command) createEvent(parameters ...string) (string, error) {
 		DateTime: time.Now().Add(time.Hour).Format(time.RFC3339),
 	}
 
-	var attendees []*remote.EventAttendee
+	var attendees []*remote.Attendee
 
-	attendee1 := &remote.EventAttendee{
+	attendee1 := &remote.Attendee{
 		Type: "required",
 		Status: &remote.EventResponseStatus{
 			Response: "",
@@ -43,7 +43,7 @@ func (c *Command) createEvent(parameters ...string) (string, error) {
 		},
 	}
 
-	attendee2 := &remote.EventAttendee{
+	attendee2 := &remote.Attendee{
 		Type: "required",
 		Status: &remote.EventResponseStatus{
 			Response: "",
@@ -68,17 +68,17 @@ func (c *Command) createEvent(parameters ...string) (string, error) {
 			ContentType: "Text",
 		},
 		ReminderMinutesBeforeStart: 15,
-		Location: &remote.EventLocation{
+		Location: &remote.Location{
 			DisplayName:  "Home",
 			LocationType: "homeAddress",
-			Address: &remote.EventAddress{
+			Address: &remote.Address{
 				Street:          "E Main St",
 				City:            "Redmond",
 				State:           "WA",
 				CountryOrRegion: "US",
 				PostalCode:      "32008",
 			},
-			Coordinates: &remote.EventCoordinates{
+			Coordinates: &remote.Coordinates{
 				Latitude:  47.672,
 				Longitude: -102.103,
 			},
