@@ -1,76 +1,54 @@
-# Plugin Starter Template [![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-starter-template/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-starter-template)
+# Mattermost/Microsoft Calendar Integration
 
-This plugin serves as a starting point for writing a Mattermost plugin. Feel free to base your own plugin off this repository.
+## Mattermost MS Calendar Plugin
 
-To learn more about plugins, see [our plugin documentation](https://developers.mattermost.com/extend/plugins/).
+This plugin supports a two-way integration between Mattermost and Microsoft
+Outlook Calendar. For a stable production release, please download the latest
+version [in the Releases
+tab](https://github.com/mattermost/mattermost-plugin-msoffice/releases) and
+follow [these instructions](#2-configuration) for install and configuration.
 
-## Getting Started
-Use GitHub's template feature to make a copy of this repository by clicking the "Use this template" button then clone outside of `$GOPATH`.
+## Table of Contents
 
-Alternatively shallow clone the repository to a directory outside of `$GOPATH` matching your plugin name:
-```
-git clone --depth 1 https://github.com/mattermost/mattermost-plugin-starter-template com.example.my-plugin
-```
+- [1. Features](#1-features)
+- [2. Configuration](#2-configuration)
 
-Note that this project uses [Go modules](https://github.com/golang/go/wiki/Modules). Be sure to locate the project outside of `$GOPATH`, or allow the use of Go modules within your `$GOPATH` with an `export GO111MODULE=on`.
+## 2. Configuration
 
-Edit `plugin.json` with your `id`, `name`, and `description`:
-```
-{
-    "id": "com.example.my-plugin",
-    "name": "My Plugin",
-    "description": "A plugin to enhance Mattermost."
-}
-```
+### Step 1 Create Mattermost App Azure (Private or Enterprise MS account)
 
-Build your plugin:
-```
-make
-```
+- Sign into [portal.azure.com](www.portal.azure.com)
+  - from the hamburger menu -> `Azure Active Directory`
 
-This will produce a single plugin file (with support for multiple architectures) for upload to your Mattermost server:
+#### Azure Active Directory
 
-```
-dist/com.example.my-plugin.tar.gz
-```
+- `App registrations`
+  - New registration - `Mattermost MS Calendar Plugin`
+- `Certificates & secrets`
+  - New client secret
+- `API permissions` -> `MsGraph` -> `calendars`
+  - add needed permissions
+  - (Read, Read.Shared, ReadWrite, ReadWrite.Shared)
+- `Authentication`
+  - Redirect URI -> `<MM_SITEURL>/plugins/com.mattermost.msoffice/oauth2/complete`
+    - For development (use ngrok.io URL)
 
-There is a build target to automate deploying and enabling the plugin to your server, but it requires configuration and [http](https://httpie.org/) to be installed:
-```
-export MM_SERVICESETTINGS_SITEURL=http://localhost:8065
-export MM_ADMIN_USERNAME=admin
-export MM_ADMIN_PASSWORD=password
-make deploy
-```
+### Step 2 Configure Plugin Settings
 
-Alternatively, if you are running your `mattermost-server` out of a sibling directory by the same name, use the `deploy` target alone to  unpack the files into the right directory. You will need to restart your server and manually enable your plugin.
+**`System Console` > `PLUGINS` > `MS Office Calendar`**
 
-In production, deploy and upload your plugin via the [System Console](https://about.mattermost.com/default-plugin-uploads).
+- [ ] (TODO: rename in plugin settings - currently `TODO:name`)
 
-## Q&A
+Personal
 
-### How do I make a server-only or web app-only plugin?
+- `Admin User IDs` - Add your sysadmin user ID
+- `tenantID` - Leave as “common"
+- `clientID` - copy from Azure App
+- `Client Secret` - copy from Azure App
 
-Simply delete the `server` or `webapp` folders and remove the corresponding sections from `plugin.json`. The build scripts will skip the missing portions automatically.
+Enterprise
 
-### How do I include assets in the plugin bundle?
-
-Place them into the `assets` directory. To use an asset at runtime, build the path to your asset and open as a regular file:
-
-```go
-bundlePath, err := p.API.GetBundlePath()
-if err != nil {
-    return errors.Wrap(err, "failed to get bundle path")
-}
-
-profileImage, err := ioutil.ReadFile(filepath.Join(bundlePath, "assets", "profile_image.png"))
-if err != nil {
-    return errors.Wrap(err, "failed to read profile image")
-}
-
-if appErr := p.API.SetProfileImage(userID, profileImage); appErr != nil {
-    return errors.Wrap(err, "failed to set profile image")
-}
-```
-
-### How do I build the plugin with unminified JavaScript?
-Use `make debug-dist` and `make debug-deploy` in place of `make dist` and `make deploy` to configure webpack to generate unminified Javascript.
+- `Admin User IDs` - Add your sysadmin user ID
+- `tenantID` - copy form Azure App
+- `clientID` - copy from Azure App
+- `Client Secret` - copy from Azure App
