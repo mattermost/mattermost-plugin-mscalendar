@@ -4,8 +4,9 @@
 package http
 
 import (
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 	"net/http"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
 )
 
 func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {

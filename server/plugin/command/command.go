@@ -65,8 +65,18 @@ func (c *Command) Handle() (string, error) {
 		handler = c.connect
 	case "viewcal":
 		handler = c.viewCalendar
+	case "createcal":
+		handler = c.createCalendar
+	case "testcreateevent":
+		handler = c.createEvent
+	case "deletecal":
+		handler = c.deleteCalendar
 	case "subscribe":
 		handler = c.subscribe
+	case "findMeetings":
+		handler = c.findMeetings
+	case "showcals":
+		handler = c.showCalendars
 	}
 	out, err := handler(parameters...)
 	if err != nil {

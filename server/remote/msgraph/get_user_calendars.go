@@ -22,6 +22,7 @@ func (c *client) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
 	}
 	c.Logger.With(bot.LogContext{
 		"UserID": userID,
+		"v":      v.Value,
 	}).Infof("msgraph: GetUserCalendars returned `%d` calendars.", len(v.Value))
 	return v.Value, nil
 }

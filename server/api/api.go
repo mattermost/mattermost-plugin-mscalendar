@@ -29,6 +29,11 @@ type Subscriptions interface {
 
 type Calendar interface {
 	ViewCalendar(from, to time.Time) ([]*remote.Event, error)
+	CreateEvent(event *remote.Event) (*remote.Event, error)
+	CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error)
+	DeleteCalendar(calendarID string) error
+	FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
+	GetUserCalendars(userID string) ([]*remote.Calendar, error)
 }
 
 type Event interface {
