@@ -77,6 +77,8 @@ func (c *Command) Handle() (string, error) {
 		handler = c.findMeetings
 	case "showcals":
 		handler = c.showCalendars
+	case "availability":
+		handler = c.availability
 	}
 	out, err := handler(parameters...)
 	if err != nil {

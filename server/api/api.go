@@ -7,6 +7,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/mattermost/mattermost-server/v5/plugin"
+
 	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
@@ -20,6 +22,7 @@ type OAuth2 interface {
 
 type Subscriptions interface {
 	CreateUserEventSubscription() (*store.Subscription, error)
+	GetUserAvailability() (string, error)
 	RenewUserEventSubscription() (*store.Subscription, error)
 	DeleteOrphanedSubscription(ID string) error
 	DeleteUserEventSubscription() error
@@ -65,6 +68,7 @@ type Dependencies struct {
 	Poster            bot.Poster
 	Remote            remote.Remote
 	IsAuthorizedAdmin func(userId string) (bool, error)
+	API               plugin.API
 }
 
 type Config struct {

@@ -175,6 +175,7 @@ func (p *Plugin) newAPIConfig() api.Config {
 			Logger:            bot,
 			Poster:            bot,
 			Remote:            remote.Makers[msgraph.Kind](conf, bot),
+			API:               p.API,
 		},
 	}
 }
