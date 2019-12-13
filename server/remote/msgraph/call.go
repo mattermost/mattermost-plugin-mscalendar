@@ -18,13 +18,20 @@ import (
 
 func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
-	baseURL, err := url.Parse(c.rbuilder.URL())
+	pathURL, err := url.Parse(path)
 	if err != nil {
 		return nil, errors.WithMessage(err, errContext)
 	}
 
-	// prepend baseURL to relative paths
-	if len(path) > 0 && path[0] == '/' {
+	if pathURL.Scheme == "" || pathURL.Host == "" {
+		var baseURL *url.URL
+		baseURL, err = url.Parse(c.rbuilder.URL())
+		if err != nil {
+			return nil, errors.WithMessage(err, errContext)
+		}
+		if path[0] != '/' {
+			path = "/" + path
+		}
 		path = baseURL.String() + path
 	}
 
