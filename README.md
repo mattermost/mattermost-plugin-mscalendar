@@ -1,6 +1,9 @@
-# Mattermost/Microsoft Calendar Integration
+# Mattermost Microsoft Calendar Plugin
 
-## Mattermost MS Calendar Plugin
+**[Help Wanted](https://github.com/mattermost/mattermost-plugin-msoffice/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22up+for+grabs%22+label%3A%22help+wanted%22+sort%3Aupdated-desc)**
+
+[![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-msoffice/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-msoffice)
+[![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-msoffice/master.svg)](https://codecov.io/gh/mattermost/mattermost-plugin-msoffice)
 
 This plugin supports a two-way integration between Mattermost and Microsoft
 Outlook Calendar. For a stable production release, please download the latest
