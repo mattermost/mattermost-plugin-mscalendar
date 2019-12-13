@@ -4,11 +4,10 @@
 package msgraph
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 // CreateCalendar creates a calendar
@@ -18,9 +17,8 @@ func (c *client) CreateCalendar(calIn *remote.Calendar) (*remote.Calendar, error
 	if err != nil {
 		return nil, err
 	}
-
-	calD, _ := json.MarshalIndent(calOut, "", "    ")
-	fmt.Printf("cal = %+v\n", string(calD))
-
+	c.Logger.With(bot.LogContext{
+		"v": calOut,
+	}).Infof("msgraph: CreateCalendars created the following calendar.")
 	return &calOut, nil
 }

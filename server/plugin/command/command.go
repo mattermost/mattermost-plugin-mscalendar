@@ -73,6 +73,10 @@ func (c *Command) Handle() (string, error) {
 		handler = c.deleteCalendar
 	case "subscribe":
 		handler = c.subscribe
+	case "findMeetings":
+		handler = c.findMeetings
+	case "showcals":
+		handler = c.showCalendars
 	}
 	out, err := handler(parameters...)
 	if err != nil {

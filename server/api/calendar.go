@@ -44,3 +44,23 @@ func (api *api) DeleteCalendar(calendarID string) error {
 
 	return client.DeleteCalendar(calendarID)
 }
+
+func (api *api) FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+	client, err := api.MakeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.FindMeetingTimes(meetingParams)
+}
+
+func (api *api) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
+	client, err := api.MakeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	//DEBUG just use me as the user, for now
+	me, err := client.GetMe()
+	return client.GetUserCalendars(me.ID)
+}

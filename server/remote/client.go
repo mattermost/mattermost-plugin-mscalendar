@@ -12,6 +12,7 @@ type Client interface {
 	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error
 	CreateCalendar(calendar *Calendar) (*Calendar, error)
+	FindMeetingTimes(meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
 	CreateEvent(calendarEvent *Event) (*Event, error)
 	DeleteCalendar(calendarID string) error
 	GetMe() (*User, error)
