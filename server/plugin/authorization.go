@@ -4,6 +4,8 @@
 package plugin
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
@@ -22,4 +24,15 @@ func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 	conf := p.getConfig()
 	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
 	return bot.IsUserAdmin(mattermostUserID), nil
+}
+
+func (p *Plugin) VerifyMMIds(IDs []string) error {
+	for id := range IDs {
+		user, _ := p.API.GetUser(IDs[id])
+		fmt.Printf("id = %+v\n", id)
+		userD, _ := json.MarshalIndent(user, "", "    ")
+		fmt.Printf("user = %+v\n", string(userD))
+	}
+	return nil
+
 }

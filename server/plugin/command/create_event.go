@@ -1,8 +1,6 @@
 package command
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
@@ -15,7 +13,7 @@ func getCreateEventFlagSet() *flag.FlagSet {
 	flagSet.String("subject", "", "Subject of the Event (no spaces for now)")
 	flagSet.String("starttime", time.Now().Format(time.RFC3339), "Start time for the event")
 	flagSet.String("endtime", time.Now().Add(time.Hour).Format(time.RFC3339), "End time for the event")
-	flagSet.StringSlice("attendees", []string{}, "A comma separated list of Attendees")
+	flagSet.StringSlice("attendees", []string{}, "A comma separated list of Attendee Mattermost UserIDs")
 
 	return flagSet
 }
@@ -92,64 +90,69 @@ func parseCreateArgs(args []string) (*remote.Event, *userError, error) {
 	}
 
 	// parse flags and start overriding Demo Defaults
-	createFlagSet := getCreateEventFlagSet()
-	err := createFlagSet.Parse(args)
-	if err != nil {
-		return event, nil, err
-	}
-
-	//                //
-	// Required Flags //
-	//                //
-	subject, err := createFlagSet.GetString("subject")
-	if err != nil {
-		return event, nil, err
-	}
-	// check that next arg is not a flag "--"
-	if subject == "" || strings.HasPrefix(subject, "--") {
-		return event, &userError{ErrorMessage: "must specify an event subject"}, nil
-	}
-	event.Subject = subject
-
-	//                //
-	// Optional Flags //
-	//                //
-	startTime, err := createFlagSet.GetString("starttime")
-	if err != nil {
-		return event, nil, err
-	}
-	if strings.HasPrefix(startTime, "--") {
-		return event, &userError{ErrorMessage: "must specify an event subject"}, nil
-	}
-	event.Start.DateTime = startTime
-
-	endTime, err := createFlagSet.GetString("endtime")
-	if err != nil {
-		return event, nil, err
-	}
-	if strings.HasPrefix(endTime, "--") {
-		return event, &userError{ErrorMessage: "must specify an event subject"}, nil
-	}
-	event.End.DateTime = endTime
-	// for a := range event.myattendees {
-	// 	fmt.Printf("myattendees[a] = %+v\n", myattendees[a])
-	// }
-	// attendees, err := createFlagSet.GetStringSlice("attendees")
+	// createFlagSet := getCreateEventFlagSet()
+	// err := createFlagSet.Parse(args)
 	// if err != nil {
-	// 	return "", nil, nil, err
+	// 	return event, nil, err
 	// }
-	// if len(attendees) == 0 {
-	// 	return "must specify some attendees ", nil, nil, nil
+	// argsD, _ := json.MarshalIndent(args, "", "    ")
+	// fmt.Printf("args = %+v\n", string(argsD))
+	//
+	// subject, err := createFlagSet.GetString("subject")
+	// if err != nil {
+	// 	return event, nil, err
 	// }
-
+	// if subject == "" || strings.HasPrefix(subject, "--") {
+	// 	return event, &userError{ErrorMessage: "Subject required. Please specify an event subject"}, nil
+	// }
+	// event.Subject = subject
+	//
+	// // Optional Flags //
+	// startTime, err := createFlagSet.GetString("starttime")
+	// if err != nil {
+	// 	return event, nil, err
+	// }
+	// if strings.HasPrefix(startTime, "--") {
+	// 	return event, &userError{ErrorMessage: "Empty --starttime flag. Please specify an starttime"}, nil
+	// }
+	// event.Start.DateTime = startTime
+	//
+	// endTime, err := createFlagSet.GetString("endtime")
+	// if err != nil {
+	// 	return event, nil, err
+	// }
+	// if strings.HasPrefix(endTime, "--") {
+	// 	return event, &userError{ErrorMessage: "Empty --endtime flag. Please specify an endtime"}, nil
+	// }
+	// event.End.DateTime = endTime
+	//
+	// mmUserIDs, err := createFlagSet.GetStringSlice("attendees")
+	// if err != nil {
+	// 	return event, nil, err
+	// }
+	// if strings.HasPrefix(mmUserIDs[0], "--") {
+	// 	return event, &userError{ErrorMessage: "Empty --attendees flag.  Please specify attendees"}, nil
+	// }
 	return event, nil, nil
 }
 
+// 	// GetUser(userId string) (*model.User, *model.AppError)
+// 	// var api *plugin.API
+// 	// _, _ = plugin.API.GetUser("")
+// 	// var junk api.newAPIConfig
+// 	for id := range IDs {
+// 		fmt.Printf("id = %+v\n", id)
+// 	}
+// 	return nil
+// }
+
 func (c *Command) createEvent(parameters ...string) (string, error) {
 
-	if len(parameters) == 0 {
-		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), nil
-	}
+	// if len(parameters) == 0 {
+	// 	return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), nil
+	// }
+
+	event, _, err := parseCreateArgs(parameters)
 
 	event, userError, err := parseCreateArgs(parameters)
 	if err != nil {

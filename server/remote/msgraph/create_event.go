@@ -11,6 +11,9 @@ import (
 
 // CreateEvent creates a calendar event
 func (c *client) CreateEvent(in *remote.Event) (*remote.Event, error) {
+
+	// plugin.API.GetUser("junk")
+
 	var out = remote.Event{}
 	err := c.rbuilder.Me().Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
 	if err != nil {

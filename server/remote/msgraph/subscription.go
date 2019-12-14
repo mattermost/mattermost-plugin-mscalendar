@@ -41,6 +41,7 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 		return err
 	}
 
+	// c.conf.BotConfig
 	c.Logger.With(bot.LogContext{
 		"subscriptionID": subscriptionID,
 	}).Debugf("msgraph: deleted subscription.")
