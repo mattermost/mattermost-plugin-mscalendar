@@ -4,8 +4,8 @@
 package msgraph
 
 import (
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 
@@ -14,22 +14,22 @@ import (
 
 type GetScheduleRequest struct {
 	// List of emails of users that we want to check
-	ScheduleIDs              []string        `json:"schedules"`
+	Schedules []string `json:"schedules"`
 
 	// Overall start and end of entire search window
-	StartTime                remote.DateTime `json:"startTime"`
-	EndTime                  remote.DateTime `json:"endTime"`
+	StartTime *remote.DateTime `json:"startTime"`
+	EndTime   *remote.DateTime `json:"endTime"`
 
 	// Size of each chunk of time we want to check
 	// This can be equal to end - start if we want, or we can get more granular results by making it shorter.
 	// For the graph API: The default is 30 minutes, minimum is 6, maximum is 1440
 	// 15 is currently being used on our end
-	AvailabilityViewInterval int             `json:"availabilityViewInterval"`
+	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 
-func (c *client) GetSchedule(scheduleIDs []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
+func (c *client) GetSchedule(schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
 	req := &msgraph.CalendarGetScheduleRequestParameter{
-		Schedules: scheduleIDs,
+		Schedules: schedules,
 		StartTime: &msgraph.DateTimeTimeZone{
 			DateTime: &startTime.DateTime,
 			TimeZone: &startTime.TimeZone,

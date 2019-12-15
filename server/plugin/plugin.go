@@ -67,9 +67,14 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	p.httpHandler = http.NewHandler()
-	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())
+
+	conf := p.newAPIConfig()
+	p.notificationHandler = api.NewNotificationHandler(conf)
 
 	command.Register(p.API.RegisterCommand)
+
+	// j := api.NewAvailabilityJob(api.New(conf, ""))
+	// go j.Run()
 
 	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil

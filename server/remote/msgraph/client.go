@@ -24,3 +24,15 @@ type client struct {
 	conf *config.Config
 	bot.Logger
 }
+
+type appClient struct {
+	client
+
+	Token string
+
+	rbuilder   *msgraph.GraphServiceRequestBuilder
+	ctx context.Context
+	httpClient *http.Client
+	conf *config.Config
+	bot.Logger
+}

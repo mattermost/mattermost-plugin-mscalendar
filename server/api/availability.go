@@ -6,6 +6,9 @@ package api
 import (
 	"time"
 
+	"github.com/robfig/cron/v3"
+
+	"github.com/mattermost/mattermost-plugin-msoffice/server/job"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
 )
@@ -18,8 +21,28 @@ const (
 	AVAILABILITY_VIEW_WORKING_ELSEWHERE = '4'
 )
 
+type availabilityJob struct {
+	api API
+}
+
+func NewAvailabilityJob(api API) job.RecurringJob {
+	return &availabilityJob{api: api}
+}
+
+func (j *availabilityJob) Run() {
+	c := cron.New()
+	c.AddFunc("* * * * *", j.Work)
+	c.Start()
+	j.Work()
+}
+
+func (j *availabilityJob) Work() {
+	j.api.GetUserAvailability()
+	j.api.(*api).Logger.Debugf("Just ran the job")
+}
+
 func (api *api) GetUserAvailability() (string, error) {
-	client, err := api.MakeClient()
+	client, err := api.MakeAppClient()
 	if err != nil {
 		return "", err
 	}
@@ -37,20 +60,22 @@ func (api *api) GetUserAvailability() (string, error) {
 	start := remote.NewDateTime(time.Now())
 	end := remote.NewDateTime(time.Now().Add(15 * time.Minute))
 	timeWindow := 15 // minutes
+
 	sched, err := client.GetSchedule(scheduleIDs, start, end, timeWindow)
 	if err != nil {
 		return "", err
 	}
 
-	userID := users[0].MattermostUserID
-	av := sched[0].AvailabilityView
-
-	setUserStatusFromAvailability(api, userID, av[0])
+	for i, s := range sched {
+		userID := users[i].MattermostUserID
+		av := s.AvailabilityView
+		api.setUserStatusFromAvailability(userID, av[0])
+	}
 
 	return utils.JSONBlock(sched), err
 }
 
-func setUserStatusFromAvailability(api *api, mattermostUserID string, av byte) {
+func (api *api) setUserStatusFromAvailability(mattermostUserID string, av byte) {
 	currentStatus, _ := api.API.GetUserStatus(mattermostUserID)
 
 	switch av {

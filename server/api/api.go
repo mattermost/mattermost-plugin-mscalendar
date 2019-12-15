@@ -100,6 +100,10 @@ func (api *api) MakeClient() (remote.Client, error) {
 	return api.Remote.NewClient(context.Background(), api.user.OAuth2Token), nil
 }
 
+func (api *api) MakeAppClient() (remote.AppLevelClient, error) {
+	return api.Remote.NewAppLevelClient(context.Background()), nil
+}
+
 func (api *api) Filter(filters ...filterf) error {
 	for _, filter := range filters {
 		err := filter(api)

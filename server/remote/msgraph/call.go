@@ -11,12 +11,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 
-func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
+func (c *client) Call(method, path string, token string, in, out interface{}) (responseData []byte, err error) {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	pathURL, err := url.Parse(path)
 	if err != nil {
@@ -36,26 +37,43 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 	}
 
 	var inBody io.Reader
+	var contentType string
 	if in != nil {
-		buf := &bytes.Buffer{}
-		err = json.NewEncoder(buf).Encode(in)
-		if err != nil {
-			return nil, err
+		v, ok := in.(url.Values)
+		if ok {
+			contentType = "application/x-www-form-urlencoded"
+			inBody = strings.NewReader(v.Encode())
+		} else {
+			contentType = "application/json"
+			buf := &bytes.Buffer{}
+			err = json.NewEncoder(buf).Encode(in)
+			if err != nil {
+				return nil, err
+			}
+			inBody = buf
 		}
-		inBody = buf
 	}
+
 	req, err := http.NewRequest(method, path, inBody)
 	if err != nil {
 		return nil, err
 	}
-	if inBody != nil {
-		req.Header.Add("Content-Type", "application/json")
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
 	}
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer " + token)
+	}
+
 	if c.ctx != nil {
 		req = req.WithContext(c.ctx)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	httpClient := c.httpClient
+	if httpClient == nil {
+		httpClient = &http.Client{}
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +86,7 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 	if err != nil {
 		return nil, err
 	}
+
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
 		if out != nil {

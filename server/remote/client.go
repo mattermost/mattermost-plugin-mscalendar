@@ -3,11 +3,17 @@
 
 package remote
 
-import "time"
+import (
+	"time"
+)
+
+type AppLevelClient interface {
+	GetSchedule(scheduleIDs []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
+}
 
 type Client interface {
 	AcceptUserEvent(userID, eventID string) error
-	Call(method, path string, in, out interface{}) (responseData []byte, err error)
+	Call(method, path string, token string, in, out interface{}) (responseData []byte, err error)
 	CreateSubscription(notificationURL string) (*Subscription, error)
 	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error
@@ -18,7 +24,7 @@ type Client interface {
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
 	GetUserCalendars(userID string) ([]*Calendar, error)
-	GetSchedule(scheduleIDs []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
+	GetSchedule(schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
 	GetUserEvent(userID, eventID string) (*Event, error)
 	ListSubscriptions() ([]*Subscription, error)

@@ -17,7 +17,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 	switch wh.ResourceData.DataType {
 	case "#Microsoft.Graph.Event":
 		event := remote.Event{}
-		_, err := c.Call(http.MethodGet, wh.Resource, nil, &event)
+		_, err := c.Call(http.MethodGet, wh.Resource, "", nil, &event)
 		if err != nil {
 			c.Logger.With(bot.LogContext{
 				"Resource":       wh.Resource,
