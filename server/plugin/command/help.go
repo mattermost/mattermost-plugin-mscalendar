@@ -27,6 +27,9 @@ func (c *Command) help(parameters ...string) (string, error) {
 	resp += "* /msoffice subscribe\n"
 	resp += "* /msoffice createcal <name>\n"
 	resp += "* /msoffice deletecal <id>\n"
-	resp += "* /msoffice testcreateevent\n"
+	resp += "* /msoffice createevent\n"
+	resp += "* /msoffice findmeetings (Optional: <attendees>)\n"
+	resp += "  * <attendees> - space delimited <type>:<email> combinations \n"
+	resp += "  * <type> options - required, optional \n"
 	return resp, nil
 }
