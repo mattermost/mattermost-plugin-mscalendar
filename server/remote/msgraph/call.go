@@ -62,7 +62,7 @@ func (c *client) Call(method, path string, token string, in, out interface{}) (r
 		req.Header.Add("Content-Type", contentType)
 	}
 	if token != "" {
-		req.Header.Add("Authorization", "Bearer " + token)
+		req.Header.Add("Authorization", "Bearer "+token)
 	}
 
 	if c.ctx != nil {
@@ -77,6 +77,7 @@ func (c *client) Call(method, path string, token string, in, out interface{}) (r
 	if err != nil {
 		return nil, err
 	}
+
 	if resp.Body == nil {
 		return nil, nil
 	}

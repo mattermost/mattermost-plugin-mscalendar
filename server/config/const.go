@@ -5,10 +5,10 @@ package config
 
 const (
 	BotUserName    = "msoffice"
-	BotDisplayName = "Microsoft Office TODO"
-	BotDescription = "Created by the Microsoft Office Plugin. TODO"
+	BotDisplayName = "Microsoft Calendar"
+	BotDescription = "Created by the Microsoft Calendar Plugin."
 
-	ApplicationName = "Microsoft Office"
+	ApplicationName = "Microsoft Calendar"
 	Repository      = "mattermost-plugin-msoffice"
 	CommandTrigger  = "msoffice"
 

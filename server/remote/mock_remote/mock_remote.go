@@ -50,6 +50,20 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleWebhook", reflect.TypeOf((*MockRemote)(nil).HandleWebhook), arg0, arg1)
 }
 
+// NewAppLevelClient mocks base method
+func (m *MockRemote) NewAppLevelClient(arg0 context.Context) remote.AppLevelClient {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewAppLevelClient", arg0)
+	ret0, _ := ret[0].(remote.AppLevelClient)
+	return ret0
+}
+
+// NewAppLevelClient indicates an expected call of NewAppLevelClient
+func (mr *MockRemoteMockRecorder) NewAppLevelClient(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAppLevelClient", reflect.TypeOf((*MockRemote)(nil).NewAppLevelClient), arg0)
+}
+
 // NewClient mocks base method
 func (m *MockRemote) NewClient(arg0 context.Context, arg1 *oauth2.Token) remote.Client {
 	m.ctrl.T.Helper()

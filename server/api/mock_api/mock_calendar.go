@@ -34,6 +34,80 @@ func (m *MockCalendar) EXPECT() *MockCalendarMockRecorder {
 	return m.recorder
 }
 
+// CreateCalendar mocks base method
+func (m *MockCalendar) CreateCalendar(arg0 *remote.Calendar) (*remote.Calendar, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCalendar", arg0)
+	ret0, _ := ret[0].(*remote.Calendar)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCalendar indicates an expected call of CreateCalendar
+func (mr *MockCalendarMockRecorder) CreateCalendar(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCalendar", reflect.TypeOf((*MockCalendar)(nil).CreateCalendar), arg0)
+}
+
+// CreateEvent mocks base method
+func (m *MockCalendar) CreateEvent(arg0 *remote.Event) (*remote.Event, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateEvent", arg0)
+	ret0, _ := ret[0].(*remote.Event)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateEvent indicates an expected call of CreateEvent
+func (mr *MockCalendarMockRecorder) CreateEvent(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEvent", reflect.TypeOf((*MockCalendar)(nil).CreateEvent), arg0)
+}
+
+// DeleteCalendar mocks base method
+func (m *MockCalendar) DeleteCalendar(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCalendar", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCalendar indicates an expected call of DeleteCalendar
+func (mr *MockCalendarMockRecorder) DeleteCalendar(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCalendar", reflect.TypeOf((*MockCalendar)(nil).DeleteCalendar), arg0)
+}
+
+// FindMeetingTimes mocks base method
+func (m *MockCalendar) FindMeetingTimes(arg0 *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindMeetingTimes", arg0)
+	ret0, _ := ret[0].(*remote.MeetingTimeSuggestionResults)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindMeetingTimes indicates an expected call of FindMeetingTimes
+func (mr *MockCalendarMockRecorder) FindMeetingTimes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMeetingTimes", reflect.TypeOf((*MockCalendar)(nil).FindMeetingTimes), arg0)
+}
+
+// GetUserCalendars mocks base method
+func (m *MockCalendar) GetUserCalendars(arg0 string) ([]*remote.Calendar, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserCalendars", arg0)
+	ret0, _ := ret[0].([]*remote.Calendar)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserCalendars indicates an expected call of GetUserCalendars
+func (mr *MockCalendarMockRecorder) GetUserCalendars(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserCalendars", reflect.TypeOf((*MockCalendar)(nil).GetUserCalendars), arg0)
+}
+
 // ViewCalendar mocks base method
 func (m *MockCalendar) ViewCalendar(arg0, arg1 time.Time) ([]*remote.Event, error) {
 	m.ctrl.T.Helper()

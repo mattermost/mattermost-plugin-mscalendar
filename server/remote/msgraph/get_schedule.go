@@ -27,7 +27,7 @@ type GetScheduleRequest struct {
 	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 
-func (c *client) GetSchedule(schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
+func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
 	req := &msgraph.CalendarGetScheduleRequestParameter{
 		Schedules: schedules,
 		StartTime: &msgraph.DateTimeTimeZone{

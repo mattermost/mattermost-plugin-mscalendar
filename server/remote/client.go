@@ -8,7 +8,7 @@ import (
 )
 
 type AppLevelClient interface {
-	GetSchedule(scheduleIDs []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
+	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 }
 
 type Client interface {
@@ -24,7 +24,7 @@ type Client interface {
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
 	GetUserCalendars(userID string) ([]*Calendar, error)
-	GetSchedule(schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
+	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
 	GetUserEvent(userID, eventID string) (*Event, error)
 	ListSubscriptions() ([]*Subscription, error)

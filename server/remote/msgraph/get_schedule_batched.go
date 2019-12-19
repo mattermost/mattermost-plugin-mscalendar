@@ -1,32 +1,84 @@
 package msgraph
 
 import (
-	"net/http"
+	"strconv"
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
-func (c *appClient) GetSchedule(schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
-	token, err := c.getAppLevelToken()
-	if err != nil {
-		return nil, err
-	}
+type GetScheduleSingleResponse struct {
+	ID      string                      `json:"id"`
+	Status  int                         `json:"status"`
+	Body    *remote.GetScheduleResponse `json:"body"`
+	Headers map[string]string           `json:"headers"`
+}
 
-	var res remote.GetScheduleResponse
+type GetScheduleBatchResponse struct {
+	Responses []*GetScheduleSingleResponse `json:"responses"`
+}
 
+func (c *appClient) GetSchedule(remoteUserID string, schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
 	params := &GetScheduleRequest{
-		Schedules: schedules,
-		StartTime: startTime,
-		EndTime: endTime,
+		Schedules:                schedules, // need to chunk these per 20 etc
+		StartTime:                startTime,
+		EndTime:                  endTime,
 		AvailabilityViewInterval: availabilityViewInterval,
 	}
 
-	uid := "fb10ac13-e441-4611-8431-8ee3b6403673"
-	u := "https://graph.microsoft.com/v1.0/Users/" + uid + "/calendar/getSchedule"
-	_, err = c.Call(http.MethodPost, u, token, params, &res)
+	allRequests := getFullBatchRequest(remoteUserID, schedules, params)
+
+	batchRes := GetScheduleBatchResponse{}
+	err := c.batchRequest(allRequests, &batchRes)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.Value, nil
+	sorted := make([]*GetScheduleSingleResponse, len(allRequests))
+	for _, r := range batchRes.Responses {
+		id, _ := strconv.Atoi(r.ID)
+		sorted[id] = r
+	}
+
+	result := []*remote.ScheduleInformation{}
+	for _, r := range sorted {
+		for _, sched := range r.Body.Value {
+			result = append(result, sched)
+		}
+	}
+
+	return result, nil
+}
+
+func getFullBatchRequest(remoteUserID string, schedules []string, params *GetScheduleRequest) []*SingleRequest {
+	u := "/Users/" + remoteUserID + "/calendar/getSchedule"
+
+	makeRequest := func() *SingleRequest {
+		req := &SingleRequest{
+			URL:    u,
+			Method: "POST",
+			Body:   params,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+		}
+		return req
+	}
+
+	//  This is where we can simulate large batches
+	// 	TODO: Split up emails given into different batches properly
+	allRequests := []*SingleRequest{}
+	// allRequests = append(allRequests, makeRequest())
+
+	numRequestsInBatch := 1
+	// numRequestsInBatch := 20
+
+	for i := 0; i < numRequestsInBatch; i++ {
+		allRequests = append(allRequests, makeRequest())
+	}
+
+	for i, r := range allRequests {
+		r.ID = strconv.Itoa(i)
+	}
+
+	return allRequests
 }

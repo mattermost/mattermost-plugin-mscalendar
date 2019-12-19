@@ -19,18 +19,16 @@ type UserStore interface {
 	DeleteUser(mattermostUserId string) error
 }
 
-
 type UserShort struct {
 	MattermostUserID string `json:"mm_id"`
-	RemoteID string `json:"remote_id"`
-	Email string `json:"email"`
+	RemoteID         string `json:"remote_id"`
+	Email            string `json:"email"`
 }
 
 type User struct {
 	PluginVersion    string
 	Remote           *remote.User
 	MattermostUserID string
-	Email 			 string `json:"mattermostSettings,omitempty"`
 	OAuth2Token      *oauth2.Token
 	Settings         Settings `json:"mattermostSettings,omitempty"`
 }
@@ -93,8 +91,8 @@ func (s *pluginStore) StoreUser(user *User) error {
 
 	newUser := &UserShort{
 		MattermostUserID: user.MattermostUserID,
-		RemoteID: user.Remote.ID,
-		Email: user.Email,
+		RemoteID:         user.Remote.ID,
+		Email:            user.Remote.Mail,
 	}
 
 	found := false

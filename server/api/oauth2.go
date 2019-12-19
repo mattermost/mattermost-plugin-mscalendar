@@ -60,7 +60,6 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 	u := &store.User{
 		PluginVersion:    api.Config.PluginVersion,
 		MattermostUserID: mattermostUserID,
-		Email: 			  me.Mail,
 		Remote:           me,
 		OAuth2Token:      tok,
 	}

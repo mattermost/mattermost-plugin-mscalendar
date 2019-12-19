@@ -8,10 +8,9 @@ import (
 	"net/url"
 )
 
-
 type AuthResponse struct {
-	TokenType string `json:"token_type"`
-	ExpiresIn int `json:"expires_in"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 	AccessToken string `json:"access_token"`
 }
 
@@ -27,10 +26,10 @@ func (c *appClient) getAppLevelToken() (string, error) {
 	res := AuthResponse{}
 
 	data := url.Values{}
-    data.Set("client_id", params["client_id"])
-    data.Set("scope", params["scope"])
-    data.Set("client_secret", params["client_secret"])
-    data.Set("grant_type", params["grant_type"])
+	data.Set("client_id", params["client_id"])
+	data.Set("scope", params["scope"])
+	data.Set("client_secret", params["client_secret"])
+	data.Set("grant_type", params["grant_type"])
 
 	_, err := c.Call(http.MethodPost, u, "", data, &res)
 	if err != nil {
@@ -38,4 +37,44 @@ func (c *appClient) getAppLevelToken() (string, error) {
 	}
 
 	return res.AccessToken, nil
+}
+
+type SingleRequest struct {
+	ID      string            `json:"id"`
+	URL     string            `json:"url"`
+	Method  string            `json:"method"`
+	Body    interface{}       `json:"body"`
+	Headers map[string]string `json:"headers"`
+}
+
+type SingleResponse struct {
+	ID      string            `json:"id"`
+	Status  int               `json:"status"`
+	Body    interface{}       `json:"body"`
+	Headers map[string]string `json:"headers"`
+}
+
+type FullBatchResponse struct {
+	Responses []*SingleResponse `json:"responses"`
+}
+
+type FullBatchRequest struct {
+	Requests []*SingleRequest `json:"requests"`
+}
+
+func (c *appClient) batchRequest(requests []*SingleRequest, out interface{}) error {
+	token, err := c.getAppLevelToken()
+	if err != nil {
+		return err
+	}
+
+	batchReq := FullBatchRequest{Requests: requests}
+	u := "https://graph.microsoft.com/v1.0/$batch"
+
+	_, err = c.Call(http.MethodPost, u, token, batchReq, out)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
