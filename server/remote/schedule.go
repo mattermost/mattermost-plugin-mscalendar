@@ -20,4 +20,3 @@ type ScheduleInformation struct {
 type GetScheduleResponse struct {
 	Value []*ScheduleInformation `json:"value,omitempty"`
 }
-

@@ -21,7 +21,6 @@ func NewDateTime(t time.Time) *DateTime {
 		DateTime: t.Format(RFC3339NanoNoTimezone),
 		// TimeZone: t.Format("MST"),
 		TimeZone: "Eastern Standard Time",
-
 	}
 }
 
