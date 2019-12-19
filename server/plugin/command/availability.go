@@ -12,6 +12,13 @@ func (c *Command) availability(parameters ...string) (string, error) {
 		}
 
 		return resString, nil
+	case len(parameters) == 1 && parameters[0] == "all":
+		resString, err := c.API.GetAllUsersAvailability()
+		if err != nil {
+			return "", err
+		}
+
+		return resString, nil
 	}
 	return "bad syntax", nil
 }

@@ -49,18 +49,18 @@ func (mr *MockClientMockRecorder) AcceptUserEvent(arg0, arg1 interface{}) *gomoc
 }
 
 // Call mocks base method
-func (m *MockClient) Call(arg0, arg1, arg2 string, arg3, arg4 interface{}) ([]byte, error) {
+func (m *MockClient) Call(arg0, arg1 string, arg2, arg3 interface{}) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Call", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "Call", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Call indicates an expected call of Call
-func (mr *MockClientMockRecorder) Call(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Call(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockClient)(nil).Call), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockClient)(nil).Call), arg0, arg1, arg2, arg3)
 }
 
 // CreateCalendar mocks base method
@@ -196,18 +196,18 @@ func (mr *MockClientMockRecorder) GetNotificationData(arg0 interface{}) *gomock.
 }
 
 // GetSchedule mocks base method
-func (m *MockClient) GetSchedule(arg0 []string, arg1, arg2 *remote.DateTime, arg3 int) ([]*remote.ScheduleInformation, error) {
+func (m *MockClient) GetSchedule(arg0 string, arg1 []string, arg2, arg3 *remote.DateTime, arg4 int) ([]*remote.ScheduleInformation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchedule", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetSchedule", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]*remote.ScheduleInformation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSchedule indicates an expected call of GetSchedule
-func (mr *MockClientMockRecorder) GetSchedule(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) GetSchedule(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchedule", reflect.TypeOf((*MockClient)(nil).GetSchedule), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchedule", reflect.TypeOf((*MockClient)(nil).GetSchedule), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetUserCalendars mocks base method

@@ -17,7 +17,7 @@ import (
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 
-func (c *client) Call(method, path string, token string, in, out interface{}) (responseData []byte, err error) {
+func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	pathURL, err := url.Parse(path)
 	if err != nil {
@@ -60,9 +60,6 @@ func (c *client) Call(method, path string, token string, in, out interface{}) (r
 	}
 	if contentType != "" {
 		req.Header.Add("Content-Type", contentType)
-	}
-	if token != "" {
-		req.Header.Add("Authorization", "Bearer "+token)
 	}
 
 	if c.ctx != nil {

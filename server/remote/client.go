@@ -7,13 +7,9 @@ import (
 	"time"
 )
 
-type AppLevelClient interface {
-	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
-}
-
 type Client interface {
 	AcceptUserEvent(userID, eventID string) error
-	Call(method, path string, token string, in, out interface{}) (responseData []byte, err error)
+	Call(method, path string, in, out interface{}) (responseData []byte, err error)
 	CreateSubscription(notificationURL string) (*Subscription, error)
 	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error

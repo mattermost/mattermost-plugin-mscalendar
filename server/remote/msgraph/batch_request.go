@@ -14,7 +14,7 @@ type AuthResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-func (c *appClient) getAppLevelToken() (string, error) {
+func (c *client) getAppLevelToken() (string, error) {
 	params := map[string]string{
 		"client_id":     c.conf.OAuth2ClientID,
 		"scope":         "https://graph.microsoft.com/.default",
@@ -31,7 +31,7 @@ func (c *appClient) getAppLevelToken() (string, error) {
 	data.Set("client_secret", params["client_secret"])
 	data.Set("grant_type", params["grant_type"])
 
-	_, err := c.Call(http.MethodPost, u, "", data, &res)
+	_, err := c.Call(http.MethodPost, u, data, &res)
 	if err != nil {
 		return "", err
 	}
@@ -62,16 +62,11 @@ type FullBatchRequest struct {
 	Requests []*SingleRequest `json:"requests"`
 }
 
-func (c *appClient) batchRequest(requests []*SingleRequest, out interface{}) error {
-	token, err := c.getAppLevelToken()
-	if err != nil {
-		return err
-	}
-
+func (c *client) batchRequest(requests []*SingleRequest, out interface{}) error {
 	batchReq := FullBatchRequest{Requests: requests}
 	u := "https://graph.microsoft.com/v1.0/$batch"
 
-	_, err = c.Call(http.MethodPost, u, token, batchReq, out)
+	_, err := c.Call(http.MethodPost, u, batchReq, out)
 	if err != nil {
 		return err
 	}

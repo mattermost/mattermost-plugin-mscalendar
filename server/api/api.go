@@ -23,6 +23,7 @@ type OAuth2 interface {
 type Subscriptions interface {
 	CreateUserEventSubscription() (*store.Subscription, error)
 	GetUserAvailability() (string, error)
+	GetAllUsersAvailability() (string, error)
 	RenewUserEventSubscription() (*store.Subscription, error)
 	DeleteOrphanedSubscription(ID string) error
 	DeleteUserEventSubscription() error
@@ -100,7 +101,7 @@ func (api *api) MakeClient() (remote.Client, error) {
 	return api.Remote.NewClient(context.Background(), api.user.OAuth2Token), nil
 }
 
-func (api *api) MakeAppClient() (remote.AppLevelClient, error) {
+func (api *api) MakeAppClient() (remote.Client, error) {
 	return api.Remote.NewAppLevelClient(context.Background()), nil
 }
 

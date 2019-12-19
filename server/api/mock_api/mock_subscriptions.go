@@ -77,6 +77,21 @@ func (mr *MockSubscriptionsMockRecorder) DeleteUserEventSubscription() *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserEventSubscription", reflect.TypeOf((*MockSubscriptions)(nil).DeleteUserEventSubscription))
 }
 
+// GetAllUsersAvailability mocks base method
+func (m *MockSubscriptions) GetAllUsersAvailability() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllUsersAvailability")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllUsersAvailability indicates an expected call of GetAllUsersAvailability
+func (mr *MockSubscriptionsMockRecorder) GetAllUsersAvailability() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsersAvailability", reflect.TypeOf((*MockSubscriptions)(nil).GetAllUsersAvailability))
+}
+
 // GetUserAvailability mocks base method
 func (m *MockSubscriptions) GetUserAvailability() (string, error) {
 	m.ctrl.T.Helper()

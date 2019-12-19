@@ -54,7 +54,7 @@ func (j *availabilityJob) Work() {
 }
 
 func (api *api) GetUserAvailability() (string, error) {
-	client, err := api.MakeAppClient()
+	client, err := api.MakeClient()
 	if err != nil {
 		return "", err
 	}

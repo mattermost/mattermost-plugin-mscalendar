@@ -51,10 +51,10 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 }
 
 // NewAppLevelClient mocks base method
-func (m *MockRemote) NewAppLevelClient(arg0 context.Context) remote.AppLevelClient {
+func (m *MockRemote) NewAppLevelClient(arg0 context.Context) remote.Client {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAppLevelClient", arg0)
-	ret0, _ := ret[0].(remote.AppLevelClient)
+	ret0, _ := ret[0].(remote.Client)
 	return ret0
 }
 
