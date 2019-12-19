@@ -14,7 +14,7 @@ func (c *client) GetMe() (*remote.User, error) {
 		ID:                *graphUser.ID,
 		DisplayName:       *graphUser.DisplayName,
 		UserPrincipalName: *graphUser.UserPrincipalName,
-		Mail: *graphUser.Mail,
+		Mail:              *graphUser.Mail,
 	}
 
 	return user, nil
