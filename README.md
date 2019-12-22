@@ -1,4 +1,4 @@
-# Mattermost Microsoft Calendar Plugin.
+# Mattermost Microsoft Calendar Plugin
 [![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-msoffice/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-msoffice)
 [![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-msoffice/master.svg)](https://codecov.io/gh/mattermost/mattermost-plugin-msoffice)
 
