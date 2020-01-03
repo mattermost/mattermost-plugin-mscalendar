@@ -5,10 +5,6 @@ package remote
 
 import "time"
 
-type AttendeeBase struct {
-	EmailAddress *EmailAddress
-}
-
 type FindMeetingTimesParameters struct {
 	Attendees                 []Attendee          `json:"attendees,omitempty"`
 	LocationConstraint        *LocationConstraint `json:"locationConstraint,omitempty"`
@@ -35,7 +31,7 @@ type MeetingTimeSuggestion struct {
 }
 
 type AttendeeAvailability struct {
-	Attendee     *AttendeeBase
+	Attendee     *Attendee
 	Availability string `json:"availability"`
 }
 

@@ -17,7 +17,7 @@ type Event struct {
 	Weblink                    string               `json:"weblink,omitempty"`
 	Start                      *DateTime            `json:"start,omitempty"`
 	End                        *DateTime            `json:"end,omitempty"`
-	ReminderMinutesBeforeStart int32                `json:"reminderMinutesBeforeStart,omitempty"`
+	ReminderMinutesBeforeStart int                  `json:"reminderMinutesBeforeStart,omitempty"`
 	Location                   *Location            `json:"location,omitempty"`
 	ResponseStatus             *EventResponseStatus `json:"responseStatus,omitempty"`
 	Attendees                  []*Attendee          `json:"attendees,omitempty"`

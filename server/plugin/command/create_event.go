@@ -14,12 +14,12 @@ import (
 func getCreateEventFlagSet() *flag.FlagSet {
 	flagSet := flag.NewFlagSet("create", flag.ContinueOnError)
 	flagSet.Bool("help", false, "show help")
-	flagSet.String("subject", "", "Subject of the event (no spaces for now)")
-	flagSet.String("body", "", "Body of the event (no spaces for now)")
-	flagSet.StringSlice("location", []string{}, "Location of the event <displayName,street,city,state,postalcode,country> (comma separated; no spaces)")
+	flagSet.String("test-subject", "", "Subject of the event (no spaces for now)")
+	flagSet.String("test-body", "", "Body of the event (no spaces for now)")
+	flagSet.StringSlice("test-location", []string{}, "Location of the event <displayName,street,city,state,postalcode,country> (comma separated; no spaces)")
 	flagSet.String("starttime", time.Now().Format(time.RFC3339), "Start time for the event")
 	flagSet.Bool("allday", false, "Set as all day event (starttime/endtime must be set to midnight on different days - 2019-12-19T00:00:00-00:00)")
-	flagSet.Int32("reminder", 15, "Reminder (in minutes)")
+	flagSet.Int("reminder", 15, "Reminder (in minutes)")
 	flagSet.String("endtime", time.Now().Add(time.Hour).Format(time.RFC3339), "End time for the event")
 	flagSet.StringSlice("attendees", []string{}, "A comma separated list of Mattermost UserIDs")
 
@@ -45,7 +45,7 @@ func parseCreateArgs(args []string) (*remote.Event, *userError, error) {
 		return nil, &userError{ErrorMessage: fmt.Sprintf(getCreateEventFlagSet().FlagUsages())}, nil
 	}
 
-	subject, err := createFlagSet.GetString("subject")
+	subject, err := createFlagSet.GetString("test-subject")
 	if err != nil {
 		return event, nil, err
 	}
@@ -55,7 +55,7 @@ func parseCreateArgs(args []string) (*remote.Event, *userError, error) {
 	}
 	event.Subject = subject
 
-	body, err := createFlagSet.GetString("body")
+	body, err := createFlagSet.GetString("test-body")
 	if err != nil {
 		return event, nil, err
 	}
@@ -97,7 +97,7 @@ func parseCreateArgs(args []string) (*remote.Event, *userError, error) {
 	}
 	event.IsAllDay = allday
 
-	reminder, err := createFlagSet.GetInt32("reminder")
+	reminder, err := createFlagSet.GetInt("reminder")
 	if err != nil {
 		return event, nil, err
 	}
@@ -106,13 +106,13 @@ func parseCreateArgs(args []string) (*remote.Event, *userError, error) {
 	}
 	event.ReminderMinutesBeforeStart = reminder
 
-	location, err := createFlagSet.GetStringSlice("location")
+	location, err := createFlagSet.GetStringSlice("test-location")
 	if err != nil {
 		return event, nil, err
 	}
 	if location != nil {
 		if len(location) != 6 {
-			return event, &userError{ErrorMessage: "must specify --location with 6 parameters, including a comma for empty values"}, nil
+			return event, &userError{ErrorMessage: "must specify --test-location with 6 parameters, including a comma for empty values"}, nil
 		}
 		event.Location = &remote.Location{
 			LocationType: "default",
