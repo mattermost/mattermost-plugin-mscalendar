@@ -6,9 +6,9 @@ package api
 import (
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 func (api *api) CreateUserEventSubscription() (*store.Subscription, error) {

@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 func (c *client) GetUserDefaultCalendarView(userID string, start, end time.Time) ([]*remote.Event, error) {

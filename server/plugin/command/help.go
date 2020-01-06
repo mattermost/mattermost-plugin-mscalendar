@@ -6,11 +6,11 @@ package command
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
 func (c *Command) help(parameters ...string) (string, error) {
-	resp := fmt.Sprintf("Mattermost Microsoft Office plugin version: %s, "+
+	resp := fmt.Sprintf("Mattermost Microsoft Calendar plugin version: %s, "+
 		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
 		c.Config.PluginVersion,
 		c.Config.BuildHashShort,
@@ -18,15 +18,15 @@ func (c *Command) help(parameters ...string) (string, error) {
 		c.Config.BuildHash,
 		c.Config.BuildDate)
 	resp += "\n"
-	resp += "* /msoffice\n"
-	resp += "* /msoffice help\n"
-	resp += "* /msoffice info\n"
-	resp += "* /msoffice connect\n"
-	resp += "* /msoffice viewcal\n"
-	resp += "* /msoffice showcals\n"
-	resp += "* /msoffice subscribe\n"
-	resp += "* /msoffice createcal <name>\n"
-	resp += "* /msoffice deletecal <id>\n"
-	resp += "* /msoffice testcreateevent\n"
+	resp += "* /mscalendar\n"
+	resp += "* /mscalendar help\n"
+	resp += "* /mscalendar info\n"
+	resp += "* /mscalendar connect\n"
+	resp += "* /mscalendar viewcal\n"
+	resp += "* /mscalendar showcals\n"
+	resp += "* /mscalendar subscribe\n"
+	resp += "* /mscalendar createcal <name>\n"
+	resp += "* /mscalendar deletecal <id>\n"
+	resp += "* /mscalendar testcreateevent\n"
 	return resp, nil
 }

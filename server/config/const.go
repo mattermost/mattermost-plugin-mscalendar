@@ -4,13 +4,13 @@
 package config
 
 const (
-	BotUserName    = "msoffice"
-	BotDisplayName = "Microsoft Office TODO"
-	BotDescription = "Created by the Microsoft Office Plugin. TODO"
+	BotUserName    = "mscalendar"
+	BotDisplayName = "Microsoft Calendar Bot"
+	BotDescription = "Created by the Microsoft Calendar Plugin."
 
-	ApplicationName = "Microsoft Office"
-	Repository      = "mattermost-plugin-msoffice"
-	CommandTrigger  = "msoffice"
+	ApplicationName = "Microsoft Calendar"
+	Repository      = "mattermost-plugin-mscalendar"
+	CommandTrigger  = "mscalendar"
 
 	PathOAuth2       = "/oauth2"
 	PathComplete     = "/complete"

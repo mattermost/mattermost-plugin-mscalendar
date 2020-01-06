@@ -6,8 +6,8 @@ package store
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 	"golang.org/x/oauth2"
 )
 

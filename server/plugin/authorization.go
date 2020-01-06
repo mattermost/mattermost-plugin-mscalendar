@@ -6,7 +6,7 @@ package plugin
 import (
 	"strings"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 // IsAuthorizedAdmin returns true if the user is either a Mattermost sysadmin,
