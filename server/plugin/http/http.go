@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
 // Handler is an http.Handler for all plugin HTTP endpoints

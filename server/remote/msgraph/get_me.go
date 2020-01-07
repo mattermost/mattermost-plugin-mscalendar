@@ -3,7 +3,7 @@
 
 package msgraph
 
-import "github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+import "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 
 func (c *client) GetMe() (*remote.User, error) {
 	graphUser, err := c.rbuilder.Me().Request().Get(c.ctx)

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 

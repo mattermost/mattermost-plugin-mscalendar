@@ -8,13 +8,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api/mock_api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api/mock_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 func TestOAuth2Connect(t *testing.T) {
