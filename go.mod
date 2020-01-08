@@ -8,7 +8,6 @@ require (
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/mattermost/mattermost-server/v5 v5.18.0-rc.test
 	github.com/pkg/errors v0.8.1
-	github.com/robfig/cron/v3 v3.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2

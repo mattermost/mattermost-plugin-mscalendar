@@ -7,72 +7,32 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/robfig/cron/v3"
-
-	"github.com/mattermost/mattermost-plugin-msoffice/server/job"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
 const (
-	AVAILABILITY_VIEW_FREE              = '0'
-	AVAILABILITY_VIEW_TENTATIVE         = '1'
-	AVAILABILITY_VIEW_BUSY              = '2'
-	AVAILABILITY_VIEW_OUT_OF_OFFICE     = '3'
-	AVAILABILITY_VIEW_WORKING_ELSEWHERE = '4'
+	availabilityTimeWindowSize = 15
+
+	availabilityViewFree             = '0'
+	availabilityViewTentative        = '1'
+	availabilityViewBusy             = '2'
+	availabilityViewOutOfOffice      = '3'
+	availabilityViewWorkingElsewhere = '4'
 )
 
-type availabilityJob struct {
-	api API
-}
-
-func NewAvailabilityJob(api API) job.RecurringJob {
-	return &availabilityJob{api: api}
-}
-
-func (j *availabilityJob) Run() {
-	c := cron.New()
-	c.AddFunc("* * * * *", j.Work)
-	c.Start()
-}
-
-func (j *availabilityJob) getLogger() bot.Logger {
-	return j.api.(*api).Logger
-}
-
-func (j *availabilityJob) Work() {
-	log := j.getLogger()
-	log.Debugf("Availability job beginning")
-
-	_, err := j.api.GetUserAvailability()
-	if err != nil {
-		log.Errorf("Error during Availability job", "error", err.Error())
-	}
-
-	log.Debugf("Availability job finished")
-}
-
-func (api *api) GetUserAvailability() (string, error) {
-	client, err := api.MakeClient()
-	if err != nil {
-		return "", err
-	}
-
+func (api *api) SyncStatusForSingleUser() (string, error) {
 	u, err := api.UserStore.LoadUser(api.mattermostUserID)
 	if err != nil {
 		return "", err
 	}
 
 	scheduleIDs := []string{u.Remote.Mail}
+	sched, err := api.GetUserAvailabilities(u.Remote.ID, scheduleIDs)
 
-	start, end, timeWindow := getTimeInfoForAvailability()
-
-	sched, err := client.GetSchedule(u.Remote.ID, scheduleIDs, start, end, timeWindow)
 	if err != nil {
 		return "", err
 	}
-
 	if len(sched) == 0 {
 		return "No schedule info found", nil
 	}
@@ -82,12 +42,7 @@ func (api *api) GetUserAvailability() (string, error) {
 	return api.setUserStatusFromAvailability(api.mattermostUserID, av), nil
 }
 
-func (api *api) GetAllUsersAvailability() (string, error) {
-	client, err := api.MakeAppClient()
-	if err != nil {
-		return "", err
-	}
-
+func (api *api) SyncStatusForAllUsers() (string, error) {
 	users, err := api.UserStore.LoadAllUsers()
 	if err != nil {
 		return "", err
@@ -102,13 +57,10 @@ func (api *api) GetAllUsersAvailability() (string, error) {
 		scheduleIDs = append(scheduleIDs, u.Email)
 	}
 
-	start, end, timeWindow := getTimeInfoForAvailability()
-
-	sched, err := client.GetSchedule(users[0].RemoteID, scheduleIDs, start, end, timeWindow)
+	sched, err := api.GetUserAvailabilities(users[0].RemoteID, scheduleIDs)
 	if err != nil {
 		return "", err
 	}
-
 	if len(sched) == 0 {
 		return "No schedule info found", nil
 	}
@@ -127,39 +79,44 @@ func (api *api) GetAllUsersAvailability() (string, error) {
 	return utils.JSONBlock(sched), nil
 }
 
-func getTimeInfoForAvailability() (start, end *remote.DateTime, timeWindow int) {
-	start = remote.NewDateTime(time.Now())
-	end = remote.NewDateTime(time.Now().Add(15 * time.Minute))
-	timeWindow = 15 // minutes
-	return start, end, timeWindow
+func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
+	client, err := api.MakeAppClient()
+	if err != nil {
+		return nil, err
+	}
+
+	start := remote.NewDateTime(time.Now())
+	end := remote.NewDateTime(time.Now().Add(availabilityTimeWindowSize * time.Minute))
+
+	return client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
 }
 
 func (api *api) setUserStatusFromAvailability(mattermostUserID string, av byte) string {
 	currentStatus, _ := api.API.GetUserStatus(mattermostUserID)
 
 	switch av {
-	case AVAILABILITY_VIEW_FREE:
+	case availabilityViewFree:
 		if currentStatus.Status == "dnd" {
 			api.API.UpdateUserStatus(mattermostUserID, "online")
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus.Status)
 		} else {
 			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus.Status)
 		}
-	case AVAILABILITY_VIEW_TENTATIVE, AVAILABILITY_VIEW_BUSY:
+	case availabilityViewTentative, availabilityViewBusy:
 		if currentStatus.Status != "dnd" {
 			api.API.UpdateUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus.Status)
 		} else {
 			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus.Status)
 		}
-	case AVAILABILITY_VIEW_OUT_OF_OFFICE:
+	case availabilityViewOutOfOffice:
 		if currentStatus.Status != "offline" {
 			api.API.UpdateUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus.Status)
 		} else {
 			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus.Status)
 		}
-	case AVAILABILITY_VIEW_WORKING_ELSEWHERE:
+	case availabilityViewWorkingElsewhere:
 		return fmt.Sprintf("User is working elsewhere. Pending implementation.")
 	}
 

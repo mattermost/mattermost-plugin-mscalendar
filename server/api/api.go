@@ -22,8 +22,6 @@ type OAuth2 interface {
 
 type Subscriptions interface {
 	CreateUserEventSubscription() (*store.Subscription, error)
-	GetUserAvailability() (string, error)
-	GetAllUsersAvailability() (string, error)
 	RenewUserEventSubscription() (*store.Subscription, error)
 	DeleteOrphanedSubscription(ID string) error
 	DeleteUserEventSubscription() error
@@ -47,11 +45,18 @@ type Event interface {
 	RespondToEvent(eventID, response string) error
 }
 
+type Availability interface {
+	GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error)
+	SyncStatusForSingleUser() (string, error)
+	SyncStatusForAllUsers() (string, error)
+}
+
 type Client interface {
 	MakeClient() (remote.Client, error)
 }
 
 type API interface {
+	Availability
 	Calendar
 	Client
 	Event

@@ -29,8 +29,9 @@ import (
 
 type Plugin struct {
 	plugin.MattermostPlugin
-	configLock *sync.RWMutex
-	config     *config.Config
+	configLock    *sync.RWMutex
+	config        *config.Config
+	statusSyncJob *api.StatusSyncJob
 
 	httpHandler         *http.Handler
 	notificationHandler api.NotificationHandler
@@ -68,13 +69,11 @@ func (p *Plugin) OnActivate() error {
 
 	p.httpHandler = http.NewHandler()
 
-	conf := p.newAPIConfig()
-	p.notificationHandler = api.NewNotificationHandler(conf)
+	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())
 
 	command.Register(p.API.RegisterCommand)
 
-	// j := api.NewAvailabilityJob(api.New(conf, ""))
-	// go j.Run()
+	p.initUserStatusSyncJob()
 
 	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil
@@ -117,6 +116,9 @@ func (p *Plugin) OnConfigurationChange() error {
 	if p.notificationHandler != nil {
 		p.notificationHandler.Configure(p.newAPIConfig())
 	}
+
+	p.initUserStatusSyncJob()
+
 	return nil
 }
 
@@ -212,4 +214,27 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	}
 	p.Templates = templates
 	return nil
+}
+
+func (p *Plugin) initUserStatusSyncJob() {
+	conf := p.newAPIConfig()
+	enable := p.getConfig().EnableStatusSyncJob
+	logger := conf.Dependencies.Logger
+
+	// Config is set to enable. No job exists, start a new job.
+	if enable && p.statusSyncJob == nil {
+		logger.Debugf("Enabling user status sync job")
+
+		job := api.NewStatusSyncJob(api.New(conf, ""))
+		p.statusSyncJob = job
+		go job.Start()
+	}
+
+	// Config is set to disable. Job exists, kill existing job.
+	if !enable && p.statusSyncJob != nil {
+		logger.Debugf("Disabling user status sync job")
+
+		p.statusSyncJob.Cancel()
+		p.statusSyncJob = nil
+	}
 }

@@ -87,6 +87,7 @@ ifneq ($(HAS_SERVER),)
 	mockgen -destination server/api/mock_api/mock_subscriptions.go github.com/mattermost/mattermost-plugin-msoffice/server/api Subscriptions
 	mockgen -destination server/api/mock_api/mock_calendar.go github.com/mattermost/mattermost-plugin-msoffice/server/api Calendar
 	mockgen -destination server/api/mock_api/mock_client.go github.com/mattermost/mattermost-plugin-msoffice/server/api Client
+	mockgen -destination server/api/mock_api/mock_availability.go github.com/mattermost/mattermost-plugin-msoffice/server/api Availability
 	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-msoffice/server/remote Remote
 	mockgen -destination server/remote/mock_remote/mock_client.go github.com/mattermost/mattermost-plugin-msoffice/server/remote Client
 	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot Poster
