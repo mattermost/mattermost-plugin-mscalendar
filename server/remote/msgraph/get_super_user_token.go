@@ -14,7 +14,7 @@ type AuthResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-func (c *client) getAppLevelToken() (string, error) {
+func (c *client) getSuperuserToken() (string, error) {
 	params := map[string]string{
 		"client_id":     c.conf.OAuth2ClientID,
 		"scope":         "https://graph.microsoft.com/.default",

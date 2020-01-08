@@ -106,8 +106,8 @@ func (api *api) MakeClient() (remote.Client, error) {
 	return api.Remote.NewClient(context.Background(), api.user.OAuth2Token), nil
 }
 
-func (api *api) MakeAppClient() (remote.Client, error) {
-	return api.Remote.NewAppLevelClient(context.Background()), nil
+func (api *api) MakeSuperuserClient() (remote.Client, error) {
+	return api.Remote.NewSuperuserClient(context.Background()), nil
 }
 
 func (api *api) Filter(filters ...filterf) error {

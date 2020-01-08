@@ -10,6 +10,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
+const JOB_INTERVAL = 1 * time.Minute
+
 type StatusSyncJob struct {
 	api        API
 	cancel     chan struct{}
@@ -40,8 +42,6 @@ func NewStatusSyncJob(api API) *StatusSyncJob {
 		api:       api,
 	}
 }
-
-const JOB_INTERVAL = 1 * time.Minute
 
 func (job *StatusSyncJob) Start() {
 	go func() {

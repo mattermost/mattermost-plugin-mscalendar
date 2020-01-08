@@ -80,7 +80,7 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 }
 
 func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client, err := api.MakeAppClient()
+	client, err := api.MakeSuperuserClient()
 	if err != nil {
 		return nil, err
 	}

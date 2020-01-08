@@ -48,11 +48,11 @@ func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client
 	return c
 }
 
-// NewAppLevelClient creates a new client used for app-only permissions.
-func (r *impl) NewAppLevelClient(ctx context.Context) remote.Client {
+// NewSuperuserClient creates a new client used for app-only permissions.
+func (r *impl) NewSuperuserClient(ctx context.Context) remote.Client {
 	httpClient := &http.Client{}
 
-	// Hack. getAppLevelToken should just use http and not a client
+	// TODO: getSuperuserToken should just use http and not a client
 	c := &client{
 		conf:       r.conf,
 		ctx:        ctx,
@@ -61,7 +61,7 @@ func (r *impl) NewAppLevelClient(ctx context.Context) remote.Client {
 		rbuilder:   msgraph.NewClient(httpClient),
 	}
 
-	token, _ := c.getAppLevelToken()
+	token, _ := c.getSuperuserToken()
 
 	o := &oauth2.Token{
 		AccessToken: token,
