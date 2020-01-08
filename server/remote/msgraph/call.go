@@ -66,11 +66,7 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 		req = req.WithContext(c.ctx)
 	}
 
-	httpClient := c.httpClient
-	if httpClient == nil {
-		httpClient = &http.Client{}
-	}
-	resp, err := httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

@@ -3,21 +3,25 @@ package msgraph
 import (
 	"strconv"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 )
 
-type GetScheduleSingleResponse struct {
-	ID      string                      `json:"id"`
-	Status  int                         `json:"status"`
-	Body    *remote.GetScheduleResponse `json:"body"`
-	Headers map[string]string           `json:"headers"`
+const maxNumUsersPerRequest = 20
+
+type getScheduleSingleResponse struct {
+	ID      string              `json:"id"`
+	Status  int                 `json:"status"`
+	Body    getScheduleResponse `json:"body"`
+	Headers map[string]string   `json:"headers"`
 }
 
-type GetScheduleBatchResponse struct {
-	Responses []*GetScheduleSingleResponse `json:"responses"`
+type getScheduleBatchResponse struct {
+	Responses []*getScheduleSingleResponse `json:"responses"`
 }
 
-type GetScheduleRequest struct {
+type getScheduleRequest struct {
 	// List of emails of users that we want to check
 	Schedules []string `json:"schedules"`
 
@@ -32,51 +36,65 @@ type GetScheduleRequest struct {
 	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 
+type getScheduleResponse struct {
+	Value []*remote.ScheduleInformation `json:"value,omitempty"`
+}
+
 func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
-	params := &GetScheduleRequest{
+	params := &getScheduleRequest{
 		StartTime:                startTime,
 		EndTime:                  endTime,
 		AvailabilityViewInterval: availabilityViewInterval,
 	}
 
-	allRequests := getFullBatchRequest(remoteUserID, schedules, params)
+	allRequests := prepareGetScheduleRequests(remoteUserID, schedules, params)
 
-	batchRes := GetScheduleBatchResponse{}
-	err := c.batchRequest(allRequests, &batchRes)
+	err, batchResponses := c.batchRequest(allRequests)
 	if err != nil {
 		return nil, err
 	}
 
-	sorted := make([]*GetScheduleSingleResponse, len(allRequests))
-	for _, r := range batchRes.Responses {
-		id, _ := strconv.Atoi(r.ID)
-		sorted[id] = r
-	}
-
 	result := []*remote.ScheduleInformation{}
-	for _, r := range sorted {
-		for _, sched := range r.Body.Value {
-			result = append(result, sched)
+
+	for i, batchRes := range batchResponses {
+		length := maxNumRequestsPerBatch
+		if i == len(batchResponses)-1 {
+			length = len(allRequests) % maxNumRequestsPerBatch
+		}
+
+		sorted := make([]*getScheduleSingleResponse, length)
+
+		for _, r := range batchRes.Responses {
+			res := &getScheduleSingleResponse{}
+			mapstructure.Decode(r, res) // TODO: handle request error case. response may look different if this single request had an error
+
+			id, _ := strconv.Atoi(res.ID)
+			sorted[id] = res
+		}
+
+		for _, r := range sorted {
+			for _, sched := range r.Body.Value {
+				result = append(result, sched)
+			}
 		}
 	}
 
 	return result, nil
 }
 
-func getFullBatchRequest(remoteUserID string, schedules []string, params *GetScheduleRequest) []*SingleRequest {
+func prepareGetScheduleRequests(remoteUserID string, schedules []string, params *getScheduleRequest) []*singleRequest {
 	u := "/Users/" + remoteUserID + "/calendar/getSchedule"
 
-	makeRequest := func() *SingleRequest {
-		p := &GetScheduleRequest{
-			Schedules:                schedules, // need to chunk these out
-			StartTime:                params.StartTime,
-			EndTime:                  params.EndTime,
-			AvailabilityViewInterval: params.AvailabilityViewInterval,
-		}
-		req := &SingleRequest{
+	makeRequest := func(schedBatch []string) *singleRequest {
+		req := &singleRequest{
 			URL:    u,
 			Method: "POST",
-			Body:   p,
+			Body: &getScheduleRequest{
+				Schedules:                schedBatch,
+				StartTime:                params.StartTime,
+				EndTime:                  params.EndTime,
+				AvailabilityViewInterval: params.AvailabilityViewInterval,
+			},
 			Headers: map[string]string{
 				"Content-Type": "application/json",
 			},
@@ -84,20 +102,25 @@ func getFullBatchRequest(remoteUserID string, schedules []string, params *GetSch
 		return req
 	}
 
-	//  This is where we can simulate large batches
-	// 	TODO: Split up emails given into different batches properly
-	allRequests := []*SingleRequest{}
-	// allRequests = append(allRequests, makeRequest())
+	allRequests := []*singleRequest{}
 
-	numRequestsInBatch := 1
-	// numRequestsInBatch := 20
-
-	for i := 0; i < numRequestsInBatch; i++ {
-		allRequests = append(allRequests, makeRequest())
+	numUsers := len(schedules)
+	numRequests := numUsers / maxNumUsersPerRequest
+	if numUsers%maxNumUsersPerRequest != 0 {
+		numRequests += 1
 	}
 
-	for i, r := range allRequests {
-		r.ID = strconv.Itoa(i)
+	for i := 0; i < numRequests; i++ {
+		startIdx := i * maxNumUsersPerRequest
+		endIdx := startIdx + maxNumUsersPerRequest
+		if i == numRequests-1 {
+			endIdx = len(schedules)
+		}
+
+		slice := schedules[startIdx:endIdx]
+		req := makeRequest(slice)
+		req.ID = strconv.Itoa(i)
+		allRequests = append(allRequests, req)
 	}
 
 	return allRequests

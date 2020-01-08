@@ -7,7 +7,9 @@ import (
 	"net/http"
 )
 
-type SingleRequest struct {
+const maxNumRequestsPerBatch = 20
+
+type singleRequest struct {
 	ID      string            `json:"id"`
 	URL     string            `json:"url"`
 	Method  string            `json:"method"`
@@ -15,29 +17,57 @@ type SingleRequest struct {
 	Headers map[string]string `json:"headers"`
 }
 
-type SingleResponse struct {
+type singleResponse struct {
 	ID      string            `json:"id"`
 	Status  int               `json:"status"`
 	Body    interface{}       `json:"body"`
 	Headers map[string]string `json:"headers"`
 }
 
-type FullBatchResponse struct {
-	Responses []*SingleResponse `json:"responses"`
+type fullBatchResponse struct {
+	Responses []interface{} `json:"responses"`
 }
 
-type FullBatchRequest struct {
-	Requests []*SingleRequest `json:"requests"`
+type fullBatchRequest struct {
+	Requests []*singleRequest `json:"requests"`
 }
 
-func (c *client) batchRequest(requests []*SingleRequest, out interface{}) error {
-	batchReq := FullBatchRequest{Requests: requests}
+func (c *client) batchRequest(requests []*singleRequest) (error, []*fullBatchResponse) {
 	u := "https://graph.microsoft.com/v1.0/$batch"
 
-	_, err := c.Call(http.MethodPost, u, batchReq, out)
-	if err != nil {
-		return err
+	batchRequests := prepareBatchRequests(requests)
+	result := []*fullBatchResponse{}
+	for _, req := range batchRequests {
+		res := &fullBatchResponse{}
+		_, err := c.Call(http.MethodPost, u, req, res)
+		if err != nil {
+			return err, nil
+		}
+		result = append(result, res)
 	}
 
-	return nil
+	return nil, result
+}
+
+func prepareBatchRequests(requests []*singleRequest) []fullBatchRequest {
+	numFullRequests := len(requests) / maxNumRequestsPerBatch
+	if len(requests)%maxNumRequestsPerBatch != 0 {
+		numFullRequests += 1
+	}
+
+	result := []fullBatchRequest{}
+
+	for i := 0; i < numFullRequests; i++ {
+		startIdx := i * maxNumRequestsPerBatch
+		endIdx := startIdx + maxNumRequestsPerBatch
+		if i == numFullRequests-1 {
+			endIdx = len(requests)
+		}
+
+		slice := requests[startIdx:endIdx]
+		batchReq := fullBatchRequest{Requests: slice}
+		result = append(result, batchReq)
+	}
+
+	return result
 }

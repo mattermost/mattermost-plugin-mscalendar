@@ -16,7 +16,3 @@ type ScheduleInformation struct {
 	// WorkingHours interface{} `json:"workingHours,omitempty"`
 	// Error *FreeBusyError `json:"error,omitempty"`
 }
-
-type GetScheduleResponse struct {
-	Value []*ScheduleInformation `json:"value,omitempty"`
-}
