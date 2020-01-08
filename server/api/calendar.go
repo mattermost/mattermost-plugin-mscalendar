@@ -27,11 +27,11 @@ func (api *api) CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, err
 	return client.CreateCalendar(calendar)
 }
 
-func (api *api) CreateEvent(event *remote.Event, MattermostUserIDs []string) (*remote.Event, error) {
+func (api *api) CreateEvent(event *remote.Event, mattermostUserIDs []string) (*remote.Event, error) {
 
 	// invite non-mapped Mattermost
-	for id := range MattermostUserIDs {
-		userID := MattermostUserIDs[id]
+	for id := range mattermostUserIDs {
+		userID := mattermostUserIDs[id]
 		_, err := api.UserStore.LoadUser(userID)
 		if err != nil {
 			if err.Error() == "not found" {

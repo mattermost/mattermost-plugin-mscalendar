@@ -27,6 +27,37 @@ func getCreateEventFlagSet() *flag.FlagSet {
 	return flagSet
 }
 
+func (c *Command) createEvent(parameters ...string) (string, error) {
+
+	if len(parameters) == 0 {
+		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), nil
+	}
+
+	event, err := parseCreateArgs(parameters)
+	if err != nil {
+		return err.Error(), nil
+	}
+
+	createFlagSet := getCreateEventFlagSet()
+	err = createFlagSet.Parse(parameters)
+	if err != nil {
+		return "", err
+	}
+
+	mattermostUserIDs, err := createFlagSet.GetStringSlice("attendees")
+	if err != nil {
+		return "", err
+	}
+
+	calEvent, err := c.API.CreateEvent(event, mattermostUserIDs)
+	if err != nil {
+		return "", err
+	}
+	resp := "Event Created\n" + utils.JSONBlock(&calEvent)
+
+	return resp, nil
+}
+
 func parseCreateArgs(args []string) (*remote.Event, error) {
 
 	event := &remote.Event{}
@@ -138,35 +169,4 @@ func parseCreateArgs(args []string) (*remote.Event, error) {
 	}
 
 	return event, nil
-}
-
-func (c *Command) createEvent(parameters ...string) (string, error) {
-
-	if len(parameters) == 0 {
-		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), nil
-	}
-
-	event, err := parseCreateArgs(parameters)
-	if err != nil {
-		return err.Error(), nil
-	}
-
-	createFlagSet := getCreateEventFlagSet()
-	err = createFlagSet.Parse(parameters)
-	if err != nil {
-		return "", err
-	}
-
-	mattermostUserIDs, err := createFlagSet.GetStringSlice("attendees")
-	if err != nil {
-		return "", err
-	}
-
-	calEvent, err := c.API.CreateEvent(event, mattermostUserIDs)
-	if err != nil {
-		return "", err
-	}
-	resp := "Event Created\n" + utils.JSONBlock(&calEvent)
-
-	return resp, nil
 }
