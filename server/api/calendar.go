@@ -6,7 +6,7 @@ package api
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 func (api *api) ViewCalendar(from, to time.Time) ([]*remote.Event, error) {

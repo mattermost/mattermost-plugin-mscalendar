@@ -8,7 +8,7 @@ import (
 
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 func (c *client) GetUserEvent(userID, eventID string) (*remote.Event, error) {

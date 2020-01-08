@@ -1,7 +1,7 @@
 {
-    "id": "com.mattermost.msoffice",
-    "name": "TODO:name",
-    "description": "TODO: description.",
+    "id": "com.mattermost.mscalendar",
+    "name": "Microsoft Calendar",
+    "description": "Microsoft Calendar Integration",
     "version": "0.1.0",
     "min_server_version": "5.16.0",
     "server": {

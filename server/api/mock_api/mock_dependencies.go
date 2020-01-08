@@ -5,11 +5,11 @@ package mock_api
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/mock_remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
 func NewMockDependencies(ctrl *gomock.Controller) *api.Dependencies {

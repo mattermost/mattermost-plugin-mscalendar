@@ -6,7 +6,7 @@ package msgraph
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 // FindMeetingTimes finds meeting time suggestions for a calendar event

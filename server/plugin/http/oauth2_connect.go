@@ -6,7 +6,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 )
 
 func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {

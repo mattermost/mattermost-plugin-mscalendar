@@ -1,13 +1,13 @@
 # Mattermost Microsoft Calendar Plugin
-[![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-msoffice/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-msoffice)
-[![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-msoffice/master.svg)](https://codecov.io/gh/mattermost/mattermost-plugin-msoffice)
+[![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-mscalendar/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-mscalendar)
+[![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-mscalendar/master.svg)](https://codecov.io/gh/mattermost/mattermost-plugin-mscalendar)
 
-# [Help Wanted](https://github.com/mattermost/mattermost-plugin-msoffice/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22up+for+grabs%22+label%3A%22help+wanted%22+sort%3Aupdated-desc)
+# [Help Wanted](https://github.com/mattermost/mattermost-plugin-mscalendar/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22up+for+grabs%22+label%3A%22help+wanted%22+sort%3Aupdated-desc)
 
 This plugin supports a two-way integration between Mattermost and Microsoft
 Outlook Calendar. For a stable production release, please download the latest
 version [in the Releases
-tab](https://github.com/mattermost/mattermost-plugin-msoffice/releases) and
+tab](https://github.com/mattermost/mattermost-plugin-mscalendar/releases) and
 follow [these instructions](#2-configuration) for install and configuration.
 
 ## Table of Contents
@@ -32,14 +32,12 @@ follow [these instructions](#2-configuration) for install and configuration.
   - add needed permissions
   - (Read, Read.Shared, ReadWrite, ReadWrite.Shared)
 - `Authentication`
-  - Redirect URI -> `<MM_SITEURL>/plugins/com.mattermost.msoffice/oauth2/complete`
+  - Redirect URI -> `<MM_SITEURL>/plugins/com.mattermost.mscalendar/oauth2/complete`
     - For development (use ngrok.io URL)
 
 ### Step 2 Configure Plugin Settings
 
-**`System Console` > `PLUGINS` > `MS Office Calendar`**
-
-- [ ] (TODO: rename in plugin settings - currently `TODO:name`)
+**`System Console` > `PLUGINS` > `Microsoft Calendar`**
 
 Personal
 

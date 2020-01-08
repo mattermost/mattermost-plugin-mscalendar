@@ -13,10 +13,10 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
-const WelcomeMessage = `### Welcome to the Microsoft Office plugin!
+const WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
 Here is some info to prove we got you logged in
 - Name: %s
 `
