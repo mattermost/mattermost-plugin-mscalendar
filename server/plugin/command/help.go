@@ -27,6 +27,9 @@ func (c *Command) help(parameters ...string) (string, error) {
 	resp += "* /mscalendar subscribe\n"
 	resp += "* /mscalendar createcal <name>\n"
 	resp += "* /mscalendar deletecal <id>\n"
-	resp += "* /mscalendar testcreateevent\n"
+	resp += "* /mscalendar createevent\n"
+	resp += "* /mscalendar findmeetings (Optional: <attendees>)\n"
+	resp += "  * <attendees> - space delimited <type>:<email> combinations \n"
+	resp += "  * <type> options - required, optional \n"
 	return resp, nil
 }

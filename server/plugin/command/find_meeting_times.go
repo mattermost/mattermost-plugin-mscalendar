@@ -4,8 +4,7 @@
 package command
 
 import (
-	"encoding/json"
-	"fmt"
+	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
@@ -13,19 +12,29 @@ import (
 
 func (c *Command) findMeetings(parameters ...string) (string, error) {
 	meetingParams := &remote.FindMeetingTimesParameters{}
-	// meetings, err := c.API.FindMeetingTimes(time.Now(), time.Now().Add(14*24*time.Hour))
+
+	var attendees []remote.Attendee
+	for a := range parameters {
+		s := strings.Split(parameters[a], ":")
+		t, email := s[0], s[1]
+		attendee := remote.Attendee{
+			Type: t,
+			EmailAddress: &remote.EmailAddress{
+				Address: email,
+			},
+		}
+		attendees = append(attendees, attendee)
+	}
+	meetingParams.Attendees = attendees
+
 	meetings, err := c.API.FindMeetingTimes(meetingParams)
 	if err != nil {
 		return "", err
 	}
 
-	fmt.Printf("meetings = %+v\n", meetings)
-	meetingsD, _ := json.MarshalIndent(meetings, "", "    ")
-	fmt.Printf("meetings = %+v\n", string(meetingsD))
-
 	resp := ""
 	for _, m := range meetings.MeetingTimeSuggestions {
-		resp += "  - " + utils.JSONBlock(m)
+		resp += utils.JSONBlock(m)
 	}
 
 	return resp, nil
