@@ -3,12 +3,14 @@ package msgraph
 import (
 	"strconv"
 
-	"github.com/mitchellh/mapstructure"
-
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 const maxNumUsersPerRequest = 20
+
+type getScheduleResponse struct {
+	Value []*remote.ScheduleInformation `json:"value,omitempty"`
+}
 
 type getScheduleSingleResponse struct {
 	ID      string              `json:"id"`
@@ -38,10 +40,6 @@ type getScheduleRequest struct {
 	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 
-type getScheduleResponse struct {
-	Value []*remote.ScheduleInformation `json:"value,omitempty"`
-}
-
 func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
 	params := &getScheduleRequest{
 		StartTime:                startTime,
@@ -50,10 +48,18 @@ func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime,
 	}
 
 	allRequests := prepareGetScheduleRequests(remoteUserID, schedules, params)
+	batchRequests := prepareBatchRequests(allRequests)
 
-	err, batchResponses := c.batchRequest(allRequests)
-	if err != nil {
-		return nil, err
+	var batchResponses []*getScheduleBatchResponse
+
+	for _, req := range batchRequests {
+		res := &getScheduleBatchResponse{}
+		err := c.batchRequest(req, res)
+		if err != nil {
+			return nil, err
+		}
+
+		batchResponses = append(batchResponses, res)
 	}
 
 	result := []*remote.ScheduleInformation{}
@@ -66,10 +72,7 @@ func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime,
 
 		sorted := make([]*getScheduleSingleResponse, length)
 
-		for _, r := range batchRes.Responses {
-			res := &getScheduleSingleResponse{}
-			mapstructure.Decode(r, res)
-
+		for _, res := range batchRes.Responses {
 			id, _ := strconv.Atoi(res.ID)
 			sorted[id] = res
 		}

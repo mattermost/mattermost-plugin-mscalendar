@@ -32,21 +32,11 @@ type fullBatchRequest struct {
 	Requests []*singleRequest `json:"requests"`
 }
 
-func (c *client) batchRequest(requests []*singleRequest) (error, []*fullBatchResponse) {
+func (c *client) batchRequest(req fullBatchRequest, out interface{}) error {
 	u := "https://graph.microsoft.com/v1.0/$batch"
 
-	batchRequests := prepareBatchRequests(requests)
-	result := []*fullBatchResponse{}
-	for _, req := range batchRequests {
-		res := &fullBatchResponse{}
-		_, err := c.CallJSON(http.MethodPost, u, req, res)
-		if err != nil {
-			return err, nil
-		}
-		result = append(result, res)
-	}
-
-	return nil, result
+	_, err := c.CallJSON(http.MethodPost, u, req, out)
+	return err
 }
 
 func prepareBatchRequests(requests []*singleRequest) []fullBatchRequest {
