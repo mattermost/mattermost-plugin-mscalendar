@@ -10,14 +10,14 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api/mock_api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api/mock_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
 func TestOAuth2Complete(t *testing.T) {
@@ -136,7 +136,7 @@ func TestOAuth2Complete(t *testing.T) {
 				</script>
 			</head>
 			<body>
-				<p>Completed connecting to Microsoft Office. Please close this window.</p>
+				<p>Completed connecting to Microsoft Calendar. Please close this window.</p>
 			</body>
 		</html>
 		`,

@@ -17,14 +17,14 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/command"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/plugin/http"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote/msgraph"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin/command"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin/http"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type Plugin struct {
@@ -136,7 +136,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	out, err := command.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
-		return nil, model.NewAppError("msofficeplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
+		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
 
 	apiconf.Poster.Ephemeral(args.UserId, args.ChannelId, out)

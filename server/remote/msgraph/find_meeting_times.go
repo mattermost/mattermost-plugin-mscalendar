@@ -4,29 +4,16 @@
 package msgraph
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	msgraph "github.com/yaegashi/msgraph.go/v1.0"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-// FindMeetingTimes finds Meetinsa calendar event
-func (c *client) FindMeetingTimes(findMeetingsParam *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+// FindMeetingTimes finds meeting time suggestions for a calendar event
+func (c *client) FindMeetingTimes(params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	meetingsOut := &remote.MeetingTimeSuggestionResults{}
-	fakeReq := &msgraph.UserFindMeetingTimesRequestParameter{}
-	fakeRes := &msgraph.MeetingTimeSuggestionsResult{}
-
-	req := c.rbuilder.Me().FindMeetingTimes(fakeReq).Request()
-	err := req.JSONRequest(c.ctx, http.MethodPost, "", &findMeetingsParam, &fakeRes)
-
-	fakeReqD, _ := json.MarshalIndent(fakeReq, "", "    ")
-	fmt.Printf("fakeReq = %+v\n", string(fakeReqD))
-
-	fakeResD, _ := json.MarshalIndent(fakeRes, "", "    ")
-	fmt.Printf("fakeRes = %+v\n", string(fakeResD))
-
+	req := c.rbuilder.Me().FindMeetingTimes(nil).Request()
+	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
 	if err != nil {
 		return nil, err
 	}

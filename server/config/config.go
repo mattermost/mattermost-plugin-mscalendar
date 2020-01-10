@@ -1,6 +1,6 @@
 package config
 
-import "github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 
 // StoredConfig represents the data stored in and managed with the Mattermost
 // config.

@@ -8,8 +8,8 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
 func (h *Handler) preprocessAction(w http.ResponseWriter, req *http.Request) (api.API, string, string) {

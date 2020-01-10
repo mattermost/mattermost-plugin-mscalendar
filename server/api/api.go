@@ -9,10 +9,10 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/store"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type OAuth2 interface {
@@ -31,7 +31,7 @@ type Subscriptions interface {
 
 type Calendar interface {
 	ViewCalendar(from, to time.Time) ([]*remote.Event, error)
-	CreateEvent(event *remote.Event) (*remote.Event, error)
+	CreateEvent(event *remote.Event, mattermostUserIDs []string) (*remote.Event, error)
 	CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error)
 	DeleteCalendar(calendarID string) error
 	FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)

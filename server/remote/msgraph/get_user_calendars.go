@@ -6,8 +6,8 @@ package msgraph
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 func (c *client) GetUserCalendars(userID string) ([]*remote.Calendar, error) {

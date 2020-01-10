@@ -6,7 +6,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 )
 
 func (h *Handler) notification(w http.ResponseWriter, req *http.Request) {

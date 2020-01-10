@@ -6,9 +6,9 @@ package store
 import (
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
 type SubscriptionStore interface {

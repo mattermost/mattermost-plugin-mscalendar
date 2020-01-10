@@ -1,4 +1,4 @@
-module github.com/mattermost/mattermost-plugin-msoffice
+module github.com/mattermost/mattermost-plugin-mscalendar
 
 go 1.13
 

@@ -8,8 +8,8 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/kvstore"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
 const (

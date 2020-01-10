@@ -12,9 +12,9 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/api"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/config"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 // Handler handles commands
@@ -67,13 +67,13 @@ func (c *Command) Handle() (string, error) {
 		handler = c.viewCalendar
 	case "createcal":
 		handler = c.createCalendar
-	case "testcreateevent":
+	case "createevent":
 		handler = c.createEvent
 	case "deletecal":
 		handler = c.deleteCalendar
 	case "subscribe":
 		handler = c.subscribe
-	case "findMeetings":
+	case "findmeetings":
 		handler = c.findMeetings
 	case "showcals":
 		handler = c.showCalendars

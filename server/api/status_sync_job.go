@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const JOB_INTERVAL = 5 * time.Minute

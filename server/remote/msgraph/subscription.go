@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
-	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const subscribeTTL = 10 * time.Minute

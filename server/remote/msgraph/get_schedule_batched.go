@@ -5,7 +5,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 const maxNumUsersPerRequest = 20
@@ -68,7 +68,7 @@ func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime,
 
 		for _, r := range batchRes.Responses {
 			res := &getScheduleSingleResponse{}
-			mapstructure.Decode(r, res) // TODO: handle request error case. response may look different if this single request had an error
+			mapstructure.Decode(r, res)
 
 			id, _ := strconv.Atoi(res.ID)
 			sorted[id] = res
