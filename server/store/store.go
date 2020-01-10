@@ -14,7 +14,7 @@ import (
 
 const (
 	UserKeyPrefix             = "user_"
-	AllUsersKeyPrefix         = "allusers_"
+	UserIndexKeyPrefix        = "userindex_"
 	MattermostUserIDKeyPrefix = "mmuid_"
 	OAuth2KeyPrefix           = "oauth2_"
 	SubscriptionKeyPrefix     = "sub_"
@@ -48,7 +48,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 	return &pluginStore{
 		basicKV:            basicKV,
 		userKV:             kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix),
-		allUsersKV:         kvstore.NewHashedKeyStore(basicKV, AllUsersKeyPrefix),
+		allUsersKV:         kvstore.NewHashedKeyStore(basicKV, UserIndexKeyPrefix),
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),

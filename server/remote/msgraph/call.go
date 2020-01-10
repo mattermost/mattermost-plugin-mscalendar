@@ -17,7 +17,23 @@ import (
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 
-func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
+func (c *client) CallJSON(method, path string, in, out interface{}) (responseData []byte, err error) {
+	contentType := "application/json"
+	buf := &bytes.Buffer{}
+	err = json.NewEncoder(buf).Encode(in)
+	if err != nil {
+		return nil, err
+	}
+	return c.Call(method, path, contentType, buf, out)
+}
+
+func (c *client) CallURLEncodedForm(method, path string, in url.Values, out interface{}) (responseData []byte, err error) {
+	contentType := "application/x-www-form-urlencoded"
+	buf := strings.NewReader(in.Encode())
+	return c.Call(method, path, contentType, buf, out)
+}
+
+func (c *client) Call(method, path, contentType string, inBody io.Reader, out interface{}) (responseData []byte, err error) {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	pathURL, err := url.Parse(path)
 	if err != nil {
@@ -34,24 +50,6 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 			path = "/" + path
 		}
 		path = baseURL.String() + path
-	}
-
-	var inBody io.Reader
-	var contentType string
-	if in != nil {
-		v, ok := in.(url.Values)
-		if ok {
-			contentType = "application/x-www-form-urlencoded"
-			inBody = strings.NewReader(v.Encode())
-		} else {
-			contentType = "application/json"
-			buf := &bytes.Buffer{}
-			err = json.NewEncoder(buf).Encode(in)
-			if err != nil {
-				return nil, err
-			}
-			inBody = buf
-		}
 	}
 
 	req, err := http.NewRequest(method, path, inBody)

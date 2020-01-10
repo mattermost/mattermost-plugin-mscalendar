@@ -47,21 +47,6 @@ func (mr *MockUserStoreMockRecorder) DeleteUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserStore)(nil).DeleteUser), arg0)
 }
 
-// LoadAllUsers mocks base method
-func (m *MockUserStore) LoadAllUsers() ([]*store.UserShort, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LoadAllUsers")
-	ret0, _ := ret[0].([]*store.UserShort)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LoadAllUsers indicates an expected call of LoadAllUsers
-func (mr *MockUserStoreMockRecorder) LoadAllUsers() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadAllUsers", reflect.TypeOf((*MockUserStore)(nil).LoadAllUsers))
-}
-
 // LoadMattermostUserId mocks base method
 func (m *MockUserStore) LoadMattermostUserId(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
@@ -90,6 +75,21 @@ func (m *MockUserStore) LoadUser(arg0 string) (*store.User, error) {
 func (mr *MockUserStoreMockRecorder) LoadUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUser", reflect.TypeOf((*MockUserStore)(nil).LoadUser), arg0)
+}
+
+// LoadUserIndex mocks base method
+func (m *MockUserStore) LoadUserIndex() ([]*store.UserShort, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadUserIndex")
+	ret0, _ := ret[0].([]*store.UserShort)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadUserIndex indicates an expected call of LoadUserIndex
+func (mr *MockUserStoreMockRecorder) LoadUserIndex() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserIndex", reflect.TypeOf((*MockUserStore)(nil).LoadUserIndex))
 }
 
 // StoreUser mocks base method

@@ -4,12 +4,16 @@
 package remote
 
 import (
+	"io"
+	"net/url"
 	"time"
 )
 
 type Client interface {
 	AcceptUserEvent(userID, eventID string) error
-	Call(method, path string, in, out interface{}) (responseData []byte, err error)
+	Call(method, path, contentType string, in io.Reader, out interface{}) (responseData []byte, err error)
+	CallJSON(method, path string, in, out interface{}) (responseData []byte, err error)
+	CallURLEncodedForm(method, path string, in url.Values, out interface{}) (responseData []byte, err error)
 	CreateSubscription(notificationURL string) (*Subscription, error)
 	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error

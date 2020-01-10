@@ -10,7 +10,7 @@ import (
 )
 
 func (api *api) ViewCalendar(from, to time.Time) ([]*remote.Event, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (api *api) ViewCalendar(from, to time.Time) ([]*remote.Event, error) {
 }
 
 func (api *api) CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (api *api) CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, err
 }
 
 func (api *api) CreateEvent(calendarEvent *remote.Event) (*remote.Event, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (api *api) CreateEvent(calendarEvent *remote.Event) (*remote.Event, error) 
 }
 
 func (api *api) DeleteCalendar(calendarID string) error {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (api *api) DeleteCalendar(calendarID string) error {
 }
 
 func (api *api) FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (api *api) FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameter
 }
 
 func (api *api) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}

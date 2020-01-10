@@ -6,7 +6,7 @@ package command
 func (c *Command) availability(parameters ...string) (string, error) {
 	switch {
 	case len(parameters) == 0:
-		resString, err := c.API.SyncStatusForSingleUser()
+		resString, err := c.API.SyncStatusForSingleUser(c.Args.UserId)
 		if err != nil {
 			return "", err
 		}
@@ -20,5 +20,6 @@ func (c *Command) availability(parameters ...string) (string, error) {
 
 		return resString, nil
 	}
+
 	return "bad syntax", nil
 }

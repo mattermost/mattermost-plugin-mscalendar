@@ -39,7 +39,7 @@ func (c *client) batchRequest(requests []*singleRequest) (error, []*fullBatchRes
 	result := []*fullBatchResponse{}
 	for _, req := range batchRequests {
 		res := &fullBatchResponse{}
-		_, err := c.Call(http.MethodPost, u, req, res)
+		_, err := c.CallJSON(http.MethodPost, u, req, res)
 		if err != nil {
 			return err, nil
 		}

@@ -7,6 +7,8 @@ package mock_remote
 import (
 	gomock "github.com/golang/mock/gomock"
 	remote "github.com/mattermost/mattermost-plugin-msoffice/server/remote"
+	io "io"
+	url "net/url"
 	reflect "reflect"
 	time "time"
 )
@@ -49,18 +51,48 @@ func (mr *MockClientMockRecorder) AcceptUserEvent(arg0, arg1 interface{}) *gomoc
 }
 
 // Call mocks base method
-func (m *MockClient) Call(arg0, arg1 string, arg2, arg3 interface{}) ([]byte, error) {
+func (m *MockClient) Call(arg0, arg1, arg2 string, arg3 io.Reader, arg4 interface{}) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Call", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Call", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Call indicates an expected call of Call
-func (mr *MockClientMockRecorder) Call(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Call(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockClient)(nil).Call), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockClient)(nil).Call), arg0, arg1, arg2, arg3, arg4)
+}
+
+// CallJSON mocks base method
+func (m *MockClient) CallJSON(arg0, arg1 string, arg2, arg3 interface{}) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CallJSON", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CallJSON indicates an expected call of CallJSON
+func (mr *MockClientMockRecorder) CallJSON(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallJSON", reflect.TypeOf((*MockClient)(nil).CallJSON), arg0, arg1, arg2, arg3)
+}
+
+// CallURLEncodedForm mocks base method
+func (m *MockClient) CallURLEncodedForm(arg0, arg1 string, arg2 url.Values, arg3 interface{}) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CallURLEncodedForm", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CallURLEncodedForm indicates an expected call of CallURLEncodedForm
+func (mr *MockClientMockRecorder) CallURLEncodedForm(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallURLEncodedForm", reflect.TypeOf((*MockClient)(nil).CallURLEncodedForm), arg0, arg1, arg2, arg3)
 }
 
 // CreateCalendar mocks base method

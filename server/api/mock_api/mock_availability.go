@@ -64,16 +64,16 @@ func (mr *MockAvailabilityMockRecorder) SyncStatusForAllUsers() *gomock.Call {
 }
 
 // SyncStatusForSingleUser mocks base method
-func (m *MockAvailability) SyncStatusForSingleUser() (string, error) {
+func (m *MockAvailability) SyncStatusForSingleUser(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SyncStatusForSingleUser")
+	ret := m.ctrl.Call(m, "SyncStatusForSingleUser", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SyncStatusForSingleUser indicates an expected call of SyncStatusForSingleUser
-func (mr *MockAvailabilityMockRecorder) SyncStatusForSingleUser() *gomock.Call {
+func (mr *MockAvailabilityMockRecorder) SyncStatusForSingleUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncStatusForSingleUser", reflect.TypeOf((*MockAvailability)(nil).SyncStatusForSingleUser))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncStatusForSingleUser", reflect.TypeOf((*MockAvailability)(nil).SyncStatusForSingleUser), arg0)
 }

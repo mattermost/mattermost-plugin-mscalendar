@@ -47,12 +47,12 @@ type Event interface {
 
 type Availability interface {
 	GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error)
-	SyncStatusForSingleUser() (string, error)
+	SyncStatusForSingleUser(mattermostUserID string) (string, error)
 	SyncStatusForAllUsers() (string, error)
 }
 
 type Client interface {
-	MakeClient() (remote.Client, error)
+	NewClient() (remote.Client, error)
 }
 
 type API interface {
@@ -97,7 +97,7 @@ func New(apiConfig Config, mattermostUserID string) API {
 
 type filterf func(*api) error
 
-func (api *api) MakeClient() (remote.Client, error) {
+func (api *api) NewClient() (remote.Client, error) {
 	err := api.Filter(withUser)
 	if err != nil {
 		return nil, err
@@ -106,8 +106,8 @@ func (api *api) MakeClient() (remote.Client, error) {
 	return api.Remote.NewClient(context.Background(), api.user.OAuth2Token), nil
 }
 
-func (api *api) MakeSuperuserClient() (remote.Client, error) {
-	return api.Remote.NewSuperuserClient(context.Background()), nil
+func (api *api) NewSuperuserClient() remote.Client {
+	return api.Remote.NewSuperuserClient(context.Background())
 }
 
 func (api *api) Filter(filters ...filterf) error {

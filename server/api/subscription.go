@@ -12,7 +12,7 @@ import (
 )
 
 func (api *api) CreateUserEventSubscription() (*store.Subscription, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (api *api) LoadUserEventSubscription() (*store.Subscription, error) {
 }
 
 func (api *api) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (api *api) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
 }
 
 func (api *api) RenewUserEventSubscription() (*store.Subscription, error) {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (api *api) DeleteUserEventSubscription() error {
 }
 
 func (api *api) DeleteOrphanedSubscription(subscriptionID string) error {
-	client, err := api.MakeClient()
+	client, err := api.NewClient()
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ import (
 type UserStore interface {
 	LoadUser(mattermostUserId string) (*User, error)
 	LoadMattermostUserId(remoteUserId string) (string, error)
-	LoadAllUsers() ([]*UserShort, error)
+	LoadUserIndex() ([]*UserShort, error)
 	StoreUser(user *User) error
 	DeleteUser(mattermostUserId string) error
 }
@@ -62,7 +62,7 @@ func (s *pluginStore) LoadMattermostUserId(remoteUserId string) (string, error) 
 	return string(data), nil
 }
 
-func (s *pluginStore) LoadAllUsers() ([]*UserShort, error) {
+func (s *pluginStore) LoadUserIndex() ([]*UserShort, error) {
 	users := []*UserShort{}
 	err := kvstore.LoadJSON(s.allUsersKV, "", &users)
 	if err != nil {

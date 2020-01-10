@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils/bot"
 )
 
-const JOB_INTERVAL = 1 * time.Minute
+const JOB_INTERVAL = 5 * time.Minute
 
 type StatusSyncJob struct {
 	api        API

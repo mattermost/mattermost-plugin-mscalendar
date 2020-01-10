@@ -31,7 +31,7 @@ func (c *client) getSuperuserToken() (string, error) {
 	data.Set("client_secret", params["client_secret"])
 	data.Set("grant_type", params["grant_type"])
 
-	_, err := c.Call(http.MethodPost, u, data, &res)
+	_, err := c.CallURLEncodedForm(http.MethodPost, u, data, &res)
 	if err != nil {
 		return "", err
 	}

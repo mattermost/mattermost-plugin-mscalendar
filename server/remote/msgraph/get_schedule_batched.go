@@ -29,10 +29,12 @@ type getScheduleRequest struct {
 	StartTime *remote.DateTime `json:"startTime"`
 	EndTime   *remote.DateTime `json:"endTime"`
 
-	// Size of each chunk of time we want to check
-	// This can be equal to end - start if we want, or we can get more granular results by making it shorter.
-	// For the graph API: The default is 30 minutes, minimum is 6, maximum is 1440
-	// 15 is currently being used on our end
+	/*
+		Size of each chunk of time we want to check
+		This can be equal to end - start if we want, or we can get more granular results by making it shorter.
+		For the graph API: The default is 30 minutes, minimum is 6, maximum is 1440
+		15 is currently being used on our end
+	*/
 	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 

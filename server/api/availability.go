@@ -9,6 +9,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-msoffice/server/remote"
 	"github.com/mattermost/mattermost-plugin-msoffice/server/utils"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -21,8 +22,8 @@ const (
 	availabilityViewWorkingElsewhere = '4'
 )
 
-func (api *api) SyncStatusForSingleUser() (string, error) {
-	u, err := api.UserStore.LoadUser(api.mattermostUserID)
+func (api *api) SyncStatusForSingleUser(mattermostUserID string) (string, error) {
+	u, err := api.UserStore.LoadUser(mattermostUserID)
 	if err != nil {
 		return "", err
 	}
@@ -37,14 +38,29 @@ func (api *api) SyncStatusForSingleUser() (string, error) {
 		return "No schedule info found", nil
 	}
 
+	status, appErr := api.Dependencies.API.GetUserStatus(api.mattermostUserID)
+	if appErr != nil {
+		return "", appErr
+	}
+
 	s := sched[0]
+	if s.Error != nil {
+		return "", errors.Errorf("Error getting availability for %s: %s", s.ScheduleID, s.Error.ResponseCode)
+	}
+	if len(s.AvailabilityView) == 0 {
+		return "No availabilities found", nil
+	}
+
 	av := s.AvailabilityView[0]
-	return api.setUserStatusFromAvailability(api.mattermostUserID, av), nil
+	return api.setUserStatusFromAvailability(api.mattermostUserID, status.Status, av), nil
 }
 
 func (api *api) SyncStatusForAllUsers() (string, error) {
-	users, err := api.UserStore.LoadAllUsers()
+	users, err := api.UserStore.LoadUserIndex()
 	if err != nil {
+		if err.Error() == "not found" {
+			return "No users found in user index", nil
+		}
 		return "", err
 	}
 
@@ -53,8 +69,10 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 	}
 
 	scheduleIDs := []string{}
+	mattermostUserIDs := []string{}
 	for _, u := range users {
 		scheduleIDs = append(scheduleIDs, u.Email)
+		mattermostUserIDs = append(mattermostUserIDs, u.MattermostUserID)
 	}
 
 	sched, err := api.GetUserAvailabilities(users[0].RemoteID, scheduleIDs)
@@ -65,11 +83,32 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 		return "No schedule info found", nil
 	}
 
+	statuses, appErr := api.Dependencies.API.GetUserStatusesByIds(mattermostUserIDs)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	statusMap := map[string]string{}
+	for _, s := range statuses {
+		statusMap[s.UserId] = s.Status
+	}
+
 	var res string
 	for i, s := range sched {
-		userID := users[i].MattermostUserID
+		if s.Error != nil {
+			api.Logger.Errorf("Error getting availability for %s: %s", s.ScheduleID, s.Error.ResponseCode)
+			continue
+		}
+
 		av := s.AvailabilityView[0]
-		res = api.setUserStatusFromAvailability(userID, av)
+
+		userID := users[i].MattermostUserID
+		status, ok := statusMap[userID]
+		if !ok {
+			continue
+		}
+
+		res = api.setUserStatusFromAvailability(userID, status, av)
 	}
 
 	if res != "" {
@@ -80,10 +119,7 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 }
 
 func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client, err := api.MakeSuperuserClient()
-	if err != nil {
-		return nil, err
-	}
+	client := api.NewSuperuserClient()
 
 	start := remote.NewDateTime(time.Now())
 	end := remote.NewDateTime(time.Now().Add(availabilityTimeWindowSize * time.Minute))
@@ -91,30 +127,28 @@ func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string)
 	return client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
 }
 
-func (api *api) setUserStatusFromAvailability(mattermostUserID string, av byte) string {
-	currentStatus, _ := api.API.GetUserStatus(mattermostUserID)
-
+func (api *api) setUserStatusFromAvailability(mattermostUserID, currentStatus string, av byte) string {
 	switch av {
 	case availabilityViewFree:
-		if currentStatus.Status == "dnd" {
+		if currentStatus == "dnd" {
 			api.API.UpdateUserStatus(mattermostUserID, "online")
-			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus.Status)
+			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus)
 		} else {
-			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus.Status)
+			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus)
 		}
 	case availabilityViewTentative, availabilityViewBusy:
-		if currentStatus.Status != "dnd" {
+		if currentStatus != "dnd" {
 			api.API.UpdateUserStatus(mattermostUserID, "dnd")
-			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus.Status)
+			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
 		} else {
-			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus.Status)
+			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus)
 		}
 	case availabilityViewOutOfOffice:
-		if currentStatus.Status != "offline" {
+		if currentStatus != "offline" {
 			api.API.UpdateUserStatus(mattermostUserID, "offline")
-			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus.Status)
+			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
 		} else {
-			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus.Status)
+			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus)
 		}
 	case availabilityViewWorkingElsewhere:
 		return fmt.Sprintf("User is working elsewhere. Pending implementation.")
