@@ -146,21 +146,21 @@ func (index UserIndex) ByMattermostID() map[string]*UserShort {
 	return result
 }
 
-func (index UserIndex) ByEmail() map[string]*UserShort {
-	result := map[string]*UserShort{}
-
-	for _, u := range index {
-		result[u.Email] = u
-	}
-
-	return result
-}
-
 func (index UserIndex) ByRemoteID() map[string]*UserShort {
 	result := map[string]*UserShort{}
 
 	for _, u := range index {
 		result[u.RemoteID] = u
+	}
+
+	return result
+}
+
+func (index UserIndex) ByEmail() map[string]*UserShort {
+	result := map[string]*UserShort{}
+
+	for _, u := range index {
+		result[u.Email] = u
 	}
 
 	return result
