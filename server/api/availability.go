@@ -50,7 +50,7 @@ func (api *api) SyncStatusForSingleUser(mattermostUserID string) (string, error)
 }
 
 func (api *api) SyncStatusForAllUsers() (string, error) {
-	users, err := api.UserStore.LoadUserIndex()
+	userIndex, err := api.UserStore.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil
@@ -58,18 +58,18 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 		return "", err
 	}
 
-	if len(users) == 0 {
+	if len(userIndex) == 0 {
 		return "No connected users found", nil
 	}
 
 	scheduleIDs := []string{}
 	mattermostUserIDs := []string{}
-	for _, u := range users {
+	for _, u := range userIndex {
 		scheduleIDs = append(scheduleIDs, u.Email)
 		mattermostUserIDs = append(mattermostUserIDs, u.MattermostUserID)
 	}
 
-	sched, err := api.GetUserAvailabilities(users[0].RemoteID, scheduleIDs)
+	sched, err := api.GetUserAvailabilities(userIndex[0].RemoteID, scheduleIDs)
 	if err != nil {
 		return "", err
 	}
@@ -87,7 +87,7 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 		statusMap[s.UserId] = s.Status
 	}
 
-	usersByEmail := users.ByEmail()
+	usersByEmail := userIndex.ByEmail()
 
 	var res string
 	for _, s := range sched {
