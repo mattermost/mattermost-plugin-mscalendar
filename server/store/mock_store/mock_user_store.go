@@ -78,10 +78,10 @@ func (mr *MockUserStoreMockRecorder) LoadUser(arg0 interface{}) *gomock.Call {
 }
 
 // LoadUserIndex mocks base method
-func (m *MockUserStore) LoadUserIndex() ([]*store.UserShort, error) {
+func (m *MockUserStore) LoadUserIndex() (store.UserIndex, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadUserIndex")
-	ret0, _ := ret[0].([]*store.UserShort)
+	ret0, _ := ret[0].(store.UserIndex)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

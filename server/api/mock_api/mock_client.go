@@ -33,17 +33,17 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
-// NewClient mocks base method
-func (m *MockClient) NewClient() (remote.Client, error) {
+// MakeClient mocks base method
+func (m *MockClient) MakeClient() (remote.Client, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewClient")
+	ret := m.ctrl.Call(m, "MakeClient")
 	ret0, _ := ret[0].(remote.Client)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// NewClient indicates an expected call of NewClient
-func (mr *MockClientMockRecorder) NewClient() *gomock.Call {
+// MakeClient indicates an expected call of MakeClient
+func (mr *MockClientMockRecorder) MakeClient() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewClient", reflect.TypeOf((*MockClient)(nil).NewClient))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockClient)(nil).MakeClient))
 }
