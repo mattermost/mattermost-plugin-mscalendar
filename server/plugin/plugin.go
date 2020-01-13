@@ -73,8 +73,6 @@ func (p *Plugin) OnActivate() error {
 
 	command.Register(p.API.RegisterCommand)
 
-	p.initUserStatusSyncJob()
-
 	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil
 }
@@ -218,7 +216,7 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 
 func (p *Plugin) initUserStatusSyncJob() {
 	conf := p.newAPIConfig()
-	enable := p.getConfig().EnableStatusSyncJob
+	enable := p.getConfig().EnableStatusSync
 	logger := conf.Dependencies.Logger
 
 	// Config is set to enable. No job exists, start a new job.

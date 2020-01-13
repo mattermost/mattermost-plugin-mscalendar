@@ -9,7 +9,7 @@ type StoredConfig struct {
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
 
-	EnableStatusSyncJob bool
+	EnableStatusSync bool
 
 	bot.BotConfig
 }

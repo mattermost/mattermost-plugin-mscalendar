@@ -35,8 +35,8 @@ func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 	}
 }
 
-// NewClient creates a new client for user-delegated permissions.
-func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client {
+// MakeClient creates a new client for user-delegated permissions.
+func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Client {
 	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{
 		conf:       r.conf,
@@ -48,8 +48,8 @@ func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client
 	return c
 }
 
-// NewSuperuserClient creates a new client used for app-only permissions.
-func (r *impl) NewSuperuserClient(ctx context.Context) remote.Client {
+// MakeSuperuserClient creates a new client used for app-only permissions.
+func (r *impl) MakeSuperuserClient(ctx context.Context) remote.Client {
 	httpClient := &http.Client{}
 	c := &client{
 		conf:       r.conf,
@@ -66,7 +66,7 @@ func (r *impl) NewSuperuserClient(ctx context.Context) remote.Client {
 		TokenType:   "Bearer",
 	}
 
-	return r.NewClient(ctx, o)
+	return r.MakeClient(ctx, o)
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {

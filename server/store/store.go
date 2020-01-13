@@ -37,7 +37,7 @@ type pluginStore struct {
 	oauth2KV           kvstore.KVStore
 	userKV             kvstore.KVStore
 	mattermostUserIDKV kvstore.KVStore
-	allUsersKV         kvstore.KVStore
+	userIndexKV        kvstore.KVStore
 	subscriptionKV     kvstore.KVStore
 	eventKV            kvstore.KVStore
 	Logger             bot.Logger
@@ -48,7 +48,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 	return &pluginStore{
 		basicKV:            basicKV,
 		userKV:             kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix),
-		allUsersKV:         kvstore.NewHashedKeyStore(basicKV, UserIndexKeyPrefix),
+		userIndexKV:        kvstore.NewHashedKeyStore(basicKV, UserIndexKeyPrefix),
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),

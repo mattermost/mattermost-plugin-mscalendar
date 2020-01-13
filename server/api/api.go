@@ -52,7 +52,7 @@ type Availability interface {
 }
 
 type Client interface {
-	NewClient() (remote.Client, error)
+	MakeClient() (remote.Client, error)
 }
 
 type API interface {
@@ -97,17 +97,17 @@ func New(apiConfig Config, mattermostUserID string) API {
 
 type filterf func(*api) error
 
-func (api *api) NewClient() (remote.Client, error) {
+func (api *api) MakeClient() (remote.Client, error) {
 	err := api.Filter(withUser)
 	if err != nil {
 		return nil, err
 	}
 
-	return api.Remote.NewClient(context.Background(), api.user.OAuth2Token), nil
+	return api.Remote.MakeClient(context.Background(), api.user.OAuth2Token), nil
 }
 
-func (api *api) NewSuperuserClient() remote.Client {
-	return api.Remote.NewSuperuserClient(context.Background())
+func (api *api) MakeSuperuserClient() remote.Client {
+	return api.Remote.MakeSuperuserClient(context.Background())
 }
 
 func (api *api) Filter(filters ...filterf) error {

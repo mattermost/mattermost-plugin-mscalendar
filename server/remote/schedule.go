@@ -3,6 +3,14 @@
 
 package remote
 
+const (
+	AvailabilityViewFree             = '0'
+	AvailabilityViewTentative        = '1'
+	AvailabilityViewBusy             = '2'
+	AvailabilityViewOutOfOffice      = '3'
+	AvailabilityViewWorkingElsewhere = '4'
+)
+
 type ScheduleInformationError struct {
 	Message      string `json:"message"`
 	ResponseCode string `json:"responseCode"`

@@ -14,12 +14,6 @@ import (
 
 const (
 	availabilityTimeWindowSize = 15
-
-	availabilityViewFree             = '0'
-	availabilityViewTentative        = '1'
-	availabilityViewBusy             = '2'
-	availabilityViewOutOfOffice      = '3'
-	availabilityViewWorkingElsewhere = '4'
 )
 
 func (api *api) SyncStatusForSingleUser(mattermostUserID string) (string, error) {
@@ -93,8 +87,10 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 		statusMap[s.UserId] = s.Status
 	}
 
+	usersByEmail := users.ByEmail()
+
 	var res string
-	for i, s := range sched {
+	for _, s := range sched {
 		if s.Error != nil {
 			api.Logger.Errorf("Error getting availability for %s: %s", s.ScheduleID, s.Error.ResponseCode)
 			continue
@@ -102,7 +98,7 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 
 		av := s.AvailabilityView[0]
 
-		userID := users[i].MattermostUserID
+		userID := usersByEmail[s.ScheduleID].MattermostUserID
 		status, ok := statusMap[userID]
 		if !ok {
 			continue
@@ -119,7 +115,7 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 }
 
 func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client := api.NewSuperuserClient()
+	client := api.MakeSuperuserClient()
 
 	start := remote.NewDateTime(time.Now())
 	end := remote.NewDateTime(time.Now().Add(availabilityTimeWindowSize * time.Minute))
@@ -129,28 +125,28 @@ func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string)
 
 func (api *api) setUserStatusFromAvailability(mattermostUserID, currentStatus string, av byte) string {
 	switch av {
-	case availabilityViewFree:
+	case remote.AvailabilityViewFree:
 		if currentStatus == "dnd" {
 			api.API.UpdateUserStatus(mattermostUserID, "online")
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus)
 		} else {
 			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus)
 		}
-	case availabilityViewTentative, availabilityViewBusy:
+	case remote.AvailabilityViewTentative, remote.AvailabilityViewBusy:
 		if currentStatus != "dnd" {
 			api.API.UpdateUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
 		} else {
 			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus)
 		}
-	case availabilityViewOutOfOffice:
+	case remote.AvailabilityViewOutOfOffice:
 		if currentStatus != "offline" {
 			api.API.UpdateUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
 		} else {
 			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus)
 		}
-	case availabilityViewWorkingElsewhere:
+	case remote.AvailabilityViewWorkingElsewhere:
 		return fmt.Sprintf("User is working elsewhere. Pending implementation.")
 	}
 

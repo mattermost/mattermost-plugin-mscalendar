@@ -51,7 +51,7 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	client := api.Remote.NewClient(ctx, tok)
+	client := api.Remote.MakeClient(ctx, tok)
 	me, err := client.GetMe()
 	if err != nil {
 		return err

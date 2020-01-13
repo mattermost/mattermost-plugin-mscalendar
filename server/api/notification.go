@@ -133,7 +133,7 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 
 	var client remote.Client
 	if !n.RecommendRenew || n.IsBare {
-		client = h.Remote.NewClient(context.Background(), creator.OAuth2Token)
+		client = h.Remote.MakeClient(context.Background(), creator.OAuth2Token)
 	}
 
 	if n.RecommendRenew {

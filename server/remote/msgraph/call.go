@@ -24,16 +24,16 @@ func (c *client) CallJSON(method, path string, in, out interface{}) (responseDat
 	if err != nil {
 		return nil, err
 	}
-	return c.Call(method, path, contentType, buf, out)
+	return c.call(method, path, contentType, buf, out)
 }
 
-func (c *client) CallURLEncodedForm(method, path string, in url.Values, out interface{}) (responseData []byte, err error) {
+func (c *client) CallFormPost(method, path string, in url.Values, out interface{}) (responseData []byte, err error) {
 	contentType := "application/x-www-form-urlencoded"
 	buf := strings.NewReader(in.Encode())
-	return c.Call(method, path, contentType, buf, out)
+	return c.call(method, path, contentType, buf, out)
 }
 
-func (c *client) Call(method, path, contentType string, inBody io.Reader, out interface{}) (responseData []byte, err error) {
+func (c *client) call(method, path, contentType string, inBody io.Reader, out interface{}) (responseData []byte, err error) {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	pathURL, err := url.Parse(path)
 	if err != nil {
