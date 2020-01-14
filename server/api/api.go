@@ -7,12 +7,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/mattermost/mattermost-server/v5/plugin"
-
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api"
 )
 
 type OAuth2 interface {
@@ -74,7 +73,7 @@ type Dependencies struct {
 	Poster            bot.Poster
 	Remote            remote.Remote
 	IsAuthorizedAdmin func(userId string) (bool, error)
-	API               plugin.API
+	PluginAPI         plugin_api.PluginAPI
 }
 
 type Config struct {

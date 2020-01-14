@@ -115,7 +115,7 @@ func (p *Plugin) OnConfigurationChange() error {
 		p.notificationHandler.Configure(p.newAPIConfig())
 	}
 
-	p.initUserStatusSyncJob()
+	p.POC_initUserStatusSyncJob()
 
 	return nil
 }
@@ -180,7 +180,7 @@ func (p *Plugin) newAPIConfig() api.Config {
 			Logger:            bot,
 			Poster:            bot,
 			Remote:            remote.Makers[msgraph.Kind](conf, bot),
-			API:               p.API,
+			PluginAPI:         p.API,
 		},
 	}
 }
@@ -214,7 +214,9 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	return nil
 }
 
-func (p *Plugin) initUserStatusSyncJob() {
+// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
+// This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
+func (p *Plugin) POC_initUserStatusSyncJob() {
 	conf := p.newAPIConfig()
 	enable := p.getConfig().EnableStatusSync
 	logger := conf.Dependencies.Logger

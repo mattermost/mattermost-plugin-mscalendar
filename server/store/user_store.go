@@ -165,3 +165,13 @@ func (index UserIndex) ByEmail() map[string]*UserShort {
 
 	return result
 }
+
+func (index UserIndex) GetMattermostUserIDs() []string {
+	result := []string{}
+
+	for _, u := range index {
+		result = append(result, u.MattermostUserID)
+	}
+
+	return result
+}
