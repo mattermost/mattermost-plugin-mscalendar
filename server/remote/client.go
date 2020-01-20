@@ -3,11 +3,15 @@
 
 package remote
 
-import "time"
+import (
+	"net/url"
+	"time"
+)
 
 type Client interface {
 	AcceptUserEvent(userID, eventID string) error
-	Call(method, path string, in, out interface{}) (responseData []byte, err error)
+	CallJSON(method, path string, in, out interface{}) (responseData []byte, err error)
+	CallFormPost(method, path string, in url.Values, out interface{}) (responseData []byte, err error)
 	CreateSubscription(notificationURL string) (*Subscription, error)
 	DeclineUserEvent(userID, eventID string) error
 	DeleteSubscription(subscriptionID string) error
@@ -18,6 +22,7 @@ type Client interface {
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
 	GetUserCalendars(userID string) ([]*Calendar, error)
+	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
 	GetUserEvent(userID, eventID string) (*Event, error)
 	ListSubscriptions() ([]*Subscription, error)

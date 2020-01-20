@@ -1,0 +1,12 @@
+{
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#Collection(microsoft.graph.scheduleInformation)",
+    "value": [
+        {
+            "scheduleId": "fb10ac13-e441-4611-8431-8ee3b6403673",
+            "error": {
+                "message": "Microsoft.Exchange.InfoWorker.Common.Availability.InvalidSmtpAddressException: The email address provided is not a valid SMTP address.\r\n. Name of the server where exception originated: CY4PR2201MB1333. LID: 43916",
+                "responseCode": "ErrorInvalidSmtpAddress"
+            }
+        }
+    ]
+}

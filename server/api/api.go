@@ -11,6 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api"
 )
 
 type OAuth2 interface {
@@ -43,11 +44,18 @@ type Event interface {
 	RespondToEvent(eventID, response string) error
 }
 
+type Availability interface {
+	GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error)
+	SyncStatusForSingleUser(mattermostUserID string) (string, error)
+	SyncStatusForAllUsers() (string, error)
+}
+
 type Client interface {
 	MakeClient() (remote.Client, error)
 }
 
 type API interface {
+	Availability
 	Calendar
 	Client
 	Event
@@ -65,6 +73,7 @@ type Dependencies struct {
 	Poster            bot.Poster
 	Remote            remote.Remote
 	IsAuthorizedAdmin func(userId string) (bool, error)
+	PluginAPI         plugin_api.PluginAPI
 }
 
 type Config struct {
@@ -93,7 +102,11 @@ func (api *api) MakeClient() (remote.Client, error) {
 		return nil, err
 	}
 
-	return api.Remote.NewClient(context.Background(), api.user.OAuth2Token), nil
+	return api.Remote.MakeClient(context.Background(), api.user.OAuth2Token), nil
+}
+
+func (api *api) MakeSuperuserClient() remote.Client {
+	return api.Remote.MakeSuperuserClient(context.Background())
 }
 
 func (api *api) Filter(filters ...filterf) error {

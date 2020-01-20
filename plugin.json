@@ -79,6 +79,13 @@
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "default": ""
+            },
+            {
+                "key": "EnableStatusSync",
+                "display_name": "Enable User Status Sync Job",
+                "type": "bool",
+                "help_text": "When enabled, a Mattermost user's status will automatically update based on their Microsoft Calendar availability. This runs every 5 minutes.",
+                "default": false
             }
         ]
     }

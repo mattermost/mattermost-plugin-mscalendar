@@ -77,6 +77,21 @@ func (mr *MockUserStoreMockRecorder) LoadUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUser", reflect.TypeOf((*MockUserStore)(nil).LoadUser), arg0)
 }
 
+// LoadUserIndex mocks base method
+func (m *MockUserStore) LoadUserIndex() (store.UserIndex, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadUserIndex")
+	ret0, _ := ret[0].(store.UserIndex)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadUserIndex indicates an expected call of LoadUserIndex
+func (mr *MockUserStoreMockRecorder) LoadUserIndex() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserIndex", reflect.TypeOf((*MockUserStore)(nil).LoadUserIndex))
+}
+
 // StoreUser mocks base method
 func (m *MockUserStore) StoreUser(arg0 *store.User) error {
 	m.ctrl.T.Helper()

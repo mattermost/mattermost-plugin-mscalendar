@@ -11,12 +11,29 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 
-func (c *client) Call(method, path string, in, out interface{}) (responseData []byte, err error) {
+func (c *client) CallJSON(method, path string, in, out interface{}) (responseData []byte, err error) {
+	contentType := "application/json"
+	buf := &bytes.Buffer{}
+	err = json.NewEncoder(buf).Encode(in)
+	if err != nil {
+		return nil, err
+	}
+	return c.call(method, path, contentType, buf, out)
+}
+
+func (c *client) CallFormPost(method, path string, in url.Values, out interface{}) (responseData []byte, err error) {
+	contentType := "application/x-www-form-urlencoded"
+	buf := strings.NewReader(in.Encode())
+	return c.call(method, path, contentType, buf, out)
+}
+
+func (c *client) call(method, path, contentType string, inBody io.Reader, out interface{}) (responseData []byte, err error) {
 	errContext := fmt.Sprintf("msgraph: Call failed: method:%s, path:%s", method, path)
 	pathURL, err := url.Parse(path)
 	if err != nil {
@@ -35,22 +52,14 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 		path = baseURL.String() + path
 	}
 
-	var inBody io.Reader
-	if in != nil {
-		buf := &bytes.Buffer{}
-		err = json.NewEncoder(buf).Encode(in)
-		if err != nil {
-			return nil, err
-		}
-		inBody = buf
-	}
 	req, err := http.NewRequest(method, path, inBody)
 	if err != nil {
 		return nil, err
 	}
-	if inBody != nil {
-		req.Header.Add("Content-Type", "application/json")
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
 	}
+
 	if c.ctx != nil {
 		req = req.WithContext(c.ctx)
 	}
@@ -59,6 +68,7 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 	if err != nil {
 		return nil, err
 	}
+
 	if resp.Body == nil {
 		return nil, nil
 	}
@@ -68,6 +78,7 @@ func (c *client) Call(method, path string, in, out interface{}) (responseData []
 	if err != nil {
 		return nil, err
 	}
+
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
 		if out != nil {

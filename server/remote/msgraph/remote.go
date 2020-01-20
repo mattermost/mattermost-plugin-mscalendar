@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"context"
+	"net/http"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
@@ -34,8 +35,8 @@ func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 	}
 }
 
-// NewClient creates a new client.
-func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client {
+// MakeClient creates a new client for user-delegated permissions.
+func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Client {
 	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{
 		conf:       r.conf,
@@ -45,6 +46,27 @@ func (r *impl) NewClient(ctx context.Context, token *oauth2.Token) remote.Client
 		rbuilder:   msgraph.NewClient(httpClient),
 	}
 	return c
+}
+
+// MakeSuperuserClient creates a new client used for app-only permissions.
+func (r *impl) MakeSuperuserClient(ctx context.Context) remote.Client {
+	httpClient := &http.Client{}
+	c := &client{
+		conf:       r.conf,
+		ctx:        ctx,
+		httpClient: httpClient,
+		Logger:     r.logger,
+		rbuilder:   msgraph.NewClient(httpClient),
+	}
+
+	token, _ := c.getSuperuserToken()
+
+	o := &oauth2.Token{
+		AccessToken: token,
+		TokenType:   "Bearer",
+	}
+
+	return r.MakeClient(ctx, o)
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {
