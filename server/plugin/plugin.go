@@ -29,8 +29,9 @@ import (
 
 type Plugin struct {
 	plugin.MattermostPlugin
-	configLock *sync.RWMutex
-	config     *config.Config
+	configLock    *sync.RWMutex
+	config        *config.Config
+	statusSyncJob *api.StatusSyncJob
 
 	httpHandler         *http.Handler
 	notificationHandler api.NotificationHandler
@@ -67,6 +68,7 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	p.httpHandler = http.NewHandler()
+
 	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())
 
 	command.Register(p.API.RegisterCommand)
@@ -112,6 +114,9 @@ func (p *Plugin) OnConfigurationChange() error {
 	if p.notificationHandler != nil {
 		p.notificationHandler.Configure(p.newAPIConfig())
 	}
+
+	p.POC_initUserStatusSyncJob()
+
 	return nil
 }
 
@@ -175,6 +180,7 @@ func (p *Plugin) newAPIConfig() api.Config {
 			Logger:            bot,
 			Poster:            bot,
 			Remote:            remote.Makers[msgraph.Kind](conf, bot),
+			PluginAPI:         p.API,
 		},
 	}
 }
@@ -206,4 +212,29 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	}
 	p.Templates = templates
 	return nil
+}
+
+// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
+// This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
+func (p *Plugin) POC_initUserStatusSyncJob() {
+	conf := p.newAPIConfig()
+	enable := p.getConfig().EnableStatusSync
+	logger := conf.Dependencies.Logger
+
+	// Config is set to enable. No job exists, start a new job.
+	if enable && p.statusSyncJob == nil {
+		logger.Debugf("Enabling user status sync job")
+
+		job := api.NewStatusSyncJob(api.New(conf, ""))
+		p.statusSyncJob = job
+		go job.Start()
+	}
+
+	// Config is set to disable. Job exists, kill existing job.
+	if !enable && p.statusSyncJob != nil {
+		logger.Debugf("Disabling user status sync job")
+
+		p.statusSyncJob.Cancel()
+		p.statusSyncJob = nil
+	}
 }

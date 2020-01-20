@@ -42,11 +42,11 @@ type RegisterFunc func(*model.Command) error
 func Register(registerFunc RegisterFunc) {
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
-		DisplayName:      "TODO display name",
-		Description:      "TODO description",
+		DisplayName:      "Microsoft Calendar",
+		Description:      "Interact with your outlook calendar.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "TODO autocomplete desc",
-		AutoCompleteHint: "TODO autocomplete hint",
+		AutoCompleteDesc: "info, connect, viewcal, createcal, testcreateevent, deletecal, subscribe, findMeetings, showcals, availability",
+		AutoCompleteHint: "(subcommand)",
 	})
 }
 
@@ -77,6 +77,8 @@ func (c *Command) Handle() (string, error) {
 		handler = c.findMeetings
 	case "showcals":
 		handler = c.showCalendars
+	case "availability":
+		handler = c.availability
 	}
 	out, err := handler(parameters...)
 	if err != nil {

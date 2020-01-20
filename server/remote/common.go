@@ -19,7 +19,8 @@ const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
 func NewDateTime(t time.Time) *DateTime {
 	return &DateTime{
 		DateTime: t.Format(RFC3339NanoNoTimezone),
-		TimeZone: t.Format("MST"),
+		// TimeZone: t.Format("MST"),
+		TimeZone: "Eastern Standard Time",
 	}
 }
 

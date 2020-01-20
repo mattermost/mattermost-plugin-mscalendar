@@ -14,8 +14,17 @@ import (
 type UserStore interface {
 	LoadUser(mattermostUserId string) (*User, error)
 	LoadMattermostUserId(remoteUserId string) (string, error)
+	LoadUserIndex() (UserIndex, error)
 	StoreUser(user *User) error
 	DeleteUser(mattermostUserId string) error
+}
+
+type UserIndex []*UserShort
+
+type UserShort struct {
+	MattermostUserID string `json:"mm_id"`
+	RemoteID         string `json:"remote_id"`
+	Email            string `json:"email"`
 }
 
 type User struct {
@@ -55,6 +64,15 @@ func (s *pluginStore) LoadMattermostUserId(remoteUserId string) (string, error) 
 	return string(data), nil
 }
 
+func (s *pluginStore) LoadUserIndex() (UserIndex, error) {
+	users := UserIndex{}
+	err := kvstore.LoadJSON(s.userIndexKV, "", &users)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (s *pluginStore) StoreUser(user *User) error {
 	err := kvstore.StoreJSON(s.userKV, user.MattermostUserID, user)
 	if err != nil {
@@ -64,6 +82,38 @@ func (s *pluginStore) StoreUser(user *User) error {
 	err = s.mattermostUserIDKV.Store(user.Remote.ID, []byte(user.MattermostUserID))
 	if err != nil {
 		_ = s.userKV.Delete(user.MattermostUserID)
+		return err
+	}
+
+	var userIndex []*UserShort
+	err = kvstore.LoadJSON(s.userIndexKV, "", &userIndex)
+	if err != nil {
+		userIndex = []*UserShort{}
+	}
+
+	newUser := &UserShort{
+		MattermostUserID: user.MattermostUserID,
+		RemoteID:         user.Remote.ID,
+		Email:            user.Remote.Mail,
+	}
+
+	found := false
+	filtered := []*UserShort{}
+	for _, u := range userIndex {
+		if u.MattermostUserID == user.MattermostUserID && u.RemoteID == user.Remote.ID {
+			found = true
+			filtered = append(filtered, newUser)
+		} else {
+			filtered = append(filtered, u)
+		}
+	}
+
+	if !found {
+		filtered = append(filtered, newUser)
+	}
+
+	err = kvstore.StoreJSON(s.userIndexKV, "", &filtered)
+	if err != nil {
 		return err
 	}
 
@@ -84,4 +134,44 @@ func (s *pluginStore) DeleteUser(mattermostUserID string) error {
 		return err
 	}
 	return nil
+}
+
+func (index UserIndex) ByMattermostID() map[string]*UserShort {
+	result := map[string]*UserShort{}
+
+	for _, u := range index {
+		result[u.MattermostUserID] = u
+	}
+
+	return result
+}
+
+func (index UserIndex) ByRemoteID() map[string]*UserShort {
+	result := map[string]*UserShort{}
+
+	for _, u := range index {
+		result[u.RemoteID] = u
+	}
+
+	return result
+}
+
+func (index UserIndex) ByEmail() map[string]*UserShort {
+	result := map[string]*UserShort{}
+
+	for _, u := range index {
+		result[u.Email] = u
+	}
+
+	return result
+}
+
+func (index UserIndex) GetMattermostUserIDs() []string {
+	result := []string{}
+
+	for _, u := range index {
+		result = append(result, u.MattermostUserID)
+	}
+
+	return result
 }

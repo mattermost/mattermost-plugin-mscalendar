@@ -1,0 +1,24 @@
+{
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#Collection(microsoft.graph.scheduleInformation)",
+    "value": [
+        {
+            "scheduleId": "test1@mattermost.onmicrosoft.com",
+            "availabilityView": "00",
+            "scheduleItems": [],
+            "workingHours": {
+                "daysOfWeek": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday"
+                ],
+                "startTime": "08:00:00.0000000",
+                "endTime": "17:00:00.0000000",
+                "timeZone": {
+                    "name": "Pacific Standard Time"
+                }
+            }
+        }
+    ]
+}
