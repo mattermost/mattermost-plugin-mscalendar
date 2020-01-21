@@ -5,7 +5,7 @@ package config
 
 const (
 	BotUserName    = "mscalendar"
-	BotDisplayName = "Microsoft Calendar Bot"
+	BotDisplayName = "Microsoft Calendar"
 	BotDescription = "Created by the Microsoft Calendar Plugin."
 
 	ApplicationName = "Microsoft Calendar"
