@@ -271,6 +271,21 @@ func (mr *MockClientMockRecorder) GetUserEvent(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserEvent", reflect.TypeOf((*MockClient)(nil).GetUserEvent), arg0, arg1)
 }
 
+// GetUserMailboxSettings mocks base method
+func (m *MockClient) GetUserMailboxSettings(arg0 string) (*remote.MailboxSettings, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserMailboxSettings", arg0)
+	ret0, _ := ret[0].(*remote.MailboxSettings)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserMailboxSettings indicates an expected call of GetUserMailboxSettings
+func (mr *MockClientMockRecorder) GetUserMailboxSettings(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserMailboxSettings", reflect.TypeOf((*MockClient)(nil).GetUserMailboxSettings), arg0)
+}
+
 // ListSubscriptions mocks base method
 func (m *MockClient) ListSubscriptions() ([]*remote.Subscription, error) {
 	m.ctrl.T.Helper()

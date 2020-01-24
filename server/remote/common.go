@@ -3,7 +3,11 @@
 
 package remote
 
-import "time"
+import (
+	"time"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+)
 
 type EmailAddress struct {
 	Address string `json:"address"`
@@ -16,11 +20,14 @@ type DateTime struct {
 
 const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
 
-func NewDateTime(t time.Time) *DateTime {
+// NewDateTime accepts a time.Time and a Windows Timezone, so the DateTime struct is compatible with Microsoft's API
+// Callers of this function are responsible for supplying a valid Windows Timezone
+// If the context is for a specific user, we will fetch their timezone from Microsoft before calling this function
+// Else for system time we use UTC
+func NewDateTime(t time.Time, winTZ string) *DateTime {
 	return &DateTime{
 		DateTime: t.Format(RFC3339NanoNoTimezone),
-		// TimeZone: t.Format("MST"),
-		TimeZone: "Eastern Standard Time",
+		TimeZone: winTZ,
 	}
 }
 
@@ -32,8 +39,38 @@ func (dt DateTime) String() string {
 	return t.Format(time.RFC3339)
 }
 
+func (dt DateTime) PrettyString() string {
+	t := dt.Time()
+	if t.IsZero() {
+		return "n/a"
+	}
+
+	return t.Format(time.RFC822)
+}
+
+func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
+	t := dt.Time()
+	if t.IsZero() {
+		return &dt
+	}
+
+	tz := safeTimeZone(timeZone)
+
+	loc, err := time.LoadLocation(tz)
+	if err == nil {
+		t = t.In(loc)
+	}
+
+	return &DateTime{
+		TimeZone: timeZone,
+		DateTime: t.Format(RFC3339NanoNoTimezone),
+	}
+}
+
 func (dt DateTime) Time() time.Time {
-	loc, err := time.LoadLocation(dt.TimeZone)
+	tz := safeTimeZone(dt.TimeZone)
+
+	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		return time.Time{}
 	}
@@ -43,4 +80,13 @@ func (dt DateTime) Time() time.Time {
 		return time.Time{}
 	}
 	return t
+}
+
+func safeTimeZone(timeZone string) string {
+	_, err := time.LoadLocation(timeZone)
+	if err != nil {
+		return utils.ConvertWindowsTimezoneToIANA(timeZone)
+	}
+
+	return timeZone
 }

@@ -76,3 +76,28 @@ func (api *api) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
 	me, err := client.GetMe()
 	return client.GetUserCalendars(me.ID)
 }
+
+func (api *api) GetUserTimezone(mattermostUserID string) (string, error) {
+	client, err := api.MakeClient()
+	if err != nil {
+		return "", err
+	}
+
+	var remoteUserID string
+	if api.user != nil && api.user.MattermostUserID == mattermostUserID {
+		remoteUserID = api.user.Remote.ID
+	} else {
+		u, err := api.UserStore.LoadUser(mattermostUserID)
+		if err != nil {
+			return "", err
+		}
+		remoteUserID = u.Remote.ID
+	}
+
+	settings, err := client.GetUserMailboxSettings(remoteUserID)
+	if err != nil {
+		return "", err
+	}
+
+	return settings.TimeZone, nil
+}

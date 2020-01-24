@@ -36,6 +36,7 @@ type Calendar interface {
 	DeleteCalendar(calendarID string) error
 	FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
 	GetUserCalendars(userID string) ([]*remote.Calendar, error)
+	GetUserTimezone(mattermostUserID string) (string, error)
 }
 
 type Event interface {

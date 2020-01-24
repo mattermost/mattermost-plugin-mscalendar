@@ -4,6 +4,7 @@
 package command
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -32,10 +33,26 @@ func (c *Command) findMeetings(parameters ...string) (string, error) {
 		return "", err
 	}
 
+	var timeZone string
+	tz, err := c.API.GetUserTimezone(c.Args.UserId)
+	if err == nil {
+		timeZone = tz
+	}
+
 	resp := ""
 	for _, m := range meetings.MeetingTimeSuggestions {
-		resp += utils.JSONBlock(m)
+		if timeZone != "" {
+			m.MeetingTimeSlot.Start = m.MeetingTimeSlot.Start.ConvertToTimezone(timeZone)
+			m.MeetingTimeSlot.End = m.MeetingTimeSlot.End.ConvertToTimezone(timeZone)
+		}
+		resp += utils.JSONBlock(renderMeetingTime(m))
 	}
 
 	return resp, nil
+}
+
+func renderMeetingTime(m *remote.MeetingTimeSuggestion) string {
+	start := m.MeetingTimeSlot.Start.PrettyString()
+	end := m.MeetingTimeSlot.End.PrettyString()
+	return fmt.Sprintf("%s - %s (%s)", start, end, m.MeetingTimeSlot.Start.TimeZone)
 }

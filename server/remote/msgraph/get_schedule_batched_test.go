@@ -61,11 +61,11 @@ func TestPrepareGetScheduleRequests(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			userID := "xyz"
-			start := time.Now()
-			end := time.Now().Add(20)
+			start := time.Now().UTC()
+			end := time.Now().UTC().Add(20)
 			params := &getScheduleRequest{
-				StartTime:                remote.NewDateTime(start),
-				EndTime:                  remote.NewDateTime(end),
+				StartTime:                remote.NewDateTime(start, "UTC"),
+				EndTime:                  remote.NewDateTime(end, "UTC"),
 				AvailabilityViewInterval: 15,
 			}
 
