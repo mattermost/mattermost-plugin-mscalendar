@@ -6,8 +6,6 @@ package api
 import (
 	"sync"
 	"time"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const JOB_INTERVAL = 5 * time.Minute
@@ -19,20 +17,16 @@ type StatusSyncJob struct {
 	cancelOnce sync.Once
 }
 
-func (j *StatusSyncJob) getLogger() bot.Logger {
-	return j.api.(*api).Logger
-}
-
 func (j *StatusSyncJob) work() {
-	log := j.getLogger()
-	log.Debugf("User status sync job beginning")
+	api := j.api
+	api.Debugf("User status sync job beginning")
 
 	_, err := j.api.SyncStatusForAllUsers()
 	if err != nil {
-		log.Errorf("Error during user status sync job", "error", err.Error())
+		api.Errorf("Error during user status sync job", "error", err.Error())
 	}
 
-	log.Debugf("User status sync job finished")
+	api.Debugf("User status sync job finished")
 }
 
 func NewStatusSyncJob(api API) *StatusSyncJob {
