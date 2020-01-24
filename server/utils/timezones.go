@@ -21,6 +21,8 @@ func populateConversionMap() {
 	}
 }
 
+// Format: {IANA, Windows, offset}
+// Source: https://techsupport.osisoft.com/Documentation/PI-Web-API/help/topics/timezones/iana.html
 var allTimezones = [][]string{
 	{"Africa/Abidjan", "Greenwich Standard Time", "+00:00"},
 	{"Africa/Accra", "Greenwich Standard Time", "+00:00"},
