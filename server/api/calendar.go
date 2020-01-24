@@ -87,9 +87,9 @@ func (api *api) GetUserTimezone(mattermostUserID string) (string, error) {
 	if api.user != nil && api.user.MattermostUserID == mattermostUserID {
 		remoteUserID = api.user.Remote.ID
 	} else {
-		u, err := api.UserStore.LoadUser(mattermostUserID)
-		if err != nil {
-			return "", err
+		u, storeErr := api.UserStore.LoadUser(mattermostUserID)
+		if storeErr != nil {
+			return "", storeErr
 		}
 		remoteUserID = u.Remote.ID
 	}
