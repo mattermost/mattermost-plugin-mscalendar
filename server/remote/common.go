@@ -20,7 +20,7 @@ type DateTime struct {
 
 const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
 
-// NewDateTime accepts a time.Time and a Windows Timezone, so the DateTime struct is compatible with Microsoft's API
+// NewDateTime creates a DateTime that is compatible with Microsoft's API
 // Callers of this function are responsible for supplying a valid Windows Timezone
 // If the context is for a specific user, we will fetch their timezone from Microsoft before calling this function
 // Else for system time we use UTC
@@ -44,7 +44,6 @@ func (dt DateTime) PrettyString() string {
 	if t.IsZero() {
 		return "n/a"
 	}
-
 	return t.Format(time.RFC822)
 }
 

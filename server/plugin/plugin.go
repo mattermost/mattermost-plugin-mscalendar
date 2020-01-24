@@ -66,7 +66,6 @@ func (p *Plugin) OnActivate() error {
 	if err != nil {
 		return err
 	}
-
 	p.httpHandler = http.NewHandler()
 
 	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())

@@ -1,13 +1,24 @@
 package utils
 
+var windowsToIanaMap = map[string]string{}
+
 func ConvertWindowsTimezoneToIANA(winTZ string) string {
-	for _, entry := range allTimezones {
-		if entry[1] == winTZ {
-			return entry[0]
-		}
+	if len(windowsToIanaMap) == 0 {
+		populateConversionMap()
 	}
 
-	return winTZ
+	tz, ok := windowsToIanaMap[winTZ]
+	if ok {
+		return tz
+	}
+
+	return ""
+}
+
+func populateConversionMap() {
+	for _, entry := range allTimezones {
+		windowsToIanaMap[entry[1]] = entry[0]
+	}
 }
 
 var allTimezones = [][]string{
