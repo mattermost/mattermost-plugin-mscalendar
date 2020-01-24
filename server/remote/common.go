@@ -81,6 +81,7 @@ func (dt DateTime) Time() time.Time {
 	return t
 }
 
+// safeTimeZone converts a time zone into a Go-compatible time zone if it is not compatible.
 func safeTimeZone(timeZone string) string {
 	_, err := time.LoadLocation(timeZone)
 	if err != nil {
