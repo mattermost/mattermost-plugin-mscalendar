@@ -1,6 +1,7 @@
 package msgraph
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -8,8 +9,14 @@ import (
 
 const maxNumUsersPerRequest = 20
 
+type apiError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 type getScheduleResponse struct {
 	Value []*remote.ScheduleInformation `json:"value,omitempty"`
+	Error *apiError
 }
 
 type getScheduleSingleResponse struct {
@@ -73,6 +80,9 @@ func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime,
 		sorted := make([]*getScheduleSingleResponse, length)
 
 		for _, res := range batchRes.Responses {
+			if res.Body.Error != nil {
+				return nil, errors.New(res.Body.Error.Message)
+			}
 			id, _ := strconv.Atoi(res.ID)
 			sorted[id] = res
 		}
