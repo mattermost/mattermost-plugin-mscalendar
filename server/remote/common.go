@@ -6,7 +6,7 @@ package remote
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	tz "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
 
 type EmailAddress struct {
@@ -20,14 +20,13 @@ type DateTime struct {
 
 const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
 
-// NewDateTime creates a DateTime that is compatible with Microsoft's API
-// Callers of this function are responsible for supplying a valid Windows Timezone
-// If the context is for a specific user, we will fetch their timezone from Microsoft before calling this function
-// Else for system time we use UTC
-func NewDateTime(t time.Time, winTZ string) *DateTime {
+// NewMicrosoftDateTime creates a DateTime that is compatible with Microsoft's API.
+func NewMicrosoftDateTime(t time.Time, timeZone string) *DateTime {
+	timeZone = tz.MicrosoftTimeZone(timeZone)
+
 	return &DateTime{
 		DateTime: t.Format(RFC3339NanoNoTimezone),
-		TimeZone: winTZ,
+		TimeZone: timeZone,
 	}
 }
 
@@ -53,7 +52,7 @@ func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
 		return &dt
 	}
 
-	tz := safeTimeZone(timeZone)
+	tz := tz.GoTimeZone(timeZone)
 
 	loc, err := time.LoadLocation(tz)
 	if err == nil {
@@ -67,7 +66,7 @@ func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
 }
 
 func (dt DateTime) Time() time.Time {
-	tz := safeTimeZone(dt.TimeZone)
+	tz := tz.GoTimeZone(dt.TimeZone)
 
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
@@ -79,14 +78,4 @@ func (dt DateTime) Time() time.Time {
 		return time.Time{}
 	}
 	return t
-}
-
-// safeTimeZone converts a time zone into a Go-compatible time zone if it is not compatible.
-func safeTimeZone(timeZone string) string {
-	_, err := time.LoadLocation(timeZone)
-	if err != nil {
-		return utils.ConvertWindowsTimezoneToIANA(timeZone)
-	}
-
-	return timeZone
 }

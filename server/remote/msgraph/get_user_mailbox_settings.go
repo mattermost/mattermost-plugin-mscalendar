@@ -10,19 +10,9 @@ import (
 )
 
 func (c *client) GetUserMailboxSettings(remoteUserID string) (*remote.MailboxSettings, error) {
-	var u string
-	if remoteUserID == "me" {
-		u = "/me/mailboxSettings"
-	} else {
-		u = "/users/" + remoteUserID + "/mailboxSettings"
-	}
-
+	u := "/users/" + remoteUserID + "/mailboxSettings"
 	out := &remote.MailboxSettings{}
 
 	_, err := c.CallJSON(http.MethodGet, u, nil, out)
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return out, err
 }

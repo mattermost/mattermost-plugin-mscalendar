@@ -64,8 +64,8 @@ func TestPrepareGetScheduleRequests(t *testing.T) {
 			start := time.Now().UTC()
 			end := time.Now().UTC().Add(20)
 			params := &getScheduleRequest{
-				StartTime:                remote.NewDateTime(start, "UTC"),
-				EndTime:                  remote.NewDateTime(end, "UTC"),
+				StartTime:                remote.NewMicrosoftDateTime(start, "UTC"),
+				EndTime:                  remote.NewMicrosoftDateTime(end, "UTC"),
 				AvailabilityViewInterval: 15,
 			}
 

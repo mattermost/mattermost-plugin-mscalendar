@@ -107,8 +107,8 @@ func (api *api) setUserStatuses(filteredUsers store.UserIndex, schedules []*remo
 func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
 	client := api.MakeSuperuserClient()
 
-	start := remote.NewDateTime(time.Now().UTC(), "UTC")
-	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
+	start := remote.NewMicrosoftDateTime(time.Now().UTC(), "UTC")
+	end := remote.NewMicrosoftDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
 
 	return client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
 }
