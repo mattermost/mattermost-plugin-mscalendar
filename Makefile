@@ -80,7 +80,6 @@ golint:
 	@echo lint success
 
 ## Generates mock golang interfaces for testing
-# TODO mock just mscalendar
 # TODO PluginAPI as in SolarLottery
 mock:
 ifneq ($(HAS_SERVER),)
