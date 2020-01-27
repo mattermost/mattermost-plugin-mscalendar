@@ -84,6 +84,20 @@ func (mr *MockLoggerMockRecorder) Infof(arg0 interface{}, arg1 ...interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Infof", reflect.TypeOf((*MockLogger)(nil).Infof), varargs...)
 }
 
+// Timed mocks base method
+func (m *MockLogger) Timed() bot.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Timed")
+	ret0, _ := ret[0].(bot.Logger)
+	return ret0
+}
+
+// Timed indicates an expected call of Timed
+func (mr *MockLoggerMockRecorder) Timed() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Timed", reflect.TypeOf((*MockLogger)(nil).Timed))
+}
+
 // Warnf mocks base method
 func (m *MockLogger) Warnf(arg0 string, arg1 ...interface{}) {
 	m.ctrl.T.Helper()

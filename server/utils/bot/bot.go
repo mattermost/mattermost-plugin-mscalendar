@@ -27,6 +27,16 @@ type BotConfig struct {
 	AdminLogVerbose bool
 }
 
+func (c BotConfig) ToStorableConfig(configMap map[string]interface{}) map[string]interface{} {
+	if configMap == nil {
+		configMap = map[string]interface{}{}
+	}
+	configMap["AdminUserIDs"] = c.AdminUserIDs
+	configMap["AdminLogLevel"] = c.AdminLogLevel
+	configMap["AdminLogVerbose"] = c.AdminLogVerbose
+	return configMap
+}
+
 type bot struct {
 	BotConfig
 	pluginAPI        plugin.API
@@ -34,8 +44,8 @@ type bot struct {
 	logContext       LogContext
 }
 
-// GetBot creates a new bot API instance.
-func GetBot(api plugin.API, botUserID string) Bot {
+// NewBot creates a new bot poster.
+func NewBot(api plugin.API, botUserID string) Bot {
 	return &bot{
 		pluginAPI:        api,
 		mattermostUserID: botUserID,

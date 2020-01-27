@@ -20,6 +20,6 @@ func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 		return true, nil
 	}
 	conf := p.getConfig()
-	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
+	bot := bot.NewBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
 	return bot.IsUserAdmin(mattermostUserID), nil
 }
