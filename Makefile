@@ -80,14 +80,12 @@ golint:
 	@echo lint success
 
 ## Generates mock golang interfaces for testing
+# TODO mock just mscalendar
+# TODO PluginAPI as in SolarLottery
 mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen
-	mockgen -destination server/api/mock_api/mock_oauth2.go github.com/mattermost/mattermost-plugin-mscalendar/server/api OAuth2
-	mockgen -destination server/api/mock_api/mock_subscriptions.go github.com/mattermost/mattermost-plugin-mscalendar/server/api Subscriptions
-	mockgen -destination server/api/mock_api/mock_calendar.go github.com/mattermost/mattermost-plugin-mscalendar/server/api Calendar
-	mockgen -destination server/api/mock_api/mock_client.go github.com/mattermost/mattermost-plugin-mscalendar/server/api Client
-	mockgen -destination server/api/mock_api/mock_availability.go github.com/mattermost/mattermost-plugin-mscalendar/server/api Availability
+	mockgen -destination server/mscalendar/mock_mscalendar/mock_mscalendar.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar MSCalendar
 	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Remote
 	mockgen -destination server/remote/mock_remote/mock_client.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Client
 	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Poster
@@ -98,6 +96,15 @@ ifneq ($(HAS_SERVER),)
 	mockgen -destination server/store/mock_store/mock_oauth2_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store OAuth2StateStore
 	mockgen -destination server/store/mock_store/mock_subscription_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store SubscriptionStore
 	mockgen -destination server/store/mock_store/mock_user_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store UserStore
+endif
+
+clean_mock:
+ifneq ($(HAS_SERVER),)
+	rm -rf ./server/mscalendar/mock_mscalendar
+	rm -rf ./server/remote/mock_remote
+	rm -rf ./server/utils/bot/mock_bot
+	rm -rf ./server/utils/plugin_api/mock_plugin_api
+	rm -rf ./server/store/mock_store
 endif
 
 ## Builds the server, if it exists, including support for multiple architectures.

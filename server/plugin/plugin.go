@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"net/http"
 	gohttp "net/http"
 	"net/url"
 	"os"
@@ -12,15 +13,17 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin/command"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin/http"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/oauth2"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -31,10 +34,10 @@ type Plugin struct {
 	plugin.MattermostPlugin
 	configLock    *sync.RWMutex
 	config        *config.Config
-	statusSyncJob *api.StatusSyncJob
+	statusSyncJob *mscalendar.StatusSyncJob
 
-	httpHandler         *http.Handler
-	notificationHandler api.NotificationHandler
+	httpRouter          *mux.Router
+	notificationHandler mscalendar.NotificationHandler
 
 	Templates map[string]*template.Template
 }
@@ -67,9 +70,12 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	p.httpHandler = http.NewHandler()
+	p.httpRouter = mux.NewRouter()
+	api.RegisterHTTP(p.httpRouter)
+	oauth2.RegisterHTTP(p.httpRouter)
+	p.httpRouter.Handle("{anything:.*}", http.NotFoundHandler())
 
-	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())
+	p.notificationHandler = mscalendar.NewNotificationHandler(p.newMSCalendarConfig())
 
 	command.Register(p.API.RegisterCommand)
 
@@ -112,7 +118,7 @@ func (p *Plugin) OnConfigurationChange() error {
 	})
 
 	if p.notificationHandler != nil {
-		p.notificationHandler.Configure(p.newAPIConfig())
+		p.notificationHandler.Configure(p.newMSCalendarConfig())
 	}
 
 	p.POC_initUserStatusSyncJob()
@@ -121,14 +127,14 @@ func (p *Plugin) OnConfigurationChange() error {
 }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	apiconf := p.newAPIConfig()
-	api := api.New(apiconf, args.UserId)
+	apiconf := p.newMSCalendarConfig()
+	mscalendar := mscalendar.New(apiconf, args.UserId)
 	command := command.Command{
-		Context:   c,
-		Args:      args,
-		ChannelID: args.ChannelId,
-		Config:    apiconf.Config,
-		API:       api,
+		Context:    c,
+		Args:       args,
+		ChannelID:  args.ChannelId,
+		Config:     apiconf.Config,
+		MSCalendar: mscalendar,
 	}
 
 	out, err := command.Handle()
@@ -142,13 +148,14 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *gohttp.Request) {
-	apiconf := p.newAPIConfig()
+	apiconf := p.newMSCalendarConfig()
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
+
 	ctx := req.Context()
-	ctx = api.Context(ctx, api.New(apiconf, mattermostUserID), p.notificationHandler)
+	ctx = mscalendar.Context(ctx, mscalendar.New(apiconf, mattermostUserID), p.notificationHandler)
 	ctx = config.Context(ctx, apiconf.Config)
 
-	p.httpHandler.ServeHTTP(w, req.WithContext(ctx))
+	p.httpRouter.ServeHTTP(w, req.WithContext(ctx))
 }
 
 func (p *Plugin) getConfig() *config.Config {
@@ -165,14 +172,14 @@ func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
 	return *p.config
 }
 
-func (p *Plugin) newAPIConfig() api.Config {
+func (p *Plugin) newMSCalendarConfig() mscalendar.Config {
 	conf := p.getConfig()
 	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
 	store := store.NewPluginStore(p.API, bot)
 
-	return api.Config{
+	return mscalendar.Config{
 		Config: conf,
-		Dependencies: &api.Dependencies{
+		Dependencies: &mscalendar.Dependencies{
 			UserStore:         store,
 			OAuth2StateStore:  store,
 			SubscriptionStore: store,
@@ -217,7 +224,7 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 // POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
 // This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
 func (p *Plugin) POC_initUserStatusSyncJob() {
-	conf := p.newAPIConfig()
+	conf := p.newMSCalendarConfig()
 	enable := p.getConfig().EnableStatusSync
 	logger := conf.Dependencies.Logger
 
@@ -225,7 +232,7 @@ func (p *Plugin) POC_initUserStatusSyncJob() {
 	if enable && p.statusSyncJob == nil {
 		logger.Debugf("Enabling user status sync job")
 
-		job := api.NewStatusSyncJob(api.New(conf, ""))
+		job := mscalendar.NewStatusSyncJob(mscalendar.New(conf, ""))
 		p.statusSyncJob = job
 		go job.Start()
 	}
