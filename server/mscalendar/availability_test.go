@@ -10,12 +10,13 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api/mock_plugin_api"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
@@ -81,9 +82,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 			defer posterCtrl.Finish()
 			poster := mock_bot.NewMockPoster(posterCtrl)
 
-			loggerCtrl := gomock.NewController(t)
-			defer loggerCtrl.Finish()
-			logger := mock_bot.NewMockLogger(loggerCtrl)
+			logger := &bot.TestLogger{TB: t}
 
 			remoteCtrl := gomock.NewController(t)
 			defer remoteCtrl.Finish()
@@ -95,7 +94,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 
 			pluginAPICtrl := gomock.NewController(t)
 			defer pluginAPICtrl.Finish()
-			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(pluginAPICtrl)
+			mockPluginAPI := mock_mscalendar.NewMockPluginAPI(pluginAPICtrl)
 
 			apiConfig := Config{
 				Config: conf,
@@ -123,12 +122,12 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 
 			mockClient.EXPECT().GetSchedule("some_remote_id", []string{"some_email@example.com"}, gomock.Any(), gomock.Any(), 15).Return([]*remote.ScheduleInformation{tc.sched}, nil)
 
-			mockPluginAPI.EXPECT().GetUserStatusesByIds([]string{"some_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "some_mm_id"}}, nil)
+			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"some_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "some_mm_id"}}, nil)
 
 			if tc.newStatus == "" {
-				mockPluginAPI.EXPECT().UpdateUserStatus("some_mm_id", gomock.Any()).Times(0)
+				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", gomock.Any()).Times(0)
 			} else {
-				mockPluginAPI.EXPECT().UpdateUserStatus("some_mm_id", tc.newStatus).Times(1)
+				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", tc.newStatus).Times(1)
 			}
 
 			a := New(apiConfig, "")

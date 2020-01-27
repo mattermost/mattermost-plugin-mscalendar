@@ -4,11 +4,12 @@
 package mscalendar
 
 import (
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api"
 )
 
 type MSCalendar interface {
@@ -20,13 +21,18 @@ type MSCalendar interface {
 	Subscriptions
 }
 
+type PluginAPI interface {
+	GetMattermostUserStatus(userID string) (*model.Status, error)
+	GetMattermostUserStatusesByIds(userIDs []string) ([]*model.Status, error)
+	UpdateMattermostUserStatus(userID, status string) (*model.Status, error)
+}
+
 // Dependencies contains all API dependencies
 type Dependencies struct {
 	EventStore        store.EventStore
-	IsAuthorizedAdmin func(userId string) (bool, error)
 	Logger            bot.Logger
 	OAuth2StateStore  store.OAuth2StateStore
-	PluginAPI         plugin_api.PluginAPI
+	PluginAPI         PluginAPI
 	Poster            bot.Poster
 	Remote            remote.Remote
 	SubscriptionStore store.SubscriptionStore

@@ -85,12 +85,12 @@ mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen
 	mockgen -destination server/mscalendar/mock_mscalendar/mock_mscalendar.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar MSCalendar
+	mockgen -destination server/mscalendar/mock_mscalendar/mock_plugin_api.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar PluginAPI
 	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Remote
 	mockgen -destination server/remote/mock_remote/mock_client.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Client
 	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Poster
 	mockgen -destination server/utils/bot/mock_bot/mock_admin.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Admin
 	mockgen -destination server/utils/bot/mock_bot/mock_logger.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Logger
-	mockgen -destination server/utils/plugin_api/mock_plugin_api/mock_plugin_api.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api PluginAPI
 	mockgen -destination server/store/mock_store/mock_event_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store EventStore
 	mockgen -destination server/store/mock_store/mock_oauth2_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store OAuth2StateStore
 	mockgen -destination server/store/mock_store/mock_subscription_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store SubscriptionStore

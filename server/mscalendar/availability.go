@@ -78,7 +78,7 @@ func (mscalendar *mscalendar) syncStatusForUsers(mattermostUserIDs []string) (st
 }
 
 func (mscalendar *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []*remote.ScheduleInformation, mattermostUserIDs []string) (string, error) {
-	statuses, appErr := mscalendar.Dependencies.PluginAPI.GetUserStatusesByIds(mattermostUserIDs)
+	statuses, appErr := mscalendar.PluginAPI.GetMattermostUserStatusesByIds(mattermostUserIDs)
 	if appErr != nil {
 		return "", appErr
 	}
@@ -125,21 +125,21 @@ func (mscalendar *mscalendar) setUserStatusFromAvailability(mattermostUserID, cu
 	switch currentAvailability {
 	case remote.AvailabilityViewFree:
 		if currentStatus == "dnd" {
-			mscalendar.PluginAPI.UpdateUserStatus(mattermostUserID, "online")
+			mscalendar.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "online")
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus)
 		} else {
 			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus)
 		}
 	case remote.AvailabilityViewTentative, remote.AvailabilityViewBusy:
 		if currentStatus != "dnd" {
-			mscalendar.PluginAPI.UpdateUserStatus(mattermostUserID, "dnd")
+			mscalendar.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
 		} else {
 			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus)
 		}
 	case remote.AvailabilityViewOutOfOffice:
 		if currentStatus != "offline" {
-			mscalendar.PluginAPI.UpdateUserStatus(mattermostUserID, "offline")
+			mscalendar.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
 		} else {
 			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus)

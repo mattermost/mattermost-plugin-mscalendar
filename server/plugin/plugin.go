@@ -28,6 +28,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 )
 
 type Plugin struct {
@@ -187,7 +188,7 @@ func (p *Plugin) newMSCalendarConfig() mscalendar.Config {
 			Logger:            bot,
 			Poster:            bot,
 			Remote:            remote.Makers[msgraph.Kind](conf, bot),
-			PluginAPI:         p.API,
+			PluginAPI:         pluginapi.New(p.API),
 		},
 	}
 }
