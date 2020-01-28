@@ -6,7 +6,7 @@ package remote
 import (
 	"time"
 
-	tz "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
 
 type EmailAddress struct {
@@ -20,8 +20,8 @@ type DateTime struct {
 
 const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
 
-// NewMicrosoftDateTime creates a DateTime that is compatible with Microsoft's API.
-func NewMicrosoftDateTime(t time.Time, timeZone string) *DateTime {
+// NewDateTime creates a DateTime that is compatible with Microsoft's API.
+func NewDateTime(t time.Time, timeZone string) *DateTime {
 	timeZone = tz.Microsoft(timeZone)
 
 	return &DateTime{
@@ -46,15 +46,13 @@ func (dt DateTime) PrettyString() string {
 	return t.Format(time.RFC822)
 }
 
-func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
+func (dt DateTime) In(timeZone string) *DateTime {
 	t := dt.Time()
 	if t.IsZero() {
 		return &dt
 	}
 
-	tz := tz.Go(timeZone)
-
-	loc, err := time.LoadLocation(tz)
+	loc, err := time.LoadLocation(tz.Go(timeZone))
 	if err == nil {
 		t = t.In(loc)
 	}
@@ -66,9 +64,7 @@ func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
 }
 
 func (dt DateTime) Time() time.Time {
-	tz := tz.Go(dt.TimeZone)
-
-	loc, err := time.LoadLocation(tz)
+	loc, err := time.LoadLocation(tz.Go(dt.TimeZone))
 	if err != nil {
 		return time.Time{}
 	}

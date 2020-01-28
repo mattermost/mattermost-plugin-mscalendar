@@ -42,8 +42,8 @@ func (c *Command) findMeetings(parameters ...string) (string, error) {
 	resp := ""
 	for _, m := range meetings.MeetingTimeSuggestions {
 		if timeZone != "" {
-			m.MeetingTimeSlot.Start = m.MeetingTimeSlot.Start.ConvertToTimezone(timeZone)
-			m.MeetingTimeSlot.End = m.MeetingTimeSlot.End.ConvertToTimezone(timeZone)
+			m.MeetingTimeSlot.Start = m.MeetingTimeSlot.Start.In(timeZone)
+			m.MeetingTimeSlot.End = m.MeetingTimeSlot.End.In(timeZone)
 		}
 		resp += utils.JSONBlock(renderMeetingTime(m))
 	}

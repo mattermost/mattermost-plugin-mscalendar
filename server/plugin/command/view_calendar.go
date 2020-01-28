@@ -23,15 +23,15 @@ func (c *Command) viewCalendar(parameters ...string) (string, error) {
 
 	if timeZone != "" {
 		for _, event := range events {
-			event.Start = event.Start.ConvertToTimezone(timeZone)
-			event.End = event.End.ConvertToTimezone(timeZone)
+			event.Start = event.Start.In(timeZone)
+			event.End = event.End.In(timeZone)
 		}
 	}
 
 	resp := ""
 	for _, e := range events {
-		e.Start = e.Start.ConvertToTimezone(timeZone)
-		e.End = e.End.ConvertToTimezone(timeZone)
+		e.Start = e.Start.In(timeZone)
+		e.End = e.End.In(timeZone)
 		resp += "  - " + e.ID + utils.JSONBlock(e)
 	}
 

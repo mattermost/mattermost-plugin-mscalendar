@@ -50,7 +50,7 @@ func TestDateTime_Time(t *testing.T) {
 	}
 }
 
-func TestDateTime_ConvertToTimezone(t *testing.T) {
+func TestDateTime_In(t *testing.T) {
 	for _, tc := range []struct {
 		DateTime
 		toTimezone           string
@@ -95,7 +95,7 @@ func TestDateTime_ConvertToTimezone(t *testing.T) {
 		},
 	} {
 		t.Run(tc.toTimezone, func(t *testing.T) {
-			dt := tc.DateTime.ConvertToTimezone(tc.toTimezone)
+			dt := tc.DateTime.In(tc.toTimezone)
 			require.Equal(t, tc.expectedUTC, dt.Time().UTC().Format(time.RFC3339Nano))
 			require.Equal(t, tc.expectedString, dt.String())
 			require.Equal(t, tc.toTimezone, dt.TimeZone)
