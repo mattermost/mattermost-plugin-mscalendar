@@ -4,7 +4,6 @@
 package plugin
 
 import (
-	"net/http"
 	gohttp "net/http"
 	"net/url"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -23,45 +21,34 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/oauth2"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 )
 
 type Plugin struct {
 	plugin.MattermostPlugin
-	configLock    *sync.RWMutex
-	config        *config.Config
-	statusSyncJob *mscalendar.StatusSyncJob
-
-	httpRouter          *mux.Router
-	notificationHandler mscalendar.NotificationHandler
+	envLock *sync.RWMutex
+	mscalendar.Env
+	statusSyncJob         *mscalendar.StatusSyncJob
+	notificationProcessor mscalendar.NotificationProcessor
+	httpHandler           *httputils.Handler
 
 	Templates map[string]*template.Template
 }
 
-func NewWithConfig(conf *config.Config) *Plugin {
+func NewWithEnv(env mscalendar.Env) *Plugin {
 	return &Plugin{
-		configLock: &sync.RWMutex{},
-		config:     conf,
+		envLock: &sync.RWMutex{},
+		Env:     env,
 	}
 }
 
 func (p *Plugin) OnActivate() error {
-	botUserID, err := p.Helpers.EnsureBot(&model.Bot{
-		Username:    config.BotUserName,
-		DisplayName: config.BotDisplayName,
-		Description: config.BotDescription,
-	}, plugin.ProfileImagePath("assets/profile.png"))
-	if err != nil {
-		return errors.Wrap(err, "failed to ensure bot account")
-	}
-	p.config.BotUserID = botUserID
-
-	// Templates
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
 		return errors.Wrap(err, "couldn't get bundle path")
@@ -71,22 +58,12 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	p.httpRouter = mux.NewRouter()
-	api.RegisterHTTP(p.httpRouter)
-	oauth2.RegisterHTTP(p.httpRouter)
-	p.httpRouter.Handle("{anything:.*}", http.NotFoundHandler())
-
-	p.notificationHandler = mscalendar.NewNotificationHandler(p.newMSCalendarConfig())
-
 	command.Register(p.API.RegisterCommand)
-
-	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil
 }
 
-// OnConfigurationChange is invoked when configuration changes may have been made.
 func (p *Plugin) OnConfigurationChange() error {
-	conf := p.getConfig()
+	env := p.getEnv()
 	stored := config.StoredConfig{}
 	err := p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
@@ -107,20 +84,48 @@ func (p *Plugin) OnConfigurationChange() error {
 	if err != nil {
 		return err
 	}
-	pluginURLPath := "/plugins/" + conf.PluginID
+	pluginURLPath := "/plugins/" + env.Config.PluginID
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
-	p.updateConfig(func(c *config.Config) {
-		c.StoredConfig = stored
-		c.MattermostSiteURL = *mattermostSiteURL
-		c.MattermostSiteHostname = mattermostURL.Hostname()
-		c.PluginURL = pluginURL
-		c.PluginURLPath = pluginURLPath
-	})
-
-	if p.notificationHandler != nil {
-		p.notificationHandler.Configure(p.newMSCalendarConfig())
+	bot, botUserID, err := bot.Ensure(p.API, p.Helpers,
+		&model.Bot{
+			Username:    config.BotUserName,
+			DisplayName: config.BotDisplayName,
+			Description: config.BotDescription,
+		},
+		"assets/profile.png")
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure bot account")
 	}
+
+	p.updateEnv(func(env *mscalendar.Env) {
+		env.StoredConfig = stored
+		env.Config.MattermostSiteURL = *mattermostSiteURL
+		env.Config.MattermostSiteHostname = mattermostURL.Hostname()
+		env.Config.PluginURL = pluginURL
+		env.Config.PluginURLPath = pluginURLPath
+		env.Config.BotUserID = botUserID
+
+		store := store.NewPluginStore(p.API, bot)
+		env.Dependencies.Logger = bot
+		env.Dependencies.Poster = bot
+		env.Dependencies.UserStore = store
+		env.Dependencies.OAuth2StateStore = store
+		env.Dependencies.SubscriptionStore = store
+		env.Dependencies.EventStore = store
+		env.Dependencies.Remote = remote.Makers[msgraph.Kind](env.Config, bot)
+		env.Dependencies.PluginAPI = pluginapi.New(p.API)
+
+		if p.notificationProcessor == nil {
+			p.notificationProcessor = mscalendar.NewNotificationProcessor(*env)
+		} else {
+			p.notificationProcessor.Configure(*env)
+		}
+
+		p.httpHandler = httputils.NewHandler()
+		oauth2connect.Init(p.httpHandler, mscalendar.New(*env))
+		api.Init(p.httpHandler, *env)
+	})
 
 	p.POC_initUserStatusSyncJob()
 
@@ -128,69 +133,41 @@ func (p *Plugin) OnConfigurationChange() error {
 }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	apiconf := p.newMSCalendarConfig()
-	mscalendar := mscalendar.New(apiconf, args.UserId)
+	env := p.getEnv()
+	mscalendar := mscalendar.New(env)
+
 	command := command.Command{
 		Context:    c,
 		Args:       args,
 		ChannelID:  args.ChannelId,
-		Config:     apiconf.Config,
+		Config:     env.Config,
 		MSCalendar: mscalendar,
 	}
-
 	out, err := command.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
 	}
 
-	apiconf.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
 	return &model.CommandResponse{}, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *gohttp.Request) {
-	apiconf := p.newMSCalendarConfig()
-	mattermostUserID := req.Header.Get("Mattermost-User-ID")
-
-	ctx := req.Context()
-	ctx = mscalendar.Context(ctx, mscalendar.New(apiconf, mattermostUserID), p.notificationHandler)
-	ctx = config.Context(ctx, apiconf.Config)
-
-	p.httpRouter.ServeHTTP(w, req.WithContext(ctx))
+	p.httpHandler.ServeHTTP(w, req)
 }
 
-func (p *Plugin) getConfig() *config.Config {
-	p.configLock.RLock()
-	defer p.configLock.RUnlock()
-	return &(*p.config)
+func (p *Plugin) getEnv() mscalendar.Env {
+	p.envLock.RLock()
+	defer p.envLock.RUnlock()
+	return p.Env
 }
 
-func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
-	p.configLock.Lock()
-	defer p.configLock.Unlock()
+func (p *Plugin) updateEnv(f func(*mscalendar.Env)) {
+	p.envLock.Lock()
+	defer p.envLock.Unlock()
 
-	f(p.config)
-	return *p.config
-}
-
-func (p *Plugin) newMSCalendarConfig() mscalendar.Config {
-	conf := p.getConfig()
-	bot := bot.NewBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
-	store := store.NewPluginStore(p.API, bot)
-
-	return mscalendar.Config{
-		Config: conf,
-		Dependencies: &mscalendar.Dependencies{
-			UserStore:         store,
-			OAuth2StateStore:  store,
-			SubscriptionStore: store,
-			EventStore:        store,
-			Logger:            bot,
-			Poster:            bot,
-			Remote:            remote.Makers[msgraph.Kind](conf, bot),
-			PluginAPI:         pluginapi.New(p.API),
-		},
-	}
+	f(&p.Env)
 }
 
 func (p *Plugin) loadTemplates(bundlePath string) error {
@@ -225,15 +202,15 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 // POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
 // This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
 func (p *Plugin) POC_initUserStatusSyncJob() {
-	conf := p.newMSCalendarConfig()
-	enable := p.getConfig().EnableStatusSync
-	logger := conf.Dependencies.Logger
+	env := p.getEnv()
+	enable := env.Config.EnableStatusSync
+	logger := env.Logger
 
 	// Config is set to enable. No job exists, start a new job.
 	if enable && p.statusSyncJob == nil {
 		logger.Debugf("Enabling user status sync job")
 
-		job := mscalendar.NewStatusSyncJob(mscalendar.New(conf, ""))
+		job := mscalendar.NewStatusSyncJob(mscalendar.New(env))
 		p.statusSyncJob = job
 		go job.Start()
 	}

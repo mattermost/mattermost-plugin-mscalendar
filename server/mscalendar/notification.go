@@ -6,7 +6,6 @@ package mscalendar
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/pkg/errors"
@@ -41,83 +40,83 @@ const (
 	OptionMaybe        = "Maybe"
 )
 
-type NotificationHandler interface {
-	http.Handler
-	Configure(apiConfig Config)
+type NotificationProcessor interface {
+	Configure(Env)
+	Enqueue(notifications ...*remote.Notification)
 	Quit()
 }
 
-type notificationHandler struct {
-	Config
-	incoming   chan *remote.Notification
-	queue      chan *remote.Notification
-	queueSize  int
-	configChan chan Config
-	quit       chan bool
+type notificationProcessor struct {
+	Env
+	envChan chan Env
+
+	incoming  chan *remote.Notification
+	queue     chan *remote.Notification
+	queueSize int
+	quit      chan bool
 }
 
-func NewNotificationHandler(apiConfig Config) NotificationHandler {
-	h := &notificationHandler{
-		Config:     apiConfig,
-		incoming:   make(chan (*remote.Notification)),
-		queue:      make(chan (*remote.Notification), maxQueueSize),
-		configChan: make(chan (Config)),
-		quit:       make(chan (bool)),
+func NewNotificationProcessor(env Env) NotificationProcessor {
+	processor := &notificationProcessor{
+		Env:      env,
+		envChan:  make(chan (Env)),
+		incoming: make(chan (*remote.Notification)),
+		queue:    make(chan (*remote.Notification), maxQueueSize),
+		quit:     make(chan (bool)),
 	}
-	go h.work()
-	return h
+	go processor.work()
+	return processor
 }
 
-func (h *notificationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	notifications := h.Remote.HandleWebhook(w, req)
+func (processor *notificationProcessor) Enqueue(notifications ...*remote.Notification) {
 	for _, n := range notifications {
-		h.incoming <- n
+		processor.incoming <- n
 	}
 }
 
-func (h *notificationHandler) Configure(apiConfig Config) {
-	h.configChan <- apiConfig
+func (processor *notificationProcessor) Configure(env Env) {
+	processor.envChan <- env
 }
 
-func (h *notificationHandler) Quit() {
-	h.quit <- true
+func (processor *notificationProcessor) Quit() {
+	processor.quit <- true
 }
 
-func (h *notificationHandler) work() {
+func (processor *notificationProcessor) work() {
 	for {
 		select {
-		case n := <-h.incoming:
-			if h.queueSize >= maxQueueSize {
-				h.Logger.Errorf("webhook notification: queue full (`%v`), dropped notification", h.queueSize)
+		case n := <-processor.incoming:
+			if processor.queueSize >= maxQueueSize {
+				processor.Env.Logger.Errorf("webhook notification: queue full (`%v`), dropped notification", processor.queueSize)
 				continue
 			}
-			h.queueSize++
-			h.queue <- n
+			processor.queueSize++
+			processor.queue <- n
 
-		case n := <-h.queue:
-			h.queueSize--
-			err := h.processNotification(n)
+		case n := <-processor.queue:
+			processor.queueSize--
+			err := processor.processNotification(n)
 			if err != nil {
-				h.Logger.With(bot.LogContext{
+				processor.Logger.With(bot.LogContext{
 					"subscriptionID": n.SubscriptionID,
 				}).Infof("webhook notification: failed: `%v`.", err)
 			}
 
-		case apiConfig := <-h.configChan:
-			h.Config = apiConfig
+		case env := <-processor.envChan:
+			processor.Env = env
 
-		case <-h.quit:
+		case <-processor.quit:
 			return
 		}
 	}
 }
 
-func (h *notificationHandler) processNotification(n *remote.Notification) error {
-	sub, err := h.SubscriptionStore.LoadSubscription(n.SubscriptionID)
+func (processor *notificationProcessor) processNotification(n *remote.Notification) error {
+	sub, err := processor.SubscriptionStore.LoadSubscription(n.SubscriptionID)
 	if err != nil {
 		return err
 	}
-	creator, err := h.UserStore.LoadUser(sub.MattermostCreatorID)
+	creator, err := processor.Env.UserStore.LoadUser(sub.MattermostCreatorID)
 	if err != nil {
 		return err
 	}
@@ -133,7 +132,7 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 
 	var client remote.Client
 	if !n.RecommendRenew || n.IsBare {
-		client = h.Remote.MakeClient(context.Background(), creator.OAuth2Token)
+		client = processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
 	}
 
 	if n.RecommendRenew {
@@ -146,13 +145,13 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 		storedSub := &store.Subscription{
 			Remote:              renewed,
 			MattermostCreatorID: creator.MattermostUserID,
-			PluginVersion:       h.Config.PluginVersion,
+			PluginVersion:       processor.Config.PluginVersion,
 		}
-		err = h.SubscriptionStore.StoreUserSubscription(creator, storedSub)
+		err = processor.SubscriptionStore.StoreUserSubscription(creator, storedSub)
 		if err != nil {
 			return err
 		}
-		h.Logger.With(bot.LogContext{
+		processor.Logger.With(bot.LogContext{
 			"MattermostUserID": creator.MattermostUserID,
 			"SubsriptionID":    n.SubscriptionID,
 		}).Debugf("webhook notification: renewed user subscription.")
@@ -166,15 +165,15 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 	}
 
 	var sa *model.SlackAttachment
-	prior, err := h.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
+	prior, err := processor.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
 	if err != nil && err != store.ErrNotFound {
 		return err
 	}
 	if prior != nil {
 		var changed bool
-		changed, sa = h.updatedEventSlackAttachment(n, prior.Remote)
+		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote)
 		if !changed {
-			h.Logger.With(bot.LogContext{
+			processor.Logger.With(bot.LogContext{
 				"MattermostUserID": creator.MattermostUserID,
 				"SubsriptionID":    n.SubscriptionID,
 				"ChangeType":       n.ChangeType,
@@ -183,22 +182,22 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 			return nil
 		}
 	} else {
-		sa = h.newEventSlackAttachment(n)
+		sa = processor.newEventSlackAttachment(n)
 		prior = &store.Event{}
 	}
 
-	err = h.Poster.DMWithAttachments(creator.MattermostUserID, sa)
+	err = processor.Poster.DMWithAttachments(creator.MattermostUserID, sa)
 	if err != nil {
 		return err
 	}
 
 	prior.Remote = n.Event
-	err = h.EventStore.StoreUserEvent(creator.MattermostUserID, prior)
+	err = processor.EventStore.StoreUserEvent(creator.MattermostUserID, prior)
 	if err != nil {
 		return err
 	}
 
-	h.Logger.With(bot.LogContext{
+	processor.Logger.With(bot.LogContext{
 		"MattermostUserID": creator.MattermostUserID,
 		"SubsriptionID":    n.SubscriptionID,
 	}).Debugf("Notified: %s.", sa.Title)
@@ -206,7 +205,7 @@ func (h *notificationHandler) processNotification(n *remote.Notification) error 
 	return nil
 }
 
-func (h *notificationHandler) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
 	return &model.SlackAttachment{
 		AuthorName: n.Event.Organizer.EmailAddress.Name,
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
@@ -216,8 +215,8 @@ func (h *notificationHandler) newSlackAttachment(n *remote.Notification) *model.
 	}
 }
 
-func (h *notificationHandler) newEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {
-	sa := h.newSlackAttachment(n)
+func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	sa := processor.newSlackAttachment(n)
 	sa.Title = "(new) " + sa.Title
 
 	for n, v := range eventToFields(n.Event) {
@@ -234,12 +233,12 @@ func (h *notificationHandler) newEventSlackAttachment(n *remote.Notification) *m
 		})
 	}
 
-	h.addPostActionSelect(sa, n.Event)
+	processor.addPostActionSelect(sa, n.Event)
 	return sa
 }
 
-func (h *notificationHandler) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event) (bool, *model.SlackAttachment) {
-	sa := h.newSlackAttachment(n)
+func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event) (bool, *model.SlackAttachment) {
+	sa := processor.newSlackAttachment(n)
 	sa.Title = "(updated) " + sa.Title
 
 	newFields := eventToFields(n.Event)
@@ -271,15 +270,15 @@ func (h *notificationHandler) updatedEventSlackAttachment(n *remote.Notification
 		})
 	}
 
-	h.addPostActionSelect(sa, n.Event)
+	processor.addPostActionSelect(sa, n.Event)
 	return true, sa
 }
 
-func (h *notificationHandler) actionURL(action string) string {
-	return fmt.Sprintf("%s/%s/%s", h.Config.PluginURLPath, config.PathPostAction, action)
+func (processor *notificationProcessor) actionURL(action string) string {
+	return fmt.Sprintf("%s/%s/%s", processor.Config.PluginURLPath, config.PathPostAction, action)
 }
 
-func (h *notificationHandler) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
+func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
 	if !event.ResponseRequested {
 		return
 	}
@@ -291,7 +290,7 @@ func (h *notificationHandler) addPostActions(sa *model.SlackAttachment, event *r
 			Name: "Accept",
 			Type: model.POST_ACTION_TYPE_BUTTON,
 			Integration: &model.PostActionIntegration{
-				URL:     h.actionURL(config.PathAccept),
+				URL:     processor.actionURL(config.PathAccept),
 				Context: context,
 			},
 		},
@@ -299,7 +298,7 @@ func (h *notificationHandler) addPostActions(sa *model.SlackAttachment, event *r
 			Name: "Tentatively Accept",
 			Type: model.POST_ACTION_TYPE_BUTTON,
 			Integration: &model.PostActionIntegration{
-				URL:     h.actionURL(config.PathTentative),
+				URL:     processor.actionURL(config.PathTentative),
 				Context: context,
 			},
 		},
@@ -307,14 +306,14 @@ func (h *notificationHandler) addPostActions(sa *model.SlackAttachment, event *r
 			Name: "Decline",
 			Type: model.POST_ACTION_TYPE_BUTTON,
 			Integration: &model.PostActionIntegration{
-				URL:     h.actionURL(config.PathDecline),
+				URL:     processor.actionURL(config.PathDecline),
 				Context: context,
 			},
 		},
 	}
 }
 
-func (h *notificationHandler) addPostActionSelect(sa *model.SlackAttachment, event *remote.Event) {
+func (processor *notificationProcessor) addPostActionSelect(sa *model.SlackAttachment, event *remote.Event) {
 	if !event.ResponseRequested {
 		return
 	}
@@ -327,7 +326,7 @@ func (h *notificationHandler) addPostActionSelect(sa *model.SlackAttachment, eve
 		Name: "Response",
 		Type: model.POST_ACTION_TYPE_SELECT,
 		Integration: &model.PostActionIntegration{
-			URL:     h.actionURL(config.PathRespond),
+			URL:     processor.actionURL(config.PathRespond),
 			Context: context,
 		},
 	}

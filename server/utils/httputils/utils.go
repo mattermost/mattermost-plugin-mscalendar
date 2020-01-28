@@ -52,8 +52,7 @@ func WriteJSONError(w http.ResponseWriter, statusCode int, summary string, err e
 		Summary string `json:"details"`
 	}{
 		Summary: summary,
-		// Summary:   "An internal error has occurred. Check app server logs for details.",
-		Error: err.Error(),
+		Error:   err.Error(),
 	})
 	_, _ = w.Write(b)
 }
@@ -68,4 +67,8 @@ func WriteBadRequestError(w http.ResponseWriter, err error) {
 
 func WriteNotFoundError(w http.ResponseWriter, err error) {
 	WriteJSONError(w, http.StatusNotFound, "Not found.", err)
+}
+
+func WriteUnauthorizedError(w http.ResponseWriter, err error) {
+	WriteJSONError(w, http.StatusUnauthorized, "Unauthorized.", err)
 }

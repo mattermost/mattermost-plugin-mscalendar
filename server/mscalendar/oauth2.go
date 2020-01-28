@@ -23,11 +23,6 @@ Here is some info to prove we got you logged in
 - Name: %s
 `
 
-type OAuth2 interface {
-	CompleteOAuth2(authedUserID, code, state string) error
-	InitOAuth2(userID string) (url string, err error)
-}
-
 func (mscalendar *mscalendar) InitOAuth2(userID string) (url string, err error) {
 	conf := mscalendar.Remote.NewOAuth2Config()
 	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)

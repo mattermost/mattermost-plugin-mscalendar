@@ -1,10 +1,11 @@
 package main
 
 import (
-	mattermost "github.com/mattermost/mattermost-server/v5/plugin"
+	mattermostplugin "github.com/mattermost/mattermost-server/v5/plugin"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	mscalendar "github.com/mattermost/mattermost-plugin-mscalendar/server/plugin"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin"
 )
 
 var BuildHash string
@@ -12,13 +13,15 @@ var BuildHashShort string
 var BuildDate string
 
 func main() {
-	mattermost.ClientMain(
-		mscalendar.NewWithConfig(
-			&config.Config{
-				PluginID:       manifest.ID,
-				PluginVersion:  manifest.Version,
-				BuildHash:      BuildHash,
-				BuildHashShort: BuildHashShort,
-				BuildDate:      BuildHash,
+	mattermostplugin.ClientMain(
+		plugin.NewWithEnv(
+			mscalendar.Env{
+				Config: &config.Config{
+					PluginID:       manifest.ID,
+					PluginVersion:  manifest.Version,
+					BuildHash:      BuildHash,
+					BuildHashShort: BuildHashShort,
+					BuildDate:      BuildHash,
+				},
 			}))
 }

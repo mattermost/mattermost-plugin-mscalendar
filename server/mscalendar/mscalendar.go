@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
 type MSCalendar interface {
@@ -17,7 +18,7 @@ type MSCalendar interface {
 	Calendar
 	Client
 	Event
-	OAuth2
+	oauth2connect.App
 	Subscriptions
 }
 
@@ -39,20 +40,20 @@ type Dependencies struct {
 	UserStore         store.UserStore
 }
 
-type Config struct {
+type Env struct {
 	*Dependencies
 	*config.Config
 }
 
 type mscalendar struct {
-	Config
+	Env
+	
 	mattermostUserID string
 	user             *store.User
 }
 
-func New(apiConfig Config, mattermostUserID string) MSCalendar {
+func New(env Env) MSCalendar {
 	return &mscalendar{
-		Config:           apiConfig,
-		mattermostUserID: mattermostUserID,
+		Env:              env,
 	}
 }

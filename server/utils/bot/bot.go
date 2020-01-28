@@ -4,6 +4,9 @@
 package bot
 
 import (
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
@@ -13,47 +16,41 @@ type Bot interface {
 	Admin
 
 	WithConfig(BotConfig) Bot
-}
-
-type BotConfig struct {
-	// AdminUserIDs contains a comma-separated list of user IDs that are allowed
-	// to administer plugin functions, even if not Mattermost sysadmins.
-	AdminUserIDs string
-
-	// AdminLogLevel is "debug", "info", "warn", or "error".
-	AdminLogLevel string
-
-	// AdminLogVerbose: set to include full context with admin log messages.
-	AdminLogVerbose bool
-}
-
-func (c BotConfig) ToStorableConfig(configMap map[string]interface{}) map[string]interface{} {
-	if configMap == nil {
-		configMap = map[string]interface{}{}
-	}
-	configMap["AdminUserIDs"] = c.AdminUserIDs
-	configMap["AdminLogLevel"] = c.AdminLogLevel
-	configMap["AdminLogVerbose"] = c.AdminLogVerbose
-	return configMap
+	UserID() string
 }
 
 type bot struct {
 	BotConfig
 	pluginAPI        plugin.API
 	mattermostUserID string
+	displayName      string
 	logContext       LogContext
 }
 
-// NewBot creates a new bot poster.
-func NewBot(api plugin.API, botUserID string) Bot {
-	return &bot{
+func Ensure(api plugin.API, helpers plugin.Helpers, stored *model.Bot, iconPath string) (Bot, string, error) {
+	botUserID, err := helpers.EnsureBot(stored, plugin.ProfileImagePath(iconPath))
+	if err != nil {
+		return nil, "", errors.Wrap(err, "failed to ensure bot account")
+	}
+
+	bot := &bot{
 		pluginAPI:        api,
 		mattermostUserID: botUserID,
+		displayName:      stored.DisplayName,
 	}
+	return bot, botUserID, nil
 }
 
 func (bot *bot) WithConfig(conf BotConfig) Bot {
 	newbot := *bot
 	newbot.BotConfig = conf
 	return &newbot
+}
+
+func (bot *bot) UserID() string {
+	return bot.mattermostUserID
+}
+
+func (bot *bot) String() string {
+	return bot.displayName
 }

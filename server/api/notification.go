@@ -5,12 +5,9 @@ package api
 
 import (
 	"net/http"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
-func notification(w http.ResponseWriter, req *http.Request) {
-	handler := mscalendar.NotificationHandlerFromContext(req.Context())
-	handler.ServeHTTP(w, req)
-	return
+func (api *api) notification(w http.ResponseWriter, req *http.Request) {
+	api.notificationProcessor.Enqueue(
+		api.Env.Remote.HandleWebhook(w, req)...)
 }

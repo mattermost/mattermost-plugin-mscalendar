@@ -1,16 +1,14 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-package oauth2
+package oauth2connect
 
 import (
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"net/http"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
-func oauth2Complete(w http.ResponseWriter, r *http.Request) {
-	mscalendar := mscalendar.FromContext(r.Context())
+func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
@@ -23,9 +21,9 @@ func oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	}
 	state := r.URL.Query().Get("state")
 
-	err := mscalendar.CompleteOAuth2(mattermostUserID, code, state)
+	err := oa.app.CompleteOAuth2(mattermostUserID, code, state)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		httputils.WriteUnauthorizedError(w, err)
 		return
 	}
 

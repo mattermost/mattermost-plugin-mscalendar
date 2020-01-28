@@ -12,44 +12,43 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
-func preprocessAction(w http.ResponseWriter, req *http.Request) (mscalendar.MSCalendar, string, string) {
+func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscalendar.MSCalendar, string, string) {
 	request := model.PostActionIntegrationRequestFromJson(req.Body)
 	if request == nil {
-		// h.LogWarn("failed to decode PostActionIntegrationRequest")
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return nil, "", ""
 	}
+
 	eventID, ok := request.Context[config.EventIDKey].(string)
 	if !ok {
-		// h.LogWarn("no event ID in the request")
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return nil, "", ""
 	}
-
 	option, _ := request.Context["selected_option"].(string)
+	mscalendar := mscalendar.New(api.Env)
 
-	return mscalendar.FromContext(req.Context()), eventID, option
+	return mscalendar, eventID, option
 }
 
-func postActionAccept(w http.ResponseWriter, req *http.Request) {
-	api, eventID, _ := preprocessAction(w, req)
+func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
+	mscalendar, eventID, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := api.AcceptEvent(eventID)
+	err := mscalendar.AcceptEvent(eventID)
 	if err != nil {
-		// h.LogWarn(err.Error())
+		api.Logger.Warnf(err.Error())
 		http.Error(w, "Failed to accept event: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 }
 
-func postActionDecline(w http.ResponseWriter, req *http.Request) {
-	api, eventID, _ := preprocessAction(w, req)
+func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
+	mscalendar, eventID, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := api.DeclineEvent(eventID)
+	err := mscalendar.DeclineEvent(eventID)
 	if err != nil {
 		// h.LogWarn(err.Error())
 		http.Error(w, "Failed to decline event: "+err.Error(), http.StatusBadRequest)
@@ -57,12 +56,12 @@ func postActionDecline(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func postActionTentative(w http.ResponseWriter, req *http.Request) {
-	api, eventID, _ := preprocessAction(w, req)
+func (api *api) postActionTentative(w http.ResponseWriter, req *http.Request) {
+	mscalendar, eventID, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := api.TentativelyAcceptEvent(eventID)
+	err := mscalendar.TentativelyAcceptEvent(eventID)
 	if err != nil {
 		// h.LogWarn(err.Error())
 		http.Error(w, "Failed to tentatively accept event: "+err.Error(), http.StatusBadRequest)
@@ -70,12 +69,12 @@ func postActionTentative(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func postActionRespond(w http.ResponseWriter, req *http.Request) {
-	a, eventID, option := preprocessAction(w, req)
+func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
+	mscalendar, eventID, option := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := a.RespondToEvent(eventID, option)
+	err := mscalendar.RespondToEvent(eventID, option)
 	if err != nil {
 		// h.LogWarn(err.Error())
 		http.Error(w, "Failed to respond to event: "+err.Error(), http.StatusBadRequest)
