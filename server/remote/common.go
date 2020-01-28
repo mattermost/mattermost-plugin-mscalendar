@@ -22,7 +22,7 @@ const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
 
 // NewMicrosoftDateTime creates a DateTime that is compatible with Microsoft's API.
 func NewMicrosoftDateTime(t time.Time, timeZone string) *DateTime {
-	timeZone = tz.MicrosoftTimeZone(timeZone)
+	timeZone = tz.Microsoft(timeZone)
 
 	return &DateTime{
 		DateTime: t.Format(RFC3339NanoNoTimezone),
@@ -52,7 +52,7 @@ func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
 		return &dt
 	}
 
-	tz := tz.GoTimeZone(timeZone)
+	tz := tz.Go(timeZone)
 
 	loc, err := time.LoadLocation(tz)
 	if err == nil {
@@ -66,7 +66,7 @@ func (dt DateTime) ConvertToTimezone(timeZone string) *DateTime {
 }
 
 func (dt DateTime) Time() time.Time {
-	tz := tz.GoTimeZone(dt.TimeZone)
+	tz := tz.Go(dt.TimeZone)
 
 	loc, err := time.LoadLocation(tz)
 	if err != nil {

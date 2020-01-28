@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// GoTimeZone converts a time zone into a Go-compatible time zone if it is not compatible.
-func GoTimeZone(timeZone string) string {
+// Go converts a time zone into a Go-compatible time zone if it is not compatible.
+func Go(timeZone string) string {
 	_, err := time.LoadLocation(timeZone)
 	if err == nil {
 		return timeZone
@@ -14,8 +14,8 @@ func GoTimeZone(timeZone string) string {
 	return windowsToIANA[timeZone]
 }
 
-// MicrosoftTimeZone converts a time zone into a Microsoft-compatible time zone if it is not compatible.
-func MicrosoftTimeZone(timeZone string) string {
+// Microsoft converts a time zone into a Microsoft-compatible time zone if it is not compatible.
+func Microsoft(timeZone string) string {
 	_, ok := iANAToWindows[timeZone]
 	if ok {
 		return timeZone
