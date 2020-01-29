@@ -11,12 +11,14 @@ import (
 
 type api struct {
 	mscalendar.Env
+	mscalendar.NotificationProcessor
 }
 
 // Init initializes the router.
-func Init(h *httputils.Handler, env mscalendar.Env) {
+func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscalendar.NotificationProcessor) {
 	api := &api{
-		Env: env,
+		Env:                   env,
+		NotificationProcessor: notificationProcessor,
 	}
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", api.getAuthorized).Methods("GET")

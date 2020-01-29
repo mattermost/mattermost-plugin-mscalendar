@@ -8,6 +8,6 @@ import (
 )
 
 func (api *api) notification(w http.ResponseWriter, req *http.Request) {
-	api.notificationProcessor.Enqueue(
+	api.NotificationProcessor.Enqueue(
 		api.Env.Remote.HandleWebhook(w, req)...)
 }

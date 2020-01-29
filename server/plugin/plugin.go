@@ -124,7 +124,7 @@ func (p *Plugin) OnConfigurationChange() error {
 
 		p.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(p.httpHandler, mscalendar.New(*env))
-		api.Init(p.httpHandler, *env)
+		api.Init(p.httpHandler, *env, p.notificationProcessor)
 	})
 
 	p.POC_initUserStatusSyncJob()

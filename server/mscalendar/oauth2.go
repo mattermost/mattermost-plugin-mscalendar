@@ -35,6 +35,10 @@ func (mscalendar *mscalendar) InitOAuth2(userID string) (url string, err error) 
 }
 
 func (mscalendar *mscalendar) CompleteOAuth2(authedUserID, code, state string) error {
+	if authedUserID == "" || code == "" || state == "" {
+		return errors.New("missing user, code or state")
+	}
+
 	oconf := mscalendar.Remote.NewOAuth2Config()
 
 	err := mscalendar.OAuth2StateStore.VerifyOAuth2State(state)

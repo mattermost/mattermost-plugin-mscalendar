@@ -47,13 +47,13 @@ type Env struct {
 
 type mscalendar struct {
 	Env
-	
+
 	mattermostUserID string
 	user             *store.User
 }
 
 func New(env Env) MSCalendar {
 	return &mscalendar{
-		Env:              env,
+		Env: env,
 	}
 }

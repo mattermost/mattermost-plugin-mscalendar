@@ -96,7 +96,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 			defer pluginAPICtrl.Finish()
 			mockPluginAPI := mock_mscalendar.NewMockPluginAPI(pluginAPICtrl)
 
-			apiConfig := Config{
+			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
 					UserStore:         userStore,
@@ -130,8 +130,8 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", tc.newStatus).Times(1)
 			}
 
-			a := New(apiConfig, "")
-			a.SyncStatusForAllUsers()
+			mscalendar := New(env)
+			mscalendar.SyncStatusForAllUsers()
 		})
 	}
 }
