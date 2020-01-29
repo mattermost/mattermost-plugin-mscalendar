@@ -16,15 +16,18 @@ import (
 type MSCalendar interface {
 	Availability
 	Calendar
-	Client
-	Event
+	EventResponder
 	oauth2connect.App
 	Subscriptions
+	Users
 }
 
 type PluginAPI interface {
+	GetMattermostUser(mattermostUserID string) (*model.User, error)
+	GetMattermostUserByUsername(mattermostUsername string) (*model.User, error)
 	GetMattermostUserStatus(userID string) (*model.Status, error)
 	GetMattermostUserStatusesByIds(userIDs []string) ([]*model.Status, error)
+	IsSysAdmin(mattermostUserID string) (bool, error)
 	UpdateMattermostUserStatus(userID, status string) (*model.Status, error)
 }
 
@@ -48,12 +51,16 @@ type Env struct {
 type mscalendar struct {
 	Env
 
-	mattermostUserID string
-	user             *store.User
+	actingUser *User
+	client     remote.Client
 }
 
-func New(env Env) MSCalendar {
+func New(env Env, actingMattermostUserID string) MSCalendar {
+	if actingMattermostUserID == "" {
+		actingMattermostUserID = env.Config.BotUserID
+	}
 	return &mscalendar{
-		Env: env,
+		Env:        env,
+		actingUser: NewUser(actingMattermostUserID),
 	}
 }

@@ -123,7 +123,7 @@ func (p *Plugin) OnConfigurationChange() error {
 		}
 
 		p.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(p.httpHandler, mscalendar.New(*env))
+		oauth2connect.Init(p.httpHandler, mscalendar.New(*env, botUserID))
 		api.Init(p.httpHandler, *env, p.notificationProcessor)
 	})
 
@@ -134,7 +134,7 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	env := p.getEnv()
-	mscalendar := mscalendar.New(env)
+	mscalendar := mscalendar.New(env, args.UserId)
 
 	command := command.Command{
 		Context:    c,
@@ -210,7 +210,7 @@ func (p *Plugin) POC_initUserStatusSyncJob() {
 	if enable && p.statusSyncJob == nil {
 		logger.Debugf("Enabling user status sync job")
 
-		job := mscalendar.NewStatusSyncJob(mscalendar.New(env))
+		job := mscalendar.NewStatusSyncJob(mscalendar.New(env, env.Config.BotUserID))
 		p.statusSyncJob = job
 		go job.Start()
 	}

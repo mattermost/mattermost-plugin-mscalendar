@@ -10,9 +10,9 @@ import (
 )
 
 // FindMeetingTimes finds meeting time suggestions for a calendar event
-func (c *client) FindMeetingTimes(params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+func (c *client) FindMeetingTimes(userID string, params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	meetingsOut := &remote.MeetingTimeSuggestionResults{}
-	req := c.rbuilder.Me().FindMeetingTimes(nil).Request()
+	req := c.rbuilder.Users().ID(userID).FindMeetingTimes(nil).Request()
 	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
 	if err != nil {
 		return nil, err

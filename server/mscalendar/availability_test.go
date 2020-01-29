@@ -10,8 +10,8 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
@@ -94,7 +94,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 
 			pluginAPICtrl := gomock.NewController(t)
 			defer pluginAPICtrl.Finish()
-			mockPluginAPI := mock_mscalendar.NewMockPluginAPI(pluginAPICtrl)
+			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(pluginAPICtrl)
 
 			env := Env{
 				Config: conf,
@@ -130,7 +130,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", tc.newStatus).Times(1)
 			}
 
-			mscalendar := New(env)
+			mscalendar := New(env, "")
 			mscalendar.SyncStatusForAllUsers()
 		})
 	}

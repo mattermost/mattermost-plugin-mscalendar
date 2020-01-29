@@ -47,6 +47,12 @@ func (settings Settings) String() string {
 	return fmt.Sprintf(" - %s", sub)
 }
 
+func (user *User) Clone() *User {
+	newUser := *user
+	newUser.Remote = &(*user.Remote)
+	return &newUser
+}
+
 func (s *pluginStore) LoadUser(mattermostUserId string) (*User, error) {
 	user := User{}
 	err := kvstore.LoadJSON(s.userKV, mattermostUserId, &user)

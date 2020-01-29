@@ -329,7 +329,7 @@ func newOAuth2MSCalendar(ctrl *gomock.Controller) (MSCalendar, Env) {
 		},
 	}
 
-	return New(env), env
+	return New(env, ""), env
 }
 
 var stateRegexp = regexp.MustCompile(`^(?P<before>.*)&+state=\w+(?P<after>.*)$`)

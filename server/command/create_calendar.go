@@ -13,7 +13,7 @@ func (c *Command) createCalendar(parameters ...string) (string, error) {
 		Name: parameters[0],
 	}
 
-	_, err := c.MSCalendar.CreateCalendar(calIn)
+	_, err := c.MSCalendar.CreateCalendar(c.user(), calIn)
 	if err != nil {
 		return "", err
 	}

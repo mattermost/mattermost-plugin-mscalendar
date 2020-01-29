@@ -10,33 +10,44 @@ import (
 )
 
 type Calendar interface {
-	ViewCalendar(from, to time.Time) ([]*remote.Event, error)
-	CreateEvent(event *remote.Event, mattermostUserIDs []string) (*remote.Event, error)
-	CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error)
-	DeleteCalendar(calendarID string) error
-	FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
-	GetUserCalendars(userID string) ([]*remote.Calendar, error)
+	CreateCalendar(user *User, calendar *remote.Calendar) (*remote.Calendar, error)
+	CreateEvent(user *User, event *remote.Event, mattermostUserIDs []string) (*remote.Event, error)
+	DeleteCalendar(user *User, calendarID string) error
+	FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
+	GetCalendars(user *User) ([]*remote.Calendar, error)
+	ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error)
 }
 
-func (mscalendar *mscalendar) ViewCalendar(from, to time.Time) ([]*remote.Event, error) {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error) {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	return client.GetUserDefaultCalendarView(mscalendar.user.Remote.ID, from, to)
+	return mscalendar.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 
-func (mscalendar *mscalendar) CreateCalendar(calendar *remote.Calendar) (*remote.Calendar, error) {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) CreateCalendar(user *User, calendar *remote.Calendar) (*remote.Calendar, error) {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	return client.CreateCalendar(calendar)
+	return mscalendar.client.CreateCalendar(user.Remote.ID, calendar)
 }
 
-func (mscalendar *mscalendar) CreateEvent(event *remote.Event, mattermostUserIDs []string) (*remote.Event, error) {
+func (mscalendar *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUserIDs []string) (*remote.Event, error) {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	// invite non-mapped Mattermost
 	for id := range mattermostUserIDs {
@@ -49,39 +60,41 @@ func (mscalendar *mscalendar) CreateEvent(event *remote.Event, mattermostUserIDs
 		}
 	}
 
-	client, err := mscalendar.MakeClient()
-	if err != nil {
-		return nil, err
-	}
-
-	return client.CreateEvent(event)
+	return mscalendar.client.CreateEvent(user.Remote.ID, event)
 }
 
-func (mscalendar *mscalendar) DeleteCalendar(calendarID string) error {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) DeleteCalendar(user *User, calendarID string) error {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
 	if err != nil {
 		return err
 	}
 
-	return client.DeleteCalendar(calendarID)
+	return mscalendar.client.DeleteCalendar(user.Remote.ID, calendarID)
 }
 
-func (mscalendar *mscalendar) FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return client.FindMeetingTimes(meetingParams)
+	return mscalendar.client.FindMeetingTimes(user.Remote.ID, meetingParams)
 }
 
-func (mscalendar *mscalendar) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) GetCalendars(user *User) ([]*remote.Calendar, error) {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	//DEBUG just use me as the user, for now
-	me, err := client.GetMe()
-	return client.GetUserCalendars(me.ID)
+	return mscalendar.client.GetCalendars(user.Remote.ID)
 }

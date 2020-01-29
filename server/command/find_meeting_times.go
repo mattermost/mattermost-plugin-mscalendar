@@ -27,7 +27,7 @@ func (c *Command) findMeetings(parameters ...string) (string, error) {
 	}
 	meetingParams.Attendees = attendees
 
-	meetings, err := c.MSCalendar.FindMeetingTimes(meetingParams)
+	meetings, err := c.MSCalendar.FindMeetingTimes(c.user(), meetingParams)
 	if err != nil {
 		return "", err
 	}

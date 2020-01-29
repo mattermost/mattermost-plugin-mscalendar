@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Command) viewCalendar(parameters ...string) (string, error) {
-	events, err := c.MSCalendar.ViewCalendar(time.Now(), time.Now().Add(14*24*time.Hour))
+	events, err := c.MSCalendar.ViewCalendar(c.user(), time.Now(), time.Now().Add(14*24*time.Hour))
 	if err != nil {
 		return "", err
 	}

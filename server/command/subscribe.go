@@ -12,7 +12,7 @@ import (
 func (c *Command) subscribe(parameters ...string) (string, error) {
 	switch {
 	case len(parameters) == 0:
-		storedSub, err := c.MSCalendar.CreateUserEventSubscription()
+		storedSub, err := c.MSCalendar.CreateMyEventSubscription()
 		if err != nil {
 			return "", err
 		}
@@ -26,21 +26,21 @@ func (c *Command) subscribe(parameters ...string) (string, error) {
 		return fmt.Sprintf("Subscriptions:%s", utils.JSONBlock(subs)), nil
 
 	case len(parameters) == 1 && parameters[0] == "show":
-		storedSub, err := c.MSCalendar.LoadUserEventSubscription()
+		storedSub, err := c.MSCalendar.LoadMyEventSubscription()
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprintf("Subscription:%s", utils.JSONBlock(storedSub)), nil
 
 	case len(parameters) == 1 && parameters[0] == "renew":
-		storedSub, err := c.MSCalendar.RenewUserEventSubscription()
+		storedSub, err := c.MSCalendar.RenewMyEventSubscription()
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprintf("Subscription %s renewed until %s", storedSub.Remote.ID, storedSub.Remote.ExpirationDateTime), nil
 
 	case len(parameters) == 1 && parameters[0] == "delete":
-		err := c.MSCalendar.DeleteUserEventSubscription()
+		err := c.MSCalendar.DeleteMyEventSubscription()
 		if err != nil {
 			return "", err
 		}

@@ -85,7 +85,7 @@ mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen
 	mockgen -destination server/mscalendar/mock_mscalendar/mock_mscalendar.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar MSCalendar
-	mockgen -destination server/mscalendar/mock_mscalendar/mock_plugin_api.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar PluginAPI
+	mockgen -destination server/mscalendar/mock_plugin_api/mock_plugin_api.go -package mock_plugin_api github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar PluginAPI
 	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Remote
 	mockgen -destination server/remote/mock_remote/mock_client.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Client
 	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Poster
@@ -100,6 +100,7 @@ endif
 clean_mock:
 ifneq ($(HAS_SERVER),)
 	rm -rf ./server/mscalendar/mock_mscalendar
+	rm -rf ./server/mscalendar/mock_plugin_api
 	rm -rf ./server/remote/mock_remote
 	rm -rf ./server/utils/bot/mock_bot
 	rm -rf ./server/utils/plugin_api/mock_plugin_api

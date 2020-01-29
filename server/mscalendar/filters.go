@@ -15,16 +15,24 @@ func (mscalendar *mscalendar) Filter(filters ...filterf) error {
 	return nil
 }
 
-func withUser(mscalendar *mscalendar) error {
-	if mscalendar.user != nil {
+func withActingUserExpanded(mscalendar *mscalendar) error {
+	return mscalendar.ExpandUser(mscalendar.actingUser)
+}
+
+func withUserExpanded(user *User) func(mscalendar *mscalendar) error {
+	return func(mscalendar *mscalendar) error {
+		return mscalendar.ExpandUser(user)
+	}
+}
+
+func withClient(mscalendar *mscalendar) error {
+	if mscalendar.client != nil {
 		return nil
 	}
-
-	user, err := mscalendar.UserStore.LoadUser(mscalendar.mattermostUserID)
+	client, err := mscalendar.MakeClient()
 	if err != nil {
 		return err
 	}
-
-	mscalendar.user = user
+	mscalendar.client = client
 	return nil
 }

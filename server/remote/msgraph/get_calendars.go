@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
-func (c *client) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
+func (c *client) GetCalendars(userID string) ([]*remote.Calendar, error) {
 	var v struct {
 		Value []*remote.Calendar `json:"value"`
 	}

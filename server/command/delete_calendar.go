@@ -5,7 +5,7 @@ func (c *Command) deleteCalendar(parameters ...string) (string, error) {
 		return "Please provide the ID of only one calendar ", nil
 	}
 
-	err := c.MSCalendar.DeleteCalendar(parameters[0])
+	err := c.MSCalendar.DeleteCalendar(c.user(), parameters[0])
 	if err != nil {
 		return "", err
 	}

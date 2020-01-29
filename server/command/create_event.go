@@ -49,7 +49,7 @@ func (c *Command) createEvent(parameters ...string) (string, error) {
 		return "", err
 	}
 
-	calEvent, err := c.MSCalendar.CreateEvent(event, mattermostUserIDs)
+	calEvent, err := c.MSCalendar.CreateEvent(c.user(), event, mattermostUserIDs)
 	if err != nil {
 		return "", err
 	}

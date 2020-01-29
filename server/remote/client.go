@@ -9,23 +9,23 @@ import (
 )
 
 type Client interface {
-	AcceptUserEvent(userID, eventID string) error
-	CallJSON(method, path string, in, out interface{}) (responseData []byte, err error)
+	AcceptEvent(userID, eventID string) error
 	CallFormPost(method, path string, in url.Values, out interface{}) (responseData []byte, err error)
-	CreateSubscription(notificationURL string) (*Subscription, error)
-	DeclineUserEvent(userID, eventID string) error
+	CallJSON(method, path string, in, out interface{}) (responseData []byte, err error)
+	CreateCalendar(userID string, calendar *Calendar) (*Calendar, error)
+	CreateEvent(userID string, calendarEvent *Event) (*Event, error)
+	CreateMySubscription(notificationURL string) (*Subscription, error)
+	DeclineEvent(userID, eventID string) error
+	DeleteCalendar(userID, calendarID string) error
 	DeleteSubscription(subscriptionID string) error
-	CreateCalendar(calendar *Calendar) (*Calendar, error)
-	FindMeetingTimes(meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
-	CreateEvent(calendarEvent *Event) (*Event, error)
-	DeleteCalendar(calendarID string) error
+	FindMeetingTimes(userID string, meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
-	GetUserCalendars(userID string) ([]*Calendar, error)
-	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
-	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
-	GetUserEvent(userID, eventID string) (*Event, error)
+	GetSchedule(userID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
+	GetCalendars(userID string) ([]*Calendar, error)
+	GetDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
+	GetEvent(userID, eventID string) (*Event, error)
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
-	TentativelyAcceptUserEvent(userID, eventID string) error
+	TentativelyAcceptEvent(userID, eventID string) error
 }

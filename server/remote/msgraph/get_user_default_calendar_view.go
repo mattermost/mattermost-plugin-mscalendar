@@ -11,7 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-func (c *client) GetUserDefaultCalendarView(userID string, start, end time.Time) ([]*remote.Event, error) {
+func (c *client) GetDefaultCalendarView(userID string, start, end time.Time) ([]*remote.Event, error) {
 	q := url.Values{}
 	q.Add("StartDateTime", start.Format(time.RFC3339))
 	q.Add("EndDateTime", end.Format(time.RFC3339))

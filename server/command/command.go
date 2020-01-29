@@ -109,3 +109,7 @@ func (c *Command) isValid() (subcommand string, parameters []string, err error) 
 
 	return subcommand, parameters, nil
 }
+
+func (c *Command) user() *mscalendar.User {
+	return mscalendar.NewUser(c.Args.UserId)
+}

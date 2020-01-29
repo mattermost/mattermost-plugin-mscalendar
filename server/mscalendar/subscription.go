@@ -12,20 +12,23 @@ import (
 )
 
 type Subscriptions interface {
-	CreateUserEventSubscription() (*store.Subscription, error)
-	RenewUserEventSubscription() (*store.Subscription, error)
+	CreateMyEventSubscription() (*store.Subscription, error)
+	RenewMyEventSubscription() (*store.Subscription, error)
 	DeleteOrphanedSubscription(ID string) error
-	DeleteUserEventSubscription() error
+	DeleteMyEventSubscription() error
 	ListRemoteSubscriptions() ([]*remote.Subscription, error)
-	LoadUserEventSubscription() (*store.Subscription, error)
+	LoadMyEventSubscription() (*store.Subscription, error)
 }
 
-func (mscalendar *mscalendar) CreateUserEventSubscription() (*store.Subscription, error) {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) CreateMyEventSubscription() (*store.Subscription, error) {
+	err := mscalendar.Filter(
+		withClient,
+	)
 	if err != nil {
 		return nil, err
 	}
-	sub, err := client.CreateSubscription(
+
+	sub, err := mscalendar.client.CreateMySubscription(
 		mscalendar.Config.PluginURL + config.FullPathEventNotification)
 	if err != nil {
 		return nil, err
@@ -33,10 +36,10 @@ func (mscalendar *mscalendar) CreateUserEventSubscription() (*store.Subscription
 
 	storedSub := &store.Subscription{
 		Remote:              sub,
-		MattermostCreatorID: mscalendar.mattermostUserID,
+		MattermostCreatorID: mscalendar.actingUser.MattermostUserID,
 		PluginVersion:       mscalendar.Config.PluginVersion,
 	}
-	err = mscalendar.SubscriptionStore.StoreUserSubscription(mscalendar.user, storedSub)
+	err = mscalendar.SubscriptionStore.StoreUserSubscription(mscalendar.actingUser.User, storedSub)
 	if err != nil {
 		return nil, err
 	}
@@ -44,13 +47,15 @@ func (mscalendar *mscalendar) CreateUserEventSubscription() (*store.Subscription
 	return storedSub, nil
 }
 
-func (mscalendar *mscalendar) LoadUserEventSubscription() (*store.Subscription, error) {
-	err := mscalendar.Filter(withUser)
+func (mscalendar *mscalendar) LoadMyEventSubscription() (*store.Subscription, error) {
+	err := mscalendar.Filter(
+		withActingUserExpanded,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	storedSub, err := mscalendar.SubscriptionStore.LoadSubscription(mscalendar.user.Settings.EventSubscriptionID)
+	storedSub, err := mscalendar.SubscriptionStore.LoadSubscription(mscalendar.actingUser.Settings.EventSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,50 +63,58 @@ func (mscalendar *mscalendar) LoadUserEventSubscription() (*store.Subscription, 
 }
 
 func (mscalendar *mscalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
-	client, err := mscalendar.MakeClient()
+	err := mscalendar.Filter(
+		withClient,
+	)
 	if err != nil {
 		return nil, err
 	}
-	subs, err := client.ListSubscriptions()
+
+	subs, err := mscalendar.client.ListSubscriptions()
 	if err != nil {
 		return nil, err
 	}
 	return subs, nil
 }
 
-func (mscalendar *mscalendar) RenewUserEventSubscription() (*store.Subscription, error) {
-	client, err := mscalendar.MakeClient()
+func (mscalendar *mscalendar) RenewMyEventSubscription() (*store.Subscription, error) {
+	err := mscalendar.Filter(
+		withClient,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	subscriptionID := mscalendar.user.Settings.EventSubscriptionID
-	renewed, err := client.RenewSubscription(subscriptionID)
+	subscriptionID := mscalendar.actingUser.Settings.EventSubscriptionID
+	renewed, err := mscalendar.client.RenewSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	storedSub, err := mscalendar.SubscriptionStore.LoadSubscription(mscalendar.user.Settings.EventSubscriptionID)
+	storedSub, err := mscalendar.SubscriptionStore.LoadSubscription(mscalendar.actingUser.Settings.EventSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
 	storedSub.Remote = renewed
 
-	err = mscalendar.SubscriptionStore.StoreUserSubscription(mscalendar.user, storedSub)
+	err = mscalendar.SubscriptionStore.StoreUserSubscription(mscalendar.actingUser.User, storedSub)
 	if err != nil {
 		return nil, err
 	}
 	return storedSub, err
 }
 
-func (mscalendar *mscalendar) DeleteUserEventSubscription() error {
-	err := mscalendar.Filter(withUser)
+func (mscalendar *mscalendar) DeleteMyEventSubscription() error {
+	err := mscalendar.Filter(
+		withActingUserExpanded,
+	)
 	if err != nil {
 		return err
 	}
-	subscriptionID := mscalendar.user.Settings.EventSubscriptionID
 
-	err = mscalendar.SubscriptionStore.DeleteUserSubscription(mscalendar.user, subscriptionID)
+	subscriptionID := mscalendar.actingUser.Settings.EventSubscriptionID
+
+	err = mscalendar.SubscriptionStore.DeleteUserSubscription(mscalendar.actingUser.User, subscriptionID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 	}
@@ -114,11 +127,13 @@ func (mscalendar *mscalendar) DeleteUserEventSubscription() error {
 }
 
 func (mscalendar *mscalendar) DeleteOrphanedSubscription(subscriptionID string) error {
-	client, err := mscalendar.MakeClient()
+	err := mscalendar.Filter(
+		withClient,
+	)
 	if err != nil {
 		return err
 	}
-	err = client.DeleteSubscription(subscriptionID)
+	err = mscalendar.client.DeleteSubscription(subscriptionID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 	}
