@@ -1,0 +1,39 @@
+{
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('fb10ac13-e441-4611-8431-8ee3b6403673')/mailboxSettings",
+    "archiveFolder": "AQMkADcwOTc5YzBkLWE1MmUtNDNiOC05YzY4LWM4ZWUANGI0MWY4M2QALgAAAycdUe7P5u9JvHThhuf1p4gBABTAogFh51ZMnhqwU8Ndj-EAAAIBTQAAAA==",
+    "timeZone": "Pacific Standard Time",
+    "dateFormat": "",
+    "timeFormat": "",
+    "automaticRepliesSetting": {
+        "status": "disabled",
+        "externalAudience": "all",
+        "internalReplyMessage": "",
+        "externalReplyMessage": "",
+        "scheduledStartDateTime": {
+            "dateTime": "2020-01-23T16:00:00.0000000",
+            "timeZone": "UTC"
+        },
+        "scheduledEndDateTime": {
+            "dateTime": "2020-01-24T16:00:00.0000000",
+            "timeZone": "UTC"
+        }
+    },
+    "language": {
+        "locale": "en-US",
+        "displayName": "English (United States)"
+    },
+    "workingHours": {
+        "daysOfWeek": [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday"
+        ],
+        "startTime": "08:00:00.0000000",
+        "endTime": "17:00:00.0000000",
+        "timeZone": {
+            "name": "Pacific Standard Time"
+        }
+    }
+}

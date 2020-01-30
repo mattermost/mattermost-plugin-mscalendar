@@ -25,6 +25,7 @@ type Client interface {
 	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
 	GetUserEvent(userID, eventID string) (*Event, error)
+	GetUserMailboxSettings(remoteUserID string) (*MailboxSettings, error)
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
 	TentativelyAcceptUserEvent(userID, eventID string) error

@@ -12,6 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api"
+	"github.com/pkg/errors"
 )
 
 type OAuth2 interface {
@@ -35,6 +36,7 @@ type Calendar interface {
 	DeleteCalendar(calendarID string) error
 	FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
 	GetUserCalendars(userID string) ([]*remote.Calendar, error)
+	GetUserTimezone(mattermostUserID string) (string, error)
 }
 
 type Event interface {
@@ -61,6 +63,7 @@ type API interface {
 	Event
 	OAuth2
 	Subscriptions
+	bot.Logger
 }
 
 // Dependencies contains all API dependencies
@@ -69,7 +72,7 @@ type Dependencies struct {
 	OAuth2StateStore  store.OAuth2StateStore
 	SubscriptionStore store.SubscriptionStore
 	EventStore        store.EventStore
-	Logger            bot.Logger
+	bot.Logger
 	Poster            bot.Poster
 	Remote            remote.Remote
 	IsAuthorizedAdmin func(userId string) (bool, error)
@@ -126,7 +129,7 @@ func withUser(api *api) error {
 
 	user, err := api.UserStore.LoadUser(api.mattermostUserID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "User not connected")
 	}
 
 	api.user = user
