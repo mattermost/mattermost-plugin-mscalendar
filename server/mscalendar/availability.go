@@ -27,7 +27,7 @@ func (mscalendar *mscalendar) SyncStatusForSingleUser(mattermostUserID string) (
 }
 
 func (mscalendar *mscalendar) SyncStatusForAllUsers() (string, error) {
-	userIndex, err := mscalendar.UserStore.LoadUserIndex()
+	userIndex, err := mscalendar.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil
@@ -40,7 +40,7 @@ func (mscalendar *mscalendar) SyncStatusForAllUsers() (string, error) {
 }
 
 func (mscalendar *mscalendar) syncStatusForUsers(mattermostUserIDs []string) (string, error) {
-	fullUserIndex, err := mscalendar.UserStore.LoadUserIndex()
+	fullUserIndex, err := mscalendar.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil

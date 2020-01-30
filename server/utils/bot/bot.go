@@ -15,30 +15,40 @@ type Bot interface {
 	Logger
 	Admin
 
+	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(BotConfig) Bot
-	UserID() string
+	MattermostUserID() string
 }
 
 type bot struct {
 	BotConfig
 	pluginAPI        plugin.API
+	pluginHelpers    plugin.Helpers
 	mattermostUserID string
 	displayName      string
 	logContext       LogContext
 }
 
-func Ensure(api plugin.API, helpers plugin.Helpers, stored *model.Bot, iconPath string) (Bot, string, error) {
-	botUserID, err := helpers.EnsureBot(stored, plugin.ProfileImagePath(iconPath))
-	if err != nil {
-		return nil, "", errors.Wrap(err, "failed to ensure bot account")
+func New(api plugin.API, helpers plugin.Helpers) Bot {
+	return &bot{
+		pluginAPI:     api,
+		pluginHelpers: helpers,
+	}
+}
+
+func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
+	if bot.mattermostUserID != "" {
+		// Already done
+		return nil
 	}
 
-	bot := &bot{
-		pluginAPI:        api,
-		mattermostUserID: botUserID,
-		displayName:      stored.DisplayName,
+	botUserID, err := bot.pluginHelpers.EnsureBot(stored, plugin.ProfileImagePath(iconPath))
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure bot account")
 	}
-	return bot, botUserID, nil
+	bot.mattermostUserID = botUserID
+	bot.displayName = stored.DisplayName
+	return nil
 }
 
 func (bot *bot) WithConfig(conf BotConfig) Bot {
@@ -47,7 +57,7 @@ func (bot *bot) WithConfig(conf BotConfig) Bot {
 	return &newbot
 }
 
-func (bot *bot) UserID() string {
+func (bot *bot) MattermostUserID() string {
 	return bot.mattermostUserID
 }
 

@@ -112,11 +112,11 @@ func (processor *notificationProcessor) work() {
 }
 
 func (processor *notificationProcessor) processNotification(n *remote.Notification) error {
-	sub, err := processor.SubscriptionStore.LoadSubscription(n.SubscriptionID)
+	sub, err := processor.Store.LoadSubscription(n.SubscriptionID)
 	if err != nil {
 		return err
 	}
-	creator, err := processor.Env.UserStore.LoadUser(sub.MattermostCreatorID)
+	creator, err := processor.Store.LoadUser(sub.MattermostCreatorID)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 			MattermostCreatorID: creator.MattermostUserID,
 			PluginVersion:       processor.Config.PluginVersion,
 		}
-		err = processor.SubscriptionStore.StoreUserSubscription(creator, storedSub)
+		err = processor.Store.StoreUserSubscription(creator, storedSub)
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	}
 
 	var sa *model.SlackAttachment
-	prior, err := processor.EventStore.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
+	prior, err := processor.Store.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
 	if err != nil && err != store.ErrNotFound {
 		return err
 	}
@@ -192,7 +192,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	}
 
 	prior.Remote = n.Event
-	err = processor.EventStore.StoreUserEvent(creator.MattermostUserID, prior)
+	err = processor.Store.StoreUserEvent(creator.MattermostUserID, prior)
 	if err != nil {
 		return err
 	}

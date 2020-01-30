@@ -32,7 +32,9 @@ import (
 
 type Plugin struct {
 	plugin.MattermostPlugin
+
 	envLock *sync.RWMutex
+	bot     bot.Bot
 	mscalendar.Env
 	statusSyncJob         *mscalendar.StatusSyncJob
 	notificationProcessor mscalendar.NotificationProcessor
@@ -49,6 +51,19 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
+	p.Env.Dependencies.PluginAPI = pluginapi.New(p.API)
+	p.bot = bot.New(p.API, p.Helpers)
+	err := p.bot.Ensure(
+		&model.Bot{
+			Username:    config.BotUserName,
+			DisplayName: config.BotDisplayName,
+			Description: config.BotDescription,
+		},
+		"assets/profile.png")
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure bot account")
+	}
+
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
 		return errors.Wrap(err, "couldn't get bundle path")
@@ -87,35 +102,19 @@ func (p *Plugin) OnConfigurationChange() error {
 	pluginURLPath := "/plugins/" + env.Config.PluginID
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
-	bot, botUserID, err := bot.Ensure(p.API, p.Helpers,
-		&model.Bot{
-			Username:    config.BotUserName,
-			DisplayName: config.BotDisplayName,
-			Description: config.BotDescription,
-		},
-		"assets/profile.png")
-	if err != nil {
-		return errors.Wrap(err, "failed to ensure bot account")
-	}
-
 	p.updateEnv(func(env *mscalendar.Env) {
 		env.StoredConfig = stored
 		env.Config.MattermostSiteURL = *mattermostSiteURL
 		env.Config.MattermostSiteHostname = mattermostURL.Hostname()
 		env.Config.PluginURL = pluginURL
 		env.Config.PluginURLPath = pluginURLPath
-		env.Config.BotUserID = botUserID
+		env.Dependencies.Remote = remote.Makers[msgraph.Kind](env.Config, env.Logger)
 
-		store := store.NewPluginStore(p.API, bot)
-		env.Dependencies.Logger = bot
-		env.Dependencies.Poster = bot
-		env.Dependencies.UserStore = store
-		env.Dependencies.OAuth2StateStore = store
-		env.Dependencies.SubscriptionStore = store
-		env.Dependencies.EventStore = store
-		env.Dependencies.Remote = remote.Makers[msgraph.Kind](env.Config, bot)
-		env.Dependencies.PluginAPI = pluginapi.New(p.API)
-
+		p.bot = p.bot.WithConfig(stored.BotConfig)
+		p.Env.Config.BotUserID = p.bot.MattermostUserID()
+		p.Env.Dependencies.Logger = p.bot
+		p.Env.Dependencies.Poster = p.bot
+		p.Env.Dependencies.Store = store.NewPluginStore(p.API, p.bot)
 		if p.notificationProcessor == nil {
 			p.notificationProcessor = mscalendar.NewNotificationProcessor(*env)
 		} else {
@@ -123,7 +122,7 @@ func (p *Plugin) OnConfigurationChange() error {
 		}
 
 		p.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(p.httpHandler, mscalendar.New(*env, botUserID))
+		oauth2connect.Init(p.httpHandler, mscalendar.NewOAuth2App(*env))
 		api.Init(p.httpHandler, *env, p.notificationProcessor)
 	})
 

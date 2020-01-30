@@ -50,20 +50,6 @@ func (mr *MockMSCalendarMockRecorder) AcceptEvent(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptEvent", reflect.TypeOf((*MockMSCalendar)(nil).AcceptEvent), arg0, arg1)
 }
 
-// CompleteOAuth2 mocks base method
-func (m *MockMSCalendar) CompleteOAuth2(arg0, arg1, arg2 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CompleteOAuth2", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CompleteOAuth2 indicates an expected call of CompleteOAuth2
-func (mr *MockMSCalendarMockRecorder) CompleteOAuth2(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteOAuth2", reflect.TypeOf((*MockMSCalendar)(nil).CompleteOAuth2), arg0, arg1, arg2)
-}
-
 // CreateCalendar mocks base method
 func (m *MockMSCalendar) CreateCalendar(arg0 *mscalendar.User, arg1 *remote.Calendar) (*remote.Calendar, error) {
 	m.ctrl.T.Helper()
@@ -222,21 +208,6 @@ func (m *MockMSCalendar) GetUserAvailabilities(arg0 string, arg1 []string) ([]*r
 func (mr *MockMSCalendarMockRecorder) GetUserAvailabilities(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAvailabilities", reflect.TypeOf((*MockMSCalendar)(nil).GetUserAvailabilities), arg0, arg1)
-}
-
-// InitOAuth2 mocks base method
-func (m *MockMSCalendar) InitOAuth2(arg0 string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitOAuth2", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// InitOAuth2 indicates an expected call of InitOAuth2
-func (mr *MockMSCalendarMockRecorder) InitOAuth2(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitOAuth2", reflect.TypeOf((*MockMSCalendar)(nil).InitOAuth2), arg0)
 }
 
 // ListRemoteSubscriptions mocks base method

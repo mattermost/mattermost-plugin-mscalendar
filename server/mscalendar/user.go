@@ -38,7 +38,7 @@ func (mscalendar *mscalendar) GetActingUser() *User {
 
 func (mscalendar *mscalendar) ExpandUser(user *User) error {
 	if user.User == nil {
-		storedUser, err := mscalendar.UserStore.LoadUser(user.MattermostUserID)
+		storedUser, err := mscalendar.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
 			return err
 		}

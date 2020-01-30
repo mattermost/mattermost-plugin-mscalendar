@@ -91,10 +91,7 @@ ifneq ($(HAS_SERVER),)
 	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Poster
 	mockgen -destination server/utils/bot/mock_bot/mock_admin.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Admin
 	mockgen -destination server/utils/bot/mock_bot/mock_logger.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Logger
-	mockgen -destination server/store/mock_store/mock_event_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store EventStore
-	mockgen -destination server/store/mock_store/mock_oauth2_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store OAuth2StateStore
-	mockgen -destination server/store/mock_store/mock_subscription_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store SubscriptionStore
-	mockgen -destination server/store/mock_store/mock_user_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store UserStore
+	mockgen -destination server/store/mock_store/mock_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store Store
 endif
 
 clean_mock:

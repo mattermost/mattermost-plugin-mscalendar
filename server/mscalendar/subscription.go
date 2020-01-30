@@ -39,7 +39,7 @@ func (mscalendar *mscalendar) CreateMyEventSubscription() (*store.Subscription, 
 		MattermostCreatorID: mscalendar.actingUser.MattermostUserID,
 		PluginVersion:       mscalendar.Config.PluginVersion,
 	}
-	err = mscalendar.SubscriptionStore.StoreUserSubscription(mscalendar.actingUser.User, storedSub)
+	err = mscalendar.Store.StoreUserSubscription(mscalendar.actingUser.User, storedSub)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (mscalendar *mscalendar) LoadMyEventSubscription() (*store.Subscription, er
 		return nil, err
 	}
 
-	storedSub, err := mscalendar.SubscriptionStore.LoadSubscription(mscalendar.actingUser.Settings.EventSubscriptionID)
+	storedSub, err := mscalendar.Store.LoadSubscription(mscalendar.actingUser.Settings.EventSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,13 +91,13 @@ func (mscalendar *mscalendar) RenewMyEventSubscription() (*store.Subscription, e
 		return nil, err
 	}
 
-	storedSub, err := mscalendar.SubscriptionStore.LoadSubscription(mscalendar.actingUser.Settings.EventSubscriptionID)
+	storedSub, err := mscalendar.Store.LoadSubscription(mscalendar.actingUser.Settings.EventSubscriptionID)
 	if err != nil {
 		return nil, err
 	}
 	storedSub.Remote = renewed
 
-	err = mscalendar.SubscriptionStore.StoreUserSubscription(mscalendar.actingUser.User, storedSub)
+	err = mscalendar.Store.StoreUserSubscription(mscalendar.actingUser.User, storedSub)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (mscalendar *mscalendar) DeleteMyEventSubscription() error {
 
 	subscriptionID := mscalendar.actingUser.Settings.EventSubscriptionID
 
-	err = mscalendar.SubscriptionStore.DeleteUserSubscription(mscalendar.actingUser.User, subscriptionID)
+	err = mscalendar.Store.DeleteUserSubscription(mscalendar.actingUser.User, subscriptionID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
 const (
@@ -33,30 +34,31 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	statusOKGraphAPIResponder()
 
-	mscalendar, env := newOAuth2MSCalendar(ctrl)
-	ss := env.Dependencies.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
-	us := env.Dependencies.UserStore.(*mock_store.MockUserStore)
+	app, env := newOAuth2TestApp(ctrl)
+	ss := env.Dependencies.Store.(*mock_store.MockStore)
 	poster := env.Dependencies.Poster.(*mock_bot.MockPoster)
 
 	state := ""
 	gomock.InOrder(
-		ss.EXPECT().StoreOAuth2State(gomock.Any()).DoAndReturn(func(s string) error {
-			if !strings.HasSuffix(s, "_"+fakeID) {
-				return errors.New("invalid state " + s)
-			}
-			state = s
-			return nil
-		}).Times(1),
+		ss.EXPECT().StoreOAuth2State(gomock.Any()).DoAndReturn(
+			func(s string) error {
+				if !strings.HasSuffix(s, "_"+fakeID) {
+					return errors.New("invalid state " + s)
+				}
+				state = s
+				return nil
+			},
+		).Times(1),
 	)
 
-	redirectURL, err := mscalendar.InitOAuth2(fakeID)
+	redirectURL, err := app.InitOAuth2(fakeID)
 	require.NoError(t, err)
 	require.NotEmpty(t, redirectURL)
 	require.NotEmpty(t, state)
 
 	gomock.InOrder(
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
-		us.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
+		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		poster.EXPECT().DM(
 			gomock.Eq(fakeID),
 			gomock.Eq(WelcomeMessage),
@@ -64,7 +66,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 		).Return(nil).Times(1),
 	)
 
-	err = mscalendar.CompleteOAuth2(fakeID, fakeCode, state)
+	err = app.CompleteOAuth2(fakeID, fakeCode, state)
 	require.NoError(t, err)
 }
 
@@ -84,7 +86,7 @@ func TestInitOAuth2(t *testing.T) {
 			name:             "unable to store user state",
 			mattermostUserID: fakeID,
 			setup: func(d *Dependencies) {
-				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
+				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(errors.New("unable to store state")).Times(1)
 			},
 			expectError: true,
@@ -93,7 +95,7 @@ func TestInitOAuth2(t *testing.T) {
 			name:             "successful redirect",
 			mattermostUserID: fakeID,
 			setup: func(d *Dependencies) {
-				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
+				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
 			},
 			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+Mail.Read+Mail.Send&state=kbb9cs43z3fxxpc_fake%40mattermost.com",
@@ -102,11 +104,11 @@ func TestInitOAuth2(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			mscalendar, env := newOAuth2MSCalendar(ctrl)
+			app, env := newOAuth2TestApp(ctrl)
 			if tc.setup != nil {
 				tc.setup(env.Dependencies)
 			}
-			gotURL, err := mscalendar.InitOAuth2(tc.mattermostUserID)
+			gotURL, err := app.InitOAuth2(tc.mattermostUserID)
 			if tc.expectError {
 				require.Error(t, err)
 				return
@@ -155,7 +157,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			code:             fakeCode,
 			state:            "user_nomatch@mattermost.com",
 			setup: func(d *Dependencies) {
-				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
+				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_nomatch@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "not authorized, user ID mismatch",
@@ -167,7 +169,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			state:             "user_" + fakeID,
 			registerResponder: badTokenExchangeResponder,
 			setup: func(d *Dependencies) {
-				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
+				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "cannot fetch token: 400",
@@ -179,7 +181,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			state:             "user_fake@mattermost.com",
 			registerResponder: unauthorizedTokenGraphAPIResponder,
 			setup: func(d *Dependencies) {
-				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
+				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "Access token is empty",
@@ -191,9 +193,8 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			state:             "user_fake@mattermost.com",
 			registerResponder: statusOKGraphAPIResponder,
 			setup: func(d *Dependencies) {
-				ss := d.OAuth2StateStore.(*mock_store.MockOAuth2StateStore)
-				us := d.UserStore.(*mock_store.MockUserStore)
-				us.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
+				ss := d.Store.(*mock_store.MockStore)
+				ss.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "forced kvstore error",
@@ -206,12 +207,12 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				tc.registerResponder()
 			}
 
-			mscalendar, env := newOAuth2MSCalendar(ctrl)
+			app, env := newOAuth2TestApp(ctrl)
 			if tc.setup != nil {
 				tc.setup(env.Dependencies)
 			}
 
-			err := mscalendar.CompleteOAuth2(tc.mattermostUserID, tc.code, tc.state)
+			err := app.CompleteOAuth2(tc.mattermostUserID, tc.code, tc.state)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), tc.expectError)
 		})
@@ -308,7 +309,7 @@ func newHTTPRequest(mattermostUserID, rawQuery string) *http.Request {
 	return r
 }
 
-func newOAuth2MSCalendar(ctrl *gomock.Controller) (MSCalendar, Env) {
+func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 	conf := &config.Config{
 		StoredConfig: config.StoredConfig{
 			OAuth2Authority:    "common",
@@ -321,15 +322,14 @@ func newOAuth2MSCalendar(ctrl *gomock.Controller) (MSCalendar, Env) {
 	env := Env{
 		Config: conf,
 		Dependencies: &Dependencies{
-			UserStore:        mock_store.NewMockUserStore(ctrl),
-			OAuth2StateStore: mock_store.NewMockOAuth2StateStore(ctrl),
-			Logger:           &bot.NilLogger{},
-			Poster:           mock_bot.NewMockPoster(ctrl),
-			Remote:           remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
+			Store:  mock_store.NewMockStore(ctrl),
+			Logger: &bot.NilLogger{},
+			Poster: mock_bot.NewMockPoster(ctrl),
+			Remote: remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
 		},
 	}
 
-	return New(env, ""), env
+	return NewOAuth2App(env), env
 }
 
 var stateRegexp = regexp.MustCompile(`^(?P<before>.*)&+state=\w+(?P<after>.*)$`)

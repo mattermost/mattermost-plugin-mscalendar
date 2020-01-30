@@ -10,16 +10,23 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
 type MSCalendar interface {
 	Availability
 	Calendar
 	EventResponder
-	oauth2connect.App
 	Subscriptions
 	Users
+}
+
+// Dependencies contains all API dependencies
+type Dependencies struct {
+	Logger    bot.Logger
+	PluginAPI PluginAPI
+	Poster    bot.Poster
+	Remote    remote.Remote
+	Store     store.Store
 }
 
 type PluginAPI interface {
@@ -31,21 +38,9 @@ type PluginAPI interface {
 	UpdateMattermostUserStatus(userID, status string) (*model.Status, error)
 }
 
-// Dependencies contains all API dependencies
-type Dependencies struct {
-	EventStore        store.EventStore
-	Logger            bot.Logger
-	OAuth2StateStore  store.OAuth2StateStore
-	PluginAPI         PluginAPI
-	Poster            bot.Poster
-	Remote            remote.Remote
-	SubscriptionStore store.SubscriptionStore
-	UserStore         store.UserStore
-}
-
 type Env struct {
-	*Dependencies
 	*config.Config
+	*Dependencies
 }
 
 type mscalendar struct {

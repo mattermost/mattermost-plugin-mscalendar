@@ -52,7 +52,7 @@ func (mscalendar *mscalendar) CreateEvent(user *User, event *remote.Event, matte
 	// invite non-mapped Mattermost
 	for id := range mattermostUserIDs {
 		userID := mattermostUserIDs[id]
-		_, err := mscalendar.UserStore.LoadUser(userID)
+		_, err := mscalendar.Store.LoadUser(userID)
 		if err != nil {
 			if err.Error() == "not found" {
 				err = mscalendar.Poster.DM(userID, "You have been invited to an MS office calendar event but have not linked your account.  Feel free to join us by connecting your www.office.com using `/msoffice connect`")

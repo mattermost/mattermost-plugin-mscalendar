@@ -9,15 +9,16 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 func TestSyncStatusForAllUsers(t *testing.T) {
@@ -60,21 +61,9 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			userStoreCtrl := gomock.NewController(t)
-			defer userStoreCtrl.Finish()
-			userStore := mock_store.NewMockUserStore(userStoreCtrl)
-
-			oauthStoreCtrl := gomock.NewController(t)
-			defer oauthStoreCtrl.Finish()
-			oauthStore := mock_store.NewMockOAuth2StateStore(oauthStoreCtrl)
-
-			subsStoreCtrl := gomock.NewController(t)
-			defer subsStoreCtrl.Finish()
-			subsStore := mock_store.NewMockSubscriptionStore(subsStoreCtrl)
-
-			eventStoreCtrl := gomock.NewController(t)
-			defer eventStoreCtrl.Finish()
-			eventStore := mock_store.NewMockEventStore(eventStoreCtrl)
+			storeCtrl := gomock.NewController(t)
+			defer storeCtrl.Finish()
+			s := mock_store.NewMockStore(storeCtrl)
 
 			conf := &config.Config{}
 
@@ -99,18 +88,15 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
-					UserStore:         userStore,
-					OAuth2StateStore:  oauthStore,
-					SubscriptionStore: subsStore,
-					EventStore:        eventStore,
-					Logger:            logger,
-					Poster:            poster,
-					Remote:            mockRemote,
-					PluginAPI:         mockPluginAPI,
+					Store:     s,
+					Logger:    logger,
+					Poster:    poster,
+					Remote:    mockRemote,
+					PluginAPI: mockPluginAPI,
 				},
 			}
 
-			userStore.EXPECT().LoadUserIndex().Return(store.UserIndex{
+			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
 				&store.UserShort{
 					MattermostUserID: "some_mm_id",
 					RemoteID:         "some_remote_id",

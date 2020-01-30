@@ -3,8 +3,6 @@
 
 package mscalendar
 
-//TODO move this into OAuth2 package, consolidate dependencies into an interface, then ->utils/oauth2
-
 import (
 	"context"
 	"fmt"
@@ -16,6 +14,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
 const WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
@@ -23,10 +22,20 @@ Here is some info to prove we got you logged in
 - Name: %s
 `
 
-func (mscalendar *mscalendar) InitOAuth2(userID string) (url string, err error) {
-	conf := mscalendar.Remote.NewOAuth2Config()
+type oauth2App struct {
+	Env
+}
+
+func NewOAuth2App(env Env) oauth2connect.App {
+	return &oauth2App{
+		Env: env,
+	}
+}
+
+func (app *oauth2App) InitOAuth2(userID string) (url string, err error) {
+	conf := app.Remote.NewOAuth2Config()
 	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
-	err = mscalendar.OAuth2StateStore.StoreOAuth2State(state)
+	err = app.Store.StoreOAuth2State(state)
 	if err != nil {
 		return "", err
 	}
@@ -34,14 +43,14 @@ func (mscalendar *mscalendar) InitOAuth2(userID string) (url string, err error) 
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
 }
 
-func (mscalendar *mscalendar) CompleteOAuth2(authedUserID, code, state string) error {
+func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	if authedUserID == "" || code == "" || state == "" {
 		return errors.New("missing user, code or state")
 	}
 
-	oconf := mscalendar.Remote.NewOAuth2Config()
+	oconf := app.Remote.NewOAuth2Config()
 
-	err := mscalendar.OAuth2StateStore.VerifyOAuth2State(state)
+	err := app.Store.VerifyOAuth2State(state)
 	if err != nil {
 		return errors.WithMessage(err, "missing stored state")
 	}
@@ -57,25 +66,25 @@ func (mscalendar *mscalendar) CompleteOAuth2(authedUserID, code, state string) e
 		return err
 	}
 
-	client := mscalendar.Remote.MakeClient(ctx, tok)
+	client := app.Remote.MakeClient(ctx, tok)
 	me, err := client.GetMe()
 	if err != nil {
 		return err
 	}
 
 	u := &store.User{
-		PluginVersion:    mscalendar.Config.PluginVersion,
+		PluginVersion:    app.Config.PluginVersion,
 		MattermostUserID: mattermostUserID,
 		Remote:           me,
 		OAuth2Token:      tok,
 	}
 
-	err = mscalendar.UserStore.StoreUser(u)
+	err = app.Store.StoreUser(u)
 	if err != nil {
 		return err
 	}
 
-	mscalendar.Poster.DM(mattermostUserID, WelcomeMessage, me.DisplayName)
+	app.Poster.DM(mattermostUserID, WelcomeMessage, me.DisplayName)
 
 	return nil
 }
