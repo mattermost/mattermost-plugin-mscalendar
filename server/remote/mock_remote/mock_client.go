@@ -226,6 +226,21 @@ func (mr *MockClientMockRecorder) GetSchedule(arg0, arg1, arg2, arg3, arg4 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchedule", reflect.TypeOf((*MockClient)(nil).GetSchedule), arg0, arg1, arg2, arg3, arg4)
 }
 
+// GetSuperuserToken mocks base method
+func (m *MockClient) GetSuperuserToken() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSuperuserToken")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSuperuserToken indicates an expected call of GetSuperuserToken
+func (mr *MockClientMockRecorder) GetSuperuserToken() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSuperuserToken", reflect.TypeOf((*MockClient)(nil).GetSuperuserToken))
+}
+
 // GetUserCalendars mocks base method
 func (m *MockClient) GetUserCalendars(arg0 string) ([]*remote.Calendar, error) {
 	m.ctrl.T.Helper()

@@ -33,6 +33,21 @@ func (m *MockPluginAPI) EXPECT() *MockPluginAPIMockRecorder {
 	return m.recorder
 }
 
+// GetUser mocks base method
+func (m *MockPluginAPI) GetUser(arg0 string) (*model.User, *model.AppError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUser", arg0)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(*model.AppError)
+	return ret0, ret1
+}
+
+// GetUser indicates an expected call of GetUser
+func (mr *MockPluginAPIMockRecorder) GetUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockPluginAPI)(nil).GetUser), arg0)
+}
+
 // GetUserStatus mocks base method
 func (m *MockPluginAPI) GetUserStatus(arg0 string) (*model.Status, *model.AppError) {
 	m.ctrl.T.Helper()

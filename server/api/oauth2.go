@@ -21,15 +21,25 @@ Here is some info to prove we got you logged in
 - Name: %s
 `
 
-func (api *api) InitOAuth2(userID string) (url string, err error) {
+func (api *api) InitOAuth2(mattermostUserID string) (url string, err error) {
+	remoteUser, err := api.GetRemoteUser(mattermostUserID)
+	if err == nil {
+		return "", errors.Errorf("User is already connected to %s", remoteUser.Mail)
+	}
+
 	conf := api.Remote.NewOAuth2Config()
-	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
+	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], mattermostUserID)
 	err = api.OAuth2StateStore.StoreOAuth2State(state)
 	if err != nil {
 		return "", err
 	}
 
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
+}
+
+func (api *api) InitOAuth2ForBot() (url string, err error) {
+	mattermostUserID := api.Config.BotUserID
+	return api.InitOAuth2(mattermostUserID)
 }
 
 func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
@@ -41,8 +51,15 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 	}
 
 	mattermostUserID := strings.Split(state, "_")[1]
+
 	if mattermostUserID != authedUserID {
-		return errors.New("not authorized, user ID mismatch")
+		if mattermostUserID != api.Config.BotUserID {
+			return errors.New("not authorized, user ID mismatch")
+		}
+		isAdmin, err := api.IsAuthorizedAdmin(authedUserID)
+		if err != nil || !isAdmin {
+			return errors.New("non-admin user attempting to set up bot account")
+		}
 	}
 
 	ctx := context.Background()
@@ -64,12 +81,28 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 		OAuth2Token:      tok,
 	}
 
+	uid, err := api.UserStore.LoadMattermostUserId(me.ID)
+	if err == nil {
+		user, userErr := api.GetMattermostUser(uid)
+		if userErr == nil {
+			api.Poster.DM(authedUserID, "Remote user %s is already mapped to a MM user. Please run `/mscalendar disconnect` with %s's account", me.Mail, user.Username)
+			return errors.Errorf("Remote user %s already connected to %s", me.Mail, user.Username)
+		} else {
+			// Orphaned connected account. Let it be overwritten by passing through here?
+			api.Poster.DM(authedUserID, "User '%s' is already mapped to a MM user, but the MM user could not be found.", me.Mail)
+		}
+	}
+
 	err = api.UserStore.StoreUser(u)
 	if err != nil {
 		return err
 	}
 
-	api.Poster.DM(mattermostUserID, WelcomeMessage, me.DisplayName)
+	if mattermostUserID == api.Config.BotUserID {
+		api.Poster.DM(authedUserID, "Bot user connected to account '%s'.", me.Mail)
+	} else {
+		api.Poster.DM(mattermostUserID, WelcomeMessage, me.DisplayName)
+	}
 
 	return nil
 }

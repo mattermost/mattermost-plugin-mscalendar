@@ -38,7 +38,8 @@ func NewHandler() *Handler {
 	actionRouter.HandleFunc(config.PathRespond, h.actionRespond).Methods("POST")
 
 	oauth2Router := h.Router.PathPrefix(config.PathOAuth2).Subrouter()
-	oauth2Router.HandleFunc("/connect", h.oauth2Connect).Methods("GET")
+	oauth2Router.HandleFunc(config.PathConnect, h.oauth2Connect).Methods("GET")
+	oauth2Router.HandleFunc(config.PathConnectBot, h.oauth2ConnectBot).Methods("GET")
 	oauth2Router.HandleFunc(config.PathComplete, h.oauth2Complete).Methods("GET")
 
 	h.Router.Handle("{anything:.*}", http.NotFoundHandler())

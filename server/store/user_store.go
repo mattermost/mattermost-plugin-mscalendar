@@ -57,7 +57,7 @@ func (s *pluginStore) LoadUser(mattermostUserId string) (*User, error) {
 }
 
 func (s *pluginStore) LoadMattermostUserId(remoteUserId string) (string, error) {
-	data, err := s.userKV.Load(remoteUserId)
+	data, err := s.mattermostUserIDKV.Load(remoteUserId)
 	if err != nil {
 		return "", err
 	}
@@ -133,6 +133,23 @@ func (s *pluginStore) DeleteUser(mattermostUserID string) error {
 	if err != nil {
 		return err
 	}
+
+	var userIndex []*UserShort
+	err = kvstore.LoadJSON(s.userIndexKV, "", &userIndex)
+	if err != nil {
+		return err
+	}
+	filtered := []*UserShort{}
+	for _, u := range userIndex {
+		if u.MattermostUserID != mattermostUserID {
+			filtered = append(filtered, u)
+		}
+	}
+	err = kvstore.StoreJSON(s.userIndexKV, "", &filtered)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

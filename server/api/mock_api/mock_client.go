@@ -47,3 +47,18 @@ func (mr *MockClientMockRecorder) MakeClient() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockClient)(nil).MakeClient))
 }
+
+// MakeSuperuserClient mocks base method
+func (m *MockClient) MakeSuperuserClient() (remote.Client, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MakeSuperuserClient")
+	ret0, _ := ret[0].(remote.Client)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MakeSuperuserClient indicates an expected call of MakeSuperuserClient
+func (mr *MockClientMockRecorder) MakeSuperuserClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeSuperuserClient", reflect.TypeOf((*MockClient)(nil).MakeSuperuserClient))
+}

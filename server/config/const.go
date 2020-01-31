@@ -13,6 +13,8 @@ const (
 	CommandTrigger  = "mscalendar"
 
 	PathOAuth2       = "/oauth2"
+	PathConnect      = "/connect"
+	PathConnectBot   = "/connect_bot"
 	PathComplete     = "/complete"
 	PathAPI          = "/api/v1"
 	PathPostAction   = "/action"

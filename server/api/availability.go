@@ -29,11 +29,24 @@ func (api *api) SyncStatusForAllUsers() (string, error) {
 		return "", err
 	}
 
-	mmIDs := userIndex.GetMattermostUserIDs()
+	index := userIndex.GetMattermostUserIDs()
+	mmIDs := []string{}
+	for _, id := range index {
+		if id != api.Config.BotUserID {
+			mmIDs = append(mmIDs, id)
+		}
+	}
+
 	return api.syncStatusForUsers(mmIDs)
 }
 
 func (api *api) syncStatusForUsers(mattermostUserIDs []string) (string, error) {
+	remoteUser, err := api.GetRemoteUser(api.mattermostUserID)
+	if err != nil {
+		return "", err
+	}
+	remoteUserID := remoteUser.ID
+
 	fullUserIndex, err := api.UserStore.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
@@ -60,7 +73,7 @@ func (api *api) syncStatusForUsers(mattermostUserIDs []string) (string, error) {
 		scheduleIDs = append(scheduleIDs, u.Email)
 	}
 
-	schedules, err := api.GetUserAvailabilities(filteredUsers[0].RemoteID, scheduleIDs)
+	schedules, err := api.GetUserAvailabilities(remoteUserID, scheduleIDs)
 	if err != nil {
 		return "", err
 	}
@@ -105,7 +118,10 @@ func (api *api) setUserStatuses(filteredUsers store.UserIndex, schedules []*remo
 }
 
 func (api *api) GetUserAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client := api.MakeSuperuserClient()
+	client, err := api.MakeSuperuserClient()
+	if err != nil {
+		return nil, err
+	}
 
 	start := remote.NewDateTime(time.Now().UTC(), "UTC")
 	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")

@@ -29,4 +29,5 @@ type Client interface {
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
 	TentativelyAcceptUserEvent(userID, eventID string) error
+	GetSuperuserToken() (string, error)
 }

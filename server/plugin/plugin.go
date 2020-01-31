@@ -180,6 +180,7 @@ func (p *Plugin) newAPIConfig() api.Config {
 			Poster:            bot,
 			Remote:            remote.Makers[msgraph.Kind](conf, bot),
 			PluginAPI:         p.API,
+			IsAuthorizedAdmin: p.IsAuthorizedAdmin,
 		},
 	}
 }
@@ -224,7 +225,7 @@ func (p *Plugin) POC_initUserStatusSyncJob() {
 	if enable && p.statusSyncJob == nil {
 		logger.Debugf("Enabling user status sync job")
 
-		job := api.NewStatusSyncJob(api.New(conf, ""))
+		job := api.NewStatusSyncJob(api.New(conf, conf.BotUserID))
 		p.statusSyncJob = job
 		go job.Start()
 	}

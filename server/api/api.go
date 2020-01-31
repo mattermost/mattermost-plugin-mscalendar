@@ -12,12 +12,14 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/plugin_api"
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 )
 
 type OAuth2 interface {
 	CompleteOAuth2(authedUserID, code, state string) error
 	InitOAuth2(userID string) (url string, err error)
+	InitOAuth2ForBot() (url string, err error)
 }
 
 type Subscriptions interface {
@@ -52,8 +54,17 @@ type Availability interface {
 	SyncStatusForAllUsers() (string, error)
 }
 
+type User interface {
+	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
+	GetRemoteUser(mattermostUserID string) (*remote.User, error)
+	DisconnectUser(mattermostUserID string) error
+	DisconnectBot() error
+	GetMattermostUser(mattermostUserID string) (*model.User, error)
+}
+
 type Client interface {
 	MakeClient() (remote.Client, error)
+	MakeSuperuserClient() (remote.Client, error)
 }
 
 type API interface {
@@ -62,6 +73,7 @@ type API interface {
 	Client
 	Event
 	OAuth2
+	User
 	Subscriptions
 	bot.Logger
 }
@@ -75,7 +87,7 @@ type Dependencies struct {
 	bot.Logger
 	Poster            bot.Poster
 	Remote            remote.Remote
-	IsAuthorizedAdmin func(userId string) (bool, error)
+	IsAuthorizedAdmin func(mattermostUserID string) (bool, error)
 	PluginAPI         plugin_api.PluginAPI
 }
 
@@ -108,8 +120,18 @@ func (api *api) MakeClient() (remote.Client, error) {
 	return api.Remote.MakeClient(context.Background(), api.user.OAuth2Token), nil
 }
 
-func (api *api) MakeSuperuserClient() remote.Client {
-	return api.Remote.MakeSuperuserClient(context.Background())
+func (api *api) MakeSuperuserClient() (remote.Client, error) {
+	client, err := api.MakeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := client.GetSuperuserToken()
+	if err != nil {
+		return nil, err
+	}
+
+	return api.Remote.MakeSuperuserClient(context.Background(), token), nil
 }
 
 func (api *api) Filter(filters ...filterf) error {

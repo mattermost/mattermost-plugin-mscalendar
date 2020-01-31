@@ -45,13 +45,17 @@ func (api *api) FindMeetingTimes(meetingParams *remote.FindMeetingTimesParameter
 	return client.FindMeetingTimes(meetingParams)
 }
 
-func (api *api) GetUserCalendars(userID string) ([]*remote.Calendar, error) {
+func (api *api) GetUserCalendars(mattermostUserID string) ([]*remote.Calendar, error) {
 	client, err := api.MakeClient()
 	if err != nil {
 		return nil, err
 	}
 
-	//DEBUG just use me as the user, for now
-	me, err := client.GetMe()
-	return client.GetUserCalendars(me.ID)
+	remoteUser, err := api.GetRemoteUser(mattermostUserID)
+	if err != nil {
+		return nil, err
+	}
+	remoteUserID := remoteUser.ID
+
+	return client.GetUserCalendars(remoteUserID)
 }

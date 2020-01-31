@@ -9,6 +9,10 @@ type PluginAPIImpl struct {
 	pluginAPI plugin.API
 }
 
+func (impl *PluginAPIImpl) GetUser(userID string) (*model.User, *model.AppError) {
+	return impl.pluginAPI.GetUser(userID)
+}
+
 func (impl *PluginAPIImpl) GetUserStatus(userID string) (*model.Status, *model.AppError) {
 	return impl.pluginAPI.GetUserStatus(userID)
 }

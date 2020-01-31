@@ -65,17 +65,17 @@ func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1 interface{}) *gomock.Cal
 }
 
 // MakeSuperuserClient mocks base method
-func (m *MockRemote) MakeSuperuserClient(arg0 context.Context) remote.Client {
+func (m *MockRemote) MakeSuperuserClient(arg0 context.Context, arg1 string) remote.Client {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MakeSuperuserClient", arg0)
+	ret := m.ctrl.Call(m, "MakeSuperuserClient", arg0, arg1)
 	ret0, _ := ret[0].(remote.Client)
 	return ret0
 }
 
 // MakeSuperuserClient indicates an expected call of MakeSuperuserClient
-func (mr *MockRemoteMockRecorder) MakeSuperuserClient(arg0 interface{}) *gomock.Call {
+func (mr *MockRemoteMockRecorder) MakeSuperuserClient(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeSuperuserClient", reflect.TypeOf((*MockRemote)(nil).MakeSuperuserClient), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeSuperuserClient", reflect.TypeOf((*MockRemote)(nil).MakeSuperuserClient), arg0, arg1)
 }
 
 // NewOAuth2Config mocks base method
