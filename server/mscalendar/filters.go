@@ -5,9 +5,9 @@ package mscalendar
 
 type filterf func(*mscalendar) error
 
-func (mscalendar *mscalendar) Filter(filters ...filterf) error {
+func (m *mscalendar) Filter(filters ...filterf) error {
 	for _, filter := range filters {
-		err := filter(mscalendar)
+		err := filter(m)
 		if err != nil {
 			return err
 		}
@@ -15,24 +15,24 @@ func (mscalendar *mscalendar) Filter(filters ...filterf) error {
 	return nil
 }
 
-func withActingUserExpanded(mscalendar *mscalendar) error {
-	return mscalendar.ExpandUser(mscalendar.actingUser)
+func withActingUserExpanded(m *mscalendar) error {
+	return m.ExpandUser(m.actingUser)
 }
 
-func withUserExpanded(user *User) func(mscalendar *mscalendar) error {
-	return func(mscalendar *mscalendar) error {
-		return mscalendar.ExpandUser(user)
+func withUserExpanded(user *User) func(m *mscalendar) error {
+	return func(m *mscalendar) error {
+		return m.ExpandUser(user)
 	}
 }
 
-func withClient(mscalendar *mscalendar) error {
-	if mscalendar.client != nil {
+func withClient(m *mscalendar) error {
+	if m.client != nil {
 		return nil
 	}
-	client, err := mscalendar.MakeClient()
+	client, err := m.MakeClient()
 	if err != nil {
 		return err
 	}
-	mscalendar.client = client
+	m.client = client
 	return nil
 }

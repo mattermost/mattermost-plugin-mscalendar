@@ -14,8 +14,8 @@ type EventResponder interface {
 	RespondToEvent(user *User, eventID, response string) error
 }
 
-func (mscalendar *mscalendar) AcceptEvent(user *User, eventID string) error {
-	err := mscalendar.Filter(
+func (m *mscalendar) AcceptEvent(user *User, eventID string) error {
+	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
 	)
@@ -23,11 +23,11 @@ func (mscalendar *mscalendar) AcceptEvent(user *User, eventID string) error {
 		return err
 	}
 
-	return mscalendar.client.AcceptEvent(user.Remote.ID, eventID)
+	return m.client.AcceptEvent(user.Remote.ID, eventID)
 }
 
-func (mscalendar *mscalendar) DeclineEvent(user *User, eventID string) error {
-	err := mscalendar.Filter(
+func (m *mscalendar) DeclineEvent(user *User, eventID string) error {
+	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
 	)
@@ -35,11 +35,11 @@ func (mscalendar *mscalendar) DeclineEvent(user *User, eventID string) error {
 		return err
 	}
 
-	return mscalendar.client.DeclineEvent(user.Remote.ID, eventID)
+	return m.client.DeclineEvent(user.Remote.ID, eventID)
 }
 
-func (mscalendar *mscalendar) TentativelyAcceptEvent(user *User, eventID string) error {
-	err := mscalendar.Filter(
+func (m *mscalendar) TentativelyAcceptEvent(user *User, eventID string) error {
+	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
 	)
@@ -47,15 +47,15 @@ func (mscalendar *mscalendar) TentativelyAcceptEvent(user *User, eventID string)
 		return err
 	}
 
-	return mscalendar.client.TentativelyAcceptEvent(user.Remote.ID, eventID)
+	return m.client.TentativelyAcceptEvent(user.Remote.ID, eventID)
 }
 
-func (mscalendar *mscalendar) RespondToEvent(user *User, eventID, response string) error {
+func (m *mscalendar) RespondToEvent(user *User, eventID, response string) error {
 	if response == OptionNotResponded {
 		return errors.New("Not responded is not a valid response")
 	}
 
-	err := mscalendar.Filter(
+	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
 	)
@@ -65,11 +65,11 @@ func (mscalendar *mscalendar) RespondToEvent(user *User, eventID, response strin
 
 	switch response {
 	case OptionYes:
-		return mscalendar.client.AcceptEvent(user.Remote.ID, eventID)
+		return m.client.AcceptEvent(user.Remote.ID, eventID)
 	case OptionNo:
-		return mscalendar.client.DeclineEvent(user.Remote.ID, eventID)
+		return m.client.DeclineEvent(user.Remote.ID, eventID)
 	case OptionMaybe:
-		return mscalendar.client.TentativelyAcceptEvent(user.Remote.ID, eventID)
+		return m.client.TentativelyAcceptEvent(user.Remote.ID, eventID)
 	default:
 		return errors.New(response + " is not a valid response")
 	}

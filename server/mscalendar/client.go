@@ -14,15 +14,15 @@ type Client interface {
 	MakeSuperuserClient() remote.Client
 }
 
-func (mscalendar *mscalendar) MakeClient() (remote.Client, error) {
-	err := mscalendar.Filter(withActingUserExpanded)
+func (m *mscalendar) MakeClient() (remote.Client, error) {
+	err := m.Filter(withActingUserExpanded)
 	if err != nil {
 		return nil, err
 	}
 
-	return mscalendar.Remote.MakeClient(context.Background(), mscalendar.actingUser.OAuth2Token), nil
+	return m.Remote.MakeClient(context.Background(), m.actingUser.OAuth2Token), nil
 }
 
-func (mscalendar *mscalendar) MakeSuperuserClient() remote.Client {
-	return mscalendar.Remote.MakeSuperuserClient(context.Background())
+func (m *mscalendar) MakeSuperuserClient() remote.Client {
+	return m.Remote.MakeSuperuserClient(context.Background())
 }

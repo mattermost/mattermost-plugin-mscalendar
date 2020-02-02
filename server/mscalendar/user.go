@@ -35,20 +35,20 @@ func (user *User) Clone() *User {
 	return &clone
 }
 
-func (mscalendar *mscalendar) GetActingUser() *User {
-	return mscalendar.actingUser
+func (m *mscalendar) GetActingUser() *User {
+	return m.actingUser
 }
 
-func (mscalendar *mscalendar) ExpandUser(user *User) error {
+func (m *mscalendar) ExpandUser(user *User) error {
 	if user.User == nil {
-		storedUser, err := mscalendar.Store.LoadUser(user.MattermostUserID)
+		storedUser, err := m.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
 			return errors.Wrap(err, "User not connected")
 		}
 		user.User = storedUser
 	}
 	if user.MattermostUser == nil {
-		mattermostUser, err := mscalendar.PluginAPI.GetMattermostUser(user.MattermostUserID)
+		mattermostUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
 		if err != nil {
 			return err
 		}
@@ -57,8 +57,8 @@ func (mscalendar *mscalendar) ExpandUser(user *User) error {
 	return nil
 }
 
-func (mscalendar *mscalendar) GetTimezone(user *User) (string, error) {
-	err := mscalendar.Filter(
+func (m *mscalendar) GetTimezone(user *User) (string, error) {
+	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
 	)
@@ -66,7 +66,7 @@ func (mscalendar *mscalendar) GetTimezone(user *User) (string, error) {
 		return "", err
 	}
 
-	settings, err := mscalendar.client.GetMailboxSettings(user.Remote.ID)
+	settings, err := m.client.GetMailboxSettings(user.Remote.ID)
 	if err != nil {
 		return "", err
 	}

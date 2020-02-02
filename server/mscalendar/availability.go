@@ -22,12 +22,12 @@ type Availability interface {
 	SyncStatusAll() (string, error)
 }
 
-func (mscalendar *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
-	return mscalendar.syncStatusUsers([]string{mattermostUserID})
+func (m *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
+	return m.syncStatusUsers([]string{mattermostUserID})
 }
 
-func (mscalendar *mscalendar) SyncStatusAll() (string, error) {
-	userIndex, err := mscalendar.Store.LoadUserIndex()
+func (m *mscalendar) SyncStatusAll() (string, error) {
+	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil
@@ -36,11 +36,11 @@ func (mscalendar *mscalendar) SyncStatusAll() (string, error) {
 	}
 
 	mmIDs := userIndex.GetMattermostUserIDs()
-	return mscalendar.syncStatusUsers(mmIDs)
+	return m.syncStatusUsers(mmIDs)
 }
 
-func (mscalendar *mscalendar) syncStatusUsers(mattermostUserIDs []string) (string, error) {
-	fullUserIndex, err := mscalendar.Store.LoadUserIndex()
+func (m *mscalendar) syncStatusUsers(mattermostUserIDs []string) (string, error) {
+	fullUserIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil
@@ -66,7 +66,7 @@ func (mscalendar *mscalendar) syncStatusUsers(mattermostUserIDs []string) (strin
 		scheduleIDs = append(scheduleIDs, u.Email)
 	}
 
-	schedules, err := mscalendar.GetAvailabilities(filteredUsers[0].RemoteID, scheduleIDs)
+	schedules, err := m.GetAvailabilities(filteredUsers[0].RemoteID, scheduleIDs)
 	if err != nil {
 		return "", err
 	}
@@ -74,11 +74,11 @@ func (mscalendar *mscalendar) syncStatusUsers(mattermostUserIDs []string) (strin
 		return "No schedule info found", nil
 	}
 
-	return mscalendar.setUserStatuses(filteredUsers, schedules, mattermostUserIDs)
+	return m.setUserStatuses(filteredUsers, schedules, mattermostUserIDs)
 }
 
-func (mscalendar *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []*remote.ScheduleInformation, mattermostUserIDs []string) (string, error) {
-	statuses, appErr := mscalendar.PluginAPI.GetMattermostUserStatusesByIds(mattermostUserIDs)
+func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []*remote.ScheduleInformation, mattermostUserIDs []string) (string, error) {
+	statuses, appErr := m.PluginAPI.GetMattermostUserStatusesByIds(mattermostUserIDs)
 	if appErr != nil {
 		return "", appErr
 	}
@@ -91,7 +91,7 @@ func (mscalendar *mscalendar) setUserStatuses(filteredUsers store.UserIndex, sch
 	var res string
 	for _, s := range schedules {
 		if s.Error != nil {
-			mscalendar.Logger.Errorf("Error getting availability for %s: %s", s.ScheduleID, s.Error.ResponseCode)
+			m.Logger.Errorf("Error getting availability for %s: %s", s.ScheduleID, s.Error.ResponseCode)
 			continue
 		}
 
@@ -101,7 +101,7 @@ func (mscalendar *mscalendar) setUserStatuses(filteredUsers store.UserIndex, sch
 			continue
 		}
 
-		res = mscalendar.setStatusFromAvailability(userID, status, s.AvailabilityView)
+		res = m.setStatusFromAvailability(userID, status, s.AvailabilityView)
 	}
 	if res != "" {
 		return res, nil
@@ -110,8 +110,8 @@ func (mscalendar *mscalendar) setUserStatuses(filteredUsers store.UserIndex, sch
 	return utils.JSONBlock(schedules), nil
 }
 
-func (mscalendar *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client := mscalendar.MakeSuperuserClient()
+func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
+	client := m.MakeSuperuserClient()
 
 	start := remote.NewDateTime(time.Now().UTC(), "UTC")
 	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
@@ -119,27 +119,27 @@ func (mscalendar *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs
 	return client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
 }
 
-func (mscalendar *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, av remote.AvailabilityView) string {
+func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, av remote.AvailabilityView) string {
 	currentAvailability := av[0]
 
 	switch currentAvailability {
 	case remote.AvailabilityViewFree:
 		if currentStatus == "dnd" {
-			mscalendar.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "online")
+			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "online")
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus)
 		} else {
 			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus)
 		}
 	case remote.AvailabilityViewTentative, remote.AvailabilityViewBusy:
 		if currentStatus != "dnd" {
-			mscalendar.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "dnd")
+			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
 		} else {
 			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus)
 		}
 	case remote.AvailabilityViewOutOfOffice:
 		if currentStatus != "offline" {
-			mscalendar.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "offline")
+			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
 		} else {
 			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus)
