@@ -5,8 +5,8 @@ package msgraph
 
 import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 
-func (c *client) DeleteCalendar(userID string, calID string) error {
-	err := c.rbuilder.Users().ID(userID).Calendars().ID(calID).Request().Delete(c.ctx)
+func (c *client) DeleteCalendar(remoteUserID string, calID string) error {
+	err := c.rbuilder.Users().ID(remoteUserID).Calendars().ID(calID).Request().Delete(c.ctx)
 	if err != nil {
 		return err
 	}

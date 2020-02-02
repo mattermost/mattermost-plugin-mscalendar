@@ -10,18 +10,18 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
-func (c *client) GetCalendars(userID string) ([]*remote.Calendar, error) {
+func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	var v struct {
 		Value []*remote.Calendar `json:"value"`
 	}
-	req := c.rbuilder.Users().ID(userID).Calendars().Request()
+	req := c.rbuilder.Users().ID(remoteUserID).Calendars().Request()
 	req.Expand("children")
 	err := req.JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
 		return nil, err
 	}
 	c.Logger.With(bot.LogContext{
-		"UserID": userID,
+		"UserID": remoteUserID,
 		"v":      v.Value,
 	}).Infof("msgraph: GetUserCalendars returned `%d` calendars.", len(v.Value))
 	return v.Value, nil

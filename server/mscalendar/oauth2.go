@@ -32,9 +32,9 @@ func NewOAuth2App(env Env) oauth2connect.App {
 	}
 }
 
-func (app *oauth2App) InitOAuth2(userID string) (url string, err error) {
+func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error) {
 	conf := app.Remote.NewOAuth2Config()
-	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], userID)
+	state := fmt.Sprintf("%v_%v", model.NewId()[0:15], mattermostUserID)
 	err = app.Store.StoreOAuth2State(state)
 	if err != nil {
 		return "", err

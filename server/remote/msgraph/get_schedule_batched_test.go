@@ -60,7 +60,7 @@ func TestPrepareGetScheduleRequests(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			userID := "xyz"
+			remoteUserID := "xyz"
 			start := time.Now().UTC()
 			end := time.Now().UTC().Add(20)
 			params := &getScheduleRequest{
@@ -69,7 +69,7 @@ func TestPrepareGetScheduleRequests(t *testing.T) {
 				AvailabilityViewInterval: 15,
 			}
 
-			out := prepareGetScheduleRequests(userID, tc.schedules, params)
+			out := prepareGetScheduleRequests(remoteUserID, tc.schedules, params)
 			require.Equal(t, "/Users/xyz/calendar/getSchedule", out[0].URL)
 			require.Equal(t, "POST", out[0].Method)
 			require.Equal(t, 1, len(out[0].Headers))

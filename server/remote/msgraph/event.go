@@ -11,10 +11,10 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-func (c *client) GetEvent(userID, eventID string) (*remote.Event, error) {
+func (c *client) GetEvent(remoteUserID, eventID string) (*remote.Event, error) {
 	e := &remote.Event{}
 
-	err := c.rbuilder.Users().ID(userID).Events().ID(eventID).Request().JSONRequest(
+	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Request().JSONRequest(
 		c.ctx, http.MethodGet, "", nil, &e)
 	if err != nil {
 		return nil, err
@@ -22,17 +22,17 @@ func (c *client) GetEvent(userID, eventID string) (*remote.Event, error) {
 	return e, nil
 }
 
-func (c *client) AcceptEvent(userID, eventID string) error {
+func (c *client) AcceptEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventAcceptRequestParameter{}
-	return c.rbuilder.Users().ID(userID).Events().ID(eventID).Accept(dummy).Request().Post(c.ctx)
+	return c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Accept(dummy).Request().Post(c.ctx)
 }
 
-func (c *client) DeclineEvent(userID, eventID string) error {
+func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventDeclineRequestParameter{}
-	return c.rbuilder.Users().ID(userID).Events().ID(eventID).Decline(dummy).Request().Post(c.ctx)
+	return c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Decline(dummy).Request().Post(c.ctx)
 }
 
-func (c *client) TentativelyAcceptEvent(userID, eventID string) error {
+func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 	dummy := &msgraph.EventTentativelyAcceptRequestParameter{}
-	return c.rbuilder.Users().ID(userID).Events().ID(eventID).TentativelyAccept(dummy).Request().Post(c.ctx)
+	return c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).TentativelyAccept(dummy).Request().Post(c.ctx)
 }

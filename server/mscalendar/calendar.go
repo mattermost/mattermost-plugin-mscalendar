@@ -51,11 +51,11 @@ func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUser
 
 	// invite non-mapped Mattermost
 	for id := range mattermostUserIDs {
-		userID := mattermostUserIDs[id]
-		_, err := m.Store.LoadUser(userID)
+		mattermostUserID := mattermostUserIDs[id]
+		_, err := m.Store.LoadUser(mattermostUserID)
 		if err != nil {
 			if err.Error() == "not found" {
-				err = m.Poster.DM(userID, "You have been invited to an MS office calendar event but have not linked your account.  Feel free to join us by connecting your www.office.com using `/msoffice connect`")
+				err = m.Poster.DM(mattermostUserID, "You have been invited to an MS office calendar event but have not linked your account.  Feel free to join us by connecting your www.office.com using `/msoffice connect`")
 			}
 		}
 	}

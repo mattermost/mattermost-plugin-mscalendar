@@ -11,9 +11,9 @@ import (
 )
 
 // CreateCalendar creates a calendar
-func (c *client) CreateCalendar(userID string, calIn *remote.Calendar) (*remote.Calendar, error) {
+func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*remote.Calendar, error) {
 	var calOut = remote.Calendar{}
-	err := c.rbuilder.Users().ID(userID).Calendars().Request().JSONRequest(c.ctx, http.MethodPost, "", &calIn, &calOut)
+	err := c.rbuilder.Users().ID(remoteUserID).Calendars().Request().JSONRequest(c.ctx, http.MethodPost, "", &calIn, &calOut)
 	if err != nil {
 		return nil, err
 	}

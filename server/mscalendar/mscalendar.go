@@ -32,10 +32,9 @@ type Dependencies struct {
 type PluginAPI interface {
 	GetMattermostUser(mattermostUserID string) (*model.User, error)
 	GetMattermostUserByUsername(mattermostUsername string) (*model.User, error)
-	GetMattermostUserStatus(userID string) (*model.Status, error)
 	GetMattermostUserStatusesByIds(userIDs []string) ([]*model.Status, error)
 	IsSysAdmin(mattermostUserID string) (bool, error)
-	UpdateMattermostUserStatus(userID, status string) (*model.Status, error)
+	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)
 }
 
 type Env struct {

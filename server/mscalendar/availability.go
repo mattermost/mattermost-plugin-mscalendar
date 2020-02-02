@@ -95,13 +95,13 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 			continue
 		}
 
-		userID := usersByEmail[s.ScheduleID].MattermostUserID
-		status, ok := statusMap[userID]
+		mattermostUserID := usersByEmail[s.ScheduleID].MattermostUserID
+		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
 		}
 
-		res = m.setStatusFromAvailability(userID, status, s.AvailabilityView)
+		res = m.setStatusFromAvailability(mattermostUserID, status, s.AvailabilityView)
 	}
 	if res != "" {
 		return res, nil

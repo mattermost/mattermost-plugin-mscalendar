@@ -21,16 +21,16 @@ func New(api plugin.API) *API {
 	}
 }
 
-func (a *API) GetMattermostUserStatus(userID string) (*model.Status, error) {
-	return a.api.GetUserStatus(userID)
+func (a *API) GetMattermostUserStatus(mattermostUserID string) (*model.Status, error) {
+	return a.api.GetUserStatus(mattermostUserID)
 }
 
-func (a *API) GetMattermostUserStatusesByIds(userIDs []string) ([]*model.Status, error) {
-	return a.api.GetUserStatusesByIds(userIDs)
+func (a *API) GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error) {
+	return a.api.GetUserStatusesByIds(mattermostUserIDs)
 }
 
-func (a *API) UpdateMattermostUserStatus(userID, status string) (*model.Status, error) {
-	return a.api.UpdateUserStatus(userID, status)
+func (a *API) UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error) {
+	return a.api.UpdateUserStatus(mattermostUserID, status)
 }
 
 // IsPluginAdmin returns true if the user is authorized to use the workflow plugin's admin-level APIs/commands.
@@ -75,11 +75,11 @@ func (a *API) CleanKVStore() error {
 	return nil
 }
 
-func (a *API) SendEphemeralPost(channelID, userID, message string) {
+func (a *API) SendEphemeralPost(channelID, mattermostUserID, message string) {
 	ephemeralPost := &model.Post{
 		ChannelId: channelID,
-		UserId:    userID,
+		UserId:    mattermostUserID,
 		Message:   message,
 	}
-	_ = a.api.SendEphemeralPost(userID, ephemeralPost)
+	_ = a.api.SendEphemeralPost(mattermostUserID, ephemeralPost)
 }

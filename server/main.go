@@ -23,5 +23,6 @@ func main() {
 					BuildHashShort: BuildHashShort,
 					BuildDate:      BuildHash,
 				},
+				Dependencies: &mscalendar.Dependencies{},
 			}))
 }
