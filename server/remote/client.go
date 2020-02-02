@@ -19,12 +19,13 @@ type Client interface {
 	DeleteCalendar(userID, calendarID string) error
 	DeleteSubscription(subscriptionID string) error
 	FindMeetingTimes(userID string, meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
-	GetMe() (*User, error)
-	GetNotificationData(*Notification) (*Notification, error)
-	GetSchedule(userID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	GetCalendars(userID string) ([]*Calendar, error)
 	GetDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
 	GetEvent(userID, eventID string) (*Event, error)
+	GetMailboxSettings(userID string) (*MailboxSettings, error)
+	GetMe() (*User, error)
+	GetNotificationData(*Notification) (*Notification, error)
+	GetSchedule(userID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
 	TentativelyAcceptEvent(userID, eventID string) error

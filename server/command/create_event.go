@@ -33,7 +33,12 @@ func (c *Command) createEvent(parameters ...string) (string, error) {
 		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), nil
 	}
 
-	event, err := parseCreateArgs(parameters)
+	tz, err := c.MSCalendar.GetTimezone(c.user())
+	if err != nil {
+		return "", nil
+	}
+
+	event, err := parseCreateArgs(parameters, tz)
 	if err != nil {
 		return err.Error(), nil
 	}
@@ -58,7 +63,7 @@ func (c *Command) createEvent(parameters ...string) (string, error) {
 	return resp, nil
 }
 
-func parseCreateArgs(args []string) (*remote.Event, error) {
+func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 
 	event := &remote.Event{}
 
@@ -117,7 +122,7 @@ func parseCreateArgs(args []string) (*remote.Event, error) {
 	}
 	event.Start = &remote.DateTime{
 		DateTime: startTime,
-		TimeZone: "Pacific Standard Time",
+		TimeZone: timeZone,
 	}
 
 	endTime, err := createFlagSet.GetString("endtime")
@@ -129,7 +134,7 @@ func parseCreateArgs(args []string) (*remote.Event, error) {
 	}
 	event.End = &remote.DateTime{
 		DateTime: endTime,
-		TimeZone: "Pacific Standard Time",
+		TimeZone: timeZone,
 	}
 
 	allday, err := createFlagSet.GetBool("allday")

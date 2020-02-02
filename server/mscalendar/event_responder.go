@@ -3,7 +3,9 @@
 
 package mscalendar
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 type EventResponder interface {
 	AcceptEvent(user *User, eventID string) error

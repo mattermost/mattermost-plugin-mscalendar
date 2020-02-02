@@ -133,14 +133,13 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	env := p.getEnv()
-	mscalendar := mscalendar.New(env, args.UserId)
 
 	command := command.Command{
 		Context:    c,
 		Args:       args,
 		ChannelID:  args.ChannelId,
 		Config:     env.Config,
-		MSCalendar: mscalendar,
+		MSCalendar: mscalendar.New(env, args.UserId),
 	}
 	out, err := command.Handle()
 	if err != nil {
@@ -209,7 +208,7 @@ func (p *Plugin) POC_initUserStatusSyncJob() {
 	if enable && p.statusSyncJob == nil {
 		logger.Debugf("Enabling user status sync job")
 
-		job := mscalendar.NewStatusSyncJob(mscalendar.New(env, env.Config.BotUserID))
+		job := mscalendar.NewStatusSyncJob(env)
 		p.statusSyncJob = job
 		go job.Start()
 	}

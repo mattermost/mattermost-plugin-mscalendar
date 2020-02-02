@@ -117,7 +117,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 			}
 
 			mscalendar := New(env, "")
-			mscalendar.SyncStatusForAllUsers()
+			mscalendar.SyncStatusAll()
 		})
 	}
 }

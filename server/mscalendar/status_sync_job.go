@@ -6,40 +6,23 @@ package mscalendar
 import (
 	"sync"
 	"time"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const JOB_INTERVAL = 5 * time.Minute
 
 type StatusSyncJob struct {
-	mscalendar MSCalendar
+	Env
+
 	cancel     chan struct{}
 	cancelled  chan struct{}
 	cancelOnce sync.Once
 }
 
-func (j *StatusSyncJob) getLogger() bot.Logger {
-	return j.mscalendar.(*mscalendar).Logger
-}
-
-func (j *StatusSyncJob) work() {
-	log := j.getLogger()
-	log.Debugf("User status sync job beginning")
-
-	_, err := j.mscalendar.SyncStatusForAllUsers()
-	if err != nil {
-		log.Errorf("Error during user status sync job", "error", err.Error())
-	}
-
-	log.Debugf("User status sync job finished")
-}
-
-func NewStatusSyncJob(mscalendar MSCalendar) *StatusSyncJob {
+func NewStatusSyncJob(env Env) *StatusSyncJob {
 	return &StatusSyncJob{
-		cancel:     make(chan struct{}),
-		cancelled:  make(chan struct{}),
-		mscalendar: mscalendar,
+		cancel:    make(chan struct{}),
+		cancelled: make(chan struct{}),
+		Env:       env,
 	}
 }
 
@@ -68,4 +51,15 @@ func (job *StatusSyncJob) Cancel() {
 		close(job.cancel)
 	})
 	<-job.cancelled
+}
+
+func (j *StatusSyncJob) work() {
+	j.Logger.Debugf("User status sync job beginning")
+
+	_, err := New(j.Env, "").SyncStatusAll()
+	if err != nil {
+		j.Logger.Errorf("Error during user status sync job", "error", err.Error())
+	}
+
+	j.Logger.Debugf("User status sync job finished")
 }

@@ -7,12 +7,14 @@ import (
 	"fmt"
 
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 type Users interface {
 	GetActingUser() *User
+	GetTimezone(user *User) (string, error)
 }
 
 type User struct {
@@ -32,6 +34,7 @@ func (user *User) Clone() *User {
 	clone.User = user.User.Clone()
 	return &clone
 }
+
 func (mscalendar *mscalendar) GetActingUser() *User {
 	return mscalendar.actingUser
 }
@@ -40,7 +43,7 @@ func (mscalendar *mscalendar) ExpandUser(user *User) error {
 	if user.User == nil {
 		storedUser, err := mscalendar.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "User not connected")
 		}
 		user.User = storedUser
 	}
@@ -52,6 +55,22 @@ func (mscalendar *mscalendar) ExpandUser(user *User) error {
 		user.MattermostUser = mattermostUser
 	}
 	return nil
+}
+
+func (mscalendar *mscalendar) GetTimezone(user *User) (string, error) {
+	err := mscalendar.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	settings, err := mscalendar.client.GetMailboxSettings(user.Remote.ID)
+	if err != nil {
+		return "", err
+	}
+	return settings.TimeZone, nil
 }
 
 func (user *User) String() string {

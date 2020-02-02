@@ -195,6 +195,21 @@ func (mr *MockMSCalendarMockRecorder) GetCalendars(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendars", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendars), arg0)
 }
 
+// GetTimezone mocks base method
+func (m *MockMSCalendar) GetTimezone(arg0 *mscalendar.User) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTimezone", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTimezone indicates an expected call of GetTimezone
+func (mr *MockMSCalendarMockRecorder) GetTimezone(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimezone", reflect.TypeOf((*MockMSCalendar)(nil).GetTimezone), arg0)
+}
+
 // GetUserAvailabilities mocks base method
 func (m *MockMSCalendar) GetUserAvailabilities(arg0 string, arg1 []string) ([]*remote.ScheduleInformation, error) {
 	m.ctrl.T.Helper()
