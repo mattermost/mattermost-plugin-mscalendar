@@ -3,9 +3,16 @@
 
 package bot
 
-import "fmt"
+import (
+	"fmt"
+	"testing"
+	"time"
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+)
+
+const timed = "__since"
+const Elapsed = "Elapsed"
 
 type LogContext map[string]interface{}
 
@@ -25,6 +32,7 @@ func level(l string) int {
 
 type Logger interface {
 	With(LogContext) Logger
+	Timed() Logger
 	Debugf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -50,7 +58,14 @@ func (bot *bot) With(logContext LogContext) Logger {
 	return &newbot
 }
 
+func (bot *bot) Timed() Logger {
+	return bot.With(LogContext{
+		timed: time.Now(),
+	})
+}
+
 func (bot *bot) Debugf(format string, args ...interface{}) {
+	measure(bot.logContext)
 	message := fmt.Sprintf(format, args...)
 	bot.pluginAPI.LogDebug(message, toKeyValuePairs(bot.logContext)...)
 	if level(bot.AdminLogLevel) >= 4 {
@@ -59,6 +74,7 @@ func (bot *bot) Debugf(format string, args ...interface{}) {
 }
 
 func (bot *bot) Errorf(format string, args ...interface{}) {
+	measure(bot.logContext)
 	message := fmt.Sprintf(format, args...)
 	bot.pluginAPI.LogError(message, toKeyValuePairs(bot.logContext)...)
 	if level(bot.AdminLogLevel) >= 1 {
@@ -67,6 +83,7 @@ func (bot *bot) Errorf(format string, args ...interface{}) {
 }
 
 func (bot *bot) Infof(format string, args ...interface{}) {
+	measure(bot.logContext)
 	message := fmt.Sprintf(format, args...)
 	bot.pluginAPI.LogInfo(message, toKeyValuePairs(bot.logContext)...)
 	if level(bot.AdminLogLevel) >= 3 {
@@ -75,6 +92,7 @@ func (bot *bot) Infof(format string, args ...interface{}) {
 }
 
 func (bot *bot) Warnf(format string, args ...interface{}) {
+	measure(bot.logContext)
 	message := fmt.Sprintf(format, args...)
 	bot.pluginAPI.LogWarn(message, toKeyValuePairs(bot.logContext)...)
 	if level(bot.AdminLogLevel) >= 2 {
@@ -92,7 +110,53 @@ func (bot *bot) logToAdmins(level, message string) {
 type NilLogger struct{}
 
 func (l *NilLogger) With(logContext LogContext) Logger         { return l }
+func (l *NilLogger) Timed() Logger                             { return l }
 func (l *NilLogger) Debugf(format string, args ...interface{}) {}
 func (l *NilLogger) Errorf(format string, args ...interface{}) {}
 func (l *NilLogger) Infof(format string, args ...interface{})  {}
 func (l *NilLogger) Warnf(format string, args ...interface{})  {}
+
+type TestLogger struct {
+	testing.TB
+	logContext LogContext
+}
+
+func (l *TestLogger) With(logContext LogContext) Logger {
+	newl := *l
+	if len(newl.logContext) == 0 {
+		newl.logContext = map[string]interface{}{}
+	}
+	for k, v := range logContext {
+		newl.logContext[k] = v
+	}
+	return &newl
+}
+
+func (l *TestLogger) Timed() Logger {
+	return l.With(LogContext{
+		timed: time.Now(),
+	})
+}
+
+func (l *TestLogger) logf(prefix, format string, args ...interface{}) {
+	out := fmt.Sprintf(prefix+": "+format, args...)
+	if len(l.logContext) > 0 {
+		measure(l.logContext)
+		out += fmt.Sprintf(" -- %+v", l.logContext)
+	}
+	l.TB.Logf(out)
+}
+
+func measure(lc LogContext) {
+	if lc[timed] == nil {
+		return
+	}
+	started := lc[timed].(time.Time)
+	lc[Elapsed] = time.Since(started).String()
+	delete(lc, timed)
+}
+
+func (l *TestLogger) Debugf(format string, args ...interface{}) { l.logf("DEBUG", format, args...) }
+func (l *TestLogger) Errorf(format string, args ...interface{}) { l.logf("ERROR", format, args...) }
+func (l *TestLogger) Infof(format string, args ...interface{})  { l.logf("INFO", format, args...) }
+func (l *TestLogger) Warnf(format string, args ...interface{})  { l.logf("WARN", format, args...) }

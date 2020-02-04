@@ -24,23 +24,23 @@ type Event struct {
 }
 
 type EventStore interface {
-	LoadUserEvent(userID, eventID string) (*Event, error)
-	StoreUserEvent(userID string, event *Event) error
-	DeleteUserEvent(userID, eventID string) error
+	LoadUserEvent(mattermostUserID, eventID string) (*Event, error)
+	StoreUserEvent(mattermostUserID string, event *Event) error
+	DeleteUserEvent(mattermostUserID, eventID string) error
 }
 
-func eventKey(userID, eventID string) string { return userID + "_" + eventID }
+func eventKey(mattermostUserID, eventID string) string { return mattermostUserID + "_" + eventID }
 
-func (s *pluginStore) LoadUserEvent(userID, eventID string) (*Event, error) {
+func (s *pluginStore) LoadUserEvent(mattermostUserID, eventID string) (*Event, error) {
 	event := Event{}
-	err := kvstore.LoadJSON(s.eventKV, eventKey(userID, eventID), &event)
+	err := kvstore.LoadJSON(s.eventKV, eventKey(mattermostUserID, eventID), &event)
 	if err != nil {
 		return nil, err
 	}
 	return &event, nil
 }
 
-func (s *pluginStore) StoreUserEvent(userID string, event *Event) error {
+func (s *pluginStore) StoreUserEvent(mattermostUserID string, event *Event) error {
 	now := time.Now()
 	end := now.Add(defaultEventTTL)
 	if event.Remote.End != nil {
@@ -56,29 +56,29 @@ func (s *pluginStore) StoreUserEvent(userID string, event *Event) error {
 	if err != nil {
 		return err
 	}
-	err = s.eventKV.StoreTTL(eventKey(userID, event.Remote.ID), data, ttl)
+	err = s.eventKV.StoreTTL(eventKey(mattermostUserID, event.Remote.ID), data, ttl)
 	if err != nil {
 		return err
 	}
 
 	s.Logger.With(bot.LogContext{
-		"UserID":  userID,
-		"eventID": event.Remote.ID,
-		"expires": end.String(),
+		"mattermostUserID": mattermostUserID,
+		"eventID":          event.Remote.ID,
+		"expires":          end.String(),
 	}).Debugf("store: stored user event.")
 
 	return nil
 }
 
-func (s *pluginStore) DeleteUserEvent(userID, eventID string) error {
-	err := s.eventKV.Delete(eventKey(userID, eventID))
+func (s *pluginStore) DeleteUserEvent(mattermostUserID, eventID string) error {
+	err := s.eventKV.Delete(eventKey(mattermostUserID, eventID))
 	if err != nil {
 		return err
 	}
 
 	s.Logger.With(bot.LogContext{
-		"UserID":  userID,
-		"eventID": eventID,
+		"mattermostUserID": mattermostUserID,
+		"eventID":          eventID,
 	}).Debugf("store: deleted event.")
 
 	return nil

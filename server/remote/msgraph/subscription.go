@@ -13,7 +13,7 @@ import (
 
 const subscribeTTL = 10 * time.Minute
 
-func (c *client) CreateSubscription(notificationURL string) (*remote.Subscription, error) {
+func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscription, error) {
 	sub := &remote.Subscription{
 		Resource:           "me/events",
 		ChangeType:         "created,updated,deleted",

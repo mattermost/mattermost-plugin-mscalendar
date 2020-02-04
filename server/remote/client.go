@@ -9,24 +9,24 @@ import (
 )
 
 type Client interface {
-	AcceptUserEvent(userID, eventID string) error
-	CallJSON(method, path string, in, out interface{}) (responseData []byte, err error)
+	AcceptEvent(remoteUserID, eventID string) error
 	CallFormPost(method, path string, in url.Values, out interface{}) (responseData []byte, err error)
-	CreateSubscription(notificationURL string) (*Subscription, error)
-	DeclineUserEvent(userID, eventID string) error
+	CallJSON(method, path string, in, out interface{}) (responseData []byte, err error)
+	CreateCalendar(remoteUserID string, calendar *Calendar) (*Calendar, error)
+	CreateEvent(remoteUserID string, calendarEvent *Event) (*Event, error)
+	CreateMySubscription(notificationURL string) (*Subscription, error)
+	DeclineEvent(remoteUserID, eventID string) error
+	DeleteCalendar(remoteUserID, calendarID string) error
 	DeleteSubscription(subscriptionID string) error
-	CreateCalendar(calendar *Calendar) (*Calendar, error)
-	FindMeetingTimes(meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
-	CreateEvent(calendarEvent *Event) (*Event, error)
-	DeleteCalendar(calendarID string) error
+	FindMeetingTimes(remoteUserID string, meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
+	GetCalendars(remoteUserID string) ([]*Calendar, error)
+	GetDefaultCalendarView(remoteUserID string, startTime, endTime time.Time) ([]*Event, error)
+	GetEvent(remoteUserID, eventID string) (*Event, error)
+	GetMailboxSettings(remoteUserID string) (*MailboxSettings, error)
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
-	GetUserCalendars(userID string) ([]*Calendar, error)
 	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
-	GetUserDefaultCalendarView(userID string, startTime, endTime time.Time) ([]*Event, error)
-	GetUserEvent(userID, eventID string) (*Event, error)
-	GetUserMailboxSettings(remoteUserID string) (*MailboxSettings, error)
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
-	TentativelyAcceptUserEvent(userID, eventID string) error
+	TentativelyAcceptEvent(remoteUserID, eventID string) error
 }

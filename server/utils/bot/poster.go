@@ -12,35 +12,35 @@ import (
 
 type Poster interface {
 	// DM posts a simple Direct Message to the specified user
-	DM(userID, format string, args ...interface{}) error
+	DM(mattermostUserID, format string, args ...interface{}) error
 
 	// DMWithAttachments posts a Direct Message that contains Slack attachments.
 	// Often used to include post actions.
-	DMWithAttachments(userID string, attachments ...*model.SlackAttachment) error
+	DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) error
 
 	// Ephemeral sends an ephemeral message to a user
-	Ephemeral(userID, channelID, format string, args ...interface{})
+	Ephemeral(mattermostUserID, channelID, format string, args ...interface{})
 }
 
 // DM posts a simple Direct Message to the specified user
-func (bot *bot) DM(userID, format string, args ...interface{}) error {
-	return bot.dm(userID, &model.Post{
+func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) error {
+	return bot.dm(mattermostUserID, &model.Post{
 		Message: fmt.Sprintf(format, args...),
 	})
 }
 
 // DMWithAttachments posts a Direct Message that contains Slack attachments.
 // Often used to include post actions.
-func (bot *bot) DMWithAttachments(userID string, attachments ...*model.SlackAttachment) error {
+func (bot *bot) DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) error {
 	post := model.Post{}
 	model.ParseSlackAttachment(&post, attachments)
-	return bot.dm(userID, &post)
+	return bot.dm(mattermostUserID, &post)
 }
 
-func (bot *bot) dm(userID string, post *model.Post) error {
-	channel, err := bot.pluginAPI.GetDirectChannel(userID, bot.mattermostUserID)
+func (bot *bot) dm(mattermostUserID string, post *model.Post) error {
+	channel, err := bot.pluginAPI.GetDirectChannel(mattermostUserID, bot.mattermostUserID)
 	if err != nil {
-		bot.pluginAPI.LogInfo("Couldn't get bot's DM channel", "user_id", userID)
+		bot.pluginAPI.LogInfo("Couldn't get bot's DM channel", "user_id", mattermostUserID)
 		return err
 	}
 	post.ChannelId = channel.Id

@@ -4,7 +4,7 @@
 package plugin
 
 import (
-	gohttp "net/http"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,46 +18,46 @@ import (
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin/command"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin/http"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 )
+
+type Env struct {
+	mscalendar.Env
+	bot                   bot.Bot
+	statusSyncJob         *mscalendar.StatusSyncJob
+	notificationProcessor mscalendar.NotificationProcessor
+	httpHandler           *httputils.Handler
+	configError           error
+}
 
 type Plugin struct {
 	plugin.MattermostPlugin
-	configLock    *sync.RWMutex
-	config        *config.Config
-	statusSyncJob *api.StatusSyncJob
 
-	httpHandler         *http.Handler
-	notificationHandler api.NotificationHandler
-
+	envLock   *sync.RWMutex
+	env       Env
 	Templates map[string]*template.Template
 }
 
-func NewWithConfig(conf *config.Config) *Plugin {
+func NewWithEnv(env mscalendar.Env) *Plugin {
 	return &Plugin{
-		configLock: &sync.RWMutex{},
-		config:     conf,
+		env: Env{
+			Env: env,
+		},
+		envLock: &sync.RWMutex{},
 	}
 }
 
 func (p *Plugin) OnActivate() error {
-	botUserID, err := p.Helpers.EnsureBot(&model.Bot{
-		Username:    config.BotUserName,
-		DisplayName: config.BotDisplayName,
-		Description: config.BotDescription,
-	}, plugin.ProfileImagePath("assets/profile.png"))
-	if err != nil {
-		return errors.Wrap(err, "failed to ensure bot account")
-	}
-	p.config.BotUserID = botUserID
-
-	// Templates
+	p.initEnv(&p.env)
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
 		return errors.Wrap(err, "couldn't get bundle path")
@@ -66,21 +66,22 @@ func (p *Plugin) OnActivate() error {
 	if err != nil {
 		return err
 	}
-	p.httpHandler = http.NewHandler()
-
-	p.notificationHandler = api.NewNotificationHandler(p.newAPIConfig())
 
 	command.Register(p.API.RegisterCommand)
-
-	p.API.LogInfo(p.config.PluginID + " activated")
 	return nil
 }
 
-// OnConfigurationChange is invoked when configuration changes may have been made.
-func (p *Plugin) OnConfigurationChange() error {
-	conf := p.getConfig()
+func (p *Plugin) OnConfigurationChange() (err error) {
+	defer func() {
+		p.updateEnv(func(e *Env) {
+			e.configError = err
+		})
+	}()
+
+	env := p.getEnv()
 	stored := config.StoredConfig{}
-	err := p.API.LoadPluginConfiguration(&stored)
+
+	err = p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
 		return errors.WithMessage(err, "failed to load plugin configuration")
 	}
@@ -88,7 +89,7 @@ func (p *Plugin) OnConfigurationChange() error {
 	if stored.OAuth2Authority == "" ||
 		stored.OAuth2ClientID == "" ||
 		stored.OAuth2ClientSecret == "" {
-		return errors.WithMessage(err, "failed to configure: OAuth2 credentials to be set in the config")
+		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
@@ -99,89 +100,104 @@ func (p *Plugin) OnConfigurationChange() error {
 	if err != nil {
 		return err
 	}
-	pluginURLPath := "/plugins/" + conf.PluginID
+	pluginURLPath := "/plugins/" + env.Config.PluginID
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
-	p.updateConfig(func(c *config.Config) {
-		c.StoredConfig = stored
-		c.MattermostSiteURL = *mattermostSiteURL
-		c.MattermostSiteHostname = mattermostURL.Hostname()
-		c.PluginURL = pluginURL
-		c.PluginURLPath = pluginURLPath
+	p.updateEnv(func(e *Env) {
+		p.initEnv(&p.env)
+
+		e.StoredConfig = stored
+		e.Config.MattermostSiteURL = *mattermostSiteURL
+		e.Config.MattermostSiteHostname = mattermostURL.Hostname()
+		e.Config.PluginURL = pluginURL
+		e.Config.PluginURLPath = pluginURLPath
+		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.Logger)
+
+		e.bot = e.bot.WithConfig(stored.BotConfig)
+		e.Config.BotUserID = e.bot.MattermostUserID()
+		e.Dependencies.Logger = e.bot
+		e.Dependencies.Poster = e.bot
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
+
+		if e.notificationProcessor == nil {
+			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
+		} else {
+			e.notificationProcessor.Configure(e.Env)
+		}
+
+		e.httpHandler = httputils.NewHandler()
+		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
+
+		// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
+		// This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
+		{
+			// Config is set to enable. No job exists, start a new job.
+			if e.EnableStatusSync && e.statusSyncJob == nil {
+				e.Logger.Debugf("Enabling user status sync job")
+				e.statusSyncJob = mscalendar.NewStatusSyncJob(e.Env)
+				go e.statusSyncJob.Start()
+			}
+
+			// Config is set to disable. Job exists, kill existing job.
+			if !e.EnableStatusSync && e.statusSyncJob != nil {
+				e.Logger.Debugf("Disabling user status sync job")
+				e.statusSyncJob.Cancel()
+				e.statusSyncJob = nil
+			}
+		}
 	})
-
-	if p.notificationHandler != nil {
-		p.notificationHandler.Configure(p.newAPIConfig())
-	}
-
-	p.POC_initUserStatusSyncJob()
 
 	return nil
 }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	apiconf := p.newAPIConfig()
-	api := api.New(apiconf, args.UserId)
-	command := command.Command{
-		Context:   c,
-		Args:      args,
-		ChannelID: args.ChannelId,
-		Config:    apiconf.Config,
-		API:       api,
+	env := p.getEnv()
+	if env.configError != nil {
+		p.API.LogError(env.configError.Error())
+		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, env.configError.Error(), http.StatusInternalServerError)
 	}
 
+	command := command.Command{
+		Context:    c,
+		Args:       args,
+		ChannelID:  args.ChannelId,
+		Config:     env.Config,
+		MSCalendar: mscalendar.New(env.Env, args.UserId),
+	}
 	out, err := command.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
-		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), gohttp.StatusInternalServerError)
+		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
 	}
 
-	apiconf.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
 	return &model.CommandResponse{}, nil
 }
 
-func (p *Plugin) ServeHTTP(pc *plugin.Context, w gohttp.ResponseWriter, req *gohttp.Request) {
-	apiconf := p.newAPIConfig()
-	mattermostUserID := req.Header.Get("Mattermost-User-ID")
-	ctx := req.Context()
-	ctx = api.Context(ctx, api.New(apiconf, mattermostUserID), p.notificationHandler)
-	ctx = config.Context(ctx, apiconf.Config)
-
-	p.httpHandler.ServeHTTP(w, req.WithContext(ctx))
-}
-
-func (p *Plugin) getConfig() *config.Config {
-	p.configLock.RLock()
-	defer p.configLock.RUnlock()
-	return &(*p.config)
-}
-
-func (p *Plugin) updateConfig(f func(*config.Config)) config.Config {
-	p.configLock.Lock()
-	defer p.configLock.Unlock()
-
-	f(p.config)
-	return *p.config
-}
-
-func (p *Plugin) newAPIConfig() api.Config {
-	conf := p.getConfig()
-	bot := bot.GetBot(p.API, conf.BotUserID).WithConfig(conf.BotConfig)
-	store := store.NewPluginStore(p.API, bot)
-
-	return api.Config{
-		Config: conf,
-		Dependencies: &api.Dependencies{
-			UserStore:         store,
-			OAuth2StateStore:  store,
-			SubscriptionStore: store,
-			EventStore:        store,
-			Logger:            bot,
-			Poster:            bot,
-			Remote:            remote.Makers[msgraph.Kind](conf, bot),
-			PluginAPI:         p.API,
-		},
+func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.Request) {
+	env := p.getEnv()
+	if env.configError != nil {
+		p.API.LogError(env.configError.Error())
+		http.Error(w, env.configError.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	env.httpHandler.ServeHTTP(w, req)
+}
+
+func (p *Plugin) getEnv() Env {
+	p.envLock.RLock()
+	defer p.envLock.RUnlock()
+	return p.env
+}
+
+func (p *Plugin) updateEnv(f func(*Env)) Env {
+	p.envLock.Lock()
+	defer p.envLock.Unlock()
+
+	f(&p.env)
+	return p.env
 }
 
 func (p *Plugin) loadTemplates(bundlePath string) error {
@@ -213,27 +229,22 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	return nil
 }
 
-// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
-// This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
-func (p *Plugin) POC_initUserStatusSyncJob() {
-	conf := p.newAPIConfig()
-	enable := p.getConfig().EnableStatusSync
-	logger := conf.Dependencies.Logger
+func (p *Plugin) initEnv(e *Env) error {
+	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
-	// Config is set to enable. No job exists, start a new job.
-	if enable && p.statusSyncJob == nil {
-		logger.Debugf("Enabling user status sync job")
-
-		job := api.NewStatusSyncJob(api.New(conf, ""))
-		p.statusSyncJob = job
-		go job.Start()
+	if e.bot == nil {
+		e.bot = bot.New(p.API, p.Helpers)
+		err := e.bot.Ensure(
+			&model.Bot{
+				Username:    config.BotUserName,
+				DisplayName: config.BotDisplayName,
+				Description: config.BotDescription,
+			},
+			"assets/profile.png")
+		if err != nil {
+			return errors.Wrap(err, "failed to ensure bot account")
+		}
 	}
 
-	// Config is set to disable. Job exists, kill existing job.
-	if !enable && p.statusSyncJob != nil {
-		logger.Debugf("Disabling user status sync job")
-
-		p.statusSyncJob.Cancel()
-		p.statusSyncJob = nil
-	}
+	return nil
 }
