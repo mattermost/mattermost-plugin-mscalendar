@@ -21,6 +21,9 @@ Here is some info to prove we got you logged in
 - Name: %s
 `
 
+const RemoteUserAlreadyConnected = "Remote user %s is already mapped to a MM user. Please run `/mscalendar disconnect` with account %s"
+const RemoteUserAlreadyConnectedNotFound = "User %s is already mapped to a MM user, but the MM user could not be found."
+
 func (api *api) InitOAuth2(mattermostUserID string) (url string, err error) {
 	remoteUser, err := api.GetRemoteUser(mattermostUserID)
 	if err == nil {
@@ -37,11 +40,6 @@ func (api *api) InitOAuth2(mattermostUserID string) (url string, err error) {
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
 }
 
-func (api *api) InitOAuth2ForBot() (url string, err error) {
-	mattermostUserID := api.Config.BotUserID
-	return api.InitOAuth2(mattermostUserID)
-}
-
 func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 	oconf := api.Remote.NewOAuth2Config()
 
@@ -56,8 +54,8 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 		if mattermostUserID != api.Config.BotUserID {
 			return errors.New("not authorized, user ID mismatch")
 		}
-		isAdmin, err := api.IsAuthorizedAdmin(authedUserID)
-		if err != nil || !isAdmin {
+		isAdmin, authErr := api.IsAuthorizedAdmin(authedUserID)
+		if authErr != nil || !isAdmin {
 			return errors.New("non-admin user attempting to set up bot account")
 		}
 	}
@@ -85,11 +83,11 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 	if err == nil {
 		user, userErr := api.GetMattermostUser(uid)
 		if userErr == nil {
-			api.Poster.DM(authedUserID, "Remote user %s is already mapped to a MM user. Please run `/mscalendar disconnect` with %s's account", me.Mail, user.Username)
-			return errors.Errorf("Remote user %s already connected to %s", me.Mail, user.Username)
+			api.Poster.DM(authedUserID, RemoteUserAlreadyConnected, me.Mail, user.Username)
+			return errors.Errorf(RemoteUserAlreadyConnected, me.Mail, user.Username)
 		} else {
 			// Orphaned connected account. Let it be overwritten by passing through here?
-			api.Poster.DM(authedUserID, "User '%s' is already mapped to a MM user, but the MM user could not be found.", me.Mail)
+			api.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, me.Mail)
 		}
 	}
 
@@ -99,7 +97,7 @@ func (api *api) CompleteOAuth2(authedUserID, code, state string) error {
 	}
 
 	if mattermostUserID == api.Config.BotUserID {
-		api.Poster.DM(authedUserID, "Bot user connected to account '%s'.", me.Mail)
+		api.Poster.DM(authedUserID, "Bot user connected to account %s.", me.Mail)
 	} else {
 		api.Poster.DM(mattermostUserID, WelcomeMessage, me.DisplayName)
 	}

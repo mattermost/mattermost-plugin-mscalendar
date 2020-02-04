@@ -45,7 +45,6 @@ func (api *api) syncStatusForUsers(mattermostUserIDs []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	remoteUserID := remoteUser.ID
 
 	fullUserIndex, err := api.UserStore.LoadUserIndex()
 	if err != nil {
@@ -73,7 +72,7 @@ func (api *api) syncStatusForUsers(mattermostUserIDs []string) (string, error) {
 		scheduleIDs = append(scheduleIDs, u.Email)
 	}
 
-	schedules, err := api.GetUserAvailabilities(remoteUserID, scheduleIDs)
+	schedules, err := api.GetUserAvailabilities(remoteUser.ID, scheduleIDs)
 	if err != nil {
 		return "", err
 	}

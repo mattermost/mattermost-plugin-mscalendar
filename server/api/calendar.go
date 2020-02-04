@@ -55,7 +55,6 @@ func (api *api) GetUserCalendars(mattermostUserID string) ([]*remote.Calendar, e
 	if err != nil {
 		return nil, err
 	}
-	remoteUserID := remoteUser.ID
 
-	return client.GetUserCalendars(remoteUserID)
+	return client.GetUserCalendars(remoteUser.ID)
 }

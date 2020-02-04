@@ -19,7 +19,6 @@ import (
 type OAuth2 interface {
 	CompleteOAuth2(authedUserID, code, state string) error
 	InitOAuth2(userID string) (url string, err error)
-	InitOAuth2ForBot() (url string, err error)
 }
 
 type Subscriptions interface {
@@ -58,7 +57,6 @@ type User interface {
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	DisconnectUser(mattermostUserID string) error
-	DisconnectBot() error
 	GetMattermostUser(mattermostUserID string) (*model.User, error)
 }
 

@@ -15,13 +15,15 @@ import (
 // Handler is an http.Handler for all plugin HTTP endpoints
 type Handler struct {
 	// Logger utils.Logger
+	*config.Config
 	*mux.Router
 }
 
 // InitRouter initializes the router.
-func NewHandler() *Handler {
+func NewHandler(conf *config.Config) *Handler {
 	h := &Handler{
 		Router: mux.NewRouter(),
+		Config: conf,
 	}
 
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
@@ -39,7 +41,6 @@ func NewHandler() *Handler {
 
 	oauth2Router := h.Router.PathPrefix(config.PathOAuth2).Subrouter()
 	oauth2Router.HandleFunc(config.PathConnect, h.oauth2Connect).Methods("GET")
-	oauth2Router.HandleFunc(config.PathConnectBot, h.oauth2ConnectBot).Methods("GET")
 	oauth2Router.HandleFunc(config.PathComplete, h.oauth2Complete).Methods("GET")
 
 	h.Router.Handle("{anything:.*}", http.NotFoundHandler())

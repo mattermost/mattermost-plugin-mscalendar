@@ -60,18 +60,3 @@ func (mr *MockOAuth2MockRecorder) InitOAuth2(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitOAuth2", reflect.TypeOf((*MockOAuth2)(nil).InitOAuth2), arg0)
 }
-
-// InitOAuth2ForBot mocks base method
-func (m *MockOAuth2) InitOAuth2ForBot() (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitOAuth2ForBot")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// InitOAuth2ForBot indicates an expected call of InitOAuth2ForBot
-func (mr *MockOAuth2MockRecorder) InitOAuth2ForBot() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitOAuth2ForBot", reflect.TypeOf((*MockOAuth2)(nil).InitOAuth2ForBot))
-}

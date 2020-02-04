@@ -3,6 +3,8 @@
 
 package command
 
+import "github.com/pkg/errors"
+
 func (c *Command) disconnect(parameters ...string) (string, error) {
 	err := c.API.DisconnectUser(c.Args.UserId)
 	if err != nil {
@@ -13,7 +15,12 @@ func (c *Command) disconnect(parameters ...string) (string, error) {
 }
 
 func (c *Command) disconnectBot(parameters ...string) (string, error) {
-	err := c.API.DisconnectBot()
+	isAdmin, err := c.API.IsAuthorizedAdmin(c.Args.UserId)
+	if err != nil || !isAdmin {
+		return "", errors.New("non-admin user attempting to disconnect bot account")
+	}
+
+	err = c.API.DisconnectUser(c.Config.BotUserID)
 	if err != nil {
 		return "", err
 	}

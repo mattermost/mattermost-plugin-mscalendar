@@ -51,10 +51,6 @@ func (api *api) DisconnectUser(mattermostUserID string) error {
 	return api.Dependencies.UserStore.DeleteUser(mattermostUserID)
 }
 
-func (api *api) DisconnectBot() error {
-	return api.Dependencies.UserStore.DeleteUser(api.BotUserID)
-}
-
 func (api *api) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 	return api.Dependencies.IsAuthorizedAdmin(mattermostUserID)
 }

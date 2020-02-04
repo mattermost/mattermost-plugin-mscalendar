@@ -20,5 +20,6 @@ func NewMockDependencies(ctrl *gomock.Controller) *api.Dependencies {
 		Logger:            &bot.NilLogger{},
 		Poster:            mock_bot.NewMockPoster(ctrl),
 		Remote:            mock_remote.NewMockRemote(ctrl),
+		IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return false, nil },
 	}
 }

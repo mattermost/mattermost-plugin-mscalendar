@@ -17,29 +17,20 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api := api.FromContext(r.Context())
-	url, err := api.InitOAuth2(userID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, url, http.StatusFound)
-}
 
-func (h *Handler) oauth2ConnectBot(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("Mattermost-User-ID")
-	if userID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
-		return
-	}
-
-	api := api.FromContext(r.Context())
-	isAdmin, err := api.IsAuthorizedAdmin(userID)
-	if err != nil || !isAdmin {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
-		return
+	var url string
+	var err error
+	if r.URL.Query().Get("bot") == "true" {
+		isAdmin, err := api.IsAuthorizedAdmin(userID)
+		if err != nil || !isAdmin {
+			http.Error(w, "Not authorized", http.StatusUnauthorized)
+			return
+		}
+		url, err = api.InitOAuth2(h.Config.BotUserID)
+	} else {
+		url, err = api.InitOAuth2(userID)
 	}
 
-	url, err := api.InitOAuth2ForBot()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

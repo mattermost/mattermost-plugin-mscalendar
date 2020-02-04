@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/pkg/errors"
 )
 
 func (c *Command) connect(parameters ...string) (string, error) {
@@ -22,12 +23,17 @@ func (c *Command) connect(parameters ...string) (string, error) {
 }
 
 func (c *Command) connectBot(parameters ...string) (string, error) {
-	_, err := c.API.GetRemoteUser(c.Config.BotUserID)
+	isAdmin, err := c.API.IsAuthorizedAdmin(c.Args.UserId)
+	if err != nil || !isAdmin {
+		return "", errors.New("non-admin user attempting to connect bot account")
+	}
+
+	_, err = c.API.GetRemoteUser(c.Config.BotUserID)
 	if err == nil {
 		return "Bot user already connected. Please run `/mscalendar disconnect_bot`", nil
 	}
 
-	out := fmt.Sprintf("[Click here to link the bot's %s account.](%s/oauth2/connect_bot)",
+	out := fmt.Sprintf("[Click here to link the bot's %s account.](%s/oauth2/connect?bot=true)",
 		config.ApplicationName,
 		c.Config.PluginURL)
 	return out, nil
