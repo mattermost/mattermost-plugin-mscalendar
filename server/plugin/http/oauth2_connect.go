@@ -21,8 +21,8 @@ func (h *Handler) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 	var url string
 	var err error
 	if r.URL.Query().Get("bot") == "true" {
-		isAdmin, err := api.IsAuthorizedAdmin(userID)
-		if err != nil || !isAdmin {
+		isAdmin, adminErr := api.IsAuthorizedAdmin(userID)
+		if adminErr != nil || !isAdmin {
 			http.Error(w, "Not authorized", http.StatusUnauthorized)
 			return
 		}
