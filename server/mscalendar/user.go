@@ -15,6 +15,7 @@ import (
 type Users interface {
 	GetActingUser() *User
 	GetTimezone(user *User) (string, error)
+	DisconnectUser(mattermostUserID string) error
 }
 
 type User struct {
@@ -87,4 +88,8 @@ func (user *User) Markdown() string {
 	} else {
 		return fmt.Sprintf("UserID: `%s`", user.MattermostUserID)
 	}
+}
+
+func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
+	return m.Store.DeleteUser(mattermostUserID)
 }

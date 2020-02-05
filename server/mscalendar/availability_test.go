@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
@@ -29,7 +30,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 	}{
 		"User is free but dnd, mark user as online": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "0",
 			},
 			currentStatus: "dnd",
@@ -37,7 +38,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 		"User is busy but online, mark as dnd": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "2",
 			},
 			currentStatus: "online",
@@ -45,7 +46,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 		"User is free and online, do not change status": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "0",
 			},
 			currentStatus: "online",
@@ -53,7 +54,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 		"User is busy and dnd, do not change status": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "2",
 			},
 			currentStatus: "dnd",
@@ -65,7 +66,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 			defer storeCtrl.Finish()
 			s := mock_store.NewMockStore(storeCtrl)
 
-			conf := &config.Config{}
+			conf := &config.Config{BotUserID: "bot_mm_id"}
 
 			posterCtrl := gomock.NewController(t)
 			defer posterCtrl.Finish()
@@ -98,22 +99,41 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 
 			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
 				&store.UserShort{
-					MattermostUserID: "some_mm_id",
-					RemoteID:         "some_remote_id",
-					Email:            "some_email@example.com",
+					MattermostUserID: "user_mm_id",
+					RemoteID:         "user_remote_id",
+					Email:            "user_email@example.com",
+				},
+				&store.UserShort{
+					MattermostUserID: "bot_mm_id",
+					RemoteID:         "bot_remote_id",
+					Email:            "bot_email@example.com",
 				},
 			}, nil).AnyTimes()
 
-			mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient)
+			token := &oauth2.Token{
+				AccessToken: "bot_oauth_token",
+			}
+			s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
+				MattermostUserID: "bot_mm_id",
+				OAuth2Token:      token,
+				Remote: &remote.User{
+					ID:   "bot_remote_id",
+					Mail: "bot_email@example.com",
+				},
+			}, nil).Times(2)
 
-			mockClient.EXPECT().GetSchedule("some_remote_id", []string{"some_email@example.com"}, gomock.Any(), gomock.Any(), 15).Return([]*remote.ScheduleInformation{tc.sched}, nil)
+			mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient)
+			mockClient.EXPECT().GetSuperuserToken().Return("bot_bearer_token", nil)
+			mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "bot_bearer_token").Return(mockClient)
 
-			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"some_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "some_mm_id"}}, nil)
+			mockClient.EXPECT().GetSchedule("bot_remote_id", []string{"user_email@example.com"}, gomock.Any(), gomock.Any(), 15).Return([]*remote.ScheduleInformation{tc.sched}, nil)
+
+			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
 
 			if tc.newStatus == "" {
-				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", gomock.Any()).Times(0)
+				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
 			} else {
-				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", tc.newStatus).Times(1)
+				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", tc.newStatus).Times(1)
 			}
 
 			mscalendar := New(env, "")

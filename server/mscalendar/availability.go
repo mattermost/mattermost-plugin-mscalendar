@@ -35,11 +35,25 @@ func (m *mscalendar) SyncStatusAll() (string, error) {
 		return "", err
 	}
 
-	mmIDs := userIndex.GetMattermostUserIDs()
+	index := userIndex.GetMattermostUserIDs()
+	mmIDs := []string{}
+	for _, id := range index {
+		if id != m.Config.BotUserID {
+			mmIDs = append(mmIDs, id)
+		}
+	}
 	return m.syncStatusUsers(mmIDs)
 }
 
 func (m *mscalendar) syncStatusUsers(mattermostUserIDs []string) (string, error) {
+	err := m.Filter(
+		withClient,
+		withUserExpanded(m.actingUser),
+	)
+	if err != nil {
+		return "", err
+	}
+
 	fullUserIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
@@ -66,7 +80,7 @@ func (m *mscalendar) syncStatusUsers(mattermostUserIDs []string) (string, error)
 		scheduleIDs = append(scheduleIDs, u.Email)
 	}
 
-	schedules, err := m.GetAvailabilities(filteredUsers[0].RemoteID, scheduleIDs)
+	schedules, err := m.GetAvailabilities(m.actingUser.Remote.ID, scheduleIDs)
 	if err != nil {
 		return "", err
 	}
@@ -111,7 +125,10 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 }
 
 func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client := m.MakeSuperuserClient()
+	client, err := m.MakeSuperuserClient()
+	if err != nil {
+		return nil, err
+	}
 
 	start := remote.NewDateTime(time.Now().UTC(), "UTC")
 	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
