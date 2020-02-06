@@ -21,6 +21,7 @@ const WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
 Here is some info to prove we got you logged in
 - Name: %s
 `
+const BotWelcomeMessage = "Bot user connected to account %s."
 
 const RemoteUserAlreadyConnected = "Remote user %s is already mapped to a MM user. Please run `/mscalendar disconnect` with account %s"
 const RemoteUserAlreadyConnectedNotFound = "User %s is already mapped to a MM user, but the MM user could not be found."
@@ -51,6 +52,14 @@ func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
 }
 
+func (app *oauth2App) InitOAuth2ForBot(mattermostUserID string) (url string, err error) {
+	isAdmin, adminErr := app.IsAuthorizedAdmin(mattermostUserID)
+	if adminErr != nil || !isAdmin {
+		return "", errors.New("non-admin attempting to connect bot account")
+	}
+	return app.InitOAuth2(app.Config.BotUserID)
+}
+
 func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	if authedUserID == "" || code == "" || state == "" {
 		return errors.New("missing user, code or state")
@@ -68,7 +77,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		if mattermostUserID != app.Config.BotUserID {
 			return errors.New("not authorized, user ID mismatch")
 		}
-		isAdmin, authErr := app.IsAuthorizedAdmin(authedUserID) // needs fix
+		isAdmin, authErr := app.IsAuthorizedAdmin(authedUserID)
 		if authErr != nil || !isAdmin {
 			return errors.New("non-admin user attempting to set up bot account")
 		}
@@ -111,7 +120,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	}
 
 	if mattermostUserID == app.Config.BotUserID {
-		app.Poster.DM(authedUserID, "Bot user connected to account %s.", me.Mail)
+		app.Poster.DM(authedUserID, BotWelcomeMessage, me.Mail)
 	} else {
 		app.Poster.DM(mattermostUserID, WelcomeMessage, me.Mail)
 	}

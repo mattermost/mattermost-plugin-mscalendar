@@ -151,6 +151,20 @@ func (mr *MockMSCalendarMockRecorder) DeleteOrphanedSubscription(arg0 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrphanedSubscription", reflect.TypeOf((*MockMSCalendar)(nil).DeleteOrphanedSubscription), arg0)
 }
 
+// DisconnectUser mocks base method
+func (m *MockMSCalendar) DisconnectUser(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DisconnectUser", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DisconnectUser indicates an expected call of DisconnectUser
+func (mr *MockMSCalendarMockRecorder) DisconnectUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisconnectUser", reflect.TypeOf((*MockMSCalendar)(nil).DisconnectUser), arg0)
+}
+
 // FindMeetingTimes mocks base method
 func (m *MockMSCalendar) FindMeetingTimes(arg0 *mscalendar.User, arg1 *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	m.ctrl.T.Helper()
@@ -210,6 +224,21 @@ func (mr *MockMSCalendarMockRecorder) GetCalendars(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendars", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendars), arg0)
 }
 
+// GetRemoteUser mocks base method
+func (m *MockMSCalendar) GetRemoteUser(arg0 string) (*remote.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemoteUser", arg0)
+	ret0, _ := ret[0].(*remote.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteUser indicates an expected call of GetRemoteUser
+func (mr *MockMSCalendarMockRecorder) GetRemoteUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteUser", reflect.TypeOf((*MockMSCalendar)(nil).GetRemoteUser), arg0)
+}
+
 // GetTimezone mocks base method
 func (m *MockMSCalendar) GetTimezone(arg0 *mscalendar.User) (string, error) {
 	m.ctrl.T.Helper()
@@ -223,6 +252,21 @@ func (m *MockMSCalendar) GetTimezone(arg0 *mscalendar.User) (string, error) {
 func (mr *MockMSCalendarMockRecorder) GetTimezone(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimezone", reflect.TypeOf((*MockMSCalendar)(nil).GetTimezone), arg0)
+}
+
+// IsAuthorizedAdmin mocks base method
+func (m *MockMSCalendar) IsAuthorizedAdmin(arg0 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsAuthorizedAdmin", arg0)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsAuthorizedAdmin indicates an expected call of IsAuthorizedAdmin
+func (mr *MockMSCalendarMockRecorder) IsAuthorizedAdmin(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAuthorizedAdmin", reflect.TypeOf((*MockMSCalendar)(nil).IsAuthorizedAdmin), arg0)
 }
 
 // ListRemoteSubscriptions mocks base method

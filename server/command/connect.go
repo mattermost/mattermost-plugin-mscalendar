@@ -11,9 +11,9 @@ import (
 )
 
 func (c *Command) connect(parameters ...string) (string, error) {
-	u, err := c.API.GetRemoteUser(c.Args.UserId) // needs fix
+	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
-		return fmt.Sprintf("Your account is already connected to %s. Please run `/mscalendar disconnect`", u.Remote.Mail), nil
+		return fmt.Sprintf("Your account is already connected to %s. Please run `/mscalendar disconnect`", ru.Mail), nil
 	}
 
 	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
@@ -23,17 +23,17 @@ func (c *Command) connect(parameters ...string) (string, error) {
 }
 
 func (c *Command) connectBot(parameters ...string) (string, error) {
-	isAdmin, err := c.API.IsAuthorizedAdmin(c.Args.UserId) // needs fix
+	isAdmin, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
 	if err != nil || !isAdmin {
-		return "", errors.New("Non-admin user attempting to connect bot account")
+		return "", errors.New("non-admin user attempting to connect bot account")
 	}
 
-	_, err = c.API.GetRemoteUser(c.Config.BotUserID) // needs fix
+	ru, err := c.MSCalendar.GetRemoteUser(c.Config.BotUserID)
 	if err == nil {
-		return "Bot user already connected. Please run `/mscalendar disconnect_bot`", nil
+		return fmt.Sprintf("Bot user already connected to %s. Please run `/mscalendar disconnect_bot`", ru.Mail), nil
 	}
 
-	out := fmt.Sprintf("[Click here to link the bot's %s account.](%s/oauth2/connect?bot=true)",
+	out := fmt.Sprintf("[Click here to link the bot's %s account.](%s/oauth2/connect_bot)",
 		config.ApplicationName,
 		c.Config.PluginURL)
 	return out, nil

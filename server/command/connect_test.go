@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/api/mock_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
@@ -18,26 +18,26 @@ func TestConnect(t *testing.T) {
 	tcs := []struct {
 		name           string
 		command        string
-		setup          func(api.API)
+		setup          func(m mscalendar.MSCalendar)
 		expectedOutput string
 		expectedError  string
 	}{
 		{
 			name:    "user already connected",
 			command: "connect",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, nil).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{Mail: "user@email.com"}, nil).Times(1)
 			},
-			expectedOutput: "Your account is already connected. Please run `/mscalendar disconnect`",
+			expectedOutput: "Your account is already connected to user@email.com. Please run `/mscalendar disconnect`",
 			expectedError:  "",
 		},
 		{
 			name:    "user not connected",
 			command: "connect",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
 			},
 			expectedOutput: "[Click here to link your Microsoft Calendar account.](http://localhost/oauth2/connect)",
 			expectedError:  "",
@@ -45,9 +45,9 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "non-admin connecting bot account",
 			command: "connect_bot",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().IsAuthorizedAdmin("user_id").Return(false, nil).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(false, nil).Times(1)
 			},
 			expectedOutput: "",
 			expectedError:  "Command /mscalendar connect_bot failed: non-admin user attempting to connect bot account",
@@ -55,23 +55,23 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "bot user already connected",
 			command: "connect_bot",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mapi.EXPECT().GetRemoteUser("bot_user_id").Return(&remote.User{}, nil).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
+				mscal.EXPECT().GetRemoteUser("bot_user_id").Return(&remote.User{Mail: "bot@email.com"}, nil).Times(1)
 			},
-			expectedOutput: "Bot user already connected. Please run `/mscalendar disconnect_bot`",
+			expectedOutput: "Bot user already connected to bot@email.com. Please run `/mscalendar disconnect_bot`",
 			expectedError:  "",
 		},
 		{
 			name:    "bot user not connected",
 			command: "connect_bot",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mapi.EXPECT().GetRemoteUser("bot_user_id").Return(nil, errors.New("remote user not found")).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
+				mscal.EXPECT().GetRemoteUser("bot_user_id").Return(nil, errors.New("remote user not found")).Times(1)
 			},
-			expectedOutput: "[Click here to link the bot's Microsoft Calendar account.](http://localhost/oauth2/connect?bot=true)",
+			expectedOutput: "[Click here to link the bot's Microsoft Calendar account.](http://localhost/oauth2/connect_bot)",
 			expectedError:  "",
 		},
 	}
@@ -86,20 +86,20 @@ func TestConnect(t *testing.T) {
 				BotUserID: "bot_user_id",
 			}
 
-			mapi := mock_api.NewMockAPI(ctrl)
+			mscal := mock_mscalendar.NewMockMSCalendar(ctrl)
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
 					Command: "/mscalendar " + tc.command,
 					UserId:  "user_id",
 				},
-				ChannelID: "channel_id",
-				Config:    conf,
-				API:       mapi,
+				ChannelID:  "channel_id",
+				Config:     conf,
+				MSCalendar: mscal,
 			}
 
 			if tc.setup != nil {
-				tc.setup(mapi)
+				tc.setup(mscal)
 			}
 
 			out, err := command.Handle()

@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/api/mock_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
@@ -17,16 +17,16 @@ func TestDisconnect(t *testing.T) {
 	tcs := []struct {
 		name           string
 		command        string
-		setup          func(api.API)
+		setup          func(mscalendar.MSCalendar)
 		expectedOutput string
 		expectedError  string
 	}{
 		{
 			name:    "disconnect failed",
 			command: "disconnect",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().DisconnectUser("user_id").Return(errors.New("Some error")).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("Some error")).Times(1)
 			},
 			expectedOutput: "",
 			expectedError:  "Command /mscalendar disconnect failed: Some error",
@@ -34,9 +34,9 @@ func TestDisconnect(t *testing.T) {
 		{
 			name:    "disconnect successful",
 			command: "disconnect",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().DisconnectUser("user_id").Return(nil).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().DisconnectUser("user_id").Return(nil).Times(1)
 			},
 			expectedOutput: "Successfully disconnected your account",
 			expectedError:  "",
@@ -44,9 +44,9 @@ func TestDisconnect(t *testing.T) {
 		{
 			name:    "non-admin disconnecting bot account",
 			command: "disconnect_bot",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().IsAuthorizedAdmin("user_id").Return(false, nil).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(false, nil).Times(1)
 			},
 			expectedOutput: "",
 			expectedError:  "Command /mscalendar disconnect_bot failed: non-admin user attempting to disconnect bot account",
@@ -54,10 +54,10 @@ func TestDisconnect(t *testing.T) {
 		{
 			name:    "bot disconnect failed",
 			command: "disconnect_bot",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mapi.EXPECT().DisconnectUser("bot_user_id").Return(errors.New("Some error")).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
+				mscal.EXPECT().DisconnectUser("bot_user_id").Return(errors.New("Some error")).Times(1)
 			},
 			expectedOutput: "",
 			expectedError:  "Command /mscalendar disconnect_bot failed: Some error",
@@ -65,10 +65,10 @@ func TestDisconnect(t *testing.T) {
 		{
 			name:    "bot disconnect successful",
 			command: "disconnect_bot",
-			setup: func(a api.API) {
-				mapi := a.(*mock_api.MockAPI)
-				mapi.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mapi.EXPECT().DisconnectUser("bot_user_id").Return(nil).Times(1)
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
+				mscal.EXPECT().DisconnectUser("bot_user_id").Return(nil).Times(1)
 			},
 			expectedOutput: "Successfully disconnected bot user",
 			expectedError:  "",
@@ -85,20 +85,20 @@ func TestDisconnect(t *testing.T) {
 				BotUserID: "bot_user_id",
 			}
 
-			mapi := mock_api.NewMockAPI(ctrl)
+			mscal := mock_mscalendar.NewMockMSCalendar(ctrl)
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
 					Command: "/mscalendar " + tc.command,
 					UserId:  "user_id",
 				},
-				ChannelID: "channel_id",
-				Config:    conf,
-				API:       mapi,
+				ChannelID:  "channel_id",
+				Config:     conf,
+				MSCalendar: mscal,
 			}
 
 			if tc.setup != nil {
-				tc.setup(mapi)
+				tc.setup(mscal)
 			}
 
 			out, err := command.Handle()

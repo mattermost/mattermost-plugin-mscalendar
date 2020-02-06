@@ -15,7 +15,7 @@ import (
 
 type Remote interface {
 	MakeClient(context.Context, *oauth2.Token) Client
-	MakeSuperuserClient(context.Context, string) Client
+	MakeSuperuserClient(ctx context.Context, token string) Client
 	NewOAuth2Config() *oauth2.Config
 	HandleWebhook(http.ResponseWriter, *http.Request) []*Notification
 }

@@ -9,6 +9,7 @@ import (
 
 type App interface {
 	InitOAuth2(mattermostUserID string) (string, error)
+	InitOAuth2ForBot(mattermostUserID string) (string, error)
 	CompleteOAuth2(mattermostUserID, code, state string) error
 }
 
@@ -23,5 +24,6 @@ func Init(h *httputils.Handler, app App) {
 
 	oauth2Router := h.Router.PathPrefix("/oauth2").Subrouter()
 	oauth2Router.HandleFunc("/connect", oa.oauth2Connect).Methods("GET")
+	oauth2Router.HandleFunc("/connect_bot", oa.oauth2ConnectBot).Methods("GET")
 	oauth2Router.HandleFunc("/complete", oa.oauth2Complete).Methods("GET")
 }

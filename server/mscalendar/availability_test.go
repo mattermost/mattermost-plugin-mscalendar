@@ -22,7 +22,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
-func TestSyncStatusForAllUsers(t *testing.T) {
+func TestSyncStatusAll(t *testing.T) {
 	for name, tc := range map[string]struct {
 		sched         *remote.ScheduleInformation
 		currentStatus string
@@ -62,30 +62,17 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			storeCtrl := gomock.NewController(t)
-			defer storeCtrl.Finish()
-			s := mock_store.NewMockStore(storeCtrl)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-			conf := &config.Config{BotUserID: "bot_mm_id"}
-
-			posterCtrl := gomock.NewController(t)
-			defer posterCtrl.Finish()
-			poster := mock_bot.NewMockPoster(posterCtrl)
+			s := mock_store.NewMockStore(ctrl)
+			poster := mock_bot.NewMockPoster(ctrl)
+			mockRemote := mock_remote.NewMockRemote(ctrl)
+			mockClient := mock_remote.NewMockClient(ctrl)
+			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 
 			logger := &bot.TestLogger{TB: t}
-
-			remoteCtrl := gomock.NewController(t)
-			defer remoteCtrl.Finish()
-			mockRemote := mock_remote.NewMockRemote(remoteCtrl)
-
-			clientCtrl := gomock.NewController(t)
-			defer clientCtrl.Finish()
-			mockClient := mock_remote.NewMockClient(clientCtrl)
-
-			pluginAPICtrl := gomock.NewController(t)
-			defer pluginAPICtrl.Finish()
-			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(pluginAPICtrl)
-
+			conf := &config.Config{BotUserID: "bot_mm_id"}
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
@@ -120,9 +107,11 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 					ID:   "bot_remote_id",
 					Mail: "bot_email@example.com",
 				},
-			}, nil).Times(2)
+			}, nil).Times(1)
 
-			mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient)
+			mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
+
+			mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
 			mockClient.EXPECT().GetSuperuserToken().Return("bot_bearer_token", nil)
 			mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "bot_bearer_token").Return(mockClient)
 

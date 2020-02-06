@@ -15,7 +15,7 @@ func (c *Command) disconnect(parameters ...string) (string, error) {
 }
 
 func (c *Command) disconnectBot(parameters ...string) (string, error) {
-	isAdmin, err := c.API.IsAuthorizedAdmin(c.Args.UserId) // needs fix
+	isAdmin, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
 	if err != nil || !isAdmin {
 		return "", errors.New("non-admin user attempting to disconnect bot account")
 	}
