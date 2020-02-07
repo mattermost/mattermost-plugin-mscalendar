@@ -13,6 +13,7 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
@@ -23,8 +24,8 @@ Here is some info to prove we got you logged in
 `
 const BotWelcomeMessage = "Bot user connected to account %s."
 
-const RemoteUserAlreadyConnected = "Remote user %s is already mapped to a MM user. Please run `/mscalendar disconnect` with account %s"
-const RemoteUserAlreadyConnectedNotFound = "User %s is already mapped to a MM user, but the MM user could not be found."
+const RemoteUserAlreadyConnected = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account."
+const RemoteUserAlreadyConnectedNotFound = "%s account `%s` is already mapped to a Mattermost account, but the Mattermost user could not be found."
 
 type oauth2App struct {
 	Env
@@ -99,11 +100,12 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	if err == nil {
 		user, userErr := app.PluginAPI.GetMattermostUser(uid)
 		if userErr == nil {
-			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, me.Mail, user.Username)
-			return errors.Errorf(RemoteUserAlreadyConnected, me.Mail, user.Username)
+			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, config.ApplicationName, me.Mail, config.CommandTrigger, user.Username)
+			return errors.Errorf(RemoteUserAlreadyConnected, config.ApplicationName, me.Mail, config.CommandTrigger, user.Username)
 		} else {
-			// Orphaned connected account. Let it be overwritten by passing through here?
-			app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, me.Mail)
+			// Couldn't fetch connected MM account. Reject connect attempt.
+			app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
+			return errors.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 		}
 	}
 

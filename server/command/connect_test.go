@@ -29,7 +29,7 @@ func TestConnect(t *testing.T) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{Mail: "user@email.com"}, nil).Times(1)
 			},
-			expectedOutput: "Your account is already connected to user@email.com. Please run `/mscalendar disconnect`",
+			expectedOutput: "Your Mattermost account is already connected to Microsoft Calendar account `user@email.com`. To connect to a different account, first run `/mscalendar disconnect`.",
 			expectedError:  "",
 		},
 		{
@@ -60,7 +60,8 @@ func TestConnect(t *testing.T) {
 				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
 				mscal.EXPECT().GetRemoteUser("bot_user_id").Return(&remote.User{Mail: "bot@email.com"}, nil).Times(1)
 			},
-			expectedOutput: "Bot user already connected to bot@email.com. Please run `/mscalendar disconnect_bot`",
+			//The bot account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect_bot
+			expectedOutput: "The bot account is already connected to Microsoft Calendar account `bot@email.com`. To connect to a different account, first run `/mscalendar disconnect_bot`.",
 			expectedError:  "",
 		},
 		{

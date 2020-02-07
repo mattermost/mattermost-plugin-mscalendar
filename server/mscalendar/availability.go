@@ -35,14 +35,14 @@ func (m *mscalendar) SyncStatusAll() (string, error) {
 		return "", err
 	}
 
-	index := userIndex.GetMattermostUserIDs()
-	mmIDs := []string{}
-	for _, id := range index {
+	allIDs := userIndex.GetMattermostUserIDs()
+	filteredIDs := []string{}
+	for _, id := range allIDs {
 		if id != m.Config.BotUserID {
-			mmIDs = append(mmIDs, id)
+			filteredIDs = append(filteredIDs, id)
 		}
 	}
-	return m.syncStatusUsers(mmIDs)
+	return m.syncStatusUsers(filteredIDs)
 }
 
 func (m *mscalendar) syncStatusUsers(mattermostUserIDs []string) (string, error) {

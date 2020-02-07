@@ -324,7 +324,9 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				poster.EXPECT().DM(
 					gomock.Eq("fake@mattermost.com"),
 					gomock.Eq(RemoteUserAlreadyConnected),
+					gomock.Eq("Microsoft Calendar"),
 					gomock.Eq("mail-value"),
+					gomock.Eq("mscalendar"),
 					gomock.Eq("sample-username"),
 				).Return(nil).Times(1)
 			},

@@ -13,7 +13,7 @@ import (
 func (c *Command) connect(parameters ...string) (string, error) {
 	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
-		return fmt.Sprintf("Your account is already connected to %s. Please run `/mscalendar disconnect`", ru.Mail), nil
+		return fmt.Sprintf("Your Mattermost account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect`.", config.ApplicationName, ru.Mail, config.CommandTrigger), nil
 	}
 
 	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
@@ -30,7 +30,7 @@ func (c *Command) connectBot(parameters ...string) (string, error) {
 
 	ru, err := c.MSCalendar.GetRemoteUser(c.Config.BotUserID)
 	if err == nil {
-		return fmt.Sprintf("Bot user already connected to %s. Please run `/mscalendar disconnect_bot`", ru.Mail), nil
+		return fmt.Sprintf("The bot account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect_bot`.", config.ApplicationName, ru.Mail, config.CommandTrigger), nil
 	}
 
 	out := fmt.Sprintf("[Click here to link the bot's %s account.](%s/oauth2/connect_bot)",
