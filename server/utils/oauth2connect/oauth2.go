@@ -5,12 +5,14 @@ package oauth2connect
 
 import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
+	"golang.org/x/oauth2"
 )
 
 type App interface {
 	InitOAuth2(mattermostUserID string) (string, error)
 	InitOAuth2ForBot(mattermostUserID string) (string, error)
 	CompleteOAuth2(mattermostUserID, code, state string) error
+	RefreshOAuth2Token(mattermostUserID string) (*oauth2.Token, error)
 }
 
 type oa struct {

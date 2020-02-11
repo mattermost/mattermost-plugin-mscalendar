@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See License for license information.
+
 package mscalendar
 
 import (
@@ -7,10 +10,12 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
@@ -30,6 +35,7 @@ const (
 	fakeBotID       = "bot-user-id"
 	fakeBotRemoteID = "bot-remote-id"
 	fakeCode        = "fakecode"
+	fakeAccessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik5HVEZ2ZEstZnl0aEV1Q..."
 )
 
 func TestCompleteOAuth2Happy(t *testing.T) {
@@ -377,6 +383,114 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 	}
 }
 
+func TestRefreshOAuth2Token(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	tcs := []struct {
+		name              string
+		mattermostUserID  string
+		setup             func(dependencies *Dependencies)
+		registerResponder func()
+		expectError       bool
+		expectToken       string
+	}{
+		{
+			name:             "error loading user",
+			mattermostUserID: fakeID,
+			setup: func(d *Dependencies) {
+				s := d.Store.(*mock_store.MockStore)
+				s.EXPECT().LoadUser(fakeID).Return(nil, errors.New("failed to load user")).Times(1)
+			},
+			expectError: true,
+		},
+		{
+			name:             "token expired. failed to fetch new token",
+			mattermostUserID: fakeID,
+			setup: func(d *Dependencies) {
+				before := time.Now().Add(time.Duration(-24 * time.Hour))
+				token := &oauth2.Token{AccessToken: "original_token", RefreshToken: "original_refresh", Expiry: before}
+				s := d.Store.(*mock_store.MockStore)
+				s.EXPECT().LoadUser(fakeID).Return(&store.User{OAuth2Token: token}, nil).Times(1)
+
+			},
+			registerResponder: badTokenExchangeResponder,
+			expectError:       true,
+		},
+		{
+			name:             "token expired. new token retrieved, failed to store user",
+			mattermostUserID: fakeID,
+			setup: func(d *Dependencies) {
+				before := time.Now().Add(time.Duration(-24 * time.Hour))
+				token := &oauth2.Token{AccessToken: "original_token", RefreshToken: "original_refresh", Expiry: before}
+				u := &store.User{OAuth2Token: token}
+
+				s := d.Store.(*mock_store.MockStore)
+				s.EXPECT().LoadUser(fakeID).Return(u, nil).Times(1)
+
+				s.EXPECT().StoreUser(u).Return(errors.New("failed to store user")).Times(1)
+			},
+			registerResponder: statusOKGraphAPIResponder,
+			expectError:       true,
+		},
+		{
+			name:             "token expired. new token retrieved, success",
+			mattermostUserID: fakeID,
+			setup: func(d *Dependencies) {
+				before := time.Now().Add(time.Duration(-24 * time.Hour))
+				token := &oauth2.Token{AccessToken: "original_token", RefreshToken: "original_refresh", Expiry: before}
+				u := &store.User{OAuth2Token: token}
+
+				s := d.Store.(*mock_store.MockStore)
+				s.EXPECT().LoadUser(fakeID).Return(u, nil).Times(1)
+
+				s.EXPECT().StoreUser(u).Return(nil).Times(1)
+			},
+			registerResponder: statusOKGraphAPIResponder,
+			expectToken:       fakeAccessToken,
+		},
+		{
+			name:             "token not expired. original token preserved",
+			mattermostUserID: fakeID,
+			setup: func(d *Dependencies) {
+				before := time.Now().Add(time.Duration(24 * time.Hour))
+				token := &oauth2.Token{AccessToken: "original_token", RefreshToken: "original_refresh", Expiry: before}
+				u := &store.User{OAuth2Token: token}
+
+				s := d.Store.(*mock_store.MockStore)
+				s.EXPECT().LoadUser(fakeID).Return(u, nil).Times(1)
+			},
+			registerResponder: statusOKGraphAPIResponder,
+			expectToken:       "original_token",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.registerResponder != nil {
+				tc.registerResponder()
+			}
+
+			app, env := newOAuth2TestApp(ctrl)
+
+			if tc.setup != nil {
+				tc.setup(env.Dependencies)
+			}
+
+			token, err := app.RefreshOAuth2Token(tc.mattermostUserID)
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectToken, token.AccessToken)
+		})
+	}
+}
+
 func badTokenExchangeResponder() {
 	url := "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 
@@ -425,7 +539,7 @@ func statusOKGraphAPIResponder() {
     "token_type": "Bearer",
     "scope": "user.read%20Fmail.read",
     "expires_in": 3600,
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik5HVEZ2ZEstZnl0aEV1Q...",
+    "access_token": "` + fakeAccessToken + `",
     "refresh_token": "AwABAAAAvPM1KaPlrEqdFSBzjqfTGAMxZGUTdM0t4B4..."
 }`
 

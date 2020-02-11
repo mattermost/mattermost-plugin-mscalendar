@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-const statusSyncJobInterval = 5 * time.Minute
+const refreshOAuth2TokenJobInterval = 24 * time.Hour
 
-type StatusSyncJob struct {
+type RefreshOAuth2TokenJob struct {
 	Env
 
 	cancel     chan struct{}
@@ -18,19 +18,19 @@ type StatusSyncJob struct {
 	cancelOnce sync.Once
 }
 
-func NewStatusSyncJob(env Env) *StatusSyncJob {
-	return &StatusSyncJob{
+func NewRefreshOAuth2TokenJob(env Env) *RefreshOAuth2TokenJob {
+	return &RefreshOAuth2TokenJob{
 		cancel:    make(chan struct{}),
 		cancelled: make(chan struct{}),
 		Env:       env,
 	}
 }
 
-func (job *StatusSyncJob) Start() {
+func (job *RefreshOAuth2TokenJob) Start() {
 	go func() {
 		defer close(job.cancelled)
 
-		ticker := time.NewTicker(statusSyncJobInterval)
+		ticker := time.NewTicker(refreshOAuth2TokenJobInterval)
 		defer func() {
 			ticker.Stop()
 		}()
@@ -46,20 +46,20 @@ func (job *StatusSyncJob) Start() {
 	}()
 }
 
-func (job *StatusSyncJob) Cancel() {
+func (job *RefreshOAuth2TokenJob) Cancel() {
 	job.cancelOnce.Do(func() {
 		close(job.cancel)
 	})
 	<-job.cancelled
 }
 
-func (j *StatusSyncJob) work() {
-	j.Logger.Debugf("User status sync job beginning")
+func (j *RefreshOAuth2TokenJob) work() {
+	j.Logger.Debugf("Refresh OAuth2 token job beginning")
 
-	_, err := New(j.Env, "").SyncStatusAll()
+	err := New(j.Env, "").RefreshAllOAuth2Tokens()
 	if err != nil {
-		j.Logger.Errorf("Error during user status sync job", "error", err.Error())
+		j.Logger.Errorf("Error during refresh OAuth2 token job", "error", err.Error())
 	}
 
-	j.Logger.Debugf("User status sync job finished")
+	j.Logger.Debugf("Refresh OAuth2 token job finished")
 }

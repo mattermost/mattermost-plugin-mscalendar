@@ -129,3 +129,28 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 
 	return nil
 }
+
+func (app *oauth2App) RefreshOAuth2Token(mattermostUserID string) (*oauth2.Token, error) {
+	user, err := app.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	conf := app.Remote.NewOAuth2Config()
+	token := user.OAuth2Token
+	tokenSource := conf.TokenSource(context.Background(), token)
+	newToken, err := tokenSource.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	if newToken.AccessToken != token.AccessToken {
+		user.OAuth2Token = newToken
+		err = app.Store.StoreUser(user)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return newToken, nil
+}

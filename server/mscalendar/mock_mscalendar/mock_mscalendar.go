@@ -9,6 +9,7 @@ import (
 	mscalendar "github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 	time "time"
 )
@@ -297,6 +298,35 @@ func (m *MockMSCalendar) LoadMyEventSubscription() (*store.Subscription, error) 
 func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
+}
+
+// RefreshAllOAuth2Tokens mocks base method
+func (m *MockMSCalendar) RefreshAllOAuth2Tokens() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshAllOAuth2Tokens")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RefreshAllOAuth2Tokens indicates an expected call of RefreshAllOAuth2Tokens
+func (mr *MockMSCalendarMockRecorder) RefreshAllOAuth2Tokens() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshAllOAuth2Tokens", reflect.TypeOf((*MockMSCalendar)(nil).RefreshAllOAuth2Tokens))
+}
+
+// RefreshOAuth2Token mocks base method
+func (m *MockMSCalendar) RefreshOAuth2Token(arg0 string) (*oauth2.Token, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshOAuth2Token", arg0)
+	ret0, _ := ret[0].(*oauth2.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshOAuth2Token indicates an expected call of RefreshOAuth2Token
+func (mr *MockMSCalendarMockRecorder) RefreshOAuth2Token(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshOAuth2Token", reflect.TypeOf((*MockMSCalendar)(nil).RefreshOAuth2Token), arg0)
 }
 
 // RenewMyEventSubscription mocks base method

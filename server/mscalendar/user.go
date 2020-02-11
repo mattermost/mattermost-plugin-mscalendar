@@ -8,6 +8,7 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -19,6 +20,8 @@ type Users interface {
 	DisconnectUser(mattermostUserID string) error
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
+	RefreshOAuth2Token(mattermostUserID string) (*oauth2.Token, error)
+	RefreshAllOAuth2Tokens() error
 }
 
 type User struct {
@@ -108,4 +111,24 @@ func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*remote.User, error
 
 func (m *mscalendar) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 	return m.Dependencies.IsAuthorizedAdmin(mattermostUserID)
+}
+
+func (m *mscalendar) RefreshOAuth2Token(mattermostUserID string) (*oauth2.Token, error) {
+	return NewOAuth2App(m.Env).RefreshOAuth2Token(mattermostUserID)
+}
+
+func (m *mscalendar) RefreshAllOAuth2Tokens() error {
+	userIndex, err := m.Store.LoadUserIndex()
+	if err != nil {
+		return err
+	}
+
+	for _, ui := range userIndex {
+		_, err := m.RefreshOAuth2Token(ui.MattermostUserID)
+		if err == nil {
+			return err
+		}
+	}
+
+	return nil
 }

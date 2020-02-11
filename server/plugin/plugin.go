@@ -67,6 +67,8 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
+	mscalendar.NewRefreshOAuth2TokenJob(p.env.Env).Start()
+
 	command.Register(p.API.RegisterCommand)
 	return nil
 }
