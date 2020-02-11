@@ -9,12 +9,16 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 type Users interface {
 	GetActingUser() *User
 	GetTimezone(user *User) (string, error)
+	DisconnectUser(mattermostUserID string) error
+	GetRemoteUser(mattermostUserID string) (*remote.User, error)
+	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 }
 
 type User struct {
@@ -87,4 +91,21 @@ func (user *User) Markdown() string {
 	} else {
 		return fmt.Sprintf("UserID: `%s`", user.MattermostUserID)
 	}
+}
+
+func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
+	return m.Store.DeleteUser(mattermostUserID)
+}
+
+func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*remote.User, error) {
+	storedUser, err := m.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return storedUser.Remote, nil
+}
+
+func (m *mscalendar) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
+	return m.Dependencies.IsAuthorizedAdmin(mattermostUserID)
 }

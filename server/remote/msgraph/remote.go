@@ -5,7 +5,6 @@ package msgraph
 
 import (
 	"context"
-	"net/http"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
@@ -49,18 +48,7 @@ func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Clien
 }
 
 // MakeSuperuserClient creates a new client used for app-only permissions.
-func (r *impl) MakeSuperuserClient(ctx context.Context) remote.Client {
-	httpClient := &http.Client{}
-	c := &client{
-		conf:       r.conf,
-		ctx:        ctx,
-		httpClient: httpClient,
-		Logger:     r.logger,
-		rbuilder:   msgraph.NewClient(httpClient),
-	}
-
-	token, _ := c.getSuperuserToken()
-
+func (r *impl) MakeSuperuserClient(ctx context.Context, token string) remote.Client {
 	o := &oauth2.Token{
 		AccessToken: token,
 		TokenType:   "Bearer",

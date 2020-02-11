@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
@@ -21,7 +22,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
-func TestSyncStatusForAllUsers(t *testing.T) {
+func TestSyncStatusAll(t *testing.T) {
 	for name, tc := range map[string]struct {
 		sched         *remote.ScheduleInformation
 		currentStatus string
@@ -29,7 +30,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 	}{
 		"User is free but dnd, mark user as online": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "0",
 			},
 			currentStatus: "dnd",
@@ -37,7 +38,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 		"User is busy but online, mark as dnd": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "2",
 			},
 			currentStatus: "online",
@@ -45,7 +46,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 		"User is free and online, do not change status": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "0",
 			},
 			currentStatus: "online",
@@ -53,7 +54,7 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 		"User is busy and dnd, do not change status": {
 			sched: &remote.ScheduleInformation{
-				ScheduleID:       "some_email@example.com",
+				ScheduleID:       "user_email@example.com",
 				AvailabilityView: "2",
 			},
 			currentStatus: "dnd",
@@ -61,30 +62,17 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			storeCtrl := gomock.NewController(t)
-			defer storeCtrl.Finish()
-			s := mock_store.NewMockStore(storeCtrl)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-			conf := &config.Config{}
-
-			posterCtrl := gomock.NewController(t)
-			defer posterCtrl.Finish()
-			poster := mock_bot.NewMockPoster(posterCtrl)
+			s := mock_store.NewMockStore(ctrl)
+			poster := mock_bot.NewMockPoster(ctrl)
+			mockRemote := mock_remote.NewMockRemote(ctrl)
+			mockClient := mock_remote.NewMockClient(ctrl)
+			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 
 			logger := &bot.TestLogger{TB: t}
-
-			remoteCtrl := gomock.NewController(t)
-			defer remoteCtrl.Finish()
-			mockRemote := mock_remote.NewMockRemote(remoteCtrl)
-
-			clientCtrl := gomock.NewController(t)
-			defer clientCtrl.Finish()
-			mockClient := mock_remote.NewMockClient(clientCtrl)
-
-			pluginAPICtrl := gomock.NewController(t)
-			defer pluginAPICtrl.Finish()
-			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(pluginAPICtrl)
-
+			conf := &config.Config{BotUserID: "bot_mm_id"}
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
@@ -98,22 +86,43 @@ func TestSyncStatusForAllUsers(t *testing.T) {
 
 			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
 				&store.UserShort{
-					MattermostUserID: "some_mm_id",
-					RemoteID:         "some_remote_id",
-					Email:            "some_email@example.com",
+					MattermostUserID: "user_mm_id",
+					RemoteID:         "user_remote_id",
+					Email:            "user_email@example.com",
+				},
+				&store.UserShort{
+					MattermostUserID: "bot_mm_id",
+					RemoteID:         "bot_remote_id",
+					Email:            "bot_email@example.com",
 				},
 			}, nil).AnyTimes()
 
-			mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient)
+			token := &oauth2.Token{
+				AccessToken: "bot_oauth_token",
+			}
+			s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
+				MattermostUserID: "bot_mm_id",
+				OAuth2Token:      token,
+				Remote: &remote.User{
+					ID:   "bot_remote_id",
+					Mail: "bot_email@example.com",
+				},
+			}, nil).Times(1)
 
-			mockClient.EXPECT().GetSchedule("some_remote_id", []string{"some_email@example.com"}, gomock.Any(), gomock.Any(), 15).Return([]*remote.ScheduleInformation{tc.sched}, nil)
+			mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
 
-			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"some_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "some_mm_id"}}, nil)
+			mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
+			mockClient.EXPECT().GetSuperuserToken().Return("bot_bearer_token", nil)
+			mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "bot_bearer_token").Return(mockClient)
+
+			mockClient.EXPECT().GetSchedule("bot_remote_id", []string{"user_email@example.com"}, gomock.Any(), gomock.Any(), 15).Return([]*remote.ScheduleInformation{tc.sched}, nil)
+
+			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
 
 			if tc.newStatus == "" {
-				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", gomock.Any()).Times(0)
+				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
 			} else {
-				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("some_mm_id", tc.newStatus).Times(1)
+				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", tc.newStatus).Times(1)
 			}
 
 			mscalendar := New(env, "")

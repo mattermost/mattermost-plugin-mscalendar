@@ -118,6 +118,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Logger = e.bot
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
+		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -184,6 +185,18 @@ func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.
 	}
 
 	env.httpHandler.ServeHTTP(w, req)
+}
+
+func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
+	env := p.getEnv()
+
+	for _, userID := range strings.Split(env.Config.AdminUserIDs, ",") {
+		if userID == mattermostUserID {
+			return true, nil
+		}
+	}
+
+	return env.PluginAPI.IsSysAdmin(mattermostUserID)
 }
 
 func (p *Plugin) getEnv() Env {

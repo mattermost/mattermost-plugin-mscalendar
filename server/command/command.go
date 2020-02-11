@@ -63,6 +63,12 @@ func (c *Command) Handle() (string, error) {
 		handler = c.info
 	case "connect":
 		handler = c.connect
+	case "connect_bot":
+		handler = c.connectBot
+	case "disconnect":
+		handler = c.disconnect
+	case "disconnect_bot":
+		handler = c.disconnectBot
 	case "viewcal":
 		handler = c.viewCalendar
 	case "createcal":

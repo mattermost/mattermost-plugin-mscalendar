@@ -26,14 +26,19 @@ func (a *API) GetMattermostUserStatus(mattermostUserID string) (*model.Status, e
 }
 
 func (a *API) GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error) {
-	return a.api.GetUserStatusesByIds(mattermostUserIDs)
+	st, err := a.api.GetUserStatusesByIds(mattermostUserIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return st, nil
 }
 
 func (a *API) UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error) {
 	return a.api.UpdateUserStatus(mattermostUserID, status)
 }
 
-// IsPluginAdmin returns true if the user is authorized to use the workflow plugin's admin-level APIs/commands.
+// IsSysAdmin returns true if the user is authorized to use the workflow plugin's admin-level APIs/commands.
 func (a *API) IsSysAdmin(mattermostUserID string) (bool, error) {
 	user, err := a.api.GetUser(mattermostUserID)
 	if err != nil {
