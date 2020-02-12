@@ -30,4 +30,6 @@ type Client interface {
 	RenewSubscription(subscriptionID string) (*Subscription, error)
 	TentativelyAcceptEvent(remoteUserID, eventID string) error
 	GetSuperuserToken() (string, error)
+	GetEventDeltaFromDateRange(remoteUserID string, start, end *DateTime) (events []*Event, deltaLink string, err error)
+	GetEventDeltaFromURL(deltaURL string) (events []*Event, deltaLink string, err error)
 }

@@ -170,16 +170,22 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return err
 	}
 	if prior != nil {
-		var changed bool
-		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote)
-		if !changed {
-			processor.Logger.With(bot.LogContext{
-				"MattermostUserID": creator.MattermostUserID,
-				"SubsriptionID":    n.SubscriptionID,
-				"ChangeType":       n.ChangeType,
-				"EventID":          n.Event.ID,
-			}).Debugf("webhook notification: no changes detected in event.")
-			return nil
+		if n.ChangeType == "deleted" {
+			n.Event = prior.Remote
+			sa = processor.newEventSlackAttachment(n)
+			sa.Title = "(deleted) " + sa.Title
+		} else {
+			var changed bool
+			changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote)
+			if !changed {
+				processor.Logger.With(bot.LogContext{
+					"MattermostUserID": creator.MattermostUserID,
+					"SubsriptionID":    n.SubscriptionID,
+					"ChangeType":       n.ChangeType,
+					"EventID":          n.Event.ID,
+				}).Debugf("webhook notification: no changes detected in event.")
+				return nil
+			}
 		}
 	} else {
 		sa = processor.newEventSlackAttachment(n)

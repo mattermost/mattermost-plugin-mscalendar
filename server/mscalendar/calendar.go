@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type Calendar interface {
@@ -16,6 +18,8 @@ type Calendar interface {
 	FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
 	GetCalendars(user *User) ([]*remote.Calendar, error)
 	ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error)
+	InitEventDelta(user *User) (events []*remote.Event, deltaURL string, err error)
+	RollingEventDelta(user *User) (events []*remote.Event, deltaURL string, err error)
 }
 
 func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error) {
@@ -97,4 +101,101 @@ func (m *mscalendar) GetCalendars(user *User) ([]*remote.Calendar, error) {
 	}
 
 	return m.client.GetCalendars(user.Remote.ID)
+}
+
+// RollingEventDelta uses the stored deltaLink in the user's subscription to fetch any events that have changed since the last fetch
+// This should run frequently throughout the day to ensure we process new event updates, in case the Graph notifications are experiencing an outage
+func (m *mscalendar) RollingEventDelta(user *User) (events []*remote.Event, deltaURL string, err error) {
+	err = m.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
+	if err != nil {
+		return nil, "", err
+	}
+
+	sub, err := m.Store.LoadUserSubscription(user.MattermostUserID)
+	if err != nil {
+		return
+	}
+
+	events, deltaURL, err = m.client.GetEventDeltaFromURL(sub.DeltaURL)
+
+	sub.DeltaURL = deltaURL
+	err = m.Store.StoreUserSubscription(user.User, sub)
+	if err != nil {
+		return
+	}
+
+	for _, event := range events {
+		_, err := m.Store.LoadUserEvent(user.MattermostUserID, event.ID)
+		if err != nil && err != store.ErrNotFound {
+			m.Logger.Errorf("Failed to fetch event %s", err.Error())
+			continue
+		}
+
+		changeType := "updated"
+		if event.Body == nil {
+			changeType = "deleted"
+		} else if err == store.ErrNotFound {
+			changeType = "created"
+		}
+
+		n := &remote.Notification{
+			ChangeType:          changeType,
+			SubscriptionID:      sub.Remote.ID,
+			RecommendRenew:      false,
+			ClientState:         sub.Remote.ClientState,
+			Subscription:        sub.Remote,
+			SubscriptionCreator: user.Remote,
+			Event:               event,
+		}
+
+		m.Logger.With(bot.LogContext{
+			"SubsriptionID": n.SubscriptionID,
+			"ChangeType":    n.ChangeType,
+			"EventID":       n.Event.ID,
+		}).Debugf("Processing notification from delta")
+
+		// TODO: delay enqueue
+		// if notifications are working, event will already exist, and fields will be equal,
+		// so this "notification" will be correctly dropped by notificationProcessor
+
+		m.Env.NotificationProcessor.Enqueue(n)
+	}
+
+	return
+}
+
+// InitEventDelta is called when a user first subscribes to updates, and at the beginning of each day, for each user.
+// It stores all events it receives, and the latest deltaLink in the user's subscription, to be used in subsequent calls to RollingEventDelta.
+func (m *mscalendar) InitEventDelta(user *User) (events []*remote.Event, deltaURL string, err error) {
+	err = m.Filter(
+		withClient,
+		withUserExpanded(user),
+	)
+	if err != nil {
+		return nil, "", err
+	}
+
+	start := time.Now().UTC()
+	end := start.Add(time.Hour * time.Duration(24*30)).UTC()
+	startDT := remote.NewDateTime(start, "UTC")
+	endDT := remote.NewDateTime(end, "UTC")
+
+	events, deltaURL, err = m.client.GetEventDeltaFromDateRange(user.Remote.ID, startDT, endDT)
+
+	// TODO: store all events, but don't create notifications
+
+	sub, err := m.Store.LoadUserSubscription(user.MattermostUserID)
+	if err != nil {
+		return
+	}
+
+	sub.DeltaURL = deltaURL
+	err = m.Store.StoreUserSubscription(user.User, sub)
+	if err != nil {
+		return
+	}
+	return
 }

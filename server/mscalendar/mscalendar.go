@@ -22,12 +22,13 @@ type MSCalendar interface {
 
 // Dependencies contains all API dependencies
 type Dependencies struct {
-	Logger            bot.Logger
-	PluginAPI         PluginAPI
-	Poster            bot.Poster
-	Remote            remote.Remote
-	Store             store.Store
-	IsAuthorizedAdmin func(string) (bool, error)
+	Logger                bot.Logger
+	PluginAPI             PluginAPI
+	Poster                bot.Poster
+	Remote                remote.Remote
+	Store                 store.Store
+	NotificationProcessor NotificationProcessor
+	IsAuthorizedAdmin     func(string) (bool, error)
 }
 
 type PluginAPI interface {

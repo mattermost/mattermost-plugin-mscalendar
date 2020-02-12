@@ -226,6 +226,38 @@ func (mr *MockClientMockRecorder) GetEvent(arg0, arg1 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockClient)(nil).GetEvent), arg0, arg1)
 }
 
+// GetEventDeltaFromDateRange mocks base method
+func (m *MockClient) GetEventDeltaFromDateRange(arg0 string, arg1, arg2 *remote.DateTime) ([]*remote.Event, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEventDeltaFromDateRange", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*remote.Event)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetEventDeltaFromDateRange indicates an expected call of GetEventDeltaFromDateRange
+func (mr *MockClientMockRecorder) GetEventDeltaFromDateRange(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventDeltaFromDateRange", reflect.TypeOf((*MockClient)(nil).GetEventDeltaFromDateRange), arg0, arg1, arg2)
+}
+
+// GetEventDeltaFromURL mocks base method
+func (m *MockClient) GetEventDeltaFromURL(arg0 string) ([]*remote.Event, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEventDeltaFromURL", arg0)
+	ret0, _ := ret[0].([]*remote.Event)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetEventDeltaFromURL indicates an expected call of GetEventDeltaFromURL
+func (mr *MockClientMockRecorder) GetEventDeltaFromURL(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventDeltaFromURL", reflect.TypeOf((*MockClient)(nil).GetEventDeltaFromURL), arg0)
+}
+
 // GetMailboxSettings mocks base method
 func (m *MockClient) GetMailboxSettings(arg0 string) (*remote.MailboxSettings, error) {
 	m.ctrl.T.Helper()

@@ -32,11 +32,10 @@ import (
 
 type Env struct {
 	mscalendar.Env
-	bot                   bot.Bot
-	statusSyncJob         *mscalendar.StatusSyncJob
-	notificationProcessor mscalendar.NotificationProcessor
-	httpHandler           *httputils.Handler
-	configError           error
+	bot           bot.Bot
+	statusSyncJob *mscalendar.StatusSyncJob
+	httpHandler   *httputils.Handler
+	configError   error
 }
 
 type Plugin struct {
@@ -120,15 +119,15 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 
-		if e.notificationProcessor == nil {
-			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
+		if e.Env.NotificationProcessor == nil {
+			e.Env.NotificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
 		} else {
-			e.notificationProcessor.Configure(e.Env)
+			e.Env.NotificationProcessor.Configure(e.Env)
 		}
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
-		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
+		api.Init(e.httpHandler, e.Env, e.Env.NotificationProcessor)
 
 		// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
 		// This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
