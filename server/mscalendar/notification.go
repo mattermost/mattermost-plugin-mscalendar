@@ -172,8 +172,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	if prior != nil {
 		if n.ChangeType == "deleted" {
 			n.Event = prior.Remote
-			sa = processor.newEventSlackAttachment(n)
-			sa.Title = "(deleted) " + sa.Title
+			sa = processor.deletedEventSlackAttachment(n)
 		} else {
 			var changed bool
 			changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote)
@@ -219,6 +218,12 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 		Title:      n.Event.Subject,
 		Text:       n.Event.BodyPreview,
 	}
+}
+
+func (processor *notificationProcessor) deletedEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	sa := processor.newEventSlackAttachment(n)
+	sa.Title = "(deleted) " + sa.Title[6:]
+	return sa
 }
 
 func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {

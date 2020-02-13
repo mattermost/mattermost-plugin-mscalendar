@@ -24,42 +24,18 @@ func (c *client) GetEventDeltaFromDateRange(remoteUserID string, start, end *rem
 	params := "?" + q.Encode()
 
 	u := c.rbuilder.Me().CalendarView().URL() + "/delta" + params
-	var out getEventDeltaResponse
-
-	_, err = c.CallJSON(http.MethodGet, u, nil, &out)
-	if err != nil {
-		return nil, "", err
-	}
-
-	ls := []*remote.Event{}
-	ls = append(ls, out.Value...)
-
-	nextLink := out.NextLink
-	for nextLink != "" {
-		out = getEventDeltaResponse{}
-
-		_, err = c.CallJSON(http.MethodGet, nextLink, nil, &out)
-		if err != nil {
-			return nil, "", err
-		}
-
-		ls = append(ls, out.Value...)
-		nextLink = out.NextLink
-	}
-
-	return ls, out.DeltaLink, nil
+	return c.GetEventDeltaFromURL(u)
 }
 
 func (c *client) GetEventDeltaFromURL(deltaURL string) (events []*remote.Event, deltaLink string, err error) {
 	var out getEventDeltaResponse
-
 	_, err = c.CallJSON(http.MethodGet, deltaURL, nil, &out)
 	if err != nil {
 		return nil, "", err
 	}
 
-	ls := []*remote.Event{}
-	ls = append(ls, out.Value...)
+	events = []*remote.Event{}
+	events = append(events, out.Value...)
 
 	nextLink := out.NextLink
 	for nextLink != "" {
@@ -70,9 +46,9 @@ func (c *client) GetEventDeltaFromURL(deltaURL string) (events []*remote.Event, 
 			return nil, "", err
 		}
 
-		ls = append(ls, out.Value...)
+		events = append(events, out.Value...)
 		nextLink = out.NextLink
 	}
 
-	return ls, out.DeltaLink, nil
+	return events, out.DeltaLink, nil
 }

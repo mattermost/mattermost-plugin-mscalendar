@@ -254,20 +254,20 @@ func (mr *MockMSCalendarMockRecorder) GetTimezone(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimezone", reflect.TypeOf((*MockMSCalendar)(nil).GetTimezone), arg0)
 }
 
-// InitEventDelta mocks base method
-func (m *MockMSCalendar) InitEventDelta(arg0 *mscalendar.User) ([]*remote.Event, string, error) {
+// InitPolling mocks base method
+func (m *MockMSCalendar) InitPolling(arg0 *mscalendar.User) ([]*remote.Event, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitEventDelta", arg0)
+	ret := m.ctrl.Call(m, "InitPolling", arg0)
 	ret0, _ := ret[0].([]*remote.Event)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// InitEventDelta indicates an expected call of InitEventDelta
-func (mr *MockMSCalendarMockRecorder) InitEventDelta(arg0 interface{}) *gomock.Call {
+// InitPolling indicates an expected call of InitPolling
+func (mr *MockMSCalendarMockRecorder) InitPolling(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitEventDelta", reflect.TypeOf((*MockMSCalendar)(nil).InitEventDelta), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitPolling", reflect.TypeOf((*MockMSCalendar)(nil).InitPolling), arg0)
 }
 
 // IsAuthorizedAdmin mocks base method
@@ -315,6 +315,22 @@ func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
 }
 
+// Poll mocks base method
+func (m *MockMSCalendar) Poll(arg0 *mscalendar.User) ([]*remote.Event, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Poll", arg0)
+	ret0, _ := ret[0].([]*remote.Event)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// Poll indicates an expected call of Poll
+func (mr *MockMSCalendarMockRecorder) Poll(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Poll", reflect.TypeOf((*MockMSCalendar)(nil).Poll), arg0)
+}
+
 // RenewMyEventSubscription mocks base method
 func (m *MockMSCalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	m.ctrl.T.Helper()
@@ -342,22 +358,6 @@ func (m *MockMSCalendar) RespondToEvent(arg0 *mscalendar.User, arg1, arg2 string
 func (mr *MockMSCalendarMockRecorder) RespondToEvent(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RespondToEvent", reflect.TypeOf((*MockMSCalendar)(nil).RespondToEvent), arg0, arg1, arg2)
-}
-
-// RollingEventDelta mocks base method
-func (m *MockMSCalendar) RollingEventDelta(arg0 *mscalendar.User) ([]*remote.Event, string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RollingEventDelta", arg0)
-	ret0, _ := ret[0].([]*remote.Event)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// RollingEventDelta indicates an expected call of RollingEventDelta
-func (mr *MockMSCalendarMockRecorder) RollingEventDelta(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RollingEventDelta", reflect.TypeOf((*MockMSCalendar)(nil).RollingEventDelta), arg0)
 }
 
 // SyncStatus mocks base method

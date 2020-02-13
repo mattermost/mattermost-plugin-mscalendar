@@ -25,6 +25,18 @@ func withUserExpanded(user *User) func(m *mscalendar) error {
 	}
 }
 
+func withRemoteUser(user *User) func(m *mscalendar) error {
+	return func(m *mscalendar) error {
+		return m.ExpandRemoteUser(user)
+	}
+}
+
+func withMattermostUser(user *User) func(m *mscalendar) error {
+	return func(m *mscalendar) error {
+		return m.ExpandMattermostUser(user)
+	}
+}
+
 func withClient(m *mscalendar) error {
 	if m.client != nil {
 		return nil

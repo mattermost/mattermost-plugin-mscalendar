@@ -44,6 +44,18 @@ func (m *mscalendar) GetActingUser() *User {
 }
 
 func (m *mscalendar) ExpandUser(user *User) error {
+	err := m.ExpandRemoteUser(user)
+	if err != nil {
+		return err
+	}
+	err = m.ExpandMattermostUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *mscalendar) ExpandRemoteUser(user *User) error {
 	if user.User == nil {
 		storedUser, err := m.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
@@ -51,6 +63,10 @@ func (m *mscalendar) ExpandUser(user *User) error {
 		}
 		user.User = storedUser
 	}
+	return nil
+}
+
+func (m *mscalendar) ExpandMattermostUser(user *User) error {
 	if user.MattermostUser == nil {
 		mattermostUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
 		if err != nil {

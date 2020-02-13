@@ -57,6 +57,20 @@ func (m *mscalendar) LoadMyEventSubscription() (*store.Subscription, error) {
 	return storedSub, err
 }
 
+func (m *mscalendar) loadUserSubscription(mattermostUserID string) (*store.Subscription, error) {
+	user, err := m.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	subID := user.Settings.EventSubscriptionID
+	if subID == "" {
+		return nil, errors.New("No subscription stored for " + user.Remote.Mail)
+	}
+
+	return m.Store.LoadSubscription(subID)
+}
+
 func (m *mscalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
 	err := m.Filter(withClient)
 	if err != nil {

@@ -13,7 +13,6 @@ import (
 
 type SubscriptionStore interface {
 	LoadSubscription(subscriptionID string) (*Subscription, error)
-	LoadUserSubscription(mattermostUserID string) (*Subscription, error)
 	StoreUserSubscription(user *User, subscription *Subscription) error
 	DeleteUserSubscription(user *User, subscriptionID string) error
 }
@@ -22,7 +21,7 @@ type Subscription struct {
 	PluginVersion       string
 	Remote              *remote.Subscription
 	MattermostCreatorID string
-	DeltaURL            string
+	PollingURL          string
 }
 
 func (s *pluginStore) LoadSubscription(subscriptionID string) (*Subscription, error) {
@@ -32,20 +31,6 @@ func (s *pluginStore) LoadSubscription(subscriptionID string) (*Subscription, er
 		return nil, err
 	}
 	return &sub, nil
-}
-
-func (s *pluginStore) LoadUserSubscription(mattermostUserID string) (*Subscription, error) {
-	user, err := s.LoadUser(mattermostUserID)
-	if err != nil {
-		return nil, err
-	}
-
-	subID := user.Settings.EventSubscriptionID
-	if subID == "" {
-		return nil, errors.New("No subscription stored for " + user.Remote.Mail)
-	}
-
-	return s.LoadSubscription(subID)
 }
 
 func (s *pluginStore) StoreUserSubscription(user *User, subscription *Subscription) error {

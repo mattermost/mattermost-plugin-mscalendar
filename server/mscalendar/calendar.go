@@ -9,6 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/pkg/errors"
 )
 
 type Calendar interface {
@@ -18,8 +19,8 @@ type Calendar interface {
 	FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error)
 	GetCalendars(user *User) ([]*remote.Calendar, error)
 	ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error)
-	InitEventDelta(user *User) (events []*remote.Event, deltaURL string, err error)
-	RollingEventDelta(user *User) (events []*remote.Event, deltaURL string, err error)
+	InitPolling(user *User) (events []*remote.Event, deltaURL string, err error)
+	Poll(user *User) (events []*remote.Event, deltaURL string, err error)
 }
 
 func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Event, error) {
@@ -103,25 +104,31 @@ func (m *mscalendar) GetCalendars(user *User) ([]*remote.Calendar, error) {
 	return m.client.GetCalendars(user.Remote.ID)
 }
 
-// RollingEventDelta uses the stored deltaLink in the user's subscription to fetch any events that have changed since the last fetch
+// Poll uses the stored deltaLink in the user's subscription to fetch any events that have changed since the last fetch
 // This should run frequently throughout the day to ensure we process new event updates, in case the Graph notifications are experiencing an outage
-func (m *mscalendar) RollingEventDelta(user *User) (events []*remote.Event, deltaURL string, err error) {
+func (m *mscalendar) Poll(user *User) (events []*remote.Event, deltaURL string, err error) {
 	err = m.Filter(
 		withClient,
-		withUserExpanded(user),
+		withRemoteUser(user),
 	)
 	if err != nil {
 		return nil, "", err
 	}
 
-	sub, err := m.Store.LoadUserSubscription(user.MattermostUserID)
+	sub, err := m.loadUserSubscription(user.MattermostUserID)
 	if err != nil {
 		return
 	}
 
-	events, deltaURL, err = m.client.GetEventDeltaFromURL(sub.DeltaURL)
+	if sub.PollingURL == "" {
+		return nil, "", errors.New("No polling URL stored for user " + user.Remote.Mail)
+	}
+	events, deltaURL, err = m.client.GetEventDeltaFromURL(sub.PollingURL)
+	if err != nil {
+		return nil, "", err
+	}
 
-	sub.DeltaURL = deltaURL
+	sub.PollingURL = deltaURL
 	err = m.Store.StoreUserSubscription(user.User, sub)
 	if err != nil {
 		return
@@ -167,12 +174,12 @@ func (m *mscalendar) RollingEventDelta(user *User) (events []*remote.Event, delt
 	return
 }
 
-// InitEventDelta is called when a user first subscribes to updates, and at the beginning of each day, for each user.
-// It stores all events it receives, and the latest deltaLink in the user's subscription, to be used in subsequent calls to RollingEventDelta.
-func (m *mscalendar) InitEventDelta(user *User) (events []*remote.Event, deltaURL string, err error) {
+// InitPolling is called when a user first subscribes to updates, and at the beginning of each day, for each user.
+// It stores all events it receives, and the latest deltaLink in the user's subscription, to be used in subsequent calls to Poll.
+func (m *mscalendar) InitPolling(user *User) (events []*remote.Event, deltaURL string, err error) {
 	err = m.Filter(
 		withClient,
-		withUserExpanded(user),
+		withRemoteUser(user),
 	)
 	if err != nil {
 		return nil, "", err
@@ -184,15 +191,27 @@ func (m *mscalendar) InitEventDelta(user *User) (events []*remote.Event, deltaUR
 	endDT := remote.NewDateTime(end, "UTC")
 
 	events, deltaURL, err = m.client.GetEventDeltaFromDateRange(user.Remote.ID, startDT, endDT)
+	if err != nil {
+		return nil, "", err
+	}
 
-	// TODO: store all events, but don't create notifications
+	for _, event := range events {
+		e := &store.Event{
+			Remote:        event,
+			PluginVersion: m.Config.PluginVersion,
+		}
+		err = m.Store.StoreUserEvent(user.MattermostUserID, e)
+		if err != nil {
+			return nil, "", err
+		}
+	}
 
-	sub, err := m.Store.LoadUserSubscription(user.MattermostUserID)
+	sub, err := m.loadUserSubscription(user.MattermostUserID)
 	if err != nil {
 		return
 	}
 
-	sub.DeltaURL = deltaURL
+	sub.PollingURL = deltaURL
 	err = m.Store.StoreUserSubscription(user.User, sub)
 	if err != nil {
 		return

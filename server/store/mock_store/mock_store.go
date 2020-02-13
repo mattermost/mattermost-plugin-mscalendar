@@ -150,21 +150,6 @@ func (mr *MockStoreMockRecorder) LoadUserIndex() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserIndex", reflect.TypeOf((*MockStore)(nil).LoadUserIndex))
 }
 
-// LoadUserSubscription mocks base method
-func (m *MockStore) LoadUserSubscription(arg0 string) (*store.Subscription, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LoadUserSubscription", arg0)
-	ret0, _ := ret[0].(*store.Subscription)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LoadUserSubscription indicates an expected call of LoadUserSubscription
-func (mr *MockStoreMockRecorder) LoadUserSubscription(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserSubscription", reflect.TypeOf((*MockStore)(nil).LoadUserSubscription), arg0)
-}
-
 // StoreOAuth2State mocks base method
 func (m *MockStore) StoreOAuth2State(arg0 string) error {
 	m.ctrl.T.Helper()
