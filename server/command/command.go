@@ -45,7 +45,7 @@ func Register(registerFunc RegisterFunc) {
 		DisplayName:      "Microsoft Calendar",
 		Description:      "Interact with your outlook calendar.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "info, connect, viewcal, createcal, testcreateevent, deletecal, subscribe, findMeetings, showcals, availability",
+		AutoCompleteDesc: "info, connect, viewcal, createcal, testcreateevent, deletecal, subscribe, findMeetings, showcals, availability, summary",
 		AutoCompleteHint: "(subcommand)",
 	})
 }
@@ -69,6 +69,8 @@ func (c *Command) Handle() (string, error) {
 		handler = c.disconnect
 	case "disconnect_bot":
 		handler = c.disconnectBot
+	case "summary":
+		handler = c.dailySummary
 	case "viewcal":
 		handler = c.viewCalendar
 	case "createcal":

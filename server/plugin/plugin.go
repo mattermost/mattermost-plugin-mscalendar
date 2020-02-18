@@ -34,6 +34,7 @@ type Env struct {
 	mscalendar.Env
 	bot                   bot.Bot
 	statusSyncJob         *mscalendar.StatusSyncJob
+	dailySummaryJob       *mscalendar.DailySummaryJob
 	notificationProcessor mscalendar.NotificationProcessor
 	httpHandler           *httputils.Handler
 	configError           error
@@ -145,6 +146,19 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 				e.Logger.Debugf("Disabling user status sync job")
 				e.statusSyncJob.Cancel()
 				e.statusSyncJob = nil
+			}
+		}
+		{
+			if e.EnableDailySummary && e.dailySummaryJob == nil {
+				e.Logger.Debugf("Enabling daily summary job")
+				e.dailySummaryJob = mscalendar.NewDailySummaryJob(e.Env)
+				go e.dailySummaryJob.Start()
+			}
+
+			if !e.EnableDailySummary && e.dailySummaryJob != nil {
+				e.Logger.Debugf("Disabling daily summary job")
+				e.dailySummaryJob.Cancel()
+				e.dailySummaryJob = nil
 			}
 		}
 	})

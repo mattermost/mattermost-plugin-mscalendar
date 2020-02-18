@@ -29,6 +29,24 @@ func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Eve
 	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 
+func (m *mscalendar) viewTodayCalendar(user *User) ([]*remote.Event, error) {
+	err := m.Filter(
+		withClient,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ExpandRemoteUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	from := time.Now()
+	to := time.Now().Add(time.Hour * 24)
+	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
+}
+
 func (m *mscalendar) CreateCalendar(user *User, calendar *remote.Calendar) (*remote.Calendar, error) {
 	err := m.Filter(
 		withClient,
