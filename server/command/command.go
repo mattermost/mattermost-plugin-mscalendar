@@ -45,7 +45,7 @@ func Register(registerFunc RegisterFunc) {
 		DisplayName:      "Microsoft Calendar",
 		Description:      "Interact with your outlook calendar.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "info, connect, viewcal, createcal, testcreateevent, deletecal, subscribe, findmeetings, showcals, availability",
+		AutoCompleteDesc: "info, connect, disconnect, connect_bot, disconnect_bot, subscribe, showcals, viewcal, createcal, deletecal, createevent, findmeetings, availability",
 		AutoCompleteHint: "(subcommand)",
 	})
 }
