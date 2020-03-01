@@ -57,7 +57,7 @@ func TestProcessNotification(t *testing.T) {
 			DisplayName: "event_location_display_name",
 		},
 		ResponseStatus: &remote.EventResponseStatus{
-			Response: "response",
+			Response: "event_response",
 		},
 		Weblink:           "event_weblink",
 		Subject:           "event_subject",
@@ -66,7 +66,7 @@ func TestProcessNotification(t *testing.T) {
 	}
 
 	sStore := &store.Subscription{
-		PluginVersion: "fill this in, capture one from the db",
+		PluginVersion: "x.x.x",
 		Remote: &remote.Subscription{
 			ID:          "remote_subscription_id",
 			ClientState: "stored_client_state",
