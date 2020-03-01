@@ -25,7 +25,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscript
 		ChangeType:         "created,updated,deleted",
 		NotificationURL:    notificationURL,
 		ExpirationDateTime: time.Now().Add(subscribeTTL).Format(time.RFC3339),
-		ClientState:		clientState,
+		ClientState:        clientState,
 	}
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
