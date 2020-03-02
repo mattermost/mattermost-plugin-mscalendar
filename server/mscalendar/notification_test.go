@@ -29,18 +29,6 @@ func NewTestNotificationProcessor(env Env) NotificationProcessor {
 }
 
 func TestProcessNotification(t *testing.T) {
-
-	type webhook struct {
-		ChangeType                     string `json:"changeType"`
-		ClientState                    string `json:"clientState,omitempty"`
-		Resource                       string `json:"resource,omitempty"`
-		SubscriptionExpirationDateTime string `json:"subscriptionExpirationDateTime,omitempty"`
-		SubscriptionID                 string `json:"subscriptionId"`
-		ResourceData                   struct {
-			DataType string `json:"@odata.type"`
-		} `json:"resourceData"`
-	}
-
 	token := &oauth2.Token{
 		AccessToken: "creator_oauth_token",
 	}
@@ -86,16 +74,6 @@ func TestProcessNotification(t *testing.T) {
 	nRemote := &remote.Notification{
 		SubscriptionID: "remote_subscription_id",
 		IsBare:         true,
-		Webhook: &webhook{
-			Resource:       "remote_event_resource_location",
-			SubscriptionID: "sub_id",
-			ChangeType:     "created",
-			ResourceData: struct {
-				DataType string `json:"@odata.type"`
-			}{
-				DataType: "#Microsoft.Graph.Event",
-			},
-		},
 		SubscriptionCreator: &remote.User{},
 		Event:               &remote.Event{},
 		Subscription:        &remote.Subscription{},
@@ -175,8 +153,8 @@ func TestProcessNotification(t *testing.T) {
 					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&remote.Subscription{}, nil).Times(1)
 					mockStore.EXPECT().StoreUserSubscription(uStore, &store.Subscription{
 						Remote:              &remote.Subscription{},
-						MattermostCreatorID: uStore.MattermostUserID,
-						PluginVersion:       conf.PluginVersion,
+						MattermostCreatorID: "creator_mm_id",
+						PluginVersion:       "x.x.x",
 					}).Return(nil).Times(1)
 				}
 
