@@ -113,10 +113,9 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
 		}
 
-		err = m.client.DeleteSubscription(eventSubscriptionID)
-		if err != nil {
-			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
-		}
+		m.client.DeleteSubscription(eventSubscriptionID)
+	} else {
+		fmt.Println("there was no storedUser.Settings.EventSubscriptionID")
 	}
 
 	return m.Store.DeleteUser(mattermostUserID)
