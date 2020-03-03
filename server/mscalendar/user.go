@@ -94,6 +94,31 @@ func (user *User) Markdown() string {
 }
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
+	err := m.Filter(
+		withClient,
+	)
+	if err != nil {
+		return err
+	}
+
+	storedUser, err := m.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	eventSubscriptionID := storedUser.Settings.EventSubscriptionID
+	if eventSubscriptionID != "" {
+		err = m.Store.DeleteUserSubscription(storedUser, eventSubscriptionID)
+		if err != nil && err != store.ErrNotFound {
+			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
+		}
+
+		err = m.client.DeleteSubscription(eventSubscriptionID)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
+		}
+	}
+
 	return m.Store.DeleteUser(mattermostUserID)
 }
 
