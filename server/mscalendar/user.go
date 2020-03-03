@@ -114,8 +114,6 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		}
 
 		m.client.DeleteSubscription(eventSubscriptionID)
-	} else {
-		fmt.Println("there was no storedUser.Settings.EventSubscriptionID")
 	}
 
 	return m.Store.DeleteUser(mattermostUserID)
