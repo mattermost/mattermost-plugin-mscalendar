@@ -24,9 +24,10 @@ type Poster interface {
 
 // DM posts a simple Direct Message to the specified user
 func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) error {
-	return bot.dm(mattermostUserID, &model.Post{
+	_, err := bot.dm(mattermostUserID, &model.Post{
 		Message: fmt.Sprintf(format, args...),
 	})
+	return err
 }
 
 // DMWithAttachments posts a Direct Message that contains Slack attachments.
@@ -34,27 +35,35 @@ func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) error {
 func (bot *bot) DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) error {
 	post := model.Post{}
 	model.ParseSlackAttachment(&post, attachments)
-	return bot.dm(mattermostUserID, &post)
+	_, err := bot.dm(mattermostUserID, &post)
+	return err
 }
 
-func (bot *bot) dm(mattermostUserID string, post *model.Post) error {
+func (bot *bot) dm(mattermostUserID string, post *model.Post) (string, error) {
 	channel, err := bot.pluginAPI.GetDirectChannel(mattermostUserID, bot.mattermostUserID)
 	if err != nil {
 		bot.pluginAPI.LogInfo("Couldn't get bot's DM channel", "user_id", mattermostUserID)
-		return err
+		return "", err
 	}
 	post.ChannelId = channel.Id
 	post.UserId = bot.mattermostUserID
-	if _, err := bot.pluginAPI.CreatePost(post); err != nil {
-		return err
+	post, err = bot.pluginAPI.CreatePost(post)
+	if err != nil {
+		return "", err
 	}
-	return nil
+	return post.Id, nil
+}
+
+func (bot *bot) dmAndGetPostID(mattermostUserID, format string, args ...interface{}) (string, error) {
+	return bot.dm(mattermostUserID, &model.Post{
+		Message: fmt.Sprintf(format, args...),
+	})
 }
 
 // DM posts a simple Direct Message to the specified user
 func (bot *bot) dmAdmins(format string, args ...interface{}) error {
 	for _, id := range strings.Split(bot.AdminUserIDs, ",") {
-		err := bot.dm(id, &model.Post{
+		_, err := bot.dm(id, &model.Post{
 			Message: fmt.Sprintf(format, args...),
 		})
 		if err != nil {
@@ -72,4 +81,19 @@ func (bot *bot) Ephemeral(userId, channelId, format string, args ...interface{})
 		Message:   fmt.Sprintf(format, args...),
 	}
 	_ = bot.pluginAPI.SendEphemeralPost(userId, post)
+}
+
+func (bot *bot) dmUpdate(postID, format string, args ...interface{}) error {
+	post, appErr := bot.pluginAPI.GetPost(postID)
+	if appErr != nil {
+		return appErr
+	}
+
+	post.Message = fmt.Sprintf(format, args...)
+	_, appErr = bot.pluginAPI.UpdatePost(post)
+	if appErr != nil {
+		return appErr
+	}
+
+	return nil
 }

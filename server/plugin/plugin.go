@@ -28,6 +28,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/welcome_flow"
 )
 
 type Env struct {
@@ -57,7 +58,7 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	p.initEnv(&p.env)
+	p.initEnv(&p.env, "")
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
 		return errors.Wrap(err, "couldn't get bundle path")
@@ -104,7 +105,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateEnv(func(e *Env) {
-		p.initEnv(&p.env)
+		p.initEnv(&p.env, pluginURL)
 
 		e.StoredConfig = stored
 		e.Config.MattermostSiteURL = *mattermostSiteURL
@@ -119,6 +120,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
+		e.Dependencies.Welcomer = e.bot
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -128,6 +130,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		welcome_flow.Init(e.httpHandler, mscalendar.NewWelcomeApp(e.Env))
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
 		// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
@@ -242,11 +245,11 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	return nil
 }
 
-func (p *Plugin) initEnv(e *Env) error {
+func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
 	if e.bot == nil {
-		e.bot = bot.New(p.API, p.Helpers)
+		e.bot = bot.New(p.API, p.Helpers, pluginURL)
 		err := e.bot.Ensure(
 			&model.Bot{
 				Username:    config.BotUserName,

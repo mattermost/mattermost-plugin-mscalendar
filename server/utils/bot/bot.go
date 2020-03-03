@@ -14,6 +14,7 @@ type Bot interface {
 	Poster
 	Logger
 	Admin
+	Welcomer
 
 	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(BotConfig) Bot
@@ -27,12 +28,14 @@ type bot struct {
 	mattermostUserID string
 	displayName      string
 	logContext       LogContext
+	pluginURL        string
 }
 
-func New(api plugin.API, helpers plugin.Helpers) Bot {
+func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
 	return &bot{
 		pluginAPI:     api,
 		pluginHelpers: helpers,
+		pluginURL:     pluginURL,
 	}
 }
 

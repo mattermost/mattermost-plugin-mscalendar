@@ -121,6 +121,13 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
+	err = app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
+
+	messageSent := err == nil
+	if messageSent {
+		return nil
+	}
+
 	if mattermostUserID == app.Config.BotUserID {
 		app.Poster.DM(authedUserID, BotWelcomeMessage, me.Mail)
 	} else {

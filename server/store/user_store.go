@@ -37,6 +37,8 @@ type User struct {
 
 type Settings struct {
 	EventSubscriptionID string
+	UpdateStatus        bool
+	GetConfirmation     bool
 }
 
 func (settings Settings) String() string {

@@ -18,6 +18,7 @@ type MSCalendar interface {
 	EventResponder
 	Subscriptions
 	Users
+	Welcome(userID string) error
 }
 
 // Dependencies contains all API dependencies
@@ -28,6 +29,7 @@ type Dependencies struct {
 	Remote            remote.Remote
 	Store             store.Store
 	IsAuthorizedAdmin func(string) (bool, error)
+	Welcomer          bot.Welcomer
 }
 
 type PluginAPI interface {

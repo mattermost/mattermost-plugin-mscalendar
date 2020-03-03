@@ -16,9 +16,11 @@ func (c *Command) connect(parameters ...string) (string, error) {
 		return fmt.Sprintf("Your Mattermost account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect`.", config.ApplicationName, ru.Mail, config.CommandTrigger), nil
 	}
 
-	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
-		config.ApplicationName,
-		c.Config.PluginURL)
+	out := "The bot just sent you a message with the instructions to connect."
+	if err := c.MSCalendar.Welcome(c.Args.UserId); err != nil {
+		out = "There has been a  problem while trying to connect."
+	}
+
 	return out, nil
 }
 
