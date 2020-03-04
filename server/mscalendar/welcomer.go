@@ -136,6 +136,14 @@ func (bot *MSCalendarBot) NotifyWelcome(userID string) error {
 	return err
 }
 
+func (bot *MSCalendarBot) NotifySettings(userID string) error {
+	_, err := bot.DM(userID, "Feel free to change these [settings](%s/settings) anytime.", bot.pluginURL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (bot *MSCalendarBot) AfterUpdateStatus(userID string, status bool) error {
 	user, err := bot.Store.LoadUser(userID)
 	if err != nil {
@@ -158,11 +166,11 @@ func (bot *MSCalendarBot) AfterUpdateStatus(userID string, status bool) error {
 		}
 	}
 
-	if !user.Flags.WelcomeGetConfirmation {
+	if status && !user.Flags.WelcomeGetConfirmation {
 		return bot.NotifyGetConfirmation(userID)
 	}
 
-	return nil
+	return bot.NotifySettings(userID)
 }
 
 func (bot *MSCalendarBot) AfterSetConfirmations(userID string, set bool) error {
@@ -187,11 +195,7 @@ func (bot *MSCalendarBot) AfterSetConfirmations(userID string, set bool) error {
 		}
 	}
 
-	_, err = bot.DM(userID, "Feel free to change these [settings](%s/settings) anytime.", bot.pluginURL)
-	if err != nil {
-		return err
-	}
-	return nil
+	return bot.NotifySettings(userID)
 }
 
 func (bot *MSCalendarBot) CleanPostIDs(mattermostUserID string) error {
