@@ -17,8 +17,9 @@ func (c *Command) connect(parameters ...string) (string, error) {
 	}
 
 	out := "The bot just sent you a message with the instructions to connect."
-	if err := c.MSCalendar.Welcome(c.Args.UserId); err != nil {
-		out = "There has been a  problem while trying to connect."
+	err = c.MSCalendar.Welcome(c.Args.UserId)
+	if err != nil {
+		out = "There has been a problem while trying to connect. err=" + err.Error()
 	}
 
 	return out, nil

@@ -29,7 +29,7 @@ type Dependencies struct {
 	Remote            remote.Remote
 	Store             store.Store
 	IsAuthorizedAdmin func(string) (bool, error)
-	Welcomer          bot.Welcomer
+	Welcomer          Welcomer
 }
 
 type PluginAPI interface {

@@ -19,6 +19,7 @@ const (
 	OAuth2KeyPrefix           = "oauth2_"
 	SubscriptionKeyPrefix     = "sub_"
 	EventKeyPrefix            = "ev_"
+	WelcomeKeyPrefix          = "welcome_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -30,6 +31,7 @@ type Store interface {
 	OAuth2StateStore
 	SubscriptionStore
 	EventStore
+	WelcomeStore
 }
 
 type pluginStore struct {
@@ -40,6 +42,7 @@ type pluginStore struct {
 	userIndexKV        kvstore.KVStore
 	subscriptionKV     kvstore.KVStore
 	eventKV            kvstore.KVStore
+	welcomeIndexKV     kvstore.KVStore
 	Logger             bot.Logger
 }
 
@@ -53,6 +56,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
+		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
 		Logger:             logger,
 	}
 }

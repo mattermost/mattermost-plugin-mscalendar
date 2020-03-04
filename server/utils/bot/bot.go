@@ -14,7 +14,6 @@ type Bot interface {
 	Poster
 	Logger
 	Admin
-	Welcomer
 
 	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(BotConfig) Bot

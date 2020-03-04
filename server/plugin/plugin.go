@@ -120,7 +120,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
-		e.Dependencies.Welcomer = e.bot
+		e.Dependencies.Welcomer = mscalendar.GetMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)

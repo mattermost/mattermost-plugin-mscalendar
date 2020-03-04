@@ -12,7 +12,7 @@ import (
 
 type Poster interface {
 	// DM posts a simple Direct Message to the specified user
-	DM(mattermostUserID, format string, args ...interface{}) error
+	DM(mattermostUserID, format string, args ...interface{}) (string, error)
 
 	// DMWithAttachments posts a Direct Message that contains Slack attachments.
 	// Often used to include post actions.
@@ -20,14 +20,16 @@ type Poster interface {
 
 	// Ephemeral sends an ephemeral message to a user
 	Ephemeral(mattermostUserID, channelID, format string, args ...interface{})
+
+	// DMPUpdate updates the postID with the formatted message
+	DMUpdate(postID, format string, args ...interface{}) error
 }
 
 // DM posts a simple Direct Message to the specified user
-func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) error {
-	_, err := bot.dm(mattermostUserID, &model.Post{
+func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) (string, error) {
+	return bot.dm(mattermostUserID, &model.Post{
 		Message: fmt.Sprintf(format, args...),
 	})
-	return err
 }
 
 // DMWithAttachments posts a Direct Message that contains Slack attachments.
@@ -54,12 +56,6 @@ func (bot *bot) dm(mattermostUserID string, post *model.Post) (string, error) {
 	return post.Id, nil
 }
 
-func (bot *bot) dmAndGetPostID(mattermostUserID, format string, args ...interface{}) (string, error) {
-	return bot.dm(mattermostUserID, &model.Post{
-		Message: fmt.Sprintf(format, args...),
-	})
-}
-
 // DM posts a simple Direct Message to the specified user
 func (bot *bot) dmAdmins(format string, args ...interface{}) error {
 	for _, id := range strings.Split(bot.AdminUserIDs, ",") {
@@ -83,7 +79,7 @@ func (bot *bot) Ephemeral(userId, channelId, format string, args ...interface{})
 	_ = bot.pluginAPI.SendEphemeralPost(userId, post)
 }
 
-func (bot *bot) dmUpdate(postID, format string, args ...interface{}) error {
+func (bot *bot) DMUpdate(postID, format string, args ...interface{}) error {
 	post, appErr := bot.pluginAPI.GetPost(postID)
 	if appErr != nil {
 		return appErr

@@ -386,3 +386,17 @@ func (mr *MockMSCalendarMockRecorder) ViewCalendar(arg0, arg1, arg2 interface{})
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ViewCalendar", reflect.TypeOf((*MockMSCalendar)(nil).ViewCalendar), arg0, arg1, arg2)
 }
+
+// Welcome mocks base method
+func (m *MockMSCalendar) Welcome(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Welcome", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Welcome indicates an expected call of Welcome
+func (mr *MockMSCalendarMockRecorder) Welcome(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Welcome", reflect.TypeOf((*MockMSCalendar)(nil).Welcome), arg0)
+}

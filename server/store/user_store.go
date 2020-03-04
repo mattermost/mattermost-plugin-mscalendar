@@ -33,12 +33,20 @@ type User struct {
 	MattermostUserID string
 	OAuth2Token      *oauth2.Token
 	Settings         Settings `json:"mattermostSettings,omitempty"`
+	Flags            Flags    `json:"mattermostFlags,omitempty"`
 }
 
 type Settings struct {
 	EventSubscriptionID string
 	UpdateStatus        bool
 	GetConfirmation     bool
+}
+
+type Flags struct {
+	WelcomeUpdateStatusPostID    string
+	WelcomeUpdateStatus          bool
+	WelcomeGetConfirmationPostID string
+	WelcomeGetConfirmation       bool
 }
 
 func (settings Settings) String() string {
