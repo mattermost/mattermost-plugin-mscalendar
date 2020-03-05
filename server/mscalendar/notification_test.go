@@ -21,19 +21,15 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
-func NewTestNotificationProcessor(env Env) NotificationProcessor {
+func newTestNotificationProcessor(env Env) NotificationProcessor {
 	processor := &notificationProcessor{
 		Env: env,
 	}
 	return processor
 }
 
-func TestProcessNotification(t *testing.T) {
-	token := &oauth2.Token{
-		AccessToken: "creator_oauth_token",
-	}
-
-	eRemote := &remote.Event{
+func newTestEvent(locationDisplayName string) *remote.Event {
+	return &remote.Event{
 		ID: "remote_event_id",
 		Organizer: &remote.Attendee{
 			EmailAddress: &remote.EmailAddress{
@@ -42,7 +38,7 @@ func TestProcessNotification(t *testing.T) {
 			},
 		},
 		Location: &remote.Location{
-			DisplayName: "event_location_display_name",
+			DisplayName: locationDisplayName,
 		},
 		ResponseStatus: &remote.EventResponseStatus{
 			Response: "event_response",
@@ -52,8 +48,10 @@ func TestProcessNotification(t *testing.T) {
 		BodyPreview:       "event_body_preview",
 		ResponseRequested: true,
 	}
+}
 
-	sStore := &store.Subscription{
+func newTestSubscription() *store.Subscription {
+	return &store.Subscription{
 		PluginVersion: "x.x.x",
 		Remote: &remote.Subscription{
 			ID:          "remote_subscription_id",
@@ -61,55 +59,61 @@ func TestProcessNotification(t *testing.T) {
 		},
 		MattermostCreatorID: "creator_mm_id",
 	}
+}
 
-	uStore := &store.User{
+func newTestUser() *store.User {
+	return &store.User{
 		Settings: store.Settings{
 			EventSubscriptionID: "remote_subscription_id",
 		},
-		Remote:           &remote.User{},
-		OAuth2Token:      token,
+		Remote: &remote.User{},
+		OAuth2Token: &oauth2.Token{
+			AccessToken: "creator_oauth_token",
+		},
 		MattermostUserID: "creator_mm_id",
 	}
+}
 
-	nRemote := &remote.Notification{
-		SubscriptionID: "remote_subscription_id",
-		IsBare:         true,
+func newTestNotification(clientState string, recommendRenew bool) *remote.Notification {
+	n := &remote.Notification{
+		SubscriptionID:      "remote_subscription_id",
+		IsBare:              true,
 		SubscriptionCreator: &remote.User{},
-		Event:               &remote.Event{},
+		Event:               newTestEvent("event_location_display_name"),
 		Subscription:        &remote.Subscription{},
+		ClientState:         clientState,
+		RecommendRenew:      recommendRenew,
 	}
+	return n
+}
 
+func TestProcessNotification(t *testing.T) {
 	tcs := []struct {
-		name                string
-		incomingClientState string
-		expectedError       string
-		hasPriorEvent       bool
-		recommendRenew      bool
+		name          string
+		expectedError string
+		notification  *remote.Notification
+		priorEvent    *remote.Event
 	}{
 		{
-			name:                "incoming ClientState matches stored ClientState",
-			incomingClientState: "stored_client_state",
-			expectedError:       "",
-			hasPriorEvent:       false,
-			recommendRenew:      false,
+			name:          "incoming ClientState matches stored ClientState",
+			expectedError: "",
+			notification:  newTestNotification("stored_client_state", false),
+			priorEvent:    nil,
 		}, {
-			name:                "incoming ClientState doesn't match stored ClientState",
-			incomingClientState: "wrong_client_state",
-			expectedError:       "Unauthorized webhook",
-			hasPriorEvent:       false,
-			recommendRenew:      false,
+			name:          "incoming ClientState doesn't match stored ClientState",
+			expectedError: "Unauthorized webhook",
+			notification:  newTestNotification("wrong_client_state", false),
+			priorEvent:    nil,
 		}, {
-			name:                "prior event exists",
-			incomingClientState: "stored_client_state",
-			expectedError:       "",
-			hasPriorEvent:       true,
-			recommendRenew:      false,
+			name:          "prior event exists",
+			expectedError: "",
+			notification:  newTestNotification("stored_client_state", false),
+			priorEvent:    newTestEvent("prior_event_location_display_name"),
 		}, {
-			name:                "sub renewal recommended",
-			incomingClientState: "stored_client_state",
-			expectedError:       "",
-			hasPriorEvent:       false,
-			recommendRenew:      true,
+			name:          "sub renewal recommended",
+			expectedError: "",
+			notification:  newTestNotification("stored_client_state", true),
+			priorEvent:    nil,
 		},
 	}
 
@@ -119,7 +123,6 @@ func TestProcessNotification(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockStore := mock_store.NewMockStore(ctrl)
-			logger := &bot.TestLogger{TB: t}
 			mockPoster := mock_bot.NewMockPoster(ctrl)
 			mockRemote := mock_remote.NewMockRemote(ctrl)
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
@@ -130,43 +133,38 @@ func TestProcessNotification(t *testing.T) {
 				Config: conf,
 				Dependencies: &Dependencies{
 					Store:     mockStore,
-					Logger:    logger,
+					Logger:    &bot.NilLogger{},
 					Poster:    mockPoster,
 					Remote:    mockRemote,
 					PluginAPI: mockPluginAPI,
 				},
 			}
 
-			nRemote.ClientState = tc.incomingClientState
-			nRemote.RecommendRenew = tc.recommendRenew
+			subscription := newTestSubscription()
+			user := newTestUser()
 
-			nRemoteWithEvent := *nRemote
-			nRemoteWithEvent.Event = eRemote
+			mockStore.EXPECT().LoadSubscription("remote_subscription_id").Return(subscription, nil).Times(1)
+			mockStore.EXPECT().LoadUser("creator_mm_id").Return(user, nil).Times(1)
 
-			mockStore.EXPECT().LoadSubscription("remote_subscription_id").Return(sStore, nil).Times(1)
-			mockStore.EXPECT().LoadUser("creator_mm_id").Return(uStore, nil).Times(1)
+			if tc.notification.ClientState == subscription.Remote.ClientState {
+				mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}).Return(mockClient).Times(1)
 
-			if nRemote.ClientState == sStore.Remote.ClientState {
-				mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-
-				if tc.recommendRenew {
+				if tc.notification.RecommendRenew {
 					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&remote.Subscription{}, nil).Times(1)
-					mockStore.EXPECT().StoreUserSubscription(uStore, &store.Subscription{
+					mockStore.EXPECT().StoreUserSubscription(user, &store.Subscription{
 						Remote:              &remote.Subscription{},
 						MattermostCreatorID: "creator_mm_id",
 						PluginVersion:       "x.x.x",
 					}).Return(nil).Times(1)
 				}
 
-				mockClient.EXPECT().GetNotificationData(nRemote).Return(&nRemoteWithEvent, nil).Times(1)
+				mockClient.EXPECT().GetNotificationData(tc.notification).Return(tc.notification, nil).Times(1)
 
-				if tc.hasPriorEvent {
-					priorEvent := *eRemote
-					priorEvent.Location = &remote.Location{
-						DisplayName:  "prior_event_location_display_name",
-					}
+				if tc.priorEvent != nil {
 					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_id").Return(&store.Event{
-						Remote: &priorEvent,
+						Remote: tc.priorEvent,
 					}, nil).Times(1)
 				} else {
 					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_id").Return(nil, store.ErrNotFound).Times(1)
@@ -176,9 +174,9 @@ func TestProcessNotification(t *testing.T) {
 				mockStore.EXPECT().StoreUserEvent("creator_mm_id", gomock.Any()).Return(nil).Times(1)
 			}
 
-			p := NewTestNotificationProcessor(env)
+			p := newTestNotificationProcessor(env)
 			processor := p.(*notificationProcessor)
-			err := processor.processNotification(nRemote)
+			err := processor.processNotification(tc.notification)
 
 			if tc.expectedError != "" {
 				require.Equal(t, tc.expectedError, err.Error())

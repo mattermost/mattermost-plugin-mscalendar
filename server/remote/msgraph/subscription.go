@@ -15,17 +15,19 @@ import (
 
 const subscribeTTL = 10 * time.Minute
 
-func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscription, error) {
+func newRandomString() string {
 	b := make([]byte, 96)
 	rand.Read(b)
-	clientState := base64.URLEncoding.EncodeToString(b)
+	return base64.URLEncoding.EncodeToString(b)
+}
 
+func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscription, error) {
 	sub := &remote.Subscription{
 		Resource:           "me/events",
 		ChangeType:         "created,updated,deleted",
 		NotificationURL:    notificationURL,
 		ExpirationDateTime: time.Now().Add(subscribeTTL).Format(time.RFC3339),
-		ClientState:        clientState,
+		ClientState:        newRandomString(),
 	}
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
