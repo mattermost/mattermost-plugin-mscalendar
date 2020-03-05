@@ -113,7 +113,10 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
 		}
 
-		m.client.DeleteSubscription(eventSubscriptionID)
+		err = m.client.DeleteSubscription(eventSubscriptionID)
+		if err != nil {
+			m.Logger.Errorf("failed to delete remote subscription %s. %s", eventSubscriptionID, err.Error())
+		}
 	}
 
 	return m.Store.DeleteUser(mattermostUserID)
