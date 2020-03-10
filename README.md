@@ -27,7 +27,7 @@ follow [these instructions](#configuration) for install and configuration.
 
 ### Step 1: Create Mattermost App Azure (Private or Enterprise MS account)
 
-- Sign into [portal.azure.com](www.portal.azure.com)
+- Sign into [portal.azure.com](https://portal.azure.com)
   - from the hamburger menu -> `Azure Active Directory`
 
 #### Azure Active Directory
