@@ -227,7 +227,7 @@ func (bot *MSCalendarBot) cleanPostIDs(mattermostUserID string) error {
 	}
 
 	if postID != "" {
-		err := bot.DeletePost(postID)
+		err = bot.DeletePost(postID)
 		if err != nil {
 			bot.Errorf(err.Error())
 		}
@@ -240,7 +240,7 @@ func (bot *MSCalendarBot) cleanPostIDs(mattermostUserID string) error {
 	}
 
 	if user.Flags.WelcomeUpdateStatusPostID != "" {
-		err := bot.DeletePost(user.Flags.WelcomeUpdateStatusPostID)
+		err = bot.DeletePost(user.Flags.WelcomeUpdateStatusPostID)
 		if err != nil {
 			bot.Errorf(err.Error())
 		}
@@ -248,7 +248,7 @@ func (bot *MSCalendarBot) cleanPostIDs(mattermostUserID string) error {
 	}
 
 	if user.Flags.WelcomeGetConfirmationPostID != "" {
-		err := bot.DeletePost(user.Flags.WelcomeGetConfirmationPostID)
+		err = bot.DeletePost(user.Flags.WelcomeGetConfirmationPostID)
 		if err != nil {
 			bot.Errorf(err.Error())
 		}
