@@ -1,4 +1,4 @@
-package mscalendar
+package mscalendar_test
 
 import (
 	"errors"
@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
@@ -42,7 +44,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	app, env := newOAuth2TestApp(ctrl)
 	ss := env.Dependencies.Store.(*mock_store.MockStore)
-	poster := env.Dependencies.Poster.(*mock_bot.MockPoster)
+	welcomer := env.Dependencies.Welcomer.(*mock_mscalendar.MockWelcomer)
 
 	state := ""
 	gomock.InOrder(
@@ -67,11 +69,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
 		ss.EXPECT().LoadMattermostUserId(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
-		poster.EXPECT().DM(
-			gomock.Eq(fakeID),
-			gomock.Eq(WelcomeMessage),
-			gomock.Eq("mail-value"),
-		).Return(nil).Times(1),
+		welcomer.EXPECT().AfterSuccessfullyConnect(fakeID, "mail-value").Return(nil).Times(1),
 	)
 
 	err = app.CompleteOAuth2(fakeID, fakeCode, state)
@@ -116,9 +114,9 @@ func TestCompleteOAuth2ForBotHappy(t *testing.T) {
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		poster.EXPECT().DM(
 			gomock.Eq(fakeID),
-			gomock.Eq(BotWelcomeMessage),
+			gomock.Eq(mscalendar.BotWelcomeMessage),
 			gomock.Eq("mail-value"),
-		).Return(nil).Times(1),
+		).Return("post_id", nil).Times(1),
 	)
 
 	err = app.CompleteOAuth2(fakeID, fakeCode, state)
@@ -132,14 +130,14 @@ func TestInitOAuth2(t *testing.T) {
 	tcs := []struct {
 		name             string
 		mattermostUserID string
-		setup            func(dependencies *Dependencies)
+		setup            func(dependencies *mscalendar.Dependencies)
 		expectError      bool
 		expectURL        string
 	}{
 		{
 			name:             "MM user already connected",
 			mattermostUserID: "fake@mattermost.com",
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				su := &store.User{Remote: &remote.User{Mail: "remote_email@example.com"}}
 				us := d.Store.(*mock_store.MockStore)
 				us.EXPECT().LoadUser("fake@mattermost.com").Return(su, nil).Times(1)
@@ -149,7 +147,7 @@ func TestInitOAuth2(t *testing.T) {
 		{
 			name:             "unable to store user state",
 			mattermostUserID: fakeID,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("Remote user not found")).Times(1)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(errors.New("unable to store state")).Times(1)
@@ -159,7 +157,7 @@ func TestInitOAuth2(t *testing.T) {
 		{
 			name:             "successful redirect",
 			mattermostUserID: fakeID,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("Remote user not found")).Times(1)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
@@ -193,14 +191,14 @@ func TestInitOAuth2ForBot(t *testing.T) {
 	tcs := []struct {
 		name             string
 		mattermostUserID string
-		setup            func(dependencies *Dependencies)
+		setup            func(dependencies *mscalendar.Dependencies)
 		expectError      bool
 		expectURL        string
 	}{
 		{
 			name:             "connecting bot, user is not admin",
 			mattermostUserID: fakeID,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				d.IsAuthorizedAdmin = func(userID string) (bool, error) { return false, nil }
 			},
 			expectError: true,
@@ -208,7 +206,7 @@ func TestInitOAuth2ForBot(t *testing.T) {
 		{
 			name:             "connecting bot, user is admin",
 			mattermostUserID: fakeID,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				d.IsAuthorizedAdmin = func(userID string) (bool, error) {
 					return true, nil
 				}
@@ -250,7 +248,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 		mattermostUserID  string
 		code              string
 		state             string
-		setup             func(*Dependencies)
+		setup             func(*mscalendar.Dependencies)
 		registerResponder func()
 		expectError       string
 	}{
@@ -274,7 +272,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			mattermostUserID: fakeID,
 			code:             fakeCode,
 			state:            "user_nomatch@mattermost.com",
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_nomatch@mattermost.com")).Return(nil).Times(1)
 			},
@@ -285,7 +283,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			mattermostUserID: "bot_user_id",
 			code:             fakeCode,
 			state:            "fake_bot-user-id",
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				d.IsAuthorizedAdmin = func(mattermostUserID string) (bool, error) {
 					return false, nil
 				}
@@ -300,7 +298,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			code:              fakeCode,
 			state:             "user_" + fakeID,
 			registerResponder: badTokenExchangeResponder,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
@@ -312,7 +310,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			code:              fakeCode,
 			state:             "user_fake@mattermost.com",
 			registerResponder: statusOKGraphAPIResponder,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				papi := d.PluginAPI.(*mock_plugin_api.MockPluginAPI)
 				papi.EXPECT().GetMattermostUser("fake@mattermost.com").Return(&model.User{Username: "sample-username"}, nil)
 
@@ -323,12 +321,12 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
 					gomock.Eq("fake@mattermost.com"),
-					gomock.Eq(RemoteUserAlreadyConnected),
+					gomock.Eq(mscalendar.RemoteUserAlreadyConnected),
 					gomock.Eq("Microsoft Calendar"),
 					gomock.Eq("mail-value"),
 					gomock.Eq("mscalendar"),
 					gomock.Eq("sample-username"),
-				).Return(nil).Times(1)
+				).Return("post_id", nil).Times(1)
 			},
 		},
 		{
@@ -337,7 +335,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			code:              fakeCode,
 			state:             "user_fake@mattermost.com",
 			registerResponder: unauthorizedTokenGraphAPIResponder,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
@@ -349,7 +347,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			code:              fakeCode,
 			state:             "user_fake@mattermost.com",
 			registerResponder: statusOKGraphAPIResponder,
-			setup: func(d *Dependencies) {
+			setup: func(d *mscalendar.Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
 				ss.EXPECT().LoadMattermostUserId("user-remote-id").Return("", errors.New("Connected user not found")).Times(1)
@@ -467,7 +465,7 @@ func newHTTPRequest(mattermostUserID, rawQuery string) *http.Request {
 	return r
 }
 
-func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
+func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, mscalendar.Env) {
 	conf := &config.Config{
 		StoredConfig: config.StoredConfig{
 			OAuth2Authority:    "common",
@@ -478,19 +476,20 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 		BotUserID: "bot-user-id",
 	}
 
-	env := Env{
+	env := mscalendar.Env{
 		Config: conf,
-		Dependencies: &Dependencies{
+		Dependencies: &mscalendar.Dependencies{
 			Store:             mock_store.NewMockStore(ctrl),
 			Logger:            &bot.NilLogger{},
 			Poster:            mock_bot.NewMockPoster(ctrl),
 			Remote:            remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
 			PluginAPI:         mock_plugin_api.NewMockPluginAPI(ctrl),
+			Welcomer:          mock_mscalendar.NewMockWelcomer(ctrl),
 			IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return false, nil },
 		},
 	}
 
-	return NewOAuth2App(env), env
+	return mscalendar.NewOAuth2App(env), env
 }
 
 var stateRegexp = regexp.MustCompile(`^(?P<before>.*)&+state=\w+(?P<after>.*)$`)

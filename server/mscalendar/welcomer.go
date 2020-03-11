@@ -16,7 +16,8 @@ type Welcomer interface {
 }
 
 type MSCalendarBot struct {
-	bot.Bot
+	bot.Poster
+	bot.Logger
 	Welcomer
 	Env
 	pluginURL string
@@ -27,9 +28,10 @@ Here is some info to prove we got you logged in
 - Name: %s
 `
 
-func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) *MSCalendarBot {
+func GetMSCalendarBot(poster bot.Poster, logger bot.Logger, env Env, pluginURL string) *MSCalendarBot {
 	return &MSCalendarBot{
-		Bot:       bot,
+		Poster:    poster,
+		Logger:    logger,
 		Env:       env,
 		pluginURL: pluginURL,
 	}
