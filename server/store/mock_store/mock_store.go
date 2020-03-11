@@ -76,11 +76,12 @@ func (mr *MockStoreMockRecorder) DeleteUserSubscription(arg0, arg1 interface{}) 
 }
 
 // DeleteUserWelcomePost mocks base method
-func (m *MockStore) DeleteUserWelcomePost(arg0 string) error {
+func (m *MockStore) DeleteUserWelcomePost(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUserWelcomePost", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteUserWelcomePost indicates an expected call of DeleteUserWelcomePost
