@@ -94,6 +94,7 @@ func (user *User) Markdown() string {
 }
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
+	m.Welcomer.AfterDisconnect(mattermostUserID)
 	return m.Store.DeleteUser(mattermostUserID)
 }
 

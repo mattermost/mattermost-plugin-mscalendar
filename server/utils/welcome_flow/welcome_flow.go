@@ -4,8 +4,9 @@
 package welcome_flow
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
@@ -25,8 +26,8 @@ func Init(h *httputils.Handler, app App) {
 	}
 
 	oauth2Router := h.Router.PathPrefix("/welcomeBot").Subrouter()
-	oauth2Router.HandleFunc("/updateStatus", wf.updateStatus).Methods("GET")
-	oauth2Router.HandleFunc("/setConfirmations", wf.updateConfirmations).Methods("GET")
+	oauth2Router.HandleFunc("/updateStatus", wf.updateStatus).Methods("POST")
+	oauth2Router.HandleFunc("/setConfirmations", wf.updateConfirmations).Methods("POST")
 }
 
 func (wf *wf) updateStatus(w http.ResponseWriter, r *http.Request) {
@@ -36,9 +37,9 @@ func (wf *wf) updateStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	updateStatus := r.URL.Query().Get("update_status") == "true"
-	message := "Status will be updated"
-	if !updateStatus {
-		message = "Status won't be updated"
+	message := ":thumbsup: Got it! We won't update your status in Mattermost."
+	if updateStatus {
+		message = ":thumbsup: Got it! We'll automatically update your status in Mattermost."
 	}
 
 	err := wf.app.SetUpdateStatus(mattermostUserID, updateStatus)
@@ -46,22 +47,23 @@ func (wf *wf) updateStatus(w http.ResponseWriter, r *http.Request) {
 		message = "There has been a problem setting your status"
 	}
 
-	html := `
-		<!DOCTYPE html>
-		<html>
-			<head>
-				<script>
-					window.close();
-				</script>
-			</head>
-			<body>
-				<p>%s. Please close this window.</p>
-			</body>
-		</html>
-		`
+	response := model.PostActionIntegrationResponse{}
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fmt.Sprintf(html, message)))
+	post := model.Post{}
+	model.ParseSlackAttachment(&post, []*model.SlackAttachment{getUpdateStatusAttachments(message)})
+
+	response.Update = &post
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response.ToJson())
+}
+
+func getUpdateStatusAttachments(message string) *model.SlackAttachment {
+	return &model.SlackAttachment{
+		Title:   "Update Status",
+		Text:    message,
+		Actions: []*model.PostAction{},
+	}
 }
 
 func (wf *wf) updateConfirmations(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +73,9 @@ func (wf *wf) updateConfirmations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	getConfirmation := r.URL.Query().Get("get_confirmation") == "true"
-	message := "We will ask for confirmation before updating your status"
-	if !getConfirmation {
-		message = "We will update your status automatically"
+	message := "Cool, we will automatically update your status."
+	if getConfirmation {
+		message = "Cool, we'll also send you confirmations before updating your status."
 	}
 
 	err := wf.app.SetGetConfirmation(mattermostUserID, getConfirmation)
@@ -81,19 +83,21 @@ func (wf *wf) updateConfirmations(w http.ResponseWriter, r *http.Request) {
 		message = "There has been a problem setting the confirmation configuration"
 	}
 
-	html := `
-		<!DOCTYPE html>
-		<html>
-			<head>
-				<script>
-					window.close();
-				</script>
-			</head>
-			<body>
-				<p>%s. Please close this window.</p>
-			</body>
-		</html>
-		`
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fmt.Sprintf(html, message)))
+	response := model.PostActionIntegrationResponse{}
+
+	post := model.Post{}
+	model.ParseSlackAttachment(&post, []*model.SlackAttachment{getSetConfirmationAttachments(message)})
+
+	response.Update = &post
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response.ToJson())
+}
+
+func getSetConfirmationAttachments(message string) *model.SlackAttachment {
+	return &model.SlackAttachment{
+		Title:   "Confirm status change",
+		Text:    message,
+		Actions: []*model.PostAction{},
+	}
 }

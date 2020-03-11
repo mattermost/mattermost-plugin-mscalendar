@@ -1,7 +1,10 @@
 package mscalendar
 
 import (
+	"fmt"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type Welcomer interface {
@@ -9,6 +12,7 @@ type Welcomer interface {
 	AfterSuccessfullyConnect(userID, userLogin string) error
 	AfterUpdateStatus(userID string, status bool) error
 	AfterSetConfirmations(userID string, set bool) error
+	AfterDisconnect(userID string) error
 }
 
 type MSCalendarBot struct {
@@ -32,15 +36,9 @@ func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) *MSCalendarBot {
 }
 
 func (bot *MSCalendarBot) Welcome(userID string) error {
-	_, err := bot.DM(userID, "Welcome to the Microsoft Calendar Bot.")
-	if err != nil {
-		return err
-	}
+	bot.cleanPostIDs(userID)
 
-	bot.CleanPostIDs(userID)
-
-	postID, err := bot.DM(userID, "[Click here to link your account.](%s/oauth2/connect)",
-		bot.pluginURL)
+	postID, err := bot.DMWithAttachments(userID, bot.getConnectAttachment())
 	if err != nil {
 		return err
 	}
@@ -56,27 +54,24 @@ func (bot *MSCalendarBot) AfterSuccessfullyConnect(userID, userLogin string) err
 		return err
 	}
 
-	postID, _ := bot.Store.LoadUserWelcomePost(userID)
+	postID, err := bot.Store.DeleteUserWelcomePost(userID)
 	if postID != "" {
-		err = bot.DMUpdate(postID, ":tada: Congratulations! Your Microsoft account (%s) has been connected to Mattermost.", userLogin)
-		if err != nil {
-			return err
+		post := &model.Post{
+			Id: postID,
 		}
-		err := bot.Store.DeleteUserWelcomePost(userID)
-		if err != nil {
-			return err
-		}
+		model.ParseSlackAttachment(post, []*model.SlackAttachment{bot.getConnectedAttachment(userLogin)})
+		bot.DMUpdatePost(post)
 	}
 
 	if !user.Flags.WelcomeUpdateStatus {
-		return bot.NotifyUpdateStatus(userID)
+		return bot.notifyUpdateStatus(userID)
 	}
 
 	if !user.Flags.WelcomeGetConfirmation {
-		return bot.NotifyGetConfirmation(userID)
+		return bot.notifyGetConfirmation(userID)
 	}
 
-	err = bot.NotifyWelcome(userID)
+	err = bot.notifyWelcome(userID)
 	if err != nil {
 		return err
 	}
@@ -84,14 +79,107 @@ func (bot *MSCalendarBot) AfterSuccessfullyConnect(userID, userLogin string) err
 	return nil
 }
 
-func (bot *MSCalendarBot) NotifyUpdateStatus(userID string) error {
-	message := "Do you wish your Mattermost status to be automatically updated to be *Do not disturb* at the time of your Microsoft Calendar events?\n"
-	message += "[Yes - Update my status](%s/welcomeBot/updateStatus?update_status=true)\t"
-	message += "[No - Don't update my status](%s/welcomeBot/updateStatus?update_status=false)"
-	postID, err := bot.DM(userID, message, bot.pluginURL, bot.pluginURL)
+func (bot *MSCalendarBot) AfterUpdateStatus(userID string, status bool) error {
+	user, err := bot.Store.LoadUser(userID)
 	if err != nil {
 		return err
 	}
+
+	if status && !user.Flags.WelcomeGetConfirmation {
+		return bot.notifyGetConfirmation(userID)
+	}
+
+	return bot.notifySettings(userID)
+}
+
+func (bot *MSCalendarBot) AfterSetConfirmations(userID string, set bool) error {
+	return bot.notifySettings(userID)
+}
+
+func (bot *MSCalendarBot) AfterDisconnect(userID string) error {
+	return bot.cleanPostIDs(userID)
+}
+
+func (bot *MSCalendarBot) notifyWelcome(userID string) error {
+	user, err := bot.Store.LoadUser(userID)
+	if err != nil {
+		return err
+	}
+	_, err = bot.DM(userID, WelcomeMessage, user.Remote.Mail)
+	return err
+}
+
+func (bot *MSCalendarBot) getConnectAttachment() *model.SlackAttachment {
+	sa := model.SlackAttachment{
+		Title: "Connect",
+		Text: fmt.Sprintf(`Welcome to the Microsoft Calendar Bot.
+[Click here to link your account.](%s/oauth2/connect)`, bot.pluginURL),
+	}
+
+	return &sa
+}
+
+func (bot *MSCalendarBot) getConnectedAttachment(userLogin string) *model.SlackAttachment {
+	return &model.SlackAttachment{
+		Title: "Connect",
+		Text:  ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost.",
+	}
+}
+
+func (bot *MSCalendarBot) getUpdateStatusAttachment() *model.SlackAttachment {
+	actionYes := model.PostAction{
+		Name: "Yes - Update my status",
+		Integration: &model.PostActionIntegration{
+			URL: bot.pluginURL + "/welcomeBot/updateStatus?update_status=true",
+		},
+	}
+
+	actionNo := model.PostAction{
+		Name: "No - Don't update my status",
+		Integration: &model.PostActionIntegration{
+			URL: bot.pluginURL + "/welcomeBot/updateStatus?update_status=false",
+		},
+	}
+
+	sa := model.SlackAttachment{
+		Title:   "Update Status",
+		Text:    "Do you wish your Mattermost status to be automatically updated to be *Do not disturb* at the time of your Microsoft Calendar events?",
+		Actions: []*model.PostAction{&actionYes, &actionNo},
+	}
+
+	return &sa
+}
+
+func (bot *MSCalendarBot) getConfirmationAttachment() *model.SlackAttachment {
+	actionYes := model.PostAction{
+		Name: "Yes - I will like to get confirmations",
+		Integration: &model.PostActionIntegration{
+			URL: bot.pluginURL + "/welcomeBot/setConfirmations?get_confirmation=true",
+		},
+	}
+
+	actionNo := model.PostAction{
+		Name: "No - Update my status automatically",
+		Integration: &model.PostActionIntegration{
+			URL: bot.pluginURL + "/welcomeBot/setConfirmations?get_confirmation=false",
+		},
+	}
+
+	sa := model.SlackAttachment{
+		Title:   "Confirm status change",
+		Text:    "Do you want to receive confirmations before we update your status for each event?",
+		Actions: []*model.PostAction{&actionYes, &actionNo},
+	}
+
+	return &sa
+}
+
+func (bot *MSCalendarBot) notifyUpdateStatus(userID string) error {
+	postID, err := bot.DMWithAttachments(userID, bot.getUpdateStatusAttachment())
+	if err != nil {
+		return err
+	}
+
 	user, err := bot.Store.LoadUser(userID)
 	if err != nil {
 		return err
@@ -105,11 +193,8 @@ func (bot *MSCalendarBot) NotifyUpdateStatus(userID string) error {
 	return nil
 }
 
-func (bot *MSCalendarBot) NotifyGetConfirmation(userID string) error {
-	message := "Do you want to receive confirmations before we update your status for each event?\n"
-	message += "[Yes - I will like to get confirmations](%s/welcomeBot/setConfirmations?set=true)\t"
-	message += "[No - Update my status automatically](%s/welcomeBot/setConfirmations?set=false)\t"
-	postID, err := bot.DM(userID, message, bot.pluginURL, bot.pluginURL)
+func (bot *MSCalendarBot) notifyGetConfirmation(userID string) error {
+	postID, err := bot.DMWithAttachments(userID, bot.getConfirmationAttachment())
 	if err != nil {
 		return err
 	}
@@ -127,81 +212,25 @@ func (bot *MSCalendarBot) NotifyGetConfirmation(userID string) error {
 	return nil
 }
 
-func (bot *MSCalendarBot) NotifyWelcome(userID string) error {
-	user, err := bot.Store.LoadUser(userID)
-	if err != nil {
-		return err
-	}
-	_, err = bot.DM(userID, WelcomeMessage, user.Remote.Mail)
-	return err
-}
-
-func (bot *MSCalendarBot) NotifySettings(userID string) error {
-	_, err := bot.DM(userID, "Feel free to change these [settings](%s/settings) anytime.", bot.pluginURL)
+func (bot *MSCalendarBot) notifySettings(userID string) error {
+	_, err := bot.DM(userID, "Feel free to change these settings anytime") //[settings](%s/settings) anytime.", bot.pluginURL)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (bot *MSCalendarBot) AfterUpdateStatus(userID string, status bool) error {
-	user, err := bot.Store.LoadUser(userID)
+func (bot *MSCalendarBot) cleanPostIDs(mattermostUserID string) error {
+	postID, err := bot.Store.DeleteUserWelcomePost(mattermostUserID)
 	if err != nil {
 		return err
 	}
 
-	if user.Flags.WelcomeUpdateStatusPostID != "" {
-		message := ":thumbsup: Got it! We won't update your status in Mattermost."
-		if status {
-			message = ":thumbsup: Got it! We'll automatically update your status in Mattermost."
-		}
-		err = bot.DMUpdate(user.Flags.WelcomeUpdateStatusPostID, message)
+	if postID != "" {
+		err := bot.DeletePost(postID)
 		if err != nil {
-			return err
+			bot.Errorf(err.Error())
 		}
-		user.Flags.WelcomeUpdateStatusPostID = ""
-		err := bot.Store.StoreUser(user)
-		if err != nil {
-			return err
-		}
-	}
-
-	if status && !user.Flags.WelcomeGetConfirmation {
-		return bot.NotifyGetConfirmation(userID)
-	}
-
-	return bot.NotifySettings(userID)
-}
-
-func (bot *MSCalendarBot) AfterSetConfirmations(userID string, set bool) error {
-	user, err := bot.Store.LoadUser(userID)
-	if err != nil {
-		return err
-	}
-
-	if user.Flags.WelcomeGetConfirmationPostID != "" {
-		message := "Cool, we'll also send you confirmations before updating your status."
-		if !set {
-			message = "Cool, we will automatically update your status."
-		}
-		err = bot.DMUpdate(user.Flags.WelcomeGetConfirmationPostID, message)
-		if err != nil {
-			return err
-		}
-		user.Flags.WelcomeGetConfirmationPostID = ""
-		err := bot.Store.StoreUser(user)
-		if err != nil {
-			return err
-		}
-	}
-
-	return bot.NotifySettings(userID)
-}
-
-func (bot *MSCalendarBot) CleanPostIDs(mattermostUserID string) error {
-	err := bot.Store.DeleteUserWelcomePost(mattermostUserID)
-	if err != nil {
-		return err
 	}
 
 	user, err := bot.Store.LoadUser(mattermostUserID)
@@ -211,7 +240,7 @@ func (bot *MSCalendarBot) CleanPostIDs(mattermostUserID string) error {
 	}
 
 	if user.Flags.WelcomeUpdateStatusPostID != "" {
-		err := bot.DMUpdate(user.Flags.WelcomeUpdateStatusPostID, "New connection detected. Please, use the latest message")
+		err := bot.DeletePost(user.Flags.WelcomeUpdateStatusPostID)
 		if err != nil {
 			bot.Errorf(err.Error())
 		}
@@ -219,7 +248,7 @@ func (bot *MSCalendarBot) CleanPostIDs(mattermostUserID string) error {
 	}
 
 	if user.Flags.WelcomeGetConfirmationPostID != "" {
-		err := bot.DMUpdate(user.Flags.WelcomeGetConfirmationPostID, "New connection detected. Please, use the latest message")
+		err := bot.DeletePost(user.Flags.WelcomeGetConfirmationPostID)
 		if err != nil {
 			bot.Errorf(err.Error())
 		}

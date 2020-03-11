@@ -16,13 +16,19 @@ type Poster interface {
 
 	// DMWithAttachments posts a Direct Message that contains Slack attachments.
 	// Often used to include post actions.
-	DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) error
+	DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) (string, error)
 
 	// Ephemeral sends an ephemeral message to a user
 	Ephemeral(mattermostUserID, channelID, format string, args ...interface{})
 
 	// DMPUpdate updates the postID with the formatted message
 	DMUpdate(postID, format string, args ...interface{}) error
+
+	// DeletePost deletes a single post
+	DeletePost(postID string) error
+
+	// DMUpdatePost substitute one post with another
+	DMUpdatePost(post *model.Post) error
 }
 
 // DM posts a simple Direct Message to the specified user
@@ -34,11 +40,11 @@ func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) (string
 
 // DMWithAttachments posts a Direct Message that contains Slack attachments.
 // Often used to include post actions.
-func (bot *bot) DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) error {
+func (bot *bot) DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) (string, error) {
 	post := model.Post{}
 	model.ParseSlackAttachment(&post, attachments)
-	_, err := bot.dm(mattermostUserID, &post)
-	return err
+	postID, err := bot.dm(mattermostUserID, &post)
+	return postID, err
 }
 
 func (bot *bot) dm(mattermostUserID string, post *model.Post) (string, error) {
@@ -91,5 +97,21 @@ func (bot *bot) DMUpdate(postID, format string, args ...interface{}) error {
 		return appErr
 	}
 
+	return nil
+}
+
+func (bot *bot) DeletePost(postID string) error {
+	appErr := bot.pluginAPI.DeletePost(postID)
+	if appErr != nil {
+		return appErr
+	}
+	return nil
+}
+
+func (bot *bot) DMUpdatePost(post *model.Post) error {
+	_, appErr := bot.pluginAPI.UpdatePost(post)
+	if appErr != nil {
+		return appErr
+	}
 	return nil
 }

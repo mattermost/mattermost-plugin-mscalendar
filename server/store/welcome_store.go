@@ -5,7 +5,7 @@ import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 type WelcomeStore interface {
 	LoadUserWelcomePost(mattermostID string) (string, error)
 	StoreUserWelcomePost(mattermostID, postID string) error
-	DeleteUserWelcomePost(mattermostID string) error
+	DeleteUserWelcomePost(mattermostID string) (string, error)
 }
 
 func (s *pluginStore) LoadUserWelcomePost(mattermostID string) (string, error) {
@@ -25,10 +25,12 @@ func (s *pluginStore) StoreUserWelcomePost(mattermostID, postID string) error {
 	return nil
 }
 
-func (s *pluginStore) DeleteUserWelcomePost(mattermostID string) error {
+func (s *pluginStore) DeleteUserWelcomePost(mattermostID string) (string, error) {
+	var postID string
+	kvstore.LoadJSON(s.welcomeIndexKV, mattermostID, &postID)
 	err := s.welcomeIndexKV.Delete(mattermostID)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return postID, nil
 }

@@ -21,6 +21,7 @@ func (app *welcomeApp) SetUpdateStatus(mattermostUserID string, updateStatus boo
 	}
 	user.Settings.UpdateStatus = updateStatus
 	user.Flags.WelcomeUpdateStatus = true
+	user.Flags.WelcomeUpdateStatusPostID = ""
 	err = app.Store.StoreUser(user)
 	if err != nil {
 		return err
@@ -36,6 +37,7 @@ func (app *welcomeApp) SetGetConfirmation(mattermostUserID string, getConfirmati
 	}
 	user.Settings.GetConfirmation = getConfirmation
 	user.Flags.WelcomeGetConfirmation = true
+	user.Flags.WelcomeGetConfirmationPostID = ""
 	err = app.Store.StoreUser(user)
 	if err != nil {
 		return err
