@@ -33,6 +33,20 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// DeleteDailySummarySettings mocks base method
+func (m *MockStore) DeleteDailySummarySettings(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteDailySummarySettings", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDailySummarySettings indicates an expected call of DeleteDailySummarySettings
+func (mr *MockStoreMockRecorder) DeleteDailySummarySettings(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDailySummarySettings", reflect.TypeOf((*MockStore)(nil).DeleteDailySummarySettings), arg0)
+}
+
 // DeleteUser mocks base method
 func (m *MockStore) DeleteUser(arg0 string) error {
 	m.ctrl.T.Helper()
