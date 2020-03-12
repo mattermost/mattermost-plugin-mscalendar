@@ -9,6 +9,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
@@ -32,6 +33,7 @@ type Store interface {
 	SubscriptionStore
 	EventStore
 	WelcomeStore
+	flow.FlowStore
 }
 
 type pluginStore struct {

@@ -6,6 +6,7 @@ package bot
 import (
 	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
@@ -14,10 +15,12 @@ type Bot interface {
 	Poster
 	Logger
 	Admin
+	Flower
 
 	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(BotConfig) Bot
 	MattermostUserID() string
+	RegisterFlow(flow.Flow, flow.FlowStore)
 }
 
 type bot struct {
@@ -28,6 +31,11 @@ type bot struct {
 	displayName      string
 	logContext       LogContext
 	pluginURL        string
+
+	flow      flow.Flow
+	flowStore flow.FlowStore
+	// TODO: Remove this and store this information in KVStore for HA
+	currentStep map[string]int
 }
 
 func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
@@ -36,6 +44,12 @@ func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
 		pluginHelpers: helpers,
 		pluginURL:     pluginURL,
 	}
+}
+
+func (bot *bot) RegisterFlow(flow flow.Flow, flowStore flow.FlowStore) {
+	bot.flow = flow
+	bot.flowStore = flowStore
+	bot.currentStep = make(map[string]int)
 }
 
 func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {

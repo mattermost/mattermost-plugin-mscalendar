@@ -25,10 +25,10 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/welcome_flow"
 )
 
 type Env struct {
@@ -120,7 +120,10 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
-		e.Dependencies.Welcomer = mscalendar.GetMSCalendarBot(e.bot, e.bot, e.Env, pluginURL)
+
+		e.Dependencies.Welcomer = mscalendar.GetMSCalendarBot(e.bot, e.Env, pluginURL)
+		welcomeFlow := mscalendar.NewWelcomeFlow("/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
+		e.bot.RegisterFlow(welcomeFlow, e.Dependencies.Store)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -130,7 +133,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
-		welcome_flow.Init(e.httpHandler, mscalendar.NewWelcomeApp(e.Env))
+		flow.Init(e.httpHandler, welcomeFlow, e.Dependencies.Store)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
 		// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
