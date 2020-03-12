@@ -4,7 +4,7 @@
 package msgraph
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
@@ -16,16 +16,16 @@ func (c *client) GetMe() (*remote.User, error) {
 	}
 
 	if graphUser.ID == nil {
-		return nil, fmt.Errorf("User has no ID")
+		return nil, errors.New("User has no ID")
 	}
 	if graphUser.DisplayName == nil {
-		return nil, fmt.Errorf("User has no Display Name")
+		return nil, errors.New("User has no Display Name")
 	}
 	if graphUser.UserPrincipalName == nil {
-		return nil, fmt.Errorf("User has no Principal Name")
+		return nil, errors.New("User has no Principal Name")
 	}
 	if graphUser.Mail == nil {
-		return nil, fmt.Errorf("User has no mail")
+		return nil, errors.New("User has no mail")
 	}
 
 	user := &remote.User{
