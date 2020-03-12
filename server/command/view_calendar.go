@@ -5,8 +5,6 @@ package command
 
 import (
 	"time"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 func (c *Command) viewCalendar(parameters ...string) (string, error) {
@@ -15,25 +13,5 @@ func (c *Command) viewCalendar(parameters ...string) (string, error) {
 		return "", err
 	}
 
-	var timeZone string
-	tz, err := c.MSCalendar.GetTimezone(c.user())
-	if err == nil {
-		timeZone = tz
-	}
-
-	if timeZone != "" {
-		for _, event := range events {
-			event.Start = event.Start.In(timeZone)
-			event.End = event.End.In(timeZone)
-		}
-	}
-
-	resp := ""
-	for _, e := range events {
-		e.Start = e.Start.In(timeZone)
-		e.End = e.End.In(timeZone)
-		resp += "  - " + e.ID + utils.JSONBlock(e)
-	}
-
-	return resp, nil
+	return c.MSCalendar.RenderCalendarView(c.user(), events)
 }

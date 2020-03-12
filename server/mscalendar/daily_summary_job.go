@@ -83,11 +83,9 @@ func (j *DailySummaryJob) work() {
 }
 
 func (j *DailySummaryJob) timerUntilFirstRun() *time.Timer {
-	now := time.Now()
-	var target time.Time
-	if now.Minute() < 30 {
-		target = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, time.Local).Add(30 * time.Minute)
-	} else {
+	now := timeNowFunc()
+	target := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, time.Local).Add(30 * time.Minute)
+	if now.Minute() >= 30 {
 		target = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, time.Local).Add(60 * time.Minute)
 	}
 

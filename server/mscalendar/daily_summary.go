@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 	"github.com/pkg/errors"
 )
@@ -21,6 +20,7 @@ type DailySummary interface {
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummarySettings, error)
 	DailySummaryAll() error
+	PostDailySummary(user *User) error
 }
 
 func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error) {
@@ -41,7 +41,7 @@ func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySum
 func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error) {
 	t, err := time.Parse(time.Kitchen, timeStr)
 	if err != nil {
-		return nil, errors.New("Invalid time value")
+		return nil, errors.New("Invalid time value: " + timeStr)
 	}
 
 	if t.Minute() != 0 && t.Minute() != 30 {
@@ -120,46 +120,94 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 }
 
 func (m *mscalendar) DailySummaryAll() error {
+	err := m.Filter(
+		withSuperuserClient,
+	)
+	if err != nil {
+		return err
+	}
+
 	dsumIndex, err := m.Store.LoadDailySummaryIndex()
 	if err != nil {
 		return err
 	}
 
 	for _, dsum := range dsumIndex {
-		shouldPost, err := shouldPostDailySummary(dsum)
+		err = m.processDailySummary(dsum)
 		if err != nil {
-			return err
-		}
-		if !shouldPost {
-			continue
-		}
-
-		err = m.postDailySummary(dsum.MattermostUserID)
-		if err != nil {
-			return err
+			u := NewUser(dsum.MattermostUserID)
+			m.ExpandMattermostUser(u)
+			m.Logger.Errorf("Error posting daily summary for user %s: %s", u.MattermostUser.Username, err.Error())
 		}
 	}
+
+	err = m.Store.SaveDailySummaryIndex(dsumIndex)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (m *mscalendar) postDailySummary(mattermostUserID string) error {
-	user := NewUser(mattermostUserID)
-	calendarData, err := m.viewTodayCalendar(user)
+func (m *mscalendar) PostDailySummary(user *User) error {
+	return m.postDailySummary(user)
+}
+
+func (m *mscalendar) processDailySummary(dsum *store.DailySummarySettings) error {
+	shouldPost, err := shouldPostDailySummary(dsum)
 	if err != nil {
-		m.Poster.DM(mattermostUserID, "Failed to run daily summary job. %s", err.Error())
 		return err
 	}
-	if len(calendarData) == 0 {
-		m.Poster.DM(mattermostUserID, "You have no upcoming events today.")
-	} else {
-		m.Poster.DM(mattermostUserID, utils.JSONBlock(calendarData))
+	if !shouldPost {
+		return nil
 	}
+
+	user := NewUser(dsum.MattermostUserID)
+	err = m.postDailySummary(user)
+	if err != nil {
+		return err
+	}
+
+	dsum.LastPostTime = timeNowFunc().Format(time.RFC3339)
+	return nil
+}
+
+func (m *mscalendar) postDailySummary(user *User) error {
+	calendarData, err := m.viewTodayCalendar(user)
+	if err != nil {
+		m.Poster.DM(user.MattermostUserID, "Failed to run daily summary job. %s", err.Error())
+		return err
+	}
+
+	if len(calendarData) == 0 {
+		m.Poster.DM(user.MattermostUserID, "You have no upcoming events today.")
+		return nil
+	}
+
+	postStr, err := m.RenderCalendarView(user, calendarData)
+	if err != nil {
+		return err
+	}
+
+	m.Poster.DM(user.MattermostUserID, postStr)
 	return nil
 }
 
 func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
 	if !dsum.Enable {
 		return false, nil
+	}
+
+	lastPostStr := dsum.LastPostTime
+	if lastPostStr != "" {
+		lastPost, err := time.Parse(time.RFC3339, lastPostStr)
+		if err != nil {
+			return false, errors.New("Failed to parse last post time: " + lastPostStr)
+		}
+		since := timeNowFunc().Sub(lastPost)
+		if since < dailySummaryTimeWindow {
+			return false, nil
+		}
 	}
 
 	timezone := tz.Go(dsum.Timezone)

@@ -186,7 +186,9 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
 	}
 
-	env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	if out != "" {
+		env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	}
 	return &model.CommandResponse{}, nil
 }
 

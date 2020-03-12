@@ -19,7 +19,7 @@ const (
 	OAuth2KeyPrefix           = "oauth2_"
 	SubscriptionKeyPrefix     = "sub_"
 	EventKeyPrefix            = "ev_"
-	DelaySummaryKeyPrefix     = "dsum_"
+	DailySummaryKeyPrefix     = "dsum_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -55,7 +55,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
-		dailySummaryKV:     kvstore.NewHashedKeyStore(basicKV, DelaySummaryKeyPrefix),
+		dailySummaryKV:     kvstore.NewHashedKeyStore(basicKV, DailySummaryKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
 		Logger:             logger,
 	}

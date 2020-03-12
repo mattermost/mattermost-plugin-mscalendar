@@ -48,3 +48,15 @@ func withClient(m *mscalendar) error {
 	m.client = client
 	return nil
 }
+
+func withSuperuserClient(m *mscalendar) error {
+	if m.client != nil {
+		return nil
+	}
+	client, err := m.MakeSuperuserClient()
+	if err != nil {
+		return err
+	}
+	m.client = client
+	return nil
+}

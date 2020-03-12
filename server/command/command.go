@@ -90,7 +90,7 @@ func (c *Command) Handle() (string, error) {
 	}
 	out, err := handler(parameters...)
 	if err != nil {
-		return "", errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
+		return out, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
 	}
 
 	return out, nil
