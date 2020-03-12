@@ -46,20 +46,6 @@ func (mr *MockWelcomerMockRecorder) AfterDisconnect(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDisconnect", reflect.TypeOf((*MockWelcomer)(nil).AfterDisconnect), arg0)
 }
 
-// AfterSetConfirmations mocks base method
-func (m *MockWelcomer) AfterSetConfirmations(arg0 string, arg1 bool) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AfterSetConfirmations", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AfterSetConfirmations indicates an expected call of AfterSetConfirmations
-func (mr *MockWelcomerMockRecorder) AfterSetConfirmations(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSetConfirmations", reflect.TypeOf((*MockWelcomer)(nil).AfterSetConfirmations), arg0, arg1)
-}
-
 // AfterSuccessfullyConnect mocks base method
 func (m *MockWelcomer) AfterSuccessfullyConnect(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -74,20 +60,6 @@ func (mr *MockWelcomerMockRecorder) AfterSuccessfullyConnect(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSuccessfullyConnect", reflect.TypeOf((*MockWelcomer)(nil).AfterSuccessfullyConnect), arg0, arg1)
 }
 
-// AfterUpdateStatus mocks base method
-func (m *MockWelcomer) AfterUpdateStatus(arg0 string, arg1 bool) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AfterUpdateStatus", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AfterUpdateStatus indicates an expected call of AfterUpdateStatus
-func (mr *MockWelcomerMockRecorder) AfterUpdateStatus(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterUpdateStatus", reflect.TypeOf((*MockWelcomer)(nil).AfterUpdateStatus), arg0, arg1)
-}
-
 // Welcome mocks base method
 func (m *MockWelcomer) Welcome(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -100,4 +72,16 @@ func (m *MockWelcomer) Welcome(arg0 string) error {
 func (mr *MockWelcomerMockRecorder) Welcome(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Welcome", reflect.TypeOf((*MockWelcomer)(nil).Welcome), arg0)
+}
+
+// WelcomeFlowEnd mocks base method
+func (m *MockWelcomer) WelcomeFlowEnd(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "WelcomeFlowEnd", arg0)
+}
+
+// WelcomeFlowEnd indicates an expected call of WelcomeFlowEnd
+func (mr *MockWelcomerMockRecorder) WelcomeFlowEnd(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WelcomeFlowEnd", reflect.TypeOf((*MockWelcomer)(nil).WelcomeFlowEnd), arg0)
 }
