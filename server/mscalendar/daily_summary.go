@@ -6,6 +6,7 @@ package mscalendar
 import (
 	"time"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ type DailySummary interface {
 	GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error)
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummarySettings, error)
-	DailySummaryAll() error
+	ProcessAllDailySummary() error
 	PostDailySummary(user *User) error
 }
 
@@ -119,7 +120,7 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	return result, nil
 }
 
-func (m *mscalendar) DailySummaryAll() error {
+func (m *mscalendar) ProcessAllDailySummary() error {
 	err := m.Filter(
 		withSuperuserClient,
 	)
@@ -173,7 +174,12 @@ func (m *mscalendar) processDailySummary(dsum *store.DailySummarySettings) error
 }
 
 func (m *mscalendar) postDailySummary(user *User) error {
-	calendarData, err := m.viewTodayCalendar(user)
+	tz, err := m.GetTimezone(user)
+	if err != nil {
+		return err
+	}
+
+	calendarData, err := m.viewTodayCalendar(user, tz)
 	if err != nil {
 		m.Poster.DM(user.MattermostUserID, "Failed to run daily summary job. %s", err.Error())
 		return err
@@ -184,7 +190,7 @@ func (m *mscalendar) postDailySummary(user *User) error {
 		return nil
 	}
 
-	postStr, err := m.RenderCalendarView(user, calendarData)
+	postStr, err := views.RenderCalendarView(calendarData, tz)
 	if err != nil {
 		return err
 	}
