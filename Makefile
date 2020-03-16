@@ -97,6 +97,7 @@ golint:
 mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen
+	mockgen -destination server/jobs/mock_cluster/mock_cluster.go github.com/mattermost/mattermost-plugin-api/cluster JobPluginAPI
 	mockgen -destination server/mscalendar/mock_mscalendar/mock_mscalendar.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar MSCalendar
 	mockgen -destination server/mscalendar/mock_plugin_api/mock_plugin_api.go -package mock_plugin_api github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar PluginAPI
 	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Remote
@@ -109,11 +110,11 @@ endif
 
 clean_mock:
 ifneq ($(HAS_SERVER),)
+	rm -rf ./server/jobs/mock_cluster
 	rm -rf ./server/mscalendar/mock_mscalendar
 	rm -rf ./server/mscalendar/mock_plugin_api
 	rm -rf ./server/remote/mock_remote
 	rm -rf ./server/utils/bot/mock_bot
-	rm -rf ./server/utils/plugin_api/mock_plugin_api
 	rm -rf ./server/store/mock_store
 endif
 
@@ -309,5 +310,3 @@ endif
 	@curl -s -H "Authorization: Bearer $(TOKEN)" -X POST $(MM_SERVICESETTINGS_SITEURL)/api/v4/plugins/$(PLUGIN_ID)/disable > /dev/null && \
 		curl -s -H "Authorization: Bearer $(TOKEN)" -X POST $(MM_SERVICESETTINGS_SITEURL)/api/v4/plugins/$(PLUGIN_ID)/enable > /dev/null && \
 		echo "OK." || echo "Sorry, something went wrong. Check that MM_ADMIN_USERNAME and MM_ADMIN_PASSWORD env variables are set correctly."
-
-
