@@ -83,12 +83,16 @@ Submit the form by clicking `Add permissions` at the bottom. You're all set for 
 
 ### Step 2: Configure Plugin Settings
 
+Copy the `Client ID` and `Tenant ID` from the Azure portal
+
+<img width="500" src="https://user-images.githubusercontent.com/6913320/76779336-9109c480-6781-11ea-8cde-4b79e5b2f3cd.png"/>
+
 **`System Console` > `PLUGINS` > `Microsoft Calendar`**
 
 - `Admin User IDs` - List of user IDs to manage the plugin
 - `tenantID` - copy from Azure App
 - `clientID` - copy from Azure App
-- `Client Secret` - copy from Azure App
+- `Client Secret` - copy from Azure App (Generated in `Certificates & secrets`, earlier in these instructions)
 
 ### Step 3: Configure Bot Account
 
