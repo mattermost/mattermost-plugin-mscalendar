@@ -16,7 +16,7 @@ const statusSyncJobID = "status_sync"
 const statusSyncJobInterval = 5 * time.Minute
 
 // NewStatusSyncJob creates a RegisteredJob with the parameters specific to the StatusSyncJob
-func NewStatusSyncJob(env mscalendar.Env) RegisteredJob {
+func NewStatusSyncJob() RegisteredJob {
 	return RegisteredJob{
 		id:                statusSyncJobID,
 		interval:          statusSyncJobInterval,

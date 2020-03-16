@@ -1,10 +1,15 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See License for license information.
+
 package jobs
 
 import (
+	"context"
+	"io"
 	"sync"
 	"time"
 
-	"github.com/lieut-data/mattermost-plugin-api/cluster"
+	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/pkg/errors"
 )
@@ -14,6 +19,7 @@ type JobManager struct {
 	activeJobs     sync.Map
 	env            mscalendar.Env
 	papi           cluster.JobPluginAPI
+	mux            sync.Mutex
 }
 
 type RegisteredJob struct {
@@ -23,12 +29,22 @@ type RegisteredJob struct {
 	isEnabledByConfig func(env mscalendar.Env) bool
 }
 
+var scheduleFunc = func(api cluster.JobPluginAPI, id string, wait cluster.NextWaitInterval, cb func()) (io.Closer, error) {
+	return cluster.Schedule(api, id, wait, cb)
+}
+
 type activeJob struct {
 	RegisteredJob
+	ScheduledJob io.Closer
+	Context      context.Context
+}
 
-	cancel     chan struct{}
-	cancelled  chan struct{}
-	cancelOnce sync.Once
+func newActiveJob(rj RegisteredJob, sched io.Closer, ctx context.Context) *activeJob {
+	return &activeJob{
+		RegisteredJob: rj,
+		ScheduledJob:  sched,
+		Context:       ctx,
+	}
 }
 
 // NewJobManager creates a JobManager for to let plugin.go coordinate with the scheduled jobs.
@@ -42,37 +58,33 @@ func NewJobManager(papi cluster.JobPluginAPI, env mscalendar.Env) *JobManager {
 // AddJob accepts a RegisteredJob, stores it, and activates it if enabled.
 func (jm *JobManager) AddJob(job RegisteredJob) error {
 	jm.registeredJobs.Store(job.id, job)
-	if job.isEnabledByConfig(jm.env) {
-		err := jm.activateJob(job)
-		if err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
 
 // OnConfigurationChange activates/deactivates jobs based on their current state, and the current plugin config.
 func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
+	jm.mux.Lock()
+	defer jm.mux.Unlock()
 	jm.env = env
-	jm.registeredJobs.Range(func(k interface{}, v interface{}) bool {
-		job, ok := v.(RegisteredJob)
-		if !ok {
-			jm.env.Logger.Errorf("Expected RegisteredJob, got %T", v)
-			return true
-		}
-		enabled := job.isEnabledByConfig(env)
-		active := jm.isJobActive(job.id)
+	jm.env.Logger.Debugf("OnConfigurationChange", "yes", "for sure")
 
-		// Config is set to enable. Job does not exist, create new job.
+	jm.registeredJobs.Range(func(k interface{}, v interface{}) bool {
+		job := v.(RegisteredJob)
+		enabled := job.isEnabledByConfig(env)
+		_, active := jm.activeJobs.Load(job.id)
+
+		// Config is set to enable. Job is inactive, so activate the job.
+		jm.env.Logger.Debugf("OnConfigurationChange", "enabled", enabled, "active", active)
 		if enabled && !active {
 			err := jm.activateJob(job)
 			if err != nil {
 				jm.env.Logger.Errorf("Error activating job", "id", job.id, "error", err.Error())
 			}
+			jm.env.Logger.Debugf("activated job")
 		}
 
-		// Config is set to disable. Job exists, kill existing job.
+		// Config is set to disable. Job is active, so deactivate the job.
 		if !enabled && active {
 			err := jm.deactivateJob(job)
 			if err != nil {
@@ -101,17 +113,12 @@ func (jm *JobManager) Close() error {
 
 // activateJob creates an ActiveJob, starts it, and stores it in the job manager.
 func (jm *JobManager) activateJob(job RegisteredJob) error {
-	_, ok := jm.activeJobs.Load(job.id)
-	if ok {
-		return errors.Errorf("Attempted to re-activate an active job %s", job.id)
+	scheduled, err := scheduleFunc(jm.papi, job.id, cluster.MakeWaitForRoundedInterval(job.interval, ptof), func() { job.work(jm.getEnv()) })
+	if err != nil {
+		return err
 	}
 
-	actJob := &activeJob{
-		RegisteredJob: job,
-		cancel:        make(chan struct{}),
-		cancelled:     make(chan struct{}),
-	}
-	actJob.start(jm.getEnv, jm.papi)
+	actJob := newActiveJob(job, scheduled, context.Background())
 
 	jm.activeJobs.Store(job.id, actJob)
 	return nil
@@ -124,8 +131,11 @@ func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 		return errors.Errorf("Attempted to deactivate a non-active job %s", job.id)
 	}
 
-	actJob := v.(*activeJob)
-	actJob.close()
+	scheduledJob := v.(*activeJob)
+	err := scheduledJob.ScheduledJob.Close()
+	if err != nil {
+		return err
+	}
 	jm.activeJobs.Delete(job.id)
 
 	return nil

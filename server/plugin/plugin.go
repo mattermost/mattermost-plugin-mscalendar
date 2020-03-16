@@ -116,7 +116,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateEnv(func(e *Env) {
-		p.initEnv(&p.env)
+		p.initEnv(e)
 
 		e.StoredConfig = stored
 		e.Config.MattermostSiteURL = *mattermostSiteURL
@@ -144,7 +144,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		if p.env.jobManager == nil {
 			p.env.jobManager = jobs.NewJobManager(p.API, e.Env)
-			err := p.env.jobManager.AddJob(jobs.NewStatusSyncJob(e.Env))
+			err := p.env.jobManager.AddJob(jobs.NewStatusSyncJob())
 			if err != nil {
 				e.Logger.Errorf(err.Error())
 			}
