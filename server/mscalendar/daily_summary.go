@@ -179,7 +179,7 @@ func (m *mscalendar) postDailySummary(user *User) error {
 		return err
 	}
 
-	calendarData, err := m.viewTodayCalendar(user, tz)
+	calendarData, err := m.getTodayCalendar(user, tz)
 	if err != nil {
 		m.Poster.DM(user.MattermostUserID, "Failed to run daily summary job. %s", err.Error())
 		return err

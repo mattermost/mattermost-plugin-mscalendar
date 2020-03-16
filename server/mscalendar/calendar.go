@@ -29,7 +29,7 @@ func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Eve
 	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 
-func (m *mscalendar) viewTodayCalendar(user *User, timezone string) ([]*remote.Event, error) {
+func (m *mscalendar) getTodayCalendar(user *User, timezone string) ([]*remote.Event, error) {
 	err := m.Filter(
 		withClient,
 	)
