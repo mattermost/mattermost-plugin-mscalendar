@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
-const dailySummaryJobInterval = 30 * time.Minute
+const dailySummaryJobInterval = 15 * time.Minute
 
 type DailySummaryJob struct {
 	Env
@@ -82,12 +82,13 @@ func (j *DailySummaryJob) work() {
 	j.Logger.Debugf("Daily summary job finished")
 }
 
+// timeUntilFirstRun uses a job's interval to compute the time duration until the initial run.
 func (j *DailySummaryJob) timerUntilFirstRun() *time.Timer {
 	now := timeNowFunc()
-	target := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, time.Local).Add(30 * time.Minute)
-	if now.Minute() >= 30 {
-		target = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, time.Local).Add(60 * time.Minute)
-	}
+	interval := dailySummaryJobInterval
+
+	leftBound := now.Truncate(interval)
+	target := leftBound.Add(interval)
 
 	j.Logger.Debugf("Waiting until %s to run daily summary job", target.Format(time.Kitchen))
 

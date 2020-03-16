@@ -44,8 +44,8 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, errors.New("Invalid time value: " + timeStr)
 	}
 
-	if t.Minute() != 0 && t.Minute() != 30 {
-		return nil, errors.New("Time must be a multiple of 30 minutes.")
+	if t.Minute()%int(dailySummaryJobInterval/time.Minute) != 0 {
+		return nil, errors.Errorf("Time must be a multiple of %d minutes.", dailySummaryJobInterval/time.Minute)
 	}
 
 	timezone, err := m.GetTimezone(user)
