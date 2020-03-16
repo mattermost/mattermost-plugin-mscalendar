@@ -142,15 +142,15 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
-		if p.env.jobManager == nil {
-			p.env.jobManager = jobs.NewJobManager(p.API, e.Env)
-			err := p.env.jobManager.AddJob(jobs.NewStatusSyncJob())
+		if e.jobManager == nil {
+			e.jobManager = jobs.NewJobManager(p.API, e.Env)
+			err := e.jobManager.AddJob(jobs.NewStatusSyncJob())
 			if err != nil {
 				e.Logger.Errorf(err.Error())
 			}
 		}
 
-		err := p.env.jobManager.OnConfigurationChange(e.Env)
+		err := e.jobManager.OnConfigurationChange(e.Env)
 		if err != nil {
 			e.Logger.Errorf(err.Error())
 		}
