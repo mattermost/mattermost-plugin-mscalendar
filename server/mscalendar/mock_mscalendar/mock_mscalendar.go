@@ -95,20 +95,6 @@ func (mr *MockMSCalendarMockRecorder) CreateMyEventSubscription() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).CreateMyEventSubscription))
 }
 
-// DailySummaryAll mocks base method
-func (m *MockMSCalendar) DailySummaryAll() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DailySummaryAll")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DailySummaryAll indicates an expected call of DailySummaryAll
-func (mr *MockMSCalendarMockRecorder) DailySummaryAll() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DailySummaryAll", reflect.TypeOf((*MockMSCalendar)(nil).DailySummaryAll))
-}
-
 // DeclineEvent mocks base method
 func (m *MockMSCalendar) DeclineEvent(arg0 *mscalendar.User, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -357,19 +343,18 @@ func (mr *MockMSCalendarMockRecorder) PostDailySummary(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostDailySummary", reflect.TypeOf((*MockMSCalendar)(nil).PostDailySummary), arg0)
 }
 
-// RenderCalendarView mocks base method
-func (m *MockMSCalendar) RenderCalendarView(arg0 *mscalendar.User, arg1 []*remote.Event) (string, error) {
+// ProcessAllDailySummary mocks base method
+func (m *MockMSCalendar) ProcessAllDailySummary() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RenderCalendarView", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "ProcessAllDailySummary")
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// RenderCalendarView indicates an expected call of RenderCalendarView
-func (mr *MockMSCalendarMockRecorder) RenderCalendarView(arg0, arg1 interface{}) *gomock.Call {
+// ProcessAllDailySummary indicates an expected call of ProcessAllDailySummary
+func (mr *MockMSCalendarMockRecorder) ProcessAllDailySummary() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderCalendarView", reflect.TypeOf((*MockMSCalendar)(nil).RenderCalendarView), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessAllDailySummary", reflect.TypeOf((*MockMSCalendar)(nil).ProcessAllDailySummary))
 }
 
 // RenewMyEventSubscription mocks base method
