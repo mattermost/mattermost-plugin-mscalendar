@@ -113,7 +113,7 @@ func (jm *JobManager) Close() error {
 
 // activateJob creates an ActiveJob, starts it, and stores it in the job manager.
 func (jm *JobManager) activateJob(job RegisteredJob) error {
-	scheduled, err := scheduleFunc(jm.papi, job.id, cluster.MakeWaitForRoundedInterval(job.interval, ptof), func() { job.work(jm.getEnv()) })
+	scheduled, err := scheduleFunc(jm.papi, job.id, cluster.MakeWaitForRoundedInterval(job.interval), func() { job.work(jm.getEnv()) })
 	if err != nil {
 		return err
 	}
