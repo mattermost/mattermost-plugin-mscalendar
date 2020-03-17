@@ -72,7 +72,10 @@ func (bot *mscBot) Welcome(userID string) error {
 }
 
 func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
-	postID, _ := bot.Store.DeleteUserWelcomePost(userID)
+	postID, err := bot.Store.DeleteUserWelcomePost(userID)
+	if err != nil {
+		bot.Errorf("error deleting user welcom post id, err=" + err.Error())
+	}
 	if postID != "" {
 		post := &model.Post{
 			Id: postID,
@@ -85,8 +88,16 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 }
 
 func (bot *mscBot) AfterDisconnect(userID string) error {
-	bot.Cancel(userID)
-	return bot.cleanPostIDs(userID)
+	errCancel := bot.Cancel(userID)
+	errClean := bot.cleanPostIDs(userID)
+	if errCancel != nil {
+		return errCancel
+	}
+
+	if errClean != nil {
+		return errClean
+	}
+	return nil
 }
 
 func (bot *mscBot) notifyWelcome(userID string) error {
