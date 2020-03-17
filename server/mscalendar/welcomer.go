@@ -29,6 +29,18 @@ func (m *mscalendar) Welcome(userID string) error {
 	return m.Welcomer.Welcome(userID)
 }
 
+func (m *mscalendar) AfterSuccessfullyConnect(userID, userLogin string) error {
+	return m.Welcomer.AfterSuccessfullyConnect(userID, userLogin)
+}
+
+func (m *mscalendar) AfterDisconnect(userID string) error {
+	return m.Welcomer.AfterDisconnect(userID)
+}
+
+func (m *mscalendar) WelcomeFlowEnd(userID string) {
+	m.Welcomer.WelcomeFlowEnd(userID)
+}
+
 func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) *MSCalendarBot {
 	return &MSCalendarBot{
 		Bot:       bot,

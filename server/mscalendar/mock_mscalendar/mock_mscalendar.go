@@ -50,6 +50,34 @@ func (mr *MockMSCalendarMockRecorder) AcceptEvent(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptEvent", reflect.TypeOf((*MockMSCalendar)(nil).AcceptEvent), arg0, arg1)
 }
 
+// AfterDisconnect mocks base method
+func (m *MockMSCalendar) AfterDisconnect(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterDisconnect", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterDisconnect indicates an expected call of AfterDisconnect
+func (mr *MockMSCalendarMockRecorder) AfterDisconnect(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDisconnect", reflect.TypeOf((*MockMSCalendar)(nil).AfterDisconnect), arg0)
+}
+
+// AfterSuccessfullyConnect mocks base method
+func (m *MockMSCalendar) AfterSuccessfullyConnect(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterSuccessfullyConnect", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AfterSuccessfullyConnect indicates an expected call of AfterSuccessfullyConnect
+func (mr *MockMSCalendarMockRecorder) AfterSuccessfullyConnect(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSuccessfullyConnect", reflect.TypeOf((*MockMSCalendar)(nil).AfterSuccessfullyConnect), arg0, arg1)
+}
+
 // CreateCalendar mocks base method
 func (m *MockMSCalendar) CreateCalendar(arg0 *mscalendar.User, arg1 *remote.Calendar) (*remote.Calendar, error) {
 	m.ctrl.T.Helper()
@@ -399,4 +427,16 @@ func (m *MockMSCalendar) Welcome(arg0 string) error {
 func (mr *MockMSCalendarMockRecorder) Welcome(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Welcome", reflect.TypeOf((*MockMSCalendar)(nil).Welcome), arg0)
+}
+
+// WelcomeFlowEnd mocks base method
+func (m *MockMSCalendar) WelcomeFlowEnd(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "WelcomeFlowEnd", arg0)
+}
+
+// WelcomeFlowEnd indicates an expected call of WelcomeFlowEnd
+func (mr *MockMSCalendarMockRecorder) WelcomeFlowEnd(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WelcomeFlowEnd", reflect.TypeOf((*MockMSCalendar)(nil).WelcomeFlowEnd), arg0)
 }

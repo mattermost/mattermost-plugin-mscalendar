@@ -18,7 +18,7 @@ type MSCalendar interface {
 	EventResponder
 	Subscriptions
 	Users
-	Welcome(userID string) error
+	Welcomer
 }
 
 // Dependencies contains all API dependencies
