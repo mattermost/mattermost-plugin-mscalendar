@@ -33,7 +33,7 @@ import (
 
 type Env struct {
 	mscalendar.Env
-	bot                   bot.Bot
+	bot                   mscalendar.Bot
 	statusSyncJob         *mscalendar.StatusSyncJob
 	notificationProcessor mscalendar.NotificationProcessor
 	httpHandler           *httputils.Handler
@@ -115,13 +115,15 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.Logger)
 
 		e.bot = e.bot.WithConfig(stored.BotConfig)
+		e.bot = mscalendar.GetMSCalendarBot(bareBot, e.Env, pluginURL)
+
 		e.Config.BotUserID = e.bot.MattermostUserID()
 		e.Dependencies.Logger = e.bot
 		e.Dependencies.Poster = e.bot
+		e.Dependencies.Welcomer = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 
-		e.Dependencies.Welcomer = mscalendar.GetMSCalendarBot(e.bot, e.Env, pluginURL)
 		welcomeFlow := mscalendar.NewWelcomeFlow("/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
 		e.bot.RegisterFlow(welcomeFlow, e.Dependencies.Store)
 
