@@ -91,7 +91,7 @@ func (bot *bot) processStep(userID string, step flow.Step, i int) error {
 	if bot.flowStore == nil {
 		bot.Errorf("Store nil")
 	}
-	postID, err := bot.DMWithAttachments(userID, step.PostSA(bot.pluginURL+bot.flow.URL(), i))
+	postID, err := bot.DMWithAttachments(userID, step.PostSlackAttachment(bot.pluginURL+bot.flow.URL(), i))
 	if err != nil {
 		return err
 	}

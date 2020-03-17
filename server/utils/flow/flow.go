@@ -22,8 +22,8 @@ type FlowStore interface {
 }
 
 type Step interface {
-	PostSA(flowHandler string, i int) *model.SlackAttachment
-	ResponseSA(value bool) *model.SlackAttachment
+	PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment
+	ResponseSlackAttachment(value bool) *model.SlackAttachment
 	PropertyName() string
 	ShouldSkip(value bool) int
 }
@@ -64,7 +64,7 @@ func NewStep(
 	}
 }
 
-func (s *step) PostSA(flowHandler string, i int) *model.SlackAttachment {
+func (s *step) PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment {
 	actionTrue := model.PostAction{
 		Name: s.trueButtonMessage,
 		Integration: &model.PostActionIntegration{
@@ -88,7 +88,7 @@ func (s *step) PostSA(flowHandler string, i int) *model.SlackAttachment {
 	return &sa
 }
 
-func (s *step) ResponseSA(value bool) *model.SlackAttachment {
+func (s *step) ResponseSlackAttachment(value bool) *model.SlackAttachment {
 	message := s.falseResponseMessage
 	if value {
 		message = s.trueResponseMessage

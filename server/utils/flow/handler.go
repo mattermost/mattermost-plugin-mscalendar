@@ -64,7 +64,7 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	response := model.PostActionIntegrationResponse{}
 	post := model.Post{}
-	model.ParseSlackAttachment(&post, []*model.SlackAttachment{step.ResponseSA(value)})
+	model.ParseSlackAttachment(&post, []*model.SlackAttachment{step.ResponseSlackAttachment(value)})
 
 	response.Update = &post
 
