@@ -25,7 +25,7 @@ follow [these instructions](#configuration) for install and configuration.
 
 ## Configuration
 
-### Step 1: Create Mattermost App Azure (Private or Enterprise MS account)
+### Step 1: Create Mattermost App in Azure
 
 Sign into [portal.azure.com](https://portal.azure.com).
 
