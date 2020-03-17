@@ -14,7 +14,12 @@ type Welcomer interface {
 	WelcomeFlowEnd(userID string)
 }
 
-type Bot struct {
+type Bot interface {
+	bot.Bot
+	Welcomer
+}
+
+type mscBot struct {
 	bot.Bot
 	Env
 	pluginURL string
@@ -41,15 +46,15 @@ func (m *mscalendar) WelcomeFlowEnd(userID string) {
 	m.Welcomer.WelcomeFlowEnd(userID)
 }
 
-func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) *Bot {
-	return &Bot{
+func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) Bot {
+	return &mscBot{
 		Bot:       bot,
 		Env:       env,
 		pluginURL: pluginURL,
 	}
 }
 
-func (bot *Bot) Welcome(userID string) error {
+func (bot *mscBot) Welcome(userID string) error {
 	bot.cleanPostIDs(userID)
 
 	postID, err := bot.DMWithAttachments(userID, bot.getConnectAttachment())
@@ -62,7 +67,7 @@ func (bot *Bot) Welcome(userID string) error {
 	return nil
 }
 
-func (bot *Bot) AfterSuccessfullyConnect(userID, userLogin string) error {
+func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 	postID, _ := bot.Store.DeleteUserWelcomePost(userID)
 	if postID != "" {
 		post := &model.Post{
@@ -75,12 +80,12 @@ func (bot *Bot) AfterSuccessfullyConnect(userID, userLogin string) error {
 	return bot.Start(userID)
 }
 
-func (bot *Bot) AfterDisconnect(userID string) error {
+func (bot *mscBot) AfterDisconnect(userID string) error {
 	bot.Cancel(userID)
 	return bot.cleanPostIDs(userID)
 }
 
-func (bot *Bot) notifyWelcome(userID string) error {
+func (bot *mscBot) notifyWelcome(userID string) error {
 	user, err := bot.Store.LoadUser(userID)
 	if err != nil {
 		return err
@@ -89,11 +94,11 @@ func (bot *Bot) notifyWelcome(userID string) error {
 	return err
 }
 
-func (bot *Bot) WelcomeFlowEnd(userID string) {
+func (bot *mscBot) WelcomeFlowEnd(userID string) {
 	bot.notifySettings(userID)
 }
 
-func (bot *Bot) getConnectAttachment() *model.SlackAttachment {
+func (bot *mscBot) getConnectAttachment() *model.SlackAttachment {
 	sa := model.SlackAttachment{
 		Title: "Connect",
 		Text: fmt.Sprintf(`Welcome to the Microsoft Calendar Bot.
@@ -103,14 +108,14 @@ func (bot *Bot) getConnectAttachment() *model.SlackAttachment {
 	return &sa
 }
 
-func (bot *Bot) getConnectedAttachment(userLogin string) *model.SlackAttachment {
+func (bot *mscBot) getConnectedAttachment(userLogin string) *model.SlackAttachment {
 	return &model.SlackAttachment{
 		Title: "Connect",
 		Text:  ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost.",
 	}
 }
 
-func (bot *Bot) notifySettings(userID string) error {
+func (bot *mscBot) notifySettings(userID string) error {
 	_, err := bot.DM(userID, "Feel free to change these settings anytime") //[settings](%s/settings) anytime.", bot.pluginURL)
 	if err != nil {
 		return err
@@ -118,7 +123,7 @@ func (bot *Bot) notifySettings(userID string) error {
 	return nil
 }
 
-func (bot *Bot) cleanPostIDs(mattermostUserID string) error {
+func (bot *mscBot) cleanPostIDs(mattermostUserID string) error {
 	postID, err := bot.Store.DeleteUserWelcomePost(mattermostUserID)
 	if err != nil {
 		return err
