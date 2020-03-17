@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	availabilityTimeWindowSize = 15
+	availabilityTimeWindowSize      = 15
+	upcomingEventNotificationTime   = 10 * time.Minute
+	upcomingEventNotificationWindow = (JOB_INTERVAL * 9) / 10 //90% of the Interval
 )
 
 type Availability interface {
@@ -110,6 +112,8 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 		}
 
 		mattermostUserID := usersByEmail[s.ScheduleID].MattermostUserID
+
+		m.notifyUpcomingEvent(mattermostUserID, s.ScheduleItems)
 		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
@@ -122,6 +126,49 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 	}
 
 	return utils.JSONBlock(schedules), nil
+}
+
+func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, items []remote.ScheduleItem) {
+	for _, scheduleItem := range items {
+		loc, err := time.LoadLocation(scheduleItem.Start.Timezone)
+		if err != nil {
+			m.Logger.Errorf("problem loading location: %s", err.Error())
+			continue
+		}
+		now := time.Now().In(loc)
+		start, err := time.Parse("2006-01-02T15:04:05MST", scheduleItem.Start.DateTime+scheduleItem.Start.Timezone)
+		if err != nil {
+			m.Logger.Errorf("problem parsing date: %s", err.Error())
+			continue
+		}
+		if now.Add(upcomingEventNotificationTime).After(start.Add(-upcomingEventNotificationWindow)) && now.Add(upcomingEventNotificationTime).Before(start.Add(upcomingEventNotificationWindow)) {
+			m.renderScheduleItem(mattermostUserID, scheduleItem)
+		}
+	}
+}
+
+func (m *mscalendar) renderScheduleItem(mattermostUserId string, s remote.ScheduleItem) {
+	message := "You have an upcoming event:"
+	start, err := time.Parse("2006-01-02T15:04:05MST", s.Start.DateTime+s.Start.Timezone)
+	if err != nil {
+		m.Logger.Errorf("problem parsing start date: %s", err.Error())
+		return
+	}
+
+	end, err := time.Parse("2006-01-02T15:04:05MST", s.End.DateTime+s.End.Timezone)
+
+	message = fmt.Sprintf("\n%s-%s", start.Format("15:04MST"), end.Format("15:04MST"))
+	if s.Subject == "" {
+		message += fmt.Sprintf("Subject: Not available. Check your privacy settings so we can show you the subject.")
+	} else {
+		message += fmt.Sprintf("\nSubject: %s", s.Subject)
+	}
+
+	if s.Location != "" {
+		message += fmt.Sprintf("\nLocation: %s", s.Location)
+	}
+
+	m.Poster.DM(mattermostUserId, message)
 }
 
 func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {

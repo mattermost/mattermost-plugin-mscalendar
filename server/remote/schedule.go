@@ -9,6 +9,13 @@ const (
 	AvailabilityViewBusy             = '2'
 	AvailabilityViewOutOfOffice      = '3'
 	AvailabilityViewWorkingElsewhere = '4'
+
+	ScheduleStatusFree             = "free"
+	ScheduleStatusTentative        = "tentative"
+	ScheduleStatusBusy             = "busy"
+	ScheduleStatusOof              = "oof"
+	ScheduleStatusWorkingElsewhere = "workingElsewhere"
+	ScheduleStatusUnknown          = "unknown"
 )
 
 type ScheduleInformationError struct {
@@ -29,7 +36,21 @@ type ScheduleInformation struct {
 
 	Error *ScheduleInformationError `json:"error"`
 
-	// ScheduleItems []interface{} `json:"scheduleItems,omitempty"`
+	ScheduleItems []ScheduleItem `json:"scheduleItems,omitempty"`
 	// WorkingHours interface{} `json:"workingHours,omitempty"`
 	// Error *FreeBusyError `json:"error,omitempty"`
+}
+
+type ScheduleItem struct {
+	IsPrivate bool
+	Status    string
+	Subject   string
+	Location  string
+	Start     ScheduleTime
+	End       ScheduleTime
+}
+
+type ScheduleTime struct {
+	DateTime string
+	Timezone string
 }
