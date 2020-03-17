@@ -25,10 +25,14 @@ type mscBot struct {
 	pluginURL string
 }
 
-const WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
+const (
+	WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
 Here is some info to prove we got you logged in
 - Name: %s
 `
+	ConnectSuccessTemplate = `Welcome to the Microsoft Calendar.
+	[Click here to link your account.](%s/oauth2/connect)`
+)
 
 func (m *mscalendar) Welcome(userID string) error {
 	return m.Welcomer.Welcome(userID)
@@ -101,8 +105,7 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 func (bot *mscBot) getConnectAttachment() *model.SlackAttachment {
 	sa := model.SlackAttachment{
 		Title: "Connect",
-		Text: fmt.Sprintf(`Welcome to the Microsoft Calendar Bot.
-[Click here to link your account.](%s/oauth2/connect)`, bot.pluginURL),
+		Text:  fmt.Sprintf(ConnectSuccessTemplate, bot.pluginURL),
 	}
 
 	return &sa
