@@ -4,7 +4,6 @@
 package flow
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -37,14 +36,12 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	stepNumber, err := strconv.Atoi(r.URL.Query().Get("step"))
 	if err != nil {
-		fmt.Println("Step is not an int, err=" + err.Error())
 		http.Error(w, "Step is not an int, err="+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	step := fh.flow.Step(stepNumber)
 	if step == nil {
-		fmt.Println("Not valid step")
 		http.Error(w, "Not valid step", http.StatusInternalServerError)
 		return
 	}
@@ -53,7 +50,6 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	valueString := r.URL.Query().Get(property)
 	if valueString == "" {
-		fmt.Println("Correct property not set")
 		http.Error(w, "Correct property not set", http.StatusInternalServerError)
 		return
 	}
@@ -62,7 +58,6 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	err = fh.store.SetProperty(mattermostUserID, property, value)
 	if err != nil {
-		fmt.Println("There has been a problem setting the property, err=" + err.Error())
 		http.Error(w, "There has been a problem setting the property, err="+err.Error(), http.StatusInternalServerError)
 		return
 	}
