@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -40,9 +41,8 @@ func TestConnect(t *testing.T) {
 				mscal.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
 				mscal.EXPECT().Welcome("user_id").Return(nil)
 			},
-			expectedOutput: `Welcome to the Microsoft Calendar Bot.
-	[Click here to link your account.](http://localhost/oauth2/connect)`,
-			expectedError: "",
+			expectedOutput: fmt.Sprintf(mscalendar.ConnectSuccessTemplate, "http://localhost"),
+			expectedError:  "",
 		},
 		{
 			name:    "non-admin connecting bot account",
