@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type MSCalendar interface {
@@ -18,6 +19,7 @@ type MSCalendar interface {
 	EventResponder
 	Subscriptions
 	Users
+	Settings
 }
 
 // Dependencies contains all API dependencies
@@ -27,6 +29,7 @@ type Dependencies struct {
 	Poster            bot.Poster
 	Remote            remote.Remote
 	Store             store.Store
+	SettingsPanel     settingspanel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
 }
 

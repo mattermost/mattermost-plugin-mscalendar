@@ -52,16 +52,31 @@ func (mr *MockPosterMockRecorder) DM(arg0, arg1 interface{}, arg2 ...interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DM", reflect.TypeOf((*MockPoster)(nil).DM), varargs...)
 }
 
+// DMUpdatePost mocks base method
+func (m *MockPoster) DMUpdatePost(arg0 *model.Post) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DMUpdatePost", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DMUpdatePost indicates an expected call of DMUpdatePost
+func (mr *MockPosterMockRecorder) DMUpdatePost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMUpdatePost", reflect.TypeOf((*MockPoster)(nil).DMUpdatePost), arg0)
+}
+
 // DMWithAttachments mocks base method
-func (m *MockPoster) DMWithAttachments(arg0 string, arg1 ...*model.SlackAttachment) error {
+func (m *MockPoster) DMWithAttachments(arg0 string, arg1 ...*model.SlackAttachment) (string, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DMWithAttachments", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DMWithAttachments indicates an expected call of DMWithAttachments
@@ -69,6 +84,20 @@ func (mr *MockPosterMockRecorder) DMWithAttachments(arg0 interface{}, arg1 ...in
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMWithAttachments", reflect.TypeOf((*MockPoster)(nil).DMWithAttachments), varargs...)
+}
+
+// DeletePost mocks base method
+func (m *MockPoster) DeletePost(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePost", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePost indicates an expected call of DeletePost
+func (mr *MockPosterMockRecorder) DeletePost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePost", reflect.TypeOf((*MockPoster)(nil).DeletePost), arg0)
 }
 
 // Ephemeral mocks base method

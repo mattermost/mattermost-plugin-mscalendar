@@ -10,6 +10,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 	OAuth2KeyPrefix           = "oauth2_"
 	SubscriptionKeyPrefix     = "sub_"
 	EventKeyPrefix            = "ev_"
+	SettingsPanelPrefix       = "settings_panel_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -30,6 +32,8 @@ type Store interface {
 	OAuth2StateStore
 	SubscriptionStore
 	EventStore
+	settingspanel.SettingStore
+	settingspanel.PanelStore
 }
 
 type pluginStore struct {
@@ -40,6 +44,7 @@ type pluginStore struct {
 	userIndexKV        kvstore.KVStore
 	subscriptionKV     kvstore.KVStore
 	eventKV            kvstore.KVStore
+	settingsPanelKV    kvstore.KVStore
 	Logger             bot.Logger
 }
 
@@ -53,6 +58,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
+		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
 		Logger:             logger,
 	}
 }

@@ -186,7 +186,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		prior = &store.Event{}
 	}
 
-	err = processor.Poster.DMWithAttachments(creator.MattermostUserID, sa)
+	_, err = processor.Poster.DMWithAttachments(creator.MattermostUserID, sa)
 	if err != nil {
 		return err
 	}
