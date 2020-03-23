@@ -25,7 +25,7 @@ func (c *client) GetMe() (*remote.User, error) {
 		return nil, errors.New("User has no Principal Name")
 	}
 	if graphUser.Mail == nil {
-		return nil, errors.New("User has no mail")
+		return nil, errors.New("User has no email address. Make sure the Microsoft account is associated to an Outlook product.")
 	}
 
 	user := &remote.User{
