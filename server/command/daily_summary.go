@@ -22,11 +22,11 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 
 	switch parameters[0] {
 	case "view":
-		err := c.MSCalendar.PostDailySummary(c.user())
+		postStr, err := c.MSCalendar.GetDailySummary(c.user())
 		if err != nil {
 			return "Error: " + err.Error(), err
 		}
-		return "", nil
+		return postStr, nil
 	case "time":
 		if len(parameters) != 2 {
 			return dailySummarySetTimeErrorMessage, nil
@@ -45,7 +45,7 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 			return "Error: " + err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + dailySummaryHelp, nil
 		}
 
-		return dailySummaryResponse(dsum) + "\n" + dailySummaryHelp, nil
+		return dailySummaryResponse(dsum), nil
 	case "enable":
 		dsum, err := c.MSCalendar.SetDailySummaryEnabled(c.user(), true)
 		if err != nil {

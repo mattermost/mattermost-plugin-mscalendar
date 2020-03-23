@@ -15,7 +15,7 @@ func (c *Command) viewCalendar(parameters ...string) (string, error) {
 		return "Error: No timezone found", err
 	}
 
-	events, err := c.MSCalendar.ViewCalendar(c.user(), time.Now(), time.Now().Add(14*24*time.Hour))
+	events, err := c.MSCalendar.ViewCalendar(c.user(), time.Now().Add(-24*time.Hour), time.Now().Add(14*24*time.Hour))
 	if err != nil {
 		return "", err
 	}

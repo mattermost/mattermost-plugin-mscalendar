@@ -21,7 +21,7 @@ type DailySummary interface {
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummarySettings, error)
 	ProcessAllDailySummary() error
-	PostDailySummary(user *User) error
+	GetDailySummary(user *User) (string, error)
 }
 
 func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error) {
@@ -150,8 +150,8 @@ func (m *mscalendar) ProcessAllDailySummary() error {
 	return nil
 }
 
-func (m *mscalendar) PostDailySummary(user *User) error {
-	return m.postDailySummary(user)
+func (m *mscalendar) GetDailySummary(user *User) (string, error) {
+	return m.getDailySummary(user)
 }
 
 func (m *mscalendar) processDailySummary(dsum *store.DailySummarySettings) error {
@@ -164,39 +164,39 @@ func (m *mscalendar) processDailySummary(dsum *store.DailySummarySettings) error
 	}
 
 	user := NewUser(dsum.MattermostUserID)
-	err = m.postDailySummary(user)
+	postStr, err := m.getDailySummary(user)
 	if err != nil {
 		return err
 	}
+	m.Poster.DM(user.MattermostUserID, postStr)
 
 	dsum.LastPostTime = timeNowFunc().Format(time.RFC3339)
 	return nil
 }
 
-func (m *mscalendar) postDailySummary(user *User) error {
+func (m *mscalendar) getDailySummary(user *User) (string, error) {
 	tz, err := m.GetTimezone(user)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	calendarData, err := m.getTodayCalendar(user, tz)
 	if err != nil {
 		m.Poster.DM(user.MattermostUserID, "Failed to run daily summary job. %s", err.Error())
-		return err
+		return "", err
 	}
 
 	if len(calendarData) == 0 {
 		m.Poster.DM(user.MattermostUserID, "You have no upcoming events today.")
-		return nil
+		return "", nil
 	}
 
 	postStr, err := views.RenderCalendarView(calendarData, tz)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	m.Poster.DM(user.MattermostUserID, postStr)
-	return nil
+	return postStr, nil
 }
 
 func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
