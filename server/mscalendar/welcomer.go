@@ -160,10 +160,12 @@ func (bot *mscBot) SetProperty(userID, propertyName string, value bool) error {
 		return bot.Dependencies.Store.SetProperty(userID, propertyName, value)
 	}
 
-	mscalendar := New(bot.Env, userID)
-	_, err := mscalendar.CreateMyEventSubscription()
-	if err != nil {
-		return err
+	if value {
+		mscalendar := New(bot.Env, userID)
+		_, err := mscalendar.CreateMyEventSubscription()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
