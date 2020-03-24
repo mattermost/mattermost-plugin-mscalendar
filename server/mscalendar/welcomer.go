@@ -3,7 +3,9 @@ package mscalendar
 import (
 	"fmt"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
@@ -17,6 +19,7 @@ type Welcomer interface {
 type Bot interface {
 	bot.Bot
 	Welcomer
+	flow.FlowStore
 }
 
 type mscBot struct {
@@ -150,4 +153,30 @@ func (bot *mscBot) cleanPostIDs(mattermostUserID string) error {
 		}
 	}
 	return nil
+}
+
+func (bot *mscBot) SetProperty(userID, propertyName string, value bool) error {
+	if propertyName != store.SubscribePropertyName {
+		return bot.Dependencies.Store.SetProperty(userID, propertyName, value)
+	}
+
+	mscalendar := New(bot.Env, userID)
+	_, err := mscalendar.CreateMyEventSubscription()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (bot *mscBot) SetPostID(userID, propertyName, postID string) error {
+	return bot.Dependencies.Store.SetPostID(userID, propertyName, postID)
+}
+
+func (bot *mscBot) GetPostID(userID, propertyName string) (string, error) {
+	return bot.Dependencies.Store.GetPostID(userID, propertyName)
+}
+
+func (bot *mscBot) RemovePostID(userID, propertyName string) error {
+	return bot.Dependencies.Store.RemovePostID(userID, propertyName)
 }

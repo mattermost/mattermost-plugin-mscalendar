@@ -68,7 +68,17 @@ func (wf *welcomeFlow) makeSteps() {
 		"Yes - I will like to get confirmations",
 		"No - Update my status automatically",
 		"Cool, we'll also send you confirmations before updating your status.",
-		"There has been a problem setting the confirmation configuration",
+		"Cool, we'll update your status automatically with no confirmation.",
+		0,
+		0,
+	), flow.NewStep(
+		"Subscribe to events",
+		"Do you want to receive notifications when you receive a new event?",
+		store.SubscribePropertyName,
+		"Yes - I will like to receive notifications",
+		"No - Do not notify me of new events",
+		"Great, you will receive a message any time you receive a new event.",
+		"Great, you will not receive any notification on new events.",
 		0,
 		0,
 	))

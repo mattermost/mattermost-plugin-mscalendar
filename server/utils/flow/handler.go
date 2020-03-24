@@ -36,13 +36,13 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	stepNumber, err := strconv.Atoi(r.URL.Query().Get("step"))
 	if err != nil {
-		http.Error(w, "Step is not an int, err="+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Step is not an int, err="+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	step := fh.flow.Step(stepNumber)
 	if step == nil {
-		http.Error(w, "Not valid step", http.StatusInternalServerError)
+		http.Error(w, "Not valid step", http.StatusBadRequest)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	valueString := r.URL.Query().Get(property)
 	if valueString == "" {
-		http.Error(w, "Correct property not set", http.StatusInternalServerError)
+		http.Error(w, "Correct property not set", http.StatusBadRequest)
 		return
 	}
 

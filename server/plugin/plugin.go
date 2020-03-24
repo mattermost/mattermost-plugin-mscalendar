@@ -116,15 +116,17 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.bot = e.bot.WithConfig(stored.BotConfig)
 
+		mscalendarBot := mscalendar.GetMSCalendarBot(e.bot, e.Env, pluginURL)
+
 		e.Config.BotUserID = e.bot.MattermostUserID()
 		e.Dependencies.Logger = e.bot
 		e.Dependencies.Poster = e.bot
-		e.Dependencies.Welcomer = mscalendar.GetMSCalendarBot(e.bot, e.Env, pluginURL)
+		e.Dependencies.Welcomer = mscalendarBot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 
 		welcomeFlow := mscalendar.NewWelcomeFlow("/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
-		e.bot.RegisterFlow(welcomeFlow, e.Dependencies.Store)
+		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -134,7 +136,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
-		flow.Init(e.httpHandler, welcomeFlow, e.Dependencies.Store)
+		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
 		// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar

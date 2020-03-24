@@ -47,6 +47,7 @@ type Flags struct {
 	WelcomeUpdateStatusPostID    string
 	WelcomeGetConfirmation       bool
 	WelcomeGetConfirmationPostID string
+	WelcomeSubscribePostID       string
 }
 
 func (settings Settings) String() string {
