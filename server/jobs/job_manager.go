@@ -67,7 +67,6 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 	jm.mux.Lock()
 	defer jm.mux.Unlock()
 	jm.env = env
-	jm.env.Logger.Debugf("OnConfigurationChange", "yes", "for sure")
 
 	jm.registeredJobs.Range(func(k interface{}, v interface{}) bool {
 		job := v.(RegisteredJob)
@@ -75,13 +74,11 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 		_, active := jm.activeJobs.Load(job.id)
 
 		// Config is set to enable. Job is inactive, so activate the job.
-		jm.env.Logger.Debugf("OnConfigurationChange", "enabled", enabled, "active", active)
 		if enabled && !active {
 			err := jm.activateJob(job)
 			if err != nil {
 				jm.env.Logger.Errorf("Error activating job", "id", job.id, "error", err.Error())
 			}
-			jm.env.Logger.Debugf("activated job")
 		}
 
 		// Config is set to disable. Job is active, so deactivate the job.

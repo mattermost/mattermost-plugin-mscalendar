@@ -43,10 +43,10 @@ func (m *mscalendar) getTodayCalendar(user *User, timezone string) ([]*remote.Ev
 	}
 
 	now := time.Now().UTC()
-	dt := remote.NewDateTime(now, "UTC").In(timezone)
+	t := remote.NewDateTime(now, "UTC").In(timezone).Time()
 
-	from := dt.Time().Truncate(time.Hour * 24)
-	to := dt.Time().Add(time.Hour * 25)
+	from := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	to := from.Add(24 * time.Hour)
 	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 

@@ -61,7 +61,7 @@ func (m *mscalendar) ExpandRemoteUser(user *User) error {
 	if user.User == nil {
 		storedUser, err := m.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
-			return errors.Wrap(err, "User not connected")
+			return errors.Wrap(err, "It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/mscalendar connect`.")
 		}
 		user.User = storedUser
 	}
