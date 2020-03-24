@@ -25,7 +25,7 @@ type Poster interface {
 	DeletePost(postID string) error
 
 	// DMUpdatePost substitute one post with another
-	DMUpdatePost(post *model.Post) error
+	UpdatePost(post *model.Post) error
 }
 
 // DM posts a simple Direct Message to the specified user
@@ -93,7 +93,7 @@ func (bot *bot) DeletePost(postID string) error {
 	return nil
 }
 
-func (bot *bot) DMUpdatePost(post *model.Post) error {
+func (bot *bot) UpdatePost(post *model.Post) error {
 	_, appErr := bot.pluginAPI.UpdatePost(post)
 	if appErr != nil {
 		return appErr

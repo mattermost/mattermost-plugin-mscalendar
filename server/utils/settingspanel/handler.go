@@ -7,7 +7,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
-type sh struct {
+type handler struct {
 	panel Panel
 }
 
@@ -20,7 +20,7 @@ func Init(h *httputils.Handler, panel Panel) {
 	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods("POST")
 }
 
-func (sh *sh) handleAction(w http.ResponseWriter, r *http.Request) {
+func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
