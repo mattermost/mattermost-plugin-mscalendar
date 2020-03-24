@@ -129,7 +129,7 @@ func (p *panel) Update(userID string) error {
 			continue
 		}
 		post.Id = postIDs[s.GetID()]
-		err = p.poster.DMUpdatePost(post)
+		err = p.poster.UpdatePost(post)
 		if err != nil {
 			p.logger.Errorf("error updating the post for setting %s, err=%s", s.GetID(), err.Error())
 		}

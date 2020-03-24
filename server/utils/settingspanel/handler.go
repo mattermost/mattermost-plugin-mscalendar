@@ -12,7 +12,7 @@ type handler struct {
 }
 
 func Init(h *httputils.Handler, panel Panel) {
-	sh := &sh{
+	sh := &handler{
 		panel: panel,
 	}
 
