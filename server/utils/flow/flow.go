@@ -24,78 +24,54 @@ type FlowStore interface {
 type Step interface {
 	PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment
 	ResponseSlackAttachment(value bool) *model.SlackAttachment
-	PropertyName() string
+	GetPropertyName() string
 	ShouldSkip(value bool) int
 }
 
-type step struct {
-	title                string
-	message              string
-	propertyName         string
-	trueButtonMessage    string
-	falseButtonMessage   string
-	trueResponseMessage  string
-	falseResponseMessage string
-	trueSkip             int
-	falseSkip            int
+type SimpleStep struct {
+	Title                string
+	Message              string
+	PropertyName         string
+	TrueButtonMessage    string
+	FalseButtonMessage   string
+	TrueResponseMessage  string
+	FalseResponseMessage string
+	TrueSkip             int
+	FalseSkip            int
 }
 
-func NewStep(
-	title,
-	message,
-	propertyName,
-	trueButtonMessage,
-	falseButtonMessage,
-	trueResponseMessage,
-	falseResponseMessage string,
-	trueSkip,
-	falseSkip int,
-) Step {
-	return &step{
-		title:                title,
-		message:              message,
-		propertyName:         propertyName,
-		trueButtonMessage:    trueButtonMessage,
-		falseButtonMessage:   falseButtonMessage,
-		trueResponseMessage:  trueResponseMessage,
-		falseResponseMessage: falseResponseMessage,
-		trueSkip:             trueSkip,
-		falseSkip:            falseSkip,
-	}
-}
-
-func (s *step) PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment {
+func (s *SimpleStep) PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment {
 	actionTrue := model.PostAction{
-		Name: s.trueButtonMessage,
+		Name: s.TrueButtonMessage,
 		Integration: &model.PostActionIntegration{
-			URL: flowHandler + "?" + s.propertyName + "=true&step=" + strconv.Itoa(i),
+			URL: flowHandler + "?" + s.PropertyName + "=true&step=" + strconv.Itoa(i),
 		},
 	}
 
 	actionFalse := model.PostAction{
-		Name: s.falseButtonMessage,
+		Name: s.FalseButtonMessage,
 		Integration: &model.PostActionIntegration{
-			URL: flowHandler + "?" + s.propertyName + "=false&step=" + strconv.Itoa(i),
+			URL: flowHandler + "?" + s.PropertyName + "=false&step=" + strconv.Itoa(i),
 		},
 	}
 
 	sa := model.SlackAttachment{
-		Title:   s.title,
-		Text:    s.message,
+		Title:   s.Title,
+		Text:    s.Message,
 		Actions: []*model.PostAction{&actionTrue, &actionFalse},
 	}
 
 	return &sa
 }
 
-func (s *step) ResponseSlackAttachment(value bool) *model.SlackAttachment {
-	message := s.falseResponseMessage
+func (s *SimpleStep) ResponseSlackAttachment(value bool) *model.SlackAttachment {
+	message := s.FalseResponseMessage
 	if value {
-		message = s.trueResponseMessage
+		message = s.TrueResponseMessage
 	}
 
 	sa := model.SlackAttachment{
-		Title:   s.title,
+		Title:   s.Title,
 		Text:    message,
 		Actions: []*model.PostAction{},
 	}
@@ -103,14 +79,14 @@ func (s *step) ResponseSlackAttachment(value bool) *model.SlackAttachment {
 	return &sa
 }
 
-func (s *step) PropertyName() string {
-	return s.propertyName
+func (s *SimpleStep) GetPropertyName() string {
+	return s.PropertyName
 }
 
-func (s *step) ShouldSkip(value bool) int {
+func (s *SimpleStep) ShouldSkip(value bool) int {
 	if value {
-		return s.trueSkip
+		return s.TrueSkip
 	}
 
-	return s.falseSkip
+	return s.FalseSkip
 }

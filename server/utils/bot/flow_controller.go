@@ -2,7 +2,7 @@ package bot
 
 import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 
-type Flower interface {
+type FlowController interface {
 	Start(userID string) error
 	NextStep(userID string, value bool) error
 	Cancel(userID string) error
@@ -49,7 +49,7 @@ func (bot *bot) Cancel(userID string) error {
 		return nil
 	}
 
-	postID, err := bot.flowStore.GetPostID(userID, step.PropertyName())
+	postID, err := bot.flowStore.GetPostID(userID, step.GetPropertyName())
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (bot *bot) processStep(userID string, step flow.Step, i int) error {
 		return err
 	}
 
-	err = bot.flowStore.SetPostID(userID, step.PropertyName(), postID)
+	err = bot.flowStore.SetPostID(userID, step.GetPropertyName(), postID)
 	if err != nil {
 		return err
 	}

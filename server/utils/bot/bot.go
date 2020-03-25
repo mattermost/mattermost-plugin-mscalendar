@@ -15,7 +15,7 @@ type Bot interface {
 	Poster
 	Logger
 	Admin
-	Flower
+	FlowController
 
 	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(BotConfig) Bot

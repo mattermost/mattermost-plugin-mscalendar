@@ -46,7 +46,7 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	property := step.PropertyName()
+	property := step.GetPropertyName()
 
 	valueString := r.URL.Query().Get(property)
 	if valueString == "" {
