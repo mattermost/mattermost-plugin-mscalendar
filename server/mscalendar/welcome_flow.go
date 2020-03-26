@@ -9,14 +9,14 @@ import (
 type welcomeFlow struct {
 	steps      []flow.Step
 	url        string
-	flower     bot.FlowController
+	controller bot.FlowController
 	onFlowDone func(userID string)
 }
 
 func NewWelcomeFlow(url string, bot bot.FlowController, onFlowDone func(userID string)) *welcomeFlow {
 	wf := welcomeFlow{
 		url:        url,
-		flower:     bot,
+		controller: bot,
 		onFlowDone: onFlowDone,
 	}
 	wf.makeSteps()
@@ -42,7 +42,7 @@ func (wf *welcomeFlow) Length() int {
 }
 
 func (wf *welcomeFlow) StepDone(userID string, value bool) {
-	wf.flower.NextStep(userID, value)
+	wf.controller.NextStep(userID, value)
 }
 
 func (wf *welcomeFlow) FlowDone(userID string) {
