@@ -29,6 +29,27 @@ func (m *mscalendar) ViewCalendar(user *User, from, to time.Time) ([]*remote.Eve
 	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 
+func (m *mscalendar) getTodayCalendar(user *User, timezone string) ([]*remote.Event, error) {
+	err := m.Filter(
+		withClient,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.ExpandRemoteUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+	t := remote.NewDateTime(now, "UTC").In(timezone).Time()
+
+	from := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	to := from.Add(24 * time.Hour)
+	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
+}
+
 func (m *mscalendar) CreateCalendar(user *User, calendar *remote.Calendar) (*remote.Calendar, error) {
 	err := m.Filter(
 		withClient,

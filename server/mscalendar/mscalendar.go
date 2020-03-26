@@ -19,6 +19,7 @@ type MSCalendar interface {
 	Subscriptions
 	Users
 	Welcomer
+	DailySummary
 }
 
 // Dependencies contains all API dependencies

@@ -33,6 +33,20 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// DeleteDailySummarySettings mocks base method
+func (m *MockStore) DeleteDailySummarySettings(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteDailySummarySettings", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDailySummarySettings indicates an expected call of DeleteDailySummarySettings
+func (mr *MockStoreMockRecorder) DeleteDailySummarySettings(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDailySummarySettings", reflect.TypeOf((*MockStore)(nil).DeleteDailySummarySettings), arg0)
+}
+
 // DeleteUser mocks base method
 func (m *MockStore) DeleteUser(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -103,6 +117,21 @@ func (m *MockStore) GetPostID(arg0, arg1 string) (string, error) {
 func (mr *MockStoreMockRecorder) GetPostID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostID", reflect.TypeOf((*MockStore)(nil).GetPostID), arg0, arg1)
+}
+
+// LoadDailySummaryIndex mocks base method
+func (m *MockStore) LoadDailySummaryIndex() (store.DailySummaryIndex, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadDailySummaryIndex")
+	ret0, _ := ret[0].(store.DailySummaryIndex)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadDailySummaryIndex indicates an expected call of LoadDailySummaryIndex
+func (mr *MockStoreMockRecorder) LoadDailySummaryIndex() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadDailySummaryIndex", reflect.TypeOf((*MockStore)(nil).LoadDailySummaryIndex))
 }
 
 // LoadMattermostUserId mocks base method
@@ -207,6 +236,20 @@ func (m *MockStore) RemovePostID(arg0, arg1 string) error {
 func (mr *MockStoreMockRecorder) RemovePostID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePostID", reflect.TypeOf((*MockStore)(nil).RemovePostID), arg0, arg1)
+}
+
+// SaveDailySummaryIndex mocks base method
+func (m *MockStore) SaveDailySummaryIndex(arg0 store.DailySummaryIndex) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveDailySummaryIndex", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveDailySummaryIndex indicates an expected call of SaveDailySummaryIndex
+func (mr *MockStoreMockRecorder) SaveDailySummaryIndex(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveDailySummaryIndex", reflect.TypeOf((*MockStore)(nil).SaveDailySummaryIndex), arg0)
 }
 
 // SetPostID mocks base method
