@@ -35,6 +35,7 @@ import (
 type Env struct {
 	mscalendar.Env
 	bot                   bot.Bot
+	dailySummaryJob       *mscalendar.DailySummaryJob
 	jobManager            *jobs.JobManager
 	notificationProcessor mscalendar.NotificationProcessor
 	httpHandler           *httputils.Handler
@@ -157,6 +158,19 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		if err != nil {
 			e.Logger.Errorf(err.Error())
 		}
+		{
+			if e.EnableDailySummary && e.dailySummaryJob == nil {
+				e.Logger.Debugf("Enabling daily summary job")
+				e.dailySummaryJob = mscalendar.NewDailySummaryJob(e.Env)
+				go e.dailySummaryJob.Start()
+			}
+
+			if !e.EnableDailySummary && e.dailySummaryJob != nil {
+				e.Logger.Debugf("Disabling daily summary job")
+				e.dailySummaryJob.Cancel()
+				e.dailySummaryJob = nil
+			}
+		}
 	})
 
 	return nil
@@ -182,7 +196,9 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
 	}
 
-	env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	if out != "" {
+		env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	}
 	return &model.CommandResponse{}, nil
 }
 
