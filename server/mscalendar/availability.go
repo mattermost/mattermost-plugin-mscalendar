@@ -15,7 +15,7 @@ import (
 const (
 	availabilityTimeWindowSize      = 15
 	upcomingEventNotificationTime   = 10 * time.Minute
-	upcomingEventNotificationWindow = (JOB_INTERVAL * 9) / 10 //90% of the Interval
+	upcomingEventNotificationWindow = (5 * time.Minute * 9) / 10 //90% of the statusSyncJobInterval
 )
 
 type Availability interface {
