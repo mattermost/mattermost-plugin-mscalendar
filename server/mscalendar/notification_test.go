@@ -5,8 +5,9 @@ package mscalendar
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
 	"golang.org/x/oauth2"
@@ -170,7 +171,7 @@ func TestProcessNotification(t *testing.T) {
 					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_id").Return(nil, store.ErrNotFound).Times(1)
 				}
 
-				mockPoster.EXPECT().DMWithAttachments("creator_mm_id", gomock.Any()).Return(nil).Times(1)
+				mockPoster.EXPECT().DMWithAttachments("creator_mm_id", gomock.Any()).Return("", nil).Times(1)
 				mockStore.EXPECT().StoreUserEvent("creator_mm_id", gomock.Any()).Return(nil).Times(1)
 			}
 
