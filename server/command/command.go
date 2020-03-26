@@ -45,7 +45,7 @@ func Register(registerFunc RegisterFunc) {
 		DisplayName:      "Microsoft Calendar",
 		Description:      "Interact with your outlook calendar.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "help, info, connect, disconnect, connect_bot, disconnect_bot, subscribe, showcals, viewcal, createcal, deletecal, createevent, findmeetings, availability",
+		AutoCompleteDesc: "help, info, connect, disconnect, connect_bot, disconnect_bot, subscribe, showcals, viewcal, createcal, deletecal, createevent, findmeetings, availability, summary",
 		AutoCompleteHint: "(subcommand)",
 	})
 }
@@ -69,6 +69,8 @@ func (c *Command) Handle() (string, error) {
 		handler = c.disconnect
 	case "disconnect_bot":
 		handler = c.disconnectBot
+	case "summary":
+		handler = c.dailySummary
 	case "viewcal":
 		handler = c.viewCalendar
 	case "createcal":
@@ -88,7 +90,7 @@ func (c *Command) Handle() (string, error) {
 	}
 	out, err := handler(parameters...)
 	if err != nil {
-		return "", errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
+		return out, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
 	}
 
 	return out, nil
