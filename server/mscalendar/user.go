@@ -119,7 +119,17 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		}
 	}
 
-	return m.Store.DeleteUser(mattermostUserID)
+	err = m.Store.DeleteUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	err = m.Store.DeleteDailySummarySettings(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*remote.User, error) {
