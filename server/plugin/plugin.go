@@ -20,6 +20,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
@@ -33,7 +34,8 @@ import (
 type Env struct {
 	mscalendar.Env
 	bot                   bot.Bot
-	statusSyncJob         *mscalendar.StatusSyncJob
+	dailySummaryJob       *mscalendar.DailySummaryJob
+	jobManager            *jobs.JobManager
 	notificationProcessor mscalendar.NotificationProcessor
 	httpHandler           *httputils.Handler
 	configError           error
@@ -71,6 +73,17 @@ func (p *Plugin) OnActivate() error {
 	return nil
 }
 
+func (p *Plugin) OnDeactivate() error {
+	e := p.getEnv()
+	if e.jobManager != nil {
+		if err := e.jobManager.Close(); err != nil {
+			p.env.Logger.Errorf("OnDeactivate: Failed to close job manager", "error", err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
 func (p *Plugin) OnConfigurationChange() (err error) {
 	defer func() {
 		p.updateEnv(func(e *Env) {
@@ -104,7 +117,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateEnv(func(e *Env) {
-		p.initEnv(&p.env)
+		p.initEnv(e)
 
 		e.StoredConfig = stored
 		e.Config.MattermostSiteURL = *mattermostSiteURL
@@ -130,21 +143,29 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
-		// POC_initUserStatusSyncJob begins a job that runs every 5 minutes to update the MM user's status based on their status in their Microsoft calendar
-		// This needs to be improved to run on a single node in the HA environment. Hence why the name is currently prefixed with POC
+		if e.jobManager == nil {
+			e.jobManager = jobs.NewJobManager(p.API, e.Env)
+			err := e.jobManager.AddJob(jobs.NewStatusSyncJob())
+			if err != nil {
+				e.Logger.Errorf(err.Error())
+			}
+		}
+
+		err := e.jobManager.OnConfigurationChange(e.Env)
+		if err != nil {
+			e.Logger.Errorf(err.Error())
+		}
 		{
-			// Config is set to enable. No job exists, start a new job.
-			if e.EnableStatusSync && e.statusSyncJob == nil {
-				e.Logger.Debugf("Enabling user status sync job")
-				e.statusSyncJob = mscalendar.NewStatusSyncJob(e.Env)
-				go e.statusSyncJob.Start()
+			if e.EnableDailySummary && e.dailySummaryJob == nil {
+				e.Logger.Debugf("Enabling daily summary job")
+				e.dailySummaryJob = mscalendar.NewDailySummaryJob(e.Env)
+				go e.dailySummaryJob.Start()
 			}
 
-			// Config is set to disable. Job exists, kill existing job.
-			if !e.EnableStatusSync && e.statusSyncJob != nil {
-				e.Logger.Debugf("Disabling user status sync job")
-				e.statusSyncJob.Cancel()
-				e.statusSyncJob = nil
+			if !e.EnableDailySummary && e.dailySummaryJob != nil {
+				e.Logger.Debugf("Disabling daily summary job")
+				e.dailySummaryJob.Cancel()
+				e.dailySummaryJob = nil
 			}
 		}
 	})
@@ -172,7 +193,9 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
 	}
 
-	env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	if out != "" {
+		env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+	}
 	return &model.CommandResponse{}, nil
 }
 

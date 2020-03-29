@@ -19,6 +19,8 @@ type Users interface {
 	DisconnectUser(mattermostUserID string) error
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
+	GetUserSettings(user *User) (*store.Settings, error)
+	StoreUserSettings(user *User, settings *store.Settings) error
 }
 
 type User struct {
@@ -44,13 +46,29 @@ func (m *mscalendar) GetActingUser() *User {
 }
 
 func (m *mscalendar) ExpandUser(user *User) error {
+	err := m.ExpandRemoteUser(user)
+	if err != nil {
+		return err
+	}
+	err = m.ExpandMattermostUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *mscalendar) ExpandRemoteUser(user *User) error {
 	if user.User == nil {
 		storedUser, err := m.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
-			return errors.Wrap(err, "User not connected")
+			return errors.Wrap(err, "It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/mscalendar connect`.")
 		}
 		user.User = storedUser
 	}
+	return nil
+}
+
+func (m *mscalendar) ExpandMattermostUser(user *User) error {
 	if user.MattermostUser == nil {
 		mattermostUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
 		if err != nil {
@@ -64,7 +82,7 @@ func (m *mscalendar) ExpandUser(user *User) error {
 func (m *mscalendar) GetTimezone(user *User) (string, error) {
 	err := m.Filter(
 		withClient,
-		withUserExpanded(user),
+		withRemoteUser(user),
 	)
 	if err != nil {
 		return "", err
@@ -143,4 +161,32 @@ func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*remote.User, error
 
 func (m *mscalendar) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 	return m.Dependencies.IsAuthorizedAdmin(mattermostUserID)
+}
+
+func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
+	err := m.Filter(
+		withUserExpanded(user),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.Settings, nil
+}
+
+func (m *mscalendar) StoreUserSettings(user *User, settings *store.Settings) error {
+	err := m.Filter(
+		withUserExpanded(user),
+	)
+	if err != nil {
+		return err
+	}
+
+	user.Settings = *settings
+	err = m.Store.StoreUser(user.User)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

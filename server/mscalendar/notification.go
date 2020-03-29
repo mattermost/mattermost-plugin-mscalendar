@@ -131,7 +131,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.SubscriptionCreator = creator.Remote
 
 	var client remote.Client
-	if !n.RecommendRenew || n.IsBare {
+	if n.RecommendRenew || n.IsBare {
 		client = processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
 	}
 
@@ -153,7 +153,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		}
 		processor.Logger.With(bot.LogContext{
 			"MattermostUserID": creator.MattermostUserID,
-			"SubsriptionID":    n.SubscriptionID,
+			"SubscriptionID":   n.SubscriptionID,
 		}).Debugf("webhook notification: renewed user subscription.")
 	}
 
@@ -175,7 +175,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		if !changed {
 			processor.Logger.With(bot.LogContext{
 				"MattermostUserID": creator.MattermostUserID,
-				"SubsriptionID":    n.SubscriptionID,
+				"SubscriptionID":   n.SubscriptionID,
 				"ChangeType":       n.ChangeType,
 				"EventID":          n.Event.ID,
 			}).Debugf("webhook notification: no changes detected in event.")
@@ -199,7 +199,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 
 	processor.Logger.With(bot.LogContext{
 		"MattermostUserID": creator.MattermostUserID,
-		"SubsriptionID":    n.SubscriptionID,
+		"SubscriptionID":   n.SubscriptionID,
 	}).Debugf("Notified: %s.", sa.Title)
 
 	return nil
