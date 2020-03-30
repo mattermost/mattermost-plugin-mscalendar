@@ -41,8 +41,8 @@ func (wf *welcomeFlow) Length() int {
 	return len(wf.steps)
 }
 
-func (wf *welcomeFlow) StepDone(userID string, value bool) {
-	wf.controller.NextStep(userID, value)
+func (wf *welcomeFlow) StepDone(userID string, step int, value bool) {
+	wf.controller.NextStep(step, userID, value)
 }
 
 func (wf *welcomeFlow) FlowDone(userID string) {

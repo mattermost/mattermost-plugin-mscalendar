@@ -10,7 +10,7 @@ type Flow interface {
 	Step(i int) Step
 	URL() string
 	Length() int
-	StepDone(userID string, value bool)
+	StepDone(userID string, step int, value bool)
 	FlowDone(userID string)
 }
 

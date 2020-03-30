@@ -4,7 +4,7 @@ import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 
 type FlowController interface {
 	Start(userID string) error
-	NextStep(userID string, value bool) error
+	NextStep(from int, userID string, value bool) error
 	Cancel(userID string) error
 }
 
@@ -16,10 +16,14 @@ func (bot *bot) Start(userID string) error {
 	return bot.processStep(userID, bot.flow.Step(0), 0)
 }
 
-func (bot *bot) NextStep(userID string, value bool) error {
+func (bot *bot) NextStep(from int, userID string, value bool) error {
 	step, err := bot.getFlowStep(userID)
 	if err != nil {
 		return err
+	}
+
+	if step != from {
+		return nil
 	}
 
 	skip := bot.flow.Step(step).ShouldSkip(value)

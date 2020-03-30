@@ -72,5 +72,5 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	w.Write(response.ToJson())
 
 	fh.store.RemovePostID(mattermostUserID, property)
-	fh.flow.StepDone(mattermostUserID, value)
+	fh.flow.StepDone(mattermostUserID, stepNumber, value)
 }
