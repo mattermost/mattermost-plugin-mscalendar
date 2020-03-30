@@ -46,11 +46,6 @@ type ScheduleItem struct {
 	Status    string
 	Subject   string
 	Location  string
-	Start     ScheduleTime
-	End       ScheduleTime
-}
-
-type ScheduleTime struct {
-	DateTime string
-	Timezone string
+	Start     DateTime
+	End       DateTime
 }

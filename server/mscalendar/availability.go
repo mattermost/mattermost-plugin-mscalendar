@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
@@ -14,8 +15,9 @@ import (
 
 const (
 	availabilityTimeWindowSize      = 15
+	StatusSyncJobInterval           = 30 * time.Second
 	upcomingEventNotificationTime   = 10 * time.Minute
-	upcomingEventNotificationWindow = (5 * time.Minute * 9) / 10 //90% of the statusSyncJobInterval
+	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
 )
 
 type Availability interface {
@@ -129,46 +131,34 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 }
 
 func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, items []remote.ScheduleItem) {
+	var timezone string
 	for _, scheduleItem := range items {
-		loc, err := time.LoadLocation(scheduleItem.Start.Timezone)
-		if err != nil {
-			m.Logger.Errorf("problem loading location: %s", err.Error())
-			continue
+		upcomingTime := time.Now().Add(upcomingEventNotificationTime)
+		start := scheduleItem.Start.Time()
+		diff := start.Sub(upcomingTime)
+
+		if (diff < upcomingEventNotificationWindow) && (diff > -upcomingEventNotificationWindow) {
+			var err error
+			if timezone == "" {
+				timezone, err = m.GetTimezoneByID(mattermostUserID)
+				if err != nil {
+					m.Logger.Errorf("error notifying upcoming event, err=%s", err.Error())
+					return
+				}
+			}
+
+			message, err := views.RenderScheduleItem(scheduleItem, timezone)
+			if err != nil {
+				m.Logger.Errorf("error notifying upcoming event, err=", err.Error())
+				continue
+			}
+			err = m.Poster.DM(mattermostUserID, message)
+			if err != nil {
+				m.Logger.Errorf("error notifying upcoming event, err=", err.Error())
+				continue
+			}
 		}
-		now := time.Now().In(loc)
-		start, err := time.Parse("2006-01-02T15:04:05MST", scheduleItem.Start.DateTime+scheduleItem.Start.Timezone)
-		if err != nil {
-			m.Logger.Errorf("problem parsing date: %s", err.Error())
-			continue
-		}
-		if now.Add(upcomingEventNotificationTime).After(start.Add(-upcomingEventNotificationWindow)) && now.Add(upcomingEventNotificationTime).Before(start.Add(upcomingEventNotificationWindow)) {
-			m.renderScheduleItem(mattermostUserID, scheduleItem)
-		}
 	}
-}
-
-func (m *mscalendar) renderScheduleItem(mattermostUserId string, s remote.ScheduleItem) {
-	message := "You have an upcoming event:"
-	start, err := time.Parse("2006-01-02T15:04:05MST", s.Start.DateTime+s.Start.Timezone)
-	if err != nil {
-		m.Logger.Errorf("problem parsing start date: %s", err.Error())
-		return
-	}
-
-	end, err := time.Parse("2006-01-02T15:04:05MST", s.End.DateTime+s.End.Timezone)
-
-	message = fmt.Sprintf("\n%s-%s", start.Format("15:04MST"), end.Format("15:04MST"))
-	if s.Subject == "" {
-		message += fmt.Sprintf("Subject: Not available. Check your privacy settings so we can show you the subject.")
-	} else {
-		message += fmt.Sprintf("\nSubject: %s", s.Subject)
-	}
-
-	if s.Location != "" {
-		message += fmt.Sprintf("\nLocation: %s", s.Location)
-	}
-
-	m.Poster.DM(mattermostUserId, message)
 }
 
 func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {

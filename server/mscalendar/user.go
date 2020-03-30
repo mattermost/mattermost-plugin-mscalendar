@@ -95,6 +95,23 @@ func (m *mscalendar) GetTimezone(user *User) (string, error) {
 	return settings.TimeZone, nil
 }
 
+func (m *mscalendar) GetTimezoneByID(mattermostUserID string) (string, error) {
+	c, err := m.MakeSuperuserClient()
+	if err != nil {
+		return "", err
+	}
+
+	u, err := m.GetRemoteUser(mattermostUserID)
+	if err != nil {
+		return "", err
+	}
+	settings, err := c.GetMailboxSettings(u.ID)
+	if err != nil {
+		return "", err
+	}
+	return settings.TimeZone, nil
+}
+
 func (user *User) String() string {
 	if user.MattermostUser != nil {
 		return fmt.Sprintf("@%s", user.MattermostUser.Username)
