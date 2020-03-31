@@ -9,6 +9,7 @@ import (
 const (
 	UpdateStatusSettingID    = "update_status"
 	GetConfirmationSettingID = "get_confirmation"
+	DailySummarySettingID    = "summary_setting"
 )
 
 func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) error {
