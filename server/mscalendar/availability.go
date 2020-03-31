@@ -15,7 +15,7 @@ import (
 
 const (
 	availabilityTimeWindowSize      = 15
-	StatusSyncJobInterval           = 30 * time.Second
+	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
 )
