@@ -40,7 +40,7 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 
 		return dailySummaryResponse(dsum), nil
 	case "settings":
-		dsum, err := c.MSCalendar.GetDailySummarySettingsForUser(c.user())
+		dsum, err := c.MSCalendar.GetDailySummaryUserSettingsForUser(c.user())
 		if err != nil {
 			return err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + dailySummaryHelp, nil
 		}
@@ -64,7 +64,7 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 	}
 }
 
-func dailySummaryResponse(dsum *store.DailySummarySettings) string {
+func dailySummaryResponse(dsum *store.DailySummaryUserSettings) string {
 	if dsum.PostTime == "" {
 		return "Your daily summary time is not yet configured.\n" + dailySummarySetTimeErrorMessage
 	}

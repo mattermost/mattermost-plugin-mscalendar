@@ -20,7 +20,6 @@ type Users interface {
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetUserSettings(user *User) (*store.Settings, error)
-	StoreUserSettings(user *User, settings *store.Settings) error
 }
 
 type User struct {
@@ -117,7 +116,16 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		return err
 	}
 
-	err = m.Store.DeleteDailySummarySettings(mattermostUserID)
+	if mattermostUserID == m.Config.BotUserID {
+		return nil
+	}
+
+	err = m.Store.DeleteUserFromIndex(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	err = m.Store.DeleteDailySummaryUserSettings(mattermostUserID)
 	if err != nil {
 		return err
 	}
@@ -147,21 +155,4 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 	}
 
 	return &user.Settings, nil
-}
-
-func (m *mscalendar) StoreUserSettings(user *User, settings *store.Settings) error {
-	err := m.Filter(
-		withUserExpanded(user),
-	)
-	if err != nil {
-		return err
-	}
-
-	user.Settings = *settings
-	err = m.Store.StoreUser(user.User)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

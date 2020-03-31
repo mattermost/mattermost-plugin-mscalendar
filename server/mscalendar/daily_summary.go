@@ -17,14 +17,14 @@ const dailySummaryTimeWindow = time.Minute * 2
 var timeNowFunc = time.Now
 
 type DailySummary interface {
-	GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error)
-	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error)
-	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummarySettings, error)
+	GetDailySummaryUserSettingsForUser(user *User) (*store.DailySummaryUserSettings, error)
+	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error)
+	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummaryUserSettings, error)
 	ProcessAllDailySummary() error
 	GetDailySummary(user *User) (string, error)
 }
 
-func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error) {
+func (m *mscalendar) GetDailySummaryUserSettingsForUser(user *User) (*store.DailySummaryUserSettings, error) {
 	dsumIndex, err := m.Store.LoadDailySummaryIndex()
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySum
 	return nil, errors.New("No daily summary settings found")
 }
 
-func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error) {
+func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error) {
 	t, err := time.Parse(time.Kitchen, timeStr)
 	if err != nil {
 		return nil, errors.New("Invalid time value: " + timeStr)
@@ -54,37 +54,25 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, err
 	}
 
-	dsumIndex, err := m.Store.LoadDailySummaryIndex()
+	dsum, err := m.Store.LoadDailySummaryUserSettings(user.MattermostUserID)
 	if err != nil {
 		return nil, err
 	}
-
-	var result *store.DailySummarySettings
-	for _, dsum := range dsumIndex {
-		if dsum.MattermostUserID == user.MattermostUserID {
-			dsum.PostTime = timeStr
-			dsum.Timezone = timezone
-			result = dsum
-			break
-		}
-	}
-	if result == nil {
-		result = &store.DailySummarySettings{
-			MattermostUserID: user.MattermostUserID,
-			PostTime:         timeStr,
-			Timezone:         timezone,
-		}
-		dsumIndex = append(dsumIndex, result)
+	if dsum == nil {
+		dsum = &store.DailySummaryUserSettings{MattermostUserID: user.MattermostUserID}
 	}
 
-	err = m.Store.SaveDailySummaryIndex(dsumIndex)
+	dsum.PostTime = timeStr
+	dsum.Timezone = timezone
+
+	err = m.Store.StoreDailySummaryUserSettings(dsum)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return dsum, nil
 }
 
-func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummarySettings, error) {
+func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummaryUserSettings, error) {
 	err := m.Filter(
 		withClient,
 		withUserExpanded(user),
@@ -93,31 +81,20 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 		return nil, err
 	}
 
-	dsumIndex, err := m.Store.LoadDailySummaryIndex()
+	dsum, err := m.Store.LoadDailySummaryUserSettings(user.MattermostUserID)
 	if err != nil {
 		return nil, err
 	}
-
-	var result *store.DailySummarySettings
-	for _, dsum := range dsumIndex {
-		if dsum.MattermostUserID == user.MattermostUserID {
-			dsum.Enable = enable
-			result = dsum
-		}
+	if dsum == nil {
+		dsum = &store.DailySummaryUserSettings{MattermostUserID: user.MattermostUserID}
 	}
-	if result == nil {
-		result = &store.DailySummarySettings{
-			MattermostUserID: user.MattermostUserID,
-			Enable:           enable,
-		}
-		dsumIndex = append(dsumIndex, result)
-	}
+	dsum.Enable = enable
 
-	err = m.Store.SaveDailySummaryIndex(dsumIndex)
+	err = m.Store.StoreDailySummaryUserSettings(dsum)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return dsum, nil
 }
 
 func (m *mscalendar) ProcessAllDailySummary() error {
@@ -133,18 +110,35 @@ func (m *mscalendar) ProcessAllDailySummary() error {
 		return err
 	}
 
+	updatedPostTimes := map[string]string{}
 	for _, dsum := range dsumIndex {
+		shouldPost, err := shouldPostDailySummary(dsum)
+		if err != nil {
+			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, err.Error())
+			continue
+		}
+		if !shouldPost {
+			continue
+		}
+
 		err = m.processDailySummary(dsum)
 		if err != nil {
-			u := NewUser(dsum.MattermostUserID)
-			m.ExpandMattermostUser(u)
-			m.Logger.Errorf("Error posting daily summary for user %s: %s", u.MattermostUser.Username, err.Error())
+			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, err.Error())
 		}
+		updatedPostTimes[dsum.MattermostUserID] = timeNowFunc().Format(time.RFC3339)
 	}
 
-	err = m.Store.SaveDailySummaryIndex(dsumIndex)
-	if err != nil {
-		return err
+	modErr := m.Store.ModifyDailySummaryIndex(func(dsumIndex store.DailySummaryIndex) (store.DailySummaryIndex, error) {
+		for _, setting := range dsumIndex {
+			postTime, ok := updatedPostTimes[setting.MattermostUserID]
+			if ok {
+				setting.LastPostTime = postTime
+			}
+		}
+		return dsumIndex, nil
+	})
+	if modErr != nil {
+		return modErr
 	}
 
 	return nil
@@ -154,23 +148,13 @@ func (m *mscalendar) GetDailySummary(user *User) (string, error) {
 	return m.getDailySummary(user)
 }
 
-func (m *mscalendar) processDailySummary(dsum *store.DailySummarySettings) error {
-	shouldPost, err := shouldPostDailySummary(dsum)
-	if err != nil {
-		return err
-	}
-	if !shouldPost {
-		return nil
-	}
-
+func (m *mscalendar) processDailySummary(dsum *store.DailySummaryUserSettings) error {
 	user := NewUser(dsum.MattermostUserID)
 	postStr, err := m.getDailySummary(user)
 	if err != nil {
 		return err
 	}
 	m.Poster.DM(user.MattermostUserID, postStr)
-
-	dsum.LastPostTime = timeNowFunc().Format(time.RFC3339)
 	return nil
 }
 
@@ -199,7 +183,7 @@ func (m *mscalendar) getDailySummary(user *User) (string, error) {
 	return postStr, nil
 }
 
-func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
+func shouldPostDailySummary(dsum *store.DailySummaryUserSettings) (bool, error) {
 	if !dsum.Enable {
 		return false, nil
 	}

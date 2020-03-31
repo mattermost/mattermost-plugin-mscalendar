@@ -4,6 +4,7 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -12,11 +13,15 @@ import (
 )
 
 type UserStore interface {
-	LoadUser(mattermostUserId string) (*User, error)
-	LoadMattermostUserId(remoteUserId string) (string, error)
+	LoadUser(mattermostUserID string) (*User, error)
+	LoadMattermostUserID(remoteUserID string) (string, error)
 	LoadUserIndex() (UserIndex, error)
 	StoreUser(user *User) error
-	DeleteUser(mattermostUserId string) error
+	LoadUserFromIndex(mattermostUserID string) (*UserShort, error)
+	DeleteUser(mattermostUserID string) error
+	ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error
+	StoreUserInIndex(user *User) error
+	DeleteUserFromIndex(mattermostUserID string) error
 }
 
 type UserIndex []*UserShort
@@ -53,17 +58,17 @@ func (user *User) Clone() *User {
 	return &newUser
 }
 
-func (s *pluginStore) LoadUser(mattermostUserId string) (*User, error) {
+func (s *pluginStore) LoadUser(mattermostUserID string) (*User, error) {
 	user := User{}
-	err := kvstore.LoadJSON(s.userKV, mattermostUserId, &user)
+	err := kvstore.LoadJSON(s.userKV, mattermostUserID, &user)
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (s *pluginStore) LoadMattermostUserId(remoteUserId string) (string, error) {
-	data, err := s.mattermostUserIDKV.Load(remoteUserId)
+func (s *pluginStore) LoadMattermostUserID(remoteUserID string) (string, error) {
+	data, err := s.mattermostUserIDKV.Load(remoteUserID)
 	if err != nil {
 		return "", err
 	}
@@ -79,6 +84,21 @@ func (s *pluginStore) LoadUserIndex() (UserIndex, error) {
 	return users, nil
 }
 
+func (s *pluginStore) LoadUserFromIndex(mattermostUserID string) (*UserShort, error) {
+	users, err := s.LoadUserIndex()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, u := range users {
+		if u.MattermostUserID == mattermostUserID {
+			return u, nil
+		}
+	}
+
+	return nil, ErrNotFound
+}
+
 func (s *pluginStore) StoreUser(user *User) error {
 	err := kvstore.StoreJSON(s.userKV, user.MattermostUserID, user)
 	if err != nil {
@@ -90,39 +110,6 @@ func (s *pluginStore) StoreUser(user *User) error {
 		_ = s.userKV.Delete(user.MattermostUserID)
 		return err
 	}
-
-	var userIndex []*UserShort
-	err = kvstore.LoadJSON(s.userIndexKV, "", &userIndex)
-	if err != nil {
-		userIndex = []*UserShort{}
-	}
-
-	newUser := &UserShort{
-		MattermostUserID: user.MattermostUserID,
-		RemoteID:         user.Remote.ID,
-		Email:            user.Remote.Mail,
-	}
-
-	found := false
-	filtered := []*UserShort{}
-	for _, u := range userIndex {
-		if u.MattermostUserID == user.MattermostUserID && u.RemoteID == user.Remote.ID {
-			found = true
-			filtered = append(filtered, newUser)
-		} else {
-			filtered = append(filtered, u)
-		}
-	}
-
-	if !found {
-		filtered = append(filtered, newUser)
-	}
-
-	err = kvstore.StoreJSON(s.userIndexKV, "", &filtered)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -157,6 +144,64 @@ func (s *pluginStore) DeleteUser(mattermostUserID string) error {
 	}
 
 	return nil
+}
+
+func (s *pluginStore) ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error {
+	return kvstore.AtomicModify(s.userIndexKV, "", func(initial []byte, storeErr error) ([]byte, error) {
+		if storeErr != nil && storeErr != ErrNotFound {
+			return initial, storeErr
+		}
+
+		var storedIndex UserIndex
+		if len(initial) > 0 {
+			err := json.Unmarshal(initial, &storedIndex)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		updated, err := modify(storedIndex)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := json.Marshal(updated)
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	})
+}
+
+func (s *pluginStore) StoreUserInIndex(user *User) error {
+	return s.ModifyUserIndex(func(userIndex UserIndex) (UserIndex, error) {
+		newUser := &UserShort{
+			MattermostUserID: user.MattermostUserID,
+			RemoteID:         user.Remote.ID,
+			Email:            user.Remote.Mail,
+		}
+
+		for i, u := range userIndex {
+			if u.MattermostUserID == user.MattermostUserID && u.RemoteID == user.Remote.ID {
+				result := append(userIndex[:i], newUser)
+				return append(result, userIndex[i+1:]...), nil
+			}
+		}
+
+		return append(userIndex, newUser), nil
+	})
+}
+
+func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
+	return s.ModifyUserIndex(func(userIndex UserIndex) (UserIndex, error) {
+		for i, u := range userIndex {
+			if u.MattermostUserID == mattermostUserID {
+				return append(userIndex[:i], userIndex[i+1:]...), nil
+			}
+		}
+		return userIndex, nil
+	})
 }
 
 func (index UserIndex) ByMattermostID() map[string]*UserShort {
