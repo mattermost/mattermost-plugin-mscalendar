@@ -127,6 +127,11 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return errors.New("Unauthorized webhook")
 	}
 
+	// Do not notify if the subscriptor is the organizer
+	if creator.Remote.Mail == n.Event.Organizer.EmailAddress.Address {
+		return nil
+	}
+
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
@@ -275,7 +280,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 }
 
 func (processor *notificationProcessor) actionURL(action string) string {
-	return fmt.Sprintf("%s/%s/%s", processor.Config.PluginURLPath, config.PathPostAction, action)
+	return fmt.Sprintf("%s%s%s", processor.Config.PluginURLPath, config.PathPostAction, action)
 }
 
 func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
