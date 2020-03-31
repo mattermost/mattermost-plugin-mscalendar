@@ -26,6 +26,7 @@ type Step interface {
 	ResponseSlackAttachment(value bool) *model.SlackAttachment
 	GetPropertyName() string
 	ShouldSkip(value bool) int
+	IsEmpty() bool
 }
 
 type SimpleStep struct {
@@ -89,4 +90,8 @@ func (s *SimpleStep) ShouldSkip(value bool) int {
 	}
 
 	return s.FalseSkip
+}
+
+func (s *SimpleStep) IsEmpty() bool {
+	return false
 }

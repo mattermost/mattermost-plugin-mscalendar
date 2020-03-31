@@ -100,6 +100,10 @@ func (bot *bot) processStep(userID string, step flow.Step, i int) error {
 		return err
 	}
 
+	if step.IsEmpty() {
+		return bot.NextStep(i, userID, false)
+	}
+
 	err = bot.flowStore.SetPostID(userID, step.GetPropertyName(), postID)
 	if err != nil {
 		return err

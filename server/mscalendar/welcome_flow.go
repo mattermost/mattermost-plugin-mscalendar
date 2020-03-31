@@ -76,6 +76,9 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseButtonMessage:   "No - Do not notify me of new events",
 		TrueResponseMessage:  "Great, you will receive a message any time you receive a new event.",
 		FalseResponseMessage: "Great, you will not receive any notification on new events.",
+	}, &flow.EmptyStep{
+		Title:   "Daily Summary",
+		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",
 	})
 
 	wf.steps = steps
