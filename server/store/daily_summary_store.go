@@ -15,6 +15,7 @@ type DailySummaryStore interface {
 
 type DailySummarySettings struct {
 	MattermostUserID string `json:"mm_id"`
+	RemoteID         string `json:"remote_id"`
 	Enable           bool   `json:"enable"`
 	PostTime         string `json:"post_time"` // Kitchen format, i.e. 8:30AM
 	Timezone         string `json:"tz"`        // Timezone in MSCal when PostTime is set/updated
@@ -53,4 +54,12 @@ func (s *pluginStore) DeleteDailySummarySettings(mattermostUserID string) error 
 		}
 	}
 	return s.SaveDailySummaryIndex(result)
+}
+
+func (index DailySummaryIndex) ByRemoteID() map[string]*DailySummarySettings {
+	result := map[string]*DailySummarySettings{}
+	for _, u := range index {
+		result[u.RemoteID] = u
+	}
+	return result
 }

@@ -224,19 +224,19 @@ func (mr *MockMSCalendarMockRecorder) GetCalendars(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendars", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendars), arg0)
 }
 
-// GetDailySummary mocks base method
-func (m *MockMSCalendar) GetDailySummary(arg0 *mscalendar.User) (string, error) {
+// GetDailySummaryForUser mocks base method
+func (m *MockMSCalendar) GetDailySummaryForUser(arg0 *mscalendar.User) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDailySummary", arg0)
+	ret := m.ctrl.Call(m, "GetDailySummaryForUser", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDailySummary indicates an expected call of GetDailySummary
-func (mr *MockMSCalendarMockRecorder) GetDailySummary(arg0 interface{}) *gomock.Call {
+// GetDailySummaryForUser indicates an expected call of GetDailySummaryForUser
+func (mr *MockMSCalendarMockRecorder) GetDailySummaryForUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailySummary", reflect.TypeOf((*MockMSCalendar)(nil).GetDailySummary), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailySummaryForUser", reflect.TypeOf((*MockMSCalendar)(nil).GetDailySummaryForUser), arg0)
 }
 
 // GetDailySummarySettingsForUser mocks base method
@@ -345,17 +345,17 @@ func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 }
 
 // ProcessAllDailySummary mocks base method
-func (m *MockMSCalendar) ProcessAllDailySummary() error {
+func (m *MockMSCalendar) ProcessAllDailySummary(arg0 time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProcessAllDailySummary")
+	ret := m.ctrl.Call(m, "ProcessAllDailySummary", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ProcessAllDailySummary indicates an expected call of ProcessAllDailySummary
-func (mr *MockMSCalendarMockRecorder) ProcessAllDailySummary() *gomock.Call {
+func (mr *MockMSCalendarMockRecorder) ProcessAllDailySummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessAllDailySummary", reflect.TypeOf((*MockMSCalendar)(nil).ProcessAllDailySummary))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessAllDailySummary", reflect.TypeOf((*MockMSCalendar)(nil).ProcessAllDailySummary), arg0)
 }
 
 // RenewMyEventSubscription mocks base method

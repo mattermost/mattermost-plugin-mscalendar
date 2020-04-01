@@ -74,7 +74,7 @@ func (job *DailySummaryJob) Cancel() {
 func (j *DailySummaryJob) work() {
 	j.Logger.Debugf("Daily summary job beginning")
 
-	err := New(j.Env, "").ProcessAllDailySummary()
+	err := New(j.Env, "").ProcessAllDailySummary(time.Now())
 	if err != nil {
 		j.Logger.Errorf("Error during daily summary job", "error", err.Error())
 	}

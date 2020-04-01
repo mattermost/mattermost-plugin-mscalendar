@@ -21,5 +21,5 @@ func Microsoft(timeZone string) string {
 		return timeZone
 	}
 
-	return iANAToWindows[timeZone]
+	return timeZone
 }

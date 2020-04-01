@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 	"github.com/pkg/errors"
@@ -20,8 +21,8 @@ type DailySummary interface {
 	GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error)
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummarySettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummarySettings, error)
-	ProcessAllDailySummary() error
-	GetDailySummary(user *User) (string, error)
+	ProcessAllDailySummary(now time.Time) error
+	GetDailySummaryForUser(user *User) (string, error)
 }
 
 func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySummarySettings, error) {
@@ -69,8 +70,13 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		}
 	}
 	if result == nil {
+		err := m.Filter(withRemoteUser(user))
+		if err != nil {
+			return nil, err
+		}
 		result = &store.DailySummarySettings{
 			MattermostUserID: user.MattermostUserID,
+			RemoteID:         user.Remote.ID,
 			PostTime:         timeStr,
 			Timezone:         timezone,
 		}
@@ -106,8 +112,13 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 		}
 	}
 	if result == nil {
+		err := m.Filter(withRemoteUser(user))
+		if err != nil {
+			return nil, err
+		}
 		result = &store.DailySummarySettings{
 			MattermostUserID: user.MattermostUserID,
+			RemoteID:         user.Remote.ID,
 			Enable:           enable,
 		}
 		dsumIndex = append(dsumIndex, result)
@@ -120,86 +131,94 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	return result, nil
 }
 
-func (m *mscalendar) ProcessAllDailySummary() error {
-	err := m.Filter(
-		withSuperuserClient,
-	)
+func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
+	isAdmin, err := m.IsAuthorizedAdmin(m.actingUser.MattermostUserID)
 	if err != nil {
 		return err
+	}
+	if !isAdmin {
+		return errors.Errorf("Non-admin user attempting ProcessAllDailySummary %s", m.actingUser.MattermostUserID)
 	}
 
 	dsumIndex, err := m.Store.LoadDailySummaryIndex()
 	if err != nil {
 		return err
 	}
-
-	for _, dsum := range dsumIndex {
-		err = m.processDailySummary(dsum)
-		if err != nil {
-			u := NewUser(dsum.MattermostUserID)
-			m.ExpandMattermostUser(u)
-			m.Logger.Errorf("Error posting daily summary for user %s: %s", u.MattermostUser.Username, err.Error())
-		}
-	}
-
-	err = m.Store.SaveDailySummaryIndex(dsumIndex)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *mscalendar) GetDailySummary(user *User) (string, error) {
-	return m.getDailySummary(user)
-}
-
-func (m *mscalendar) processDailySummary(dsum *store.DailySummarySettings) error {
-	shouldPost, err := shouldPostDailySummary(dsum)
-	if err != nil {
-		return err
-	}
-	if !shouldPost {
+	if len(dsumIndex) == 0 {
 		return nil
 	}
 
-	user := NewUser(dsum.MattermostUserID)
-	postStr, err := m.getDailySummary(user)
+	err = m.Filter(withSuperuserClient)
 	if err != nil {
 		return err
 	}
-	m.Poster.DM(user.MattermostUserID, postStr)
 
-	dsum.LastPostTime = timeNowFunc().Format(time.RFC3339)
+	requests := []*remote.ViewCalendarParams{}
+	for _, dsum := range dsumIndex {
+		shouldPost, err := shouldPostDailySummary(dsum, now)
+		if err != nil {
+			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, err.Error())
+			continue
+		}
+		if !shouldPost {
+			continue
+		}
+
+		start, end := getTodayHoursForTimezone(now, dsum.Timezone)
+		req := &remote.ViewCalendarParams{
+			RemoteID:  dsum.RemoteID,
+			StartTime: start,
+			EndTime:   end,
+		}
+		requests = append(requests, req)
+	}
+
+	responses, err := m.client.DoBatchViewCalendarRequests(requests)
+	if err != nil {
+		return err
+	}
+
+	mappedPostTimes := map[string]string{}
+	byRemoteID := dsumIndex.ByRemoteID()
+	for _, res := range responses {
+		dsum := byRemoteID[res.RemoteID]
+		if res.Error != nil {
+			m.Logger.Errorf("Error rendering user %s calendar: %s %s", dsum.MattermostUserID, res.Error.Code, res.Error.Message)
+		}
+		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone)
+		if err != nil {
+			m.Logger.Errorf("Error rendering user %s calendar: %s", dsum.MattermostUserID, err.Error())
+		}
+
+		m.Poster.DM(dsum.MattermostUserID, postStr)
+		mappedPostTimes[dsum.MattermostUserID] = time.Now().Format(time.RFC3339)
+	}
+	m.Logger.Infof("Processed daily summary for %d users", len(mappedPostTimes))
+
+	// TODO atomic save index
 	return nil
 }
 
-func (m *mscalendar) getDailySummary(user *User) (string, error) {
+func (m *mscalendar) GetDailySummaryForUser(user *User) (string, error) {
+	return m.getDailySummaryForUser(user)
+}
+
+func (m *mscalendar) getDailySummaryForUser(user *User) (string, error) {
 	tz, err := m.GetTimezone(user)
 	if err != nil {
 		return "", err
 	}
 
-	calendarData, err := m.getTodayCalendar(user, tz)
+	calendarData, err := m.getTodayCalendarEvents(user, time.Now(), tz)
 	if err != nil {
-		m.Poster.DM(user.MattermostUserID, "Failed to run daily summary job. %s", err.Error())
+		m.Poster.DM(user.MattermostUserID, "Failed to get user . %s", err.Error())
 		return "", err
 	}
 
-	if len(calendarData) == 0 {
-		m.Poster.DM(user.MattermostUserID, "You have no upcoming events today.")
-		return "", nil
-	}
-
-	postStr, err := views.RenderCalendarView(calendarData, tz)
-	if err != nil {
-		return "", err
-	}
-
-	return postStr, nil
+	return views.RenderCalendarView(calendarData, tz)
 }
 
-func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
+func shouldPostDailySummary(dsum *store.DailySummarySettings, now time.Time) (bool, error) {
 	if !dsum.Enable {
 		return false, nil
 	}
@@ -210,7 +229,7 @@ func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
 		if err != nil {
 			return false, errors.New("Failed to parse last post time: " + lastPostStr)
 		}
-		since := timeNowFunc().Sub(lastPost)
+		since := now.Sub(lastPost)
 		if since < dailySummaryTimeWindow {
 			return false, nil
 		}
@@ -229,7 +248,7 @@ func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
 		return false, err
 	}
 
-	now := timeNowFunc().In(loc)
+	now = now.In(loc)
 	if now.Weekday() == time.Saturday || now.Weekday() == time.Sunday {
 		return false, nil
 	}
@@ -240,4 +259,11 @@ func shouldPostDailySummary(dsum *store.DailySummarySettings) (bool, error) {
 		return diff < dailySummaryTimeWindow, nil
 	}
 	return -diff < dailySummaryTimeWindow, nil
+}
+
+func getTodayHoursForTimezone(now time.Time, timezone string) (start, end time.Time) {
+	t := remote.NewDateTime(now.UTC(), "UTC").In(timezone).Time()
+	start = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	end = start.Add(24 * time.Hour)
+	return start, end
 }

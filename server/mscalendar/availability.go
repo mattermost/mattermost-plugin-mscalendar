@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -27,6 +28,18 @@ func (m *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
 }
 
 func (m *mscalendar) SyncStatusAll() (string, error) {
+	isAdmin, err := m.IsAuthorizedAdmin(m.actingUser.MattermostUserID)
+	if err != nil {
+		return "", err
+	}
+	if !isAdmin {
+		return "", errors.Errorf("Non-admin user attempting SyncStatusAll %s", m.actingUser.MattermostUserID)
+	}
+	err = m.Filter(withSuperuserClient)
+	if err != nil {
+		return "", err
+	}
+
 	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
@@ -125,7 +138,7 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 }
 
 func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
-	client, err := m.MakeSuperuserClient()
+	err := m.Filter(withClient)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +146,7 @@ func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string
 	start := remote.NewDateTime(time.Now().UTC(), "UTC")
 	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
 
-	return client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
+	return m.client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
 }
 
 func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, av remote.AvailabilityView) string {
