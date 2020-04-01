@@ -5,6 +5,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
@@ -12,28 +13,28 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
-func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscalendar.MSCalendar, *mscalendar.User, string, string) {
+func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscalendar.MSCalendar, *mscalendar.User, string, string, string) {
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 
 	request := model.PostActionIntegrationRequestFromJson(req.Body)
 	if request == nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
-		return nil, nil, "", ""
+		return nil, nil, "", "", ""
 	}
 
 	eventID, ok := request.Context[config.EventIDKey].(string)
 	if !ok {
 		http.Error(w, "invalid request", http.StatusBadRequest)
-		return nil, nil, "", ""
+		return nil, nil, "", "", ""
 	}
 	option, _ := request.Context["selected_option"].(string)
 	mscal := mscalendar.New(api.Env, mattermostUserID)
 
-	return mscal, mscalendar.NewUser(mattermostUserID), eventID, option
+	return mscal, mscalendar.NewUser(mattermostUserID), eventID, option, request.PostId
 }
 
 func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, _ := api.preprocessAction(w, req)
+	mscalendar, user, eventID, _, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
@@ -46,7 +47,7 @@ func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, _ := api.preprocessAction(w, req)
+	mscalendar, user, eventID, _, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
@@ -58,7 +59,7 @@ func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionTentative(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, _ := api.preprocessAction(w, req)
+	mscalendar, user, eventID, _, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
@@ -70,14 +71,47 @@ func (api *api) postActionTentative(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, option := api.preprocessAction(w, req)
+	calendar, user, eventID, option, postID := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := mscalendar.RespondToEvent(user, eventID, option)
-	if err != nil {
-		// h.LogWarn(err.Error())
+	err := calendar.RespondToEvent(user, eventID, option)
+	if err != nil && !strings.HasPrefix(err.Error(), "202") {
 		http.Error(w, "Failed to respond to event: "+err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	var response string
+	switch option {
+	case mscalendar.OptionYes:
+		response = mscalendar.ResponseYes
+	case mscalendar.OptionNo:
+		response = mscalendar.ResponseNo
+	case mscalendar.OptionMaybe:
+		response = mscalendar.ResponseMaybe
+	default:
+		return
+	}
+
+	p, err := api.PluginAPI.GetPost(postID)
+	if err != nil {
+		http.Error(w, "Failed to update the post: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sas := p.Attachments()
+	if len(sas) == 0 {
+		http.Error(w, "Failed to update the post: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sa := sas[0]
+	sa.Actions = mscalendar.GetPostActionSelect(eventID, response, req.URL.String())
+	postResponse := model.PostActionIntegrationResponse{}
+	model.ParseSlackAttachment(p, []*model.SlackAttachment{sa})
+
+	postResponse.Update = p
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(postResponse.ToJson())
 }

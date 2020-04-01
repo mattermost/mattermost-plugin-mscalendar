@@ -40,6 +40,13 @@ const (
 	OptionMaybe        = "Maybe"
 )
 
+const (
+	ResponseYes   = "accepted"
+	ResponseMaybe = "tentativelyAccepted"
+	ResponseNo    = "declined"
+	ResponseNone  = "notResponded"
+)
+
 type NotificationProcessor interface {
 	Configure(Env)
 	Enqueue(notifications ...*remote.Notification)
@@ -125,11 +132,6 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	}
 	if sub.Remote.ClientState != "" && sub.Remote.ClientState != n.ClientState {
 		return errors.New("Unauthorized webhook")
-	}
-
-	// Do not notify if the subscriptor is the organizer
-	if creator.Remote.Mail == n.Event.Organizer.EmailAddress.Address {
-		return nil
 	}
 
 	n.Subscription = sub.Remote
@@ -238,7 +240,9 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 		})
 	}
 
-	processor.addPostActionSelect(sa, n.Event)
+	if n.Event.ResponseRequested && !n.Event.IsOrganizer {
+		sa.Actions = GetPostActionSelect(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
+	}
 	return sa
 }
 
@@ -275,7 +279,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 
-	processor.addPostActionSelect(sa, n.Event)
+	if n.Event.ResponseRequested && !n.Event.IsOrganizer {
+		sa.Actions = GetPostActionSelect(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
+	}
 	return true, sa
 }
 
@@ -318,20 +324,16 @@ func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment
 	}
 }
 
-func (processor *notificationProcessor) addPostActionSelect(sa *model.SlackAttachment, event *remote.Event) {
-	if !event.ResponseRequested {
-		return
-	}
-
+func GetPostActionSelect(eventID, response, url string) []*model.PostAction {
 	context := map[string]interface{}{
-		config.EventIDKey: event.ID,
+		config.EventIDKey: eventID,
 	}
 
 	pa := &model.PostAction{
 		Name: "Response",
 		Type: model.POST_ACTION_TYPE_SELECT,
 		Integration: &model.PostActionIntegration{
-			URL:     processor.actionURL(config.PathRespond),
+			URL:     url,
 			Context: context,
 		},
 	}
@@ -339,18 +341,17 @@ func (processor *notificationProcessor) addPostActionSelect(sa *model.SlackAttac
 	for _, o := range []string{OptionNotResponded, OptionYes, OptionNo, OptionMaybe} {
 		pa.Options = append(pa.Options, &model.PostActionOptions{Text: o, Value: o})
 	}
-	switch event.ResponseStatus.Response {
-	case "notResponded":
+	switch response {
+	case ResponseNone:
 		pa.DefaultOption = OptionNotResponded
-	case "accepted":
+	case ResponseYes:
 		pa.DefaultOption = OptionYes
-	case "declined":
+	case ResponseNo:
 		pa.DefaultOption = OptionNo
-	case "tentativelyAccepted":
+	case ResponseMaybe:
 		pa.DefaultOption = OptionMaybe
 	}
-
-	sa.Actions = []*model.PostAction{pa}
+	return []*model.PostAction{pa}
 }
 
 func eventToFields(e *remote.Event) fields.Fields {

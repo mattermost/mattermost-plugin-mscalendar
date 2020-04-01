@@ -78,6 +78,21 @@ func (mr *MockPluginAPIMockRecorder) GetMattermostUserStatusesByIds(arg0 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserStatusesByIds", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserStatusesByIds), arg0)
 }
 
+// GetPost mocks base method
+func (m *MockPluginAPI) GetPost(arg0 string) (*model.Post, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPost", arg0)
+	ret0, _ := ret[0].(*model.Post)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPost indicates an expected call of GetPost
+func (mr *MockPluginAPIMockRecorder) GetPost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPost", reflect.TypeOf((*MockPluginAPI)(nil).GetPost), arg0)
+}
+
 // IsSysAdmin mocks base method
 func (m *MockPluginAPI) IsSysAdmin(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()

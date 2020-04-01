@@ -88,3 +88,11 @@ func (a *API) SendEphemeralPost(channelID, mattermostUserID, message string) {
 	}
 	_ = a.api.SendEphemeralPost(mattermostUserID, ephemeralPost)
 }
+
+func (a *API) GetPost(postID string) (*model.Post, error) {
+	p, appErr := a.api.GetPost(postID)
+	if appErr != nil {
+		return nil, appErr
+	}
+	return p, nil
+}
