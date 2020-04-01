@@ -22,7 +22,7 @@ type Setting interface {
 type Panel interface {
 	Set(userID, settingID string, value string) error
 	Print(userID string)
-	Update(userID string) error
+	GetUpdatePost(userID string) (*model.Post, error)
 	Clear(userID string) error
 	URL() string
 	GetSettingIDs() []string
@@ -34,9 +34,9 @@ type SettingStore interface {
 }
 
 type PanelStore interface {
-	SetPanelPostIDs(userID string, postIDs map[string]string) error
-	GetPanelPostIDs(userID string) (map[string]string, error)
-	DeletePanelPostIDs(userID string) error
+	SetPanelPostID(userID string, postIDs string) error
+	GetPanelPostID(userID string) (string, error)
+	DeletePanelPostID(userID string) error
 }
 
 type panel struct {
@@ -95,7 +95,7 @@ func (p *panel) Print(userID string) {
 		p.logger.Errorf("could not clean previous setting post")
 	}
 
-	postIDs := make(map[string]string)
+	sas := []*model.SlackAttachment{}
 	for _, key := range p.settingKeys {
 		s := p.settings[key]
 		sa, loopErr := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
@@ -103,55 +103,51 @@ func (p *panel) Print(userID string) {
 			p.logger.Errorf("error creating the slack attachment, err=" + loopErr.Error())
 			continue
 		}
-		postID, loopErr := p.poster.DMWithAttachments(userID, sa)
-		if loopErr != nil {
-			p.logger.Errorf("error creating the message, err=", loopErr.Error())
-			continue
-		}
-		postIDs[s.GetID()] = postID
+		sas = append(sas, sa)
+
 	}
-	err = p.store.SetPanelPostIDs(userID, postIDs)
+	postID, err := p.poster.DMWithAttachments(userID, sas...)
+	if err != nil {
+		p.logger.Errorf("error creating the message, err=", err.Error())
+		return
+	}
+
+	err = p.store.SetPanelPostID(userID, postID)
 	if err != nil {
 		p.logger.Errorf("could not set the post IDs, err=", err.Error())
 	}
 }
 
-func (p *panel) Update(userID string) error {
-	postIDs, err := p.store.GetPanelPostIDs(userID)
-	if err != nil {
-		return err
-	}
+func (p *panel) GetUpdatePost(userID string) (*model.Post, error) {
+	post := &model.Post{}
 
-	for _, s := range p.settings {
-		post, err := s.ToPost(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
+	sas := []*model.SlackAttachment{}
+	for _, key := range p.settingKeys {
+		s := p.settings[key]
+		sa, err := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
 		if err != nil {
 			p.logger.Errorf("error creating the slack attachment for setting %s, err=%s", s.GetID(), err.Error())
 			continue
 		}
-		post.Id = postIDs[s.GetID()]
-		err = p.poster.UpdatePost(post)
-		if err != nil {
-			p.logger.Errorf("error updating the post for setting %s, err=%s", s.GetID(), err.Error())
-		}
+		sas = append(sas, sa)
 	}
 
-	return nil
+	model.ParseSlackAttachment(post, sas)
+	return post, nil
 }
 
 func (p *panel) cleanPreviousSettingsPosts(userID string) error {
-	postIDs, err := p.store.GetPanelPostIDs(userID)
+	postID, err := p.store.GetPanelPostID(userID)
 	if err != nil {
 		return err
 	}
 
-	for _, v := range postIDs {
-		err = p.poster.DeletePost(v)
-		if err != nil {
-			p.logger.Errorf("could not delete setting post")
-		}
+	err = p.poster.DeletePost(postID)
+	if err != nil {
+		p.logger.Errorf("could not delete setting post")
 	}
 
-	err = p.store.DeletePanelPostIDs(userID)
+	err = p.store.DeletePanelPostID(userID)
 	if err != nil {
 		return err
 	}

@@ -59,25 +59,25 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	}
 }
 
-func (s *pluginStore) SetPanelPostIDs(userID string, postIDs map[string]string) error {
-	err := kvstore.StoreJSON(s.settingsPanelKV, userID, postIDs)
+func (s *pluginStore) SetPanelPostID(userID string, postID string) error {
+	err := kvstore.StoreJSON(s.settingsPanelKV, userID, postID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *pluginStore) GetPanelPostIDs(userID string) (map[string]string, error) {
-	var postIDs map[string]string
-	err := kvstore.LoadJSON(s.settingsPanelKV, userID, &postIDs)
+func (s *pluginStore) GetPanelPostID(userID string) (string, error) {
+	var postID string
+	err := kvstore.LoadJSON(s.settingsPanelKV, userID, &postID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return postIDs, nil
+	return postID, nil
 }
 
-func (s *pluginStore) DeletePanelPostIDs(userID string) error {
+func (s *pluginStore) DeletePanelPostID(userID string) error {
 	err := s.settingsPanelKV.Delete(userID)
 	if err != nil {
 		return err

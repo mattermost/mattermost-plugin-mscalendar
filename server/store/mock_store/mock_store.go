@@ -47,18 +47,18 @@ func (mr *MockStoreMockRecorder) DeleteDailySummarySettings(arg0 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDailySummarySettings", reflect.TypeOf((*MockStore)(nil).DeleteDailySummarySettings), arg0)
 }
 
-// DeletePanelPostIDs mocks base method
-func (m *MockStore) DeletePanelPostIDs(arg0 string) error {
+// DeletePanelPostID mocks base method
+func (m *MockStore) DeletePanelPostID(arg0 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeletePanelPostIDs", arg0)
+	ret := m.ctrl.Call(m, "DeletePanelPostID", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeletePanelPostIDs indicates an expected call of DeletePanelPostIDs
-func (mr *MockStoreMockRecorder) DeletePanelPostIDs(arg0 interface{}) *gomock.Call {
+// DeletePanelPostID indicates an expected call of DeletePanelPostID
+func (mr *MockStoreMockRecorder) DeletePanelPostID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePanelPostIDs", reflect.TypeOf((*MockStore)(nil).DeletePanelPostIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePanelPostID", reflect.TypeOf((*MockStore)(nil).DeletePanelPostID), arg0)
 }
 
 // DeleteUser mocks base method
@@ -103,19 +103,19 @@ func (mr *MockStoreMockRecorder) DeleteUserSubscription(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserSubscription", reflect.TypeOf((*MockStore)(nil).DeleteUserSubscription), arg0, arg1)
 }
 
-// GetPanelPostIDs mocks base method
-func (m *MockStore) GetPanelPostIDs(arg0 string) (map[string]string, error) {
+// GetPanelPostID mocks base method
+func (m *MockStore) GetPanelPostID(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPanelPostIDs", arg0)
-	ret0, _ := ret[0].(map[string]string)
+	ret := m.ctrl.Call(m, "GetPanelPostID", arg0)
+	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetPanelPostIDs indicates an expected call of GetPanelPostIDs
-func (mr *MockStoreMockRecorder) GetPanelPostIDs(arg0 interface{}) *gomock.Call {
+// GetPanelPostID indicates an expected call of GetPanelPostID
+func (mr *MockStoreMockRecorder) GetPanelPostID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPanelPostIDs", reflect.TypeOf((*MockStore)(nil).GetPanelPostIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPanelPostID", reflect.TypeOf((*MockStore)(nil).GetPanelPostID), arg0)
 }
 
 // GetSetting mocks base method
@@ -237,18 +237,18 @@ func (mr *MockStoreMockRecorder) SaveDailySummaryIndex(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveDailySummaryIndex", reflect.TypeOf((*MockStore)(nil).SaveDailySummaryIndex), arg0)
 }
 
-// SetPanelPostIDs mocks base method
-func (m *MockStore) SetPanelPostIDs(arg0 string, arg1 map[string]string) error {
+// SetPanelPostID mocks base method
+func (m *MockStore) SetPanelPostID(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPanelPostIDs", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetPanelPostID", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetPanelPostIDs indicates an expected call of SetPanelPostIDs
-func (mr *MockStoreMockRecorder) SetPanelPostIDs(arg0, arg1 interface{}) *gomock.Call {
+// SetPanelPostID indicates an expected call of SetPanelPostID
+func (mr *MockStoreMockRecorder) SetPanelPostID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPanelPostIDs", reflect.TypeOf((*MockStore)(nil).SetPanelPostIDs), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPanelPostID", reflect.TypeOf((*MockStore)(nil).SetPanelPostID), arg0, arg1)
 }
 
 // SetSetting mocks base method

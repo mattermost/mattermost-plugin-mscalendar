@@ -46,8 +46,10 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	sh.panel.Set(mattermostUserID, id, value)
 
 	response := model.PostActionIntegrationResponse{}
+	post, err := sh.panel.GetUpdatePost(mattermostUserID)
+	if err == nil {
+		response.Update = post
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response.ToJson())
-
-	sh.panel.Update(mattermostUserID)
 }
