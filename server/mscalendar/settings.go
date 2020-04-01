@@ -35,10 +35,12 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		store.UpdateStatusSettingID,
 		settingStore,
 	))
-	settings = append(settings, settingspanel.NewEmptySetting(
+	settings = append(settings, settingspanel.NewReadOnlySetting(
 		store.DailySummarySettingID,
 		"Daily Summary",
 		"You can update your daily summary settings by typing `/mscalendar summary time 8:00AM`.",
+		"",
+		settingStore,
 	))
 	return settingspanel.NewSettingsPanel(settings, bot, bot, panelStore, settingsHandler, pluginURL)
 }

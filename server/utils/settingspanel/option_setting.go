@@ -65,18 +65,6 @@ func (s *optionSetting) GetDependency() string {
 	return s.dependsOn
 }
 
-func (s *optionSetting) ToPost(userID, settingHandler string, disabled bool) (*model.Post, error) {
-	sa, err := s.GetSlackAttachments(userID, settingHandler, disabled)
-	if err != nil {
-		return nil, err
-	}
-
-	post := model.Post{}
-	model.ParseSlackAttachment(&post, []*model.SlackAttachment{sa})
-
-	return &post, nil
-}
-
 func (s *optionSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"

@@ -54,9 +54,29 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 		return user.Settings.UpdateStatus, nil
 	case GetConfirmationSettingID:
 		return user.Settings.GetConfirmation, nil
+	case DailySummarySettingID:
+		return s.getDailySummarySettingForUser(userID)
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}
+}
+
+func (s *pluginStore) getDailySummarySettingForUser(userID string) (string, error) {
+	dsumIndex, err := s.LoadDailySummaryIndex()
+	if err != nil {
+		return "", err
+	}
+
+	for _, dsum := range dsumIndex {
+		if dsum.MattermostUserID == userID {
+			if !dsum.Enable {
+				return "Daily summary not set", nil
+			}
+			return fmt.Sprintf("Daily summary set at %s (%s)", dsum.PostTime, dsum.Timezone), nil
+		}
+	}
+
+	return "Daily summary not set", nil
 }
 
 func (s *pluginStore) SetPanelPostID(userID string, postID string) error {

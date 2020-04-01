@@ -41,17 +41,6 @@ func (s *emptySetting) GetTitle() string {
 func (s *emptySetting) GetDescription() string {
 	return s.description
 }
-func (s *emptySetting) ToPost(userID, settingHandler string, disabled bool) (*model.Post, error) {
-	sa, err := s.GetSlackAttachments(userID, settingHandler, disabled)
-	if err != nil {
-		return nil, err
-	}
-
-	post := model.Post{}
-	model.ParseSlackAttachment(&post, []*model.SlackAttachment{sa})
-
-	return &post, nil
-}
 func (s *emptySetting) GetSlackAttachments(userID, settngHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	sa := model.SlackAttachment{

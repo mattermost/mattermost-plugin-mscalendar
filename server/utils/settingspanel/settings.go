@@ -15,7 +15,6 @@ type Setting interface {
 	IsDisabled(foreignValue string) bool
 	GetTitle() string
 	GetDescription() string
-	ToPost(userID, settingHandler string, disabled bool) (*model.Post, error)
 	GetSlackAttachments(userID, settngHandler string, disabled bool) (*model.SlackAttachment, error)
 }
 
