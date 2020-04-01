@@ -17,14 +17,14 @@ const dailySummaryTimeWindow = time.Minute * 2
 var timeNowFunc = time.Now
 
 type DailySummary interface {
-	GetDailySummaryUserSettingsForUser(user *User) (*store.DailySummaryUserSettings, error)
+	GetDailySummarySettingsForUser(user *User) (*store.DailySummaryUserSettings, error)
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummaryUserSettings, error)
 	ProcessAllDailySummary() error
 	GetDailySummary(user *User) (string, error)
 }
 
-func (m *mscalendar) GetDailySummaryUserSettingsForUser(user *User) (*store.DailySummaryUserSettings, error) {
+func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySummaryUserSettings, error) {
 	dsumIndex, err := m.Store.LoadDailySummaryIndex()
 	if err != nil {
 		return nil, err

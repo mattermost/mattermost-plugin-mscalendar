@@ -40,7 +40,7 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 
 		return dailySummaryResponse(dsum), nil
 	case "settings":
-		dsum, err := c.MSCalendar.GetDailySummaryUserSettingsForUser(c.user())
+		dsum, err := c.MSCalendar.GetDailySummarySettingsForUser(c.user())
 		if err != nil {
 			return err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + dailySummaryHelp, nil
 		}
