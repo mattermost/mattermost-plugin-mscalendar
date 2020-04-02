@@ -20,10 +20,10 @@ func NewEmptySetting(id, title, description string) Setting {
 	}
 }
 
-func (s *emptySetting) Set(userID string, value string) error {
+func (s *emptySetting) Set(userID string, value interface{}) error {
 	return nil
 }
-func (s *emptySetting) Get(userID string) (string, error) {
+func (s *emptySetting) Get(userID string) (interface{}, error) {
 	return "", nil
 }
 func (s *emptySetting) GetID() string {
@@ -32,7 +32,7 @@ func (s *emptySetting) GetID() string {
 func (s *emptySetting) GetDependency() string {
 	return ""
 }
-func (s *emptySetting) IsDisabled(foreignValue string) bool {
+func (s *emptySetting) IsDisabled(foreignValue interface{}) bool {
 	return false
 }
 func (s *emptySetting) GetTitle() string {

@@ -31,6 +31,8 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
 		user.Settings.GetConfirmation = storableValue
+	case DailySummarySettingID:
+		s.updateDailySummarySettingForUser(userID, value)
 	default:
 		return fmt.Errorf("setting %s not found", settingID)
 	}
@@ -61,22 +63,51 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	}
 }
 
-func (s *pluginStore) getDailySummarySettingForUser(userID string) (string, error) {
+func (s *pluginStore) getDailySummarySettingForUser(userID string) (*DailySummarySettings, error) {
 	dsumIndex, err := s.LoadDailySummaryIndex()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, dsum := range dsumIndex {
 		if dsum.MattermostUserID == userID {
-			if !dsum.Enable {
-				return "Daily summary not set", nil
-			}
-			return fmt.Sprintf("Daily summary set at %s (%s)", dsum.PostTime, dsum.Timezone), nil
+			return dsum, nil
 		}
 	}
 
-	return "Daily summary not set", nil
+	return nil, nil
+}
+
+func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
+	dsumIndex, err := s.LoadDailySummaryIndex()
+	if err != nil {
+		return err
+	}
+
+	for _, dsum := range dsumIndex {
+		if dsum.MattermostUserID == userID {
+			stringValue := value.(string)
+			if stringValue == "true" {
+				dsum.Enable = true
+				break
+			}
+
+			if stringValue == "false" {
+				dsum.Enable = false
+				break
+			}
+
+			dsum.PostTime = value.(string)
+			break
+		}
+	}
+
+	err = s.SaveDailySummaryIndex(dsumIndex)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *pluginStore) SetPanelPostID(userID string, postID string) error {

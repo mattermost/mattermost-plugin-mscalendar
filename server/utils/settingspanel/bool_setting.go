@@ -25,7 +25,7 @@ func NewBoolSetting(id string, title string, description string, dependsOn strin
 	}
 }
 
-func (s *boolSetting) Set(userID string, value string) error {
+func (s *boolSetting) Set(userID string, value interface{}) error {
 	boolValue := false
 	if value == "true" {
 		boolValue = true
@@ -39,7 +39,7 @@ func (s *boolSetting) Set(userID string, value string) error {
 	return nil
 }
 
-func (s *boolSetting) Get(userID string) (string, error) {
+func (s *boolSetting) Get(userID string) (interface{}, error) {
 	value, err := s.store.GetSetting(userID, s.id)
 	if err != nil {
 		return "", err
@@ -93,14 +93,22 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 		actionTrue := model.PostAction{
 			Name: "Yes",
 			Integration: &model.PostActionIntegration{
-				URL: settingHandler + "?" + s.id + "=true",
+				URL: settingHandler,
+				Context: map[string]interface{}{
+					ContextIDKey:          s.id,
+					ContextButtonValueKey: "true",
+				},
 			},
 		}
 
 		actionFalse := model.PostAction{
 			Name: "No",
 			Integration: &model.PostActionIntegration{
-				URL: settingHandler + "?" + s.id + "=false",
+				URL: settingHandler,
+				Context: map[string]interface{}{
+					ContextIDKey:          s.id,
+					ContextButtonValueKey: "false",
+				},
 			},
 		}
 		actions = []*model.PostAction{&actionTrue, &actionFalse}
@@ -117,6 +125,6 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 	return &sa, nil
 }
 
-func (s *boolSetting) IsDisabled(foreignValue string) bool {
+func (s *boolSetting) IsDisabled(foreignValue interface{}) bool {
 	return foreignValue == "false"
 }

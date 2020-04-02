@@ -8,11 +8,11 @@ import (
 )
 
 type Setting interface {
-	Set(userID string, value string) error
-	Get(userID string) (string, error)
+	Set(userID string, value interface{}) error
+	Get(userID string) (interface{}, error)
 	GetID() string
 	GetDependency() string
-	IsDisabled(foreignValue string) bool
+	IsDisabled(foreignValue interface{}) bool
 	GetTitle() string
 	GetDescription() string
 	GetSlackAttachments(userID, settngHandler string, disabled bool) (*model.SlackAttachment, error)

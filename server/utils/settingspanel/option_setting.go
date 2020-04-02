@@ -27,7 +27,7 @@ func NewOptionSetting(id string, title string, description string, dependsOn str
 	}
 }
 
-func (s *optionSetting) Set(userID string, value string) error {
+func (s *optionSetting) Set(userID string, value interface{}) error {
 	err := s.store.SetSetting(userID, s.id, value)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (s *optionSetting) Set(userID string, value string) error {
 	return nil
 }
 
-func (s *optionSetting) Get(userID string) (string, error) {
+func (s *optionSetting) Get(userID string) (interface{}, error) {
 	value, err := s.store.GetSetting(userID, s.id)
 	if err != nil {
 		return "", err
@@ -81,6 +81,9 @@ func (s *optionSetting) GetSlackAttachments(userID, settingHandler string, disab
 			Name: "Select an option:",
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler + "?" + s.id + "=true",
+				Context: map[string]interface{}{
+					ContextIDKey: s.id,
+				},
 			},
 			Type:    "select",
 			Options: stringsToOptions(s.options),
@@ -98,6 +101,6 @@ func (s *optionSetting) GetSlackAttachments(userID, settingHandler string, disab
 	return &sa, nil
 }
 
-func (s *optionSetting) IsDisabled(foreignValue string) bool {
+func (s *optionSetting) IsDisabled(foreignValue interface{}) bool {
 	return foreignValue == "false"
 }

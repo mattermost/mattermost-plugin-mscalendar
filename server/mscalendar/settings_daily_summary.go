@@ -1,0 +1,245 @@
+package mscalendar
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
+	"github.com/mattermost/mattermost-server/v5/model"
+)
+
+type dailySummarySetting struct {
+	title       string
+	description string
+	id          string
+	dependsOn   string
+	optionsH    []string
+	optionsM    []string
+	optionsAPM  []string
+	store       settingspanel.SettingStore
+}
+
+func NewDailySummarySetting(inStore settingspanel.SettingStore) settingspanel.Setting {
+	os := &dailySummarySetting{
+		title:       "Daily Summary",
+		description: "When do you want to receive the daily summary",
+		id:          store.DailySummarySettingID,
+		dependsOn:   "",
+		store:       inStore,
+	}
+	os.optionsH = []string{}
+	for i := 0; i < 12; i++ {
+		os.optionsH = append(os.optionsH, fmt.Sprintf("%d", i))
+	}
+
+	os.optionsM = []string{}
+	for i := 0; i < 4; i++ {
+		os.optionsM = append(os.optionsM, fmt.Sprintf("%02d", i*15))
+	}
+
+	os.optionsAPM = []string{"AM", "PM"}
+
+	return os
+}
+
+func (s *dailySummarySetting) Set(userID string, value interface{}) error {
+	err := s.store.SetSetting(userID, s.id, value)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *dailySummarySetting) Get(userID string) (interface{}, error) {
+	value, err := s.store.GetSetting(userID, s.id)
+	if err != nil {
+		return "", err
+	}
+
+	dsum, ok := value.(*store.DailySummarySettings)
+	if !ok {
+		return "", errors.New("current value is not a Daily Summary Setting")
+	}
+
+	return dsum, nil
+}
+
+func (s *dailySummarySetting) GetID() string {
+	return s.id
+}
+
+func (s *dailySummarySetting) GetTitle() string {
+	return s.title
+}
+
+func (s *dailySummarySetting) GetDescription() string {
+	return s.description
+}
+
+func (s *dailySummarySetting) GetDependency() string {
+	return s.dependsOn
+}
+
+func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	title := fmt.Sprintf("Setting: %s", s.title)
+	currentValueMessage := "Disabled"
+
+	actions := []*model.PostAction{}
+	if !disabled {
+		dsumRaw, err := s.Get(userID)
+		if err != nil {
+			return nil, err
+		}
+
+		currentH := "0"
+		currentM := "00"
+		currentAPM := "AM"
+		fullTime := "0:00AM"
+		currentEnable := false
+		currentTextValue := "Not set."
+
+		if dsumRaw != nil {
+			dsum := dsumRaw.(*store.DailySummarySettings)
+			fullTime = dsum.PostTime
+			currentEnable = dsum.Enable
+			splitted := strings.Split(fullTime, ":")
+			currentH = splitted[0]
+			currentM = splitted[1][:2]
+			currentAPM = splitted[1][2:]
+			enableText := "Disabled"
+			if currentEnable {
+				enableText = "Enabled"
+			}
+			currentTextValue = fmt.Sprintf("%s (%s) (%s)", dsum.PostTime, dsum.Timezone, enableText)
+		}
+
+		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
+
+		actionOptionsH := model.PostAction{
+			Name: "H:",
+			Integration: &model.PostActionIntegration{
+				URL: settingHandler,
+				Context: map[string]interface{}{
+					settingspanel.ContextIDKey: s.id,
+				},
+			},
+			Type:          "select",
+			Options:       s.makeHOptions(currentM, currentAPM),
+			DefaultOption: fullTime,
+		}
+
+		actionOptionsM := model.PostAction{
+			Name: "M:",
+			Integration: &model.PostActionIntegration{
+				URL: settingHandler,
+				Context: map[string]interface{}{
+					settingspanel.ContextIDKey: s.id,
+				},
+			},
+			Type:          "select",
+			Options:       s.makeMOptions(currentH, currentAPM),
+			DefaultOption: fullTime,
+		}
+
+		actionOptionsAPM := model.PostAction{
+			Name: "AM/PM:",
+			Integration: &model.PostActionIntegration{
+				URL: settingHandler,
+				Context: map[string]interface{}{
+					settingspanel.ContextIDKey: s.id,
+				},
+			},
+			Type:          "select",
+			Options:       s.makeAPMOptions(currentH, currentM),
+			DefaultOption: fullTime,
+		}
+
+		actions = []*model.PostAction{&actionOptionsH, &actionOptionsM, &actionOptionsAPM}
+
+		if currentTextValue != "Not set" {
+			buttonText := "Enable"
+			enable := "true"
+			if currentEnable {
+				buttonText = "Disable"
+				enable = "false"
+			}
+			actionToggle := model.PostAction{
+				Name: buttonText,
+				Integration: &model.PostActionIntegration{
+					URL: settingHandler,
+					Context: map[string]interface{}{
+						settingspanel.ContextIDKey:          s.id,
+						settingspanel.ContextButtonValueKey: enable,
+					},
+				},
+			}
+
+			actions = append(actions, &actionToggle)
+		}
+	}
+
+	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
+	sa := model.SlackAttachment{
+		Title:   title,
+		Text:    text,
+		Actions: actions,
+	}
+	return &sa, nil
+}
+
+func (s *dailySummarySetting) IsDisabled(foreignValue interface{}) bool {
+	return foreignValue == "false"
+}
+
+func (s *dailySummarySetting) makeHOptions(minute, apm string) []*model.PostActionOptions {
+	out := []*model.PostActionOptions{}
+	for i, o := range s.optionsH {
+		if i == 0 && apm == "PM" {
+			o = "12"
+		}
+		out = append(out, &model.PostActionOptions{
+			Text:  o,
+			Value: fmt.Sprintf("%s:%s%s", o, minute, apm),
+		})
+	}
+	return out
+}
+
+func (s *dailySummarySetting) makeMOptions(hour, apm string) []*model.PostActionOptions {
+	out := []*model.PostActionOptions{}
+	for _, o := range s.optionsM {
+		out = append(out, &model.PostActionOptions{
+			Text:  o,
+			Value: fmt.Sprintf("%s:%s%s", hour, o, apm),
+		})
+	}
+	return out
+}
+
+func (s *dailySummarySetting) makeAPMOptions(hour, minute string) []*model.PostActionOptions {
+	out := []*model.PostActionOptions{}
+
+	storeHour := hour
+	if hour == "12" {
+		storeHour = "0"
+	}
+	o := s.optionsAPM[0]
+	out = append(out, &model.PostActionOptions{
+		Text:  o,
+		Value: fmt.Sprintf("%s:%s%s", storeHour, minute, o),
+	})
+
+	storeHour = hour
+	if hour == "0" {
+		storeHour = "12"
+	}
+	o = s.optionsAPM[1]
+	out = append(out, &model.PostActionOptions{
+		Text:  o,
+		Value: fmt.Sprintf("%s:%s%s", storeHour, minute, o),
+	})
+	return out
+}

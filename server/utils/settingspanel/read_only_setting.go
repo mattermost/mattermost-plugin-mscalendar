@@ -25,11 +25,11 @@ func NewReadOnlySetting(id string, title string, description string, dependsOn s
 	}
 }
 
-func (s *readOnlySetting) Set(userID string, value string) error {
+func (s *readOnlySetting) Set(userID string, value interface{}) error {
 	return nil
 }
 
-func (s *readOnlySetting) Get(userID string) (string, error) {
+func (s *readOnlySetting) Get(userID string) (interface{}, error) {
 	value, err := s.store.GetSetting(userID, s.id)
 	if err != nil {
 		return "", err
@@ -79,6 +79,6 @@ func (s *readOnlySetting) GetSlackAttachments(userID, settingHandler string, dis
 	return &sa, nil
 }
 
-func (s *readOnlySetting) IsDisabled(foreignValue string) bool {
+func (s *readOnlySetting) IsDisabled(foreignValue interface{}) bool {
 	return foreignValue == "false"
 }
