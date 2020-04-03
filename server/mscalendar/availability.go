@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 const (
@@ -138,10 +140,29 @@ func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string
 
 func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, av remote.AvailabilityView) string {
 	currentAvailability := av[0]
+	u := NewUser(mattermostUserID)
+
+	if !m.ShouldChangeStatus(u) {
+		return "Status not changed by user configuration."
+	}
+
+	if !m.HasAvailabilityChanged(u, currentAvailability) {
+		return "Status not changed because there is no update since last status change."
+	}
+
+	u.LastStatusUpdateAvailability = currentAvailability
+	m.Store.StoreUser(u.User)
+
+	url := fmt.Sprintf("%s%s%s", m.Config.PluginURLPath, config.PathPostAction, config.PathConfirmStatusChange)
 
 	switch currentAvailability {
 	case remote.AvailabilityViewFree:
 		if currentStatus == "dnd" {
+			if m.ShouldNotifyStatusChange(u) {
+				userQuestion := fmt.Sprintf("Shall we change your status from %s to online?", currentStatus)
+				m.Poster.DMWithAttachments(mattermostUserID, statusChangeAttachments(userQuestion, "online", url))
+				return fmt.Sprintf("User asked for status change from %s to online", currentStatus)
+			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "online")
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus)
 		} else {
@@ -149,6 +170,11 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 		}
 	case remote.AvailabilityViewTentative, remote.AvailabilityViewBusy:
 		if currentStatus != "dnd" {
+			if m.ShouldNotifyStatusChange(u) {
+				userQuestion := fmt.Sprintf("Shall we change your status from %s to dnd?", currentStatus)
+				m.Poster.DMWithAttachments(mattermostUserID, statusChangeAttachments(userQuestion, "dnd", url))
+				return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
+			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
 		} else {
@@ -156,6 +182,11 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 		}
 	case remote.AvailabilityViewOutOfOffice:
 		if currentStatus != "offline" {
+			if m.ShouldNotifyStatusChange(u) {
+				userQuestion := fmt.Sprintf("Shall we change your status from %s to offline?", currentStatus)
+				m.Poster.DMWithAttachments(mattermostUserID, statusChangeAttachments(userQuestion, "offline", url))
+				return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
+			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
 		} else {
@@ -166,4 +197,35 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 	}
 
 	return fmt.Sprintf("Availability view doesn't match %d", currentAvailability)
+}
+
+func statusChangeAttachments(message, to, url string) *model.SlackAttachment {
+	actionYes := &model.PostAction{
+		Name: "Yes",
+		Integration: &model.PostActionIntegration{
+			URL: url,
+			Context: map[string]interface{}{
+				"value":     true,
+				"change_to": to,
+			},
+		},
+	}
+
+	actionNo := &model.PostAction{
+		Name: "No",
+		Integration: &model.PostActionIntegration{
+			URL: url,
+			Context: map[string]interface{}{
+				"value": false,
+			},
+		},
+	}
+
+	sa := &model.SlackAttachment{
+		Title:   "Status change",
+		Text:    message,
+		Actions: []*model.PostAction{actionYes, actionNo},
+	}
+
+	return sa
 }

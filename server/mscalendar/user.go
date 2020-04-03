@@ -111,6 +111,32 @@ func (user *User) Markdown() string {
 	}
 }
 
+func (m *mscalendar) ShouldNotifyStatusChange(u *User) bool {
+	err := m.ExpandRemoteUser(u)
+	if err != nil {
+		return false
+	}
+	// TODO: finish when related PRs are merged
+	return true
+}
+
+func (m *mscalendar) ShouldChangeStatus(u *User) bool {
+	err := m.ExpandRemoteUser(u)
+	if err != nil {
+		return false
+	}
+	// TODO: finish when related PRs are merged
+	return true
+}
+
+func (m *mscalendar) HasAvailabilityChanged(u *User, currentAvailability byte) bool {
+	err := m.ExpandRemoteUser(u)
+	if err != nil {
+		return false
+	}
+	return u.LastStatusUpdateAvailability != currentAvailability
+}
+
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	err := m.Filter(
 		withClient,

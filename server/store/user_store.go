@@ -28,11 +28,12 @@ type UserShort struct {
 }
 
 type User struct {
-	PluginVersion    string
-	Remote           *remote.User
-	MattermostUserID string
-	OAuth2Token      *oauth2.Token
-	Settings         Settings `json:"mattermostSettings,omitempty"`
+	PluginVersion                string
+	Remote                       *remote.User
+	MattermostUserID             string
+	OAuth2Token                  *oauth2.Token
+	Settings                     Settings `json:"mattermostSettings,omitempty"`
+	LastStatusUpdateAvailability byte
 }
 
 type Settings struct {

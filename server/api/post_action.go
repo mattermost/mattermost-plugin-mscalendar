@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -80,4 +81,50 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Failed to respond to event: "+err.Error(), http.StatusBadRequest)
 		return
 	}
+}
+
+func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.Request) {
+	mattermostUserID := req.Header.Get("Mattermost-User-ID")
+	if mattermostUserID == "" {
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	response := model.PostActionIntegrationResponse{}
+	post := &model.Post{}
+
+	request := model.PostActionIntegrationRequestFromJson(req.Body)
+	if request == nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	value, ok := request.Context["value"]
+	if !ok {
+		http.Error(w, "No value", http.StatusBadRequest)
+		return
+	}
+
+	returnText := "The status has not been changed."
+	if value.(bool) {
+		changeTo, ok := request.Context["change_to"]
+		if !ok {
+			http.Error(w, "No state to change", http.StatusBadRequest)
+			return
+		}
+		stringChangeTo := changeTo.(string)
+		api.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, stringChangeTo)
+		returnText = fmt.Sprintf("The status has been changed to %s.", stringChangeTo)
+	}
+
+	sa := &model.SlackAttachment{
+		Title: "Status Change",
+		Text:  returnText,
+	}
+
+	model.ParseSlackAttachment(post, []*model.SlackAttachment{sa})
+
+	response.Update = post
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response.ToJson())
 }
