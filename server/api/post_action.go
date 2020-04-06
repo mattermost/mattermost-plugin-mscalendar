@@ -99,14 +99,14 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 		return
 	}
 
-	value, ok := request.Context["value"]
+	value, ok := request.Context["value"].(bool)
 	if !ok {
-		http.Error(w, "No value", http.StatusBadRequest)
+		http.Error(w, `No recognizable value for property "value"`, http.StatusBadRequest)
 		return
 	}
 
 	returnText := "The status has not been changed."
-	if value.(bool) {
+	if value {
 		changeTo, ok := request.Context["change_to"]
 		if !ok {
 			http.Error(w, "No state to change", http.StatusBadRequest)

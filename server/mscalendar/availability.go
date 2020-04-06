@@ -173,7 +173,7 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 			if m.ShouldNotifyStatusChange(u) {
 				userQuestion := fmt.Sprintf("Shall we change your status from %s to dnd?", currentStatus)
 				m.Poster.DMWithAttachments(mattermostUserID, statusChangeAttachments(userQuestion, "dnd", url))
-				return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
+				return fmt.Sprintf("User asked for status change from %s to dnd.", currentStatus)
 			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
@@ -185,7 +185,7 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 			if m.ShouldNotifyStatusChange(u) {
 				userQuestion := fmt.Sprintf("Shall we change your status from %s to offline?", currentStatus)
 				m.Poster.DMWithAttachments(mattermostUserID, statusChangeAttachments(userQuestion, "offline", url))
-				return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
+				return fmt.Sprintf("User asked for status change fom %s to offline", currentStatus)
 			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
