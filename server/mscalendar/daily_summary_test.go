@@ -65,7 +65,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				s := deps.Store.(*mock_store.MockStore)
 				s.EXPECT().LoadDailySummaryIndex().Return(store.DailySummaryIndex{
-					&store.DailySummarySettings{
+					&store.DailySummaryUserSettings{
 						MattermostUserID: "user1_mm_id",
 						RemoteID:         "user1_remote_id",
 						Enable:           true,
@@ -105,7 +105,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				s := deps.Store.(*mock_store.MockStore)
 				s.EXPECT().LoadDailySummaryIndex().Return(store.DailySummaryIndex{
-					&store.DailySummarySettings{
+					&store.DailySummaryUserSettings{
 						MattermostUserID: "user1_mm_id",
 						RemoteID:         "user1_remote_id",
 						Enable:           true,
@@ -113,7 +113,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 						Timezone:         "Eastern Standard Time",
 						LastPostTime:     "",
 					},
-					&store.DailySummarySettings{
+					&store.DailySummaryUserSettings{
 						MattermostUserID: "user2_mm_id",
 						RemoteID:         "user2_remote_id",
 						Enable:           true,
@@ -121,7 +121,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 						Timezone:         "Pacific Standard Time",
 						LastPostTime:     "",
 					},
-					&store.DailySummarySettings{
+					&store.DailySummaryUserSettings{
 						MattermostUserID: "user3_mm_id",
 						RemoteID:         "user3_remote_id",
 						Enable:           true,
@@ -173,6 +173,8 @@ func TestProcessAllDailySummary(t *testing.T) {
 Wednesday February 12
 * 9:00AM - 11:00AM `+"`The subject`\n").Return(nil).Times(1),
 				)
+
+				s.EXPECT().ModifyDailySummaryIndex(gomock.Any()).Return(nil)
 
 				mockLogger := deps.Logger.(*mock_bot.MockLogger)
 				mockLogger.EXPECT().Infof("Processed daily summary for %d users", 2)
@@ -309,7 +311,7 @@ func TestShouldPostDailySummary(t *testing.T) {
 			loc, err := time.LoadLocation("EST")
 			require.Nil(t, err)
 
-			dsum := &store.DailySummarySettings{
+			dsum := &store.DailySummaryUserSettings{
 				Enable:   tc.enabled,
 				PostTime: tc.postTime,
 				Timezone: tc.timeZone,

@@ -92,12 +92,7 @@ func TestSyncStatusAll(t *testing.T) {
 					RemoteID:         "user_remote_id",
 					Email:            "user_email@example.com",
 				},
-				&store.UserShort{
-					MattermostUserID: "bot_mm_id",
-					RemoteID:         "bot_remote_id",
-					Email:            "bot_email@example.com",
-				},
-			}, nil).Times(2)
+			}, nil).Times(1)
 
 			token := &oauth2.Token{
 				AccessToken: "bot_oauth_token",

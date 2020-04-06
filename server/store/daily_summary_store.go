@@ -4,16 +4,20 @@
 package store
 
 import (
+	"encoding/json"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
 type DailySummaryStore interface {
 	LoadDailySummaryIndex() (DailySummaryIndex, error)
-	SaveDailySummaryIndex(dsumIndex DailySummaryIndex) error
-	DeleteDailySummarySettings(mattermostUserID string) error
+	LoadDailySummaryUserSettings(mattermostUserID string) (*DailySummaryUserSettings, error)
+	StoreDailySummaryUserSettings(dsum *DailySummaryUserSettings) error
+	DeleteDailySummaryUserSettings(mattermostUserID string) error
+	ModifyDailySummaryIndex(modify func(dsumIndex DailySummaryIndex) (DailySummaryIndex, error)) error
 }
 
-type DailySummarySettings struct {
+type DailySummaryUserSettings struct {
 	MattermostUserID string `json:"mm_id"`
 	RemoteID         string `json:"remote_id"`
 	Enable           bool   `json:"enable"`
@@ -22,7 +26,7 @@ type DailySummarySettings struct {
 	LastPostTime     string `json:"last_post_time"`
 }
 
-type DailySummaryIndex []*DailySummarySettings
+type DailySummaryIndex []*DailySummaryUserSettings
 
 func (s *pluginStore) LoadDailySummaryIndex() (DailySummaryIndex, error) {
 	dsumIndex := DailySummaryIndex{}
@@ -33,31 +37,76 @@ func (s *pluginStore) LoadDailySummaryIndex() (DailySummaryIndex, error) {
 	return dsumIndex, nil
 }
 
-func (s *pluginStore) SaveDailySummaryIndex(dsumIndex DailySummaryIndex) error {
-	err := kvstore.StoreJSON(s.dailySummaryKV, "", &dsumIndex)
+func (s *pluginStore) LoadDailySummaryUserSettings(mattermostUserID string) (*DailySummaryUserSettings, error) {
+	index, err := s.LoadDailySummaryIndex()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
-}
-
-func (s *pluginStore) DeleteDailySummarySettings(mattermostUserID string) error {
-	users, err := s.LoadDailySummaryIndex()
-	if err != nil {
-		return err
+	if index == nil {
+		return nil, nil
 	}
 
-	result := DailySummaryIndex{}
-	for _, u := range users {
-		if u.MattermostUserID != mattermostUserID {
-			result = append(result, u)
+	for _, dsum := range index {
+		if dsum.MattermostUserID == mattermostUserID {
+			return dsum, nil
 		}
 	}
-	return s.SaveDailySummaryIndex(result)
+	return nil, nil
 }
 
-func (index DailySummaryIndex) ByRemoteID() map[string]*DailySummarySettings {
-	result := map[string]*DailySummarySettings{}
+func (s *pluginStore) StoreDailySummaryUserSettings(toStore *DailySummaryUserSettings) error {
+	return s.ModifyDailySummaryIndex(func(dsumIndex DailySummaryIndex) (DailySummaryIndex, error) {
+		for i, dsum := range dsumIndex {
+			if dsum.MattermostUserID == toStore.MattermostUserID {
+				result := append(dsumIndex[:i], toStore)
+				return append(result, dsumIndex[i+1:]...), nil
+			}
+		}
+
+		return append(dsumIndex, toStore), nil
+	})
+}
+
+func (s *pluginStore) DeleteDailySummaryUserSettings(mattermostUserID string) error {
+	return s.ModifyDailySummaryIndex(func(dsumIndex DailySummaryIndex) (DailySummaryIndex, error) {
+		for i, u := range dsumIndex {
+			if u.MattermostUserID == mattermostUserID {
+				return append(dsumIndex[:i], dsumIndex[i+1:]...), nil
+			}
+		}
+		return dsumIndex, nil
+	})
+}
+
+func (s *pluginStore) ModifyDailySummaryIndex(modify func(dsumIndex DailySummaryIndex) (DailySummaryIndex, error)) error {
+	return kvstore.AtomicModify(s.dailySummaryKV, "", func(initialBytes []byte, storeErr error) ([]byte, error) {
+		if storeErr != nil && storeErr != ErrNotFound {
+			return nil, storeErr
+		}
+
+		storedSettings := DailySummaryIndex{}
+		if len(initialBytes) > 0 {
+			err := json.Unmarshal(initialBytes, &storedSettings)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		updated, err := modify(storedSettings)
+		if err != nil {
+			return nil, err
+		}
+		b, err := json.Marshal(updated)
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+	})
+}
+
+func (index DailySummaryIndex) ByRemoteID() map[string]*DailySummaryUserSettings {
+	result := map[string]*DailySummaryUserSettings{}
 	for _, u := range index {
 		result[u.RemoteID] = u
 	}
