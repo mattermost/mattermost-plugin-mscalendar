@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
@@ -60,12 +59,6 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 			return err.Error(), err
 		}
 		return dailySummaryResponse(dsum), nil
-	case "all":
-		err := c.MSCalendar.ProcessAllDailySummary(time.Now())
-		if err != nil {
-			return "", err
-		}
-		return "Sent daily summaries to all relevant users", nil
 	default:
 		return "Invalid command. Please try again\n\n" + dailySummaryHelp, nil
 	}

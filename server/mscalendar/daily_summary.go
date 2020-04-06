@@ -200,10 +200,6 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 }
 
 func (m *mscalendar) GetDailySummaryForUser(user *User) (string, error) {
-	return m.getDailySummaryForUser(user)
-}
-
-func (m *mscalendar) getDailySummaryForUser(user *User) (string, error) {
 	tz, err := m.GetTimezone(user)
 	if err != nil {
 		return "", err
@@ -211,8 +207,7 @@ func (m *mscalendar) getDailySummaryForUser(user *User) (string, error) {
 
 	calendarData, err := m.getTodayCalendarEvents(user, time.Now(), tz)
 	if err != nil {
-		m.Poster.DM(user.MattermostUserID, "Failed to get user . %s", err.Error())
-		return "", err
+		return "Failed to get calendar events", err
 	}
 
 	return views.RenderCalendarView(calendarData, tz)
