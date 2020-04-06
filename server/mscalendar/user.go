@@ -111,7 +111,32 @@ func (user *User) Markdown() string {
 }
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
-	err := m.Store.DeleteUser(mattermostUserID)
+	err := m.Filter(
+		withClient,
+	)
+	if err != nil {
+		return err
+	}
+
+	storedUser, err := m.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	eventSubscriptionID := storedUser.Settings.EventSubscriptionID
+	if eventSubscriptionID != "" {
+		err = m.Store.DeleteUserSubscription(storedUser, eventSubscriptionID)
+		if err != nil && err != store.ErrNotFound {
+			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
+		}
+
+		err = m.client.DeleteSubscription(eventSubscriptionID)
+		if err != nil {
+			m.Logger.Errorf("failed to delete remote subscription %s. %s", eventSubscriptionID, err.Error())
+		}
+	}
+
+	err = m.Store.DeleteUser(mattermostUserID)
 	if err != nil {
 		return err
 	}
