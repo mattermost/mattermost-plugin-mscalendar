@@ -142,19 +142,19 @@ func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, items []remote
 			if timezone == "" {
 				timezone, err = m.GetTimezoneByID(mattermostUserID)
 				if err != nil {
-					m.Logger.Errorf("error notifying upcoming event, err=%s", err.Error())
+					m.Logger.Errorf("notifyUpcomingEvent error getting timezone, err=%s", err.Error())
 					return
 				}
 			}
 
 			message, err := views.RenderScheduleItem(scheduleItem, timezone)
 			if err != nil {
-				m.Logger.Errorf("error notifying upcoming event, err=", err.Error())
+				m.Logger.Errorf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
 				continue
 			}
 			err = m.Poster.DM(mattermostUserID, message)
 			if err != nil {
-				m.Logger.Errorf("error notifying upcoming event, err=", err.Error())
+				m.Logger.Errorf("notifyUpcomingEvent error creating DM, err=", err.Error())
 				continue
 			}
 		}
