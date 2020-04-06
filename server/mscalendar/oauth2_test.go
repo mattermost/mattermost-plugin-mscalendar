@@ -65,8 +65,9 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	gomock.InOrder(
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
-		ss.EXPECT().LoadMattermostUserId(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
+		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
+		ss.EXPECT().StoreUserInIndex(gomock.Any()).Return(nil).Times(1),
 		poster.EXPECT().DM(
 			gomock.Eq(fakeID),
 			gomock.Eq(WelcomeMessage),
@@ -112,7 +113,7 @@ func TestCompleteOAuth2ForBotHappy(t *testing.T) {
 
 	gomock.InOrder(
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
-		ss.EXPECT().LoadMattermostUserId(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
+		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		poster.EXPECT().DM(
 			gomock.Eq(fakeID),
@@ -317,7 +318,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				papi.EXPECT().GetMattermostUser("fake@mattermost.com").Return(&model.User{Username: "sample-username"}, nil)
 
 				ss := d.Store.(*mock_store.MockStore)
-				ss.EXPECT().LoadMattermostUserId("user-remote-id").Return("fake@mattermost.com", nil)
+				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("fake@mattermost.com", nil)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 
 				poster := d.Poster.(*mock_bot.MockPoster)
@@ -352,7 +353,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
-				ss.EXPECT().LoadMattermostUserId("user-remote-id").Return("", errors.New("Connected user not found")).Times(1)
+				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("", errors.New("Connected user not found")).Times(1)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "forced kvstore error",
