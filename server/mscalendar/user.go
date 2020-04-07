@@ -20,7 +20,6 @@ type Users interface {
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetUserSettings(user *User) (*store.Settings, error)
-	StoreUserSettings(user *User, settings *store.Settings) error
 }
 
 type User struct {
@@ -113,12 +112,46 @@ func (user *User) Markdown() string {
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	m.AfterDisconnect(mattermostUserID)
-	err := m.Store.DeleteUser(mattermostUserID)
+	err := m.Filter(
+		withClient,
+	)
 	if err != nil {
 		return err
 	}
 
-	err = m.Store.DeleteDailySummarySettings(mattermostUserID)
+	storedUser, err := m.Store.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	eventSubscriptionID := storedUser.Settings.EventSubscriptionID
+	if eventSubscriptionID != "" {
+		err = m.Store.DeleteUserSubscription(storedUser, eventSubscriptionID)
+		if err != nil && err != store.ErrNotFound {
+			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
+		}
+
+		err = m.client.DeleteSubscription(eventSubscriptionID)
+		if err != nil {
+			m.Logger.Errorf("failed to delete remote subscription %s. %s", eventSubscriptionID, err.Error())
+		}
+	}
+
+	err = m.Store.DeleteUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	if mattermostUserID == m.Config.BotUserID {
+		return nil
+	}
+
+	err = m.Store.DeleteUserFromIndex(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	err = m.Store.DeleteDailySummaryUserSettings(mattermostUserID)
 	if err != nil {
 		return err
 	}
@@ -148,21 +181,4 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 	}
 
 	return &user.Settings, nil
-}
-
-func (m *mscalendar) StoreUserSettings(user *User, settings *store.Settings) error {
-	err := m.Filter(
-		withUserExpanded(user),
-	)
-	if err != nil {
-		return err
-	}
-
-	user.Settings = *settings
-	err = m.Store.StoreUser(user.User)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

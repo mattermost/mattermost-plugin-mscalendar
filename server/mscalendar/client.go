@@ -23,15 +23,8 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 	return m.Remote.MakeClient(context.Background(), m.actingUser.OAuth2Token), nil
 }
 
-func (m *mscalendar) MakeSuperuserClient() (remote.Client, error) {
-	err := m.Filter(
-		withClient,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := m.client.GetSuperuserToken()
+func (m *mscalendar) MakeSuperuserClient(client remote.Client) (remote.Client, error) {
+	token, err := client.GetSuperuserToken()
 	if err != nil {
 		return nil, err
 	}

@@ -92,7 +92,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	uid, err := app.Store.LoadMattermostUserId(me.ID)
+	uid, err := app.Store.LoadMattermostUserID(me.ID)
 	if err == nil {
 		user, userErr := app.PluginAPI.GetMattermostUser(uid)
 		if userErr == nil {
@@ -119,8 +119,14 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 
 	if mattermostUserID == app.Config.BotUserID {
 		app.Poster.DM(authedUserID, BotWelcomeMessage, me.Mail)
+		return nil
 	} else {
 		app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
+	}
+
+	err = app.Store.StoreUserInIndex(u)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -6,6 +6,8 @@ package kvstore
 import (
 	"crypto/md5"
 	"fmt"
+
+	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type hashedKeyStore struct {
@@ -32,6 +34,10 @@ func (s hashedKeyStore) Store(key string, data []byte) error {
 
 func (s hashedKeyStore) StoreTTL(key string, data []byte, ttlSeconds int64) error {
 	return s.store.StoreTTL(hashKey(s.prefix, key), data, ttlSeconds)
+}
+
+func (s hashedKeyStore) StoreWithOptions(key string, value []byte, opts model.PluginKVSetOptions) (bool, error) {
+	return s.store.StoreWithOptions(hashKey(s.prefix, key), value, opts)
 }
 
 func (s hashedKeyStore) Delete(key string) error {
