@@ -72,7 +72,7 @@ func RenderScheduleItem(s remote.ScheduleItem, timezone string) (string, error) 
 
 	message += fmt.Sprintf("\n%s-%s (%s)", start.Format(time.Kitchen), end.Format(time.Kitchen), timezone)
 	if s.Subject == "" {
-		message += fmt.Sprintf("\nSubject: Not available. The event may not have a subject or there might be a problem with the permissions. If you believe there is a permissions problem, check your privacy settings so we can show you the subject.")
+		message += fmt.Sprintf("\nNo subject.")
 	} else {
 		message += fmt.Sprintf("\nSubject: %s", s.Subject)
 	}
