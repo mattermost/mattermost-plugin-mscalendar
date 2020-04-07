@@ -4,11 +4,13 @@
 package flow
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
@@ -30,19 +32,19 @@ func Init(h *httputils.Handler, flow Flow, store FlowStore) {
 func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		utils.SlackAttachmentError(w, "Error: Not authorized.")
 		return
 	}
 
 	stepNumber, err := strconv.Atoi(r.URL.Query().Get("step"))
 	if err != nil {
-		http.Error(w, "Step is not an int, err="+err.Error(), http.StatusBadRequest)
+		utils.SlackAttachmentError(w, fmt.Sprintf("Error: Step provided is not an int, err=%s", err.Error()))
 		return
 	}
 
 	step := fh.flow.Step(stepNumber)
 	if step == nil {
-		http.Error(w, "Not valid step", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, fmt.Sprintf("Error: There is no step %d.", step))
 		return
 	}
 
@@ -50,7 +52,7 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	valueString := r.URL.Query().Get(property)
 	if valueString == "" {
-		http.Error(w, "Correct property not set", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Correct property not set")
 		return
 	}
 
@@ -58,7 +60,7 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	err = fh.store.SetProperty(mattermostUserID, property, value)
 	if err != nil {
-		http.Error(w, "There has been a problem setting the property, err="+err.Error(), http.StatusInternalServerError)
+		utils.SlackAttachmentError(w, "There has been a problem setting the property, err="+err.Error())
 		return
 	}
 
