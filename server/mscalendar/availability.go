@@ -17,7 +17,7 @@ const (
 )
 
 type Availability interface {
-	GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error)
+	GetAvailabilities(users store.UserIndex) ([]*remote.ScheduleInformation, error)
 	SyncStatus(mattermostUserID string) (string, error)
 	SyncStatusAll() (string, error)
 }
@@ -32,6 +32,11 @@ func (m *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
 }
 
 func (m *mscalendar) SyncStatusAll() (string, error) {
+	err := m.Filter(withSuperuserClient)
+	if err != nil {
+		return "", err
+	}
+
 	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
@@ -44,24 +49,11 @@ func (m *mscalendar) SyncStatusAll() (string, error) {
 }
 
 func (m *mscalendar) syncStatusUsers(users store.UserIndex) (string, error) {
-	err := m.Filter(
-		withClient,
-		withUserExpanded(m.actingUser),
-	)
-	if err != nil {
-		return "", err
-	}
-
 	if len(users) == 0 {
 		return "No connected users found", nil
 	}
 
-	scheduleIDs := []string{}
-	for _, u := range users {
-		scheduleIDs = append(scheduleIDs, u.Email)
-	}
-
-	schedules, err := m.GetAvailabilities(m.actingUser.Remote.ID, scheduleIDs)
+	schedules, err := m.GetAvailabilities(users)
 	if err != nil {
 		return "", err
 	}
@@ -106,16 +98,24 @@ func (m *mscalendar) setUserStatuses(users store.UserIndex, schedules []*remote.
 	return utils.JSONBlock(schedules), nil
 }
 
-func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string) ([]*remote.ScheduleInformation, error) {
+func (m *mscalendar) GetAvailabilities(users store.UserIndex) ([]*remote.ScheduleInformation, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, err
 	}
 
+	params := []*remote.ScheduleUserInfo{}
+	for _, u := range users {
+		params = append(params, &remote.ScheduleUserInfo{
+			RemoteUserID: u.RemoteID,
+			Mail:         u.Email,
+		})
+	}
+
 	start := remote.NewDateTime(time.Now().UTC(), "UTC")
 	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
 
-	return m.client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
+	return m.client.GetSchedule(params, start, end, availabilityTimeWindowSize)
 }
 
 func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, av remote.AvailabilityView) string {

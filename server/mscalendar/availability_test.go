@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"golang.org/x/oauth2"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
@@ -92,25 +92,14 @@ func TestSyncStatusAll(t *testing.T) {
 				},
 			}, nil).AnyTimes()
 
-			token := &oauth2.Token{
-				AccessToken: "bot_oauth_token",
-			}
-			s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
-				MattermostUserID: "bot_mm_id",
-				OAuth2Token:      token,
-				Remote: &remote.User{
-					ID:   "bot_remote_id",
-					Mail: "bot_email@example.com",
-				},
-			}, nil).Times(1)
+			mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil)
 
-			mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
-
-			mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-			mockClient.EXPECT().GetSuperuserToken().Return("bot_bearer_token", nil)
-			mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "bot_bearer_token").Return(mockClient)
-
-			mockClient.EXPECT().GetSchedule("bot_remote_id", []string{"user_email@example.com"}, gomock.Any(), gomock.Any(), 15).Return([]*remote.ScheduleInformation{tc.sched}, nil)
+			mockClient.EXPECT().GetSchedule(gomock.Any(), gomock.Any(), gomock.Any(), 15).DoAndReturn(
+				func(params []*remote.ScheduleUserInfo, start, end *remote.DateTime, window int) ([]*remote.ScheduleInformation, error) {
+					require.Equal(t, params[0].Mail, "user_email@example.com")
+					require.Equal(t, params[0].RemoteUserID, "user_remote_id")
+					return []*remote.ScheduleInformation{tc.sched}, nil
+				})
 
 			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
 
@@ -121,7 +110,9 @@ func TestSyncStatusAll(t *testing.T) {
 			}
 
 			mscalendar := New(env, "")
-			mscalendar.SyncStatusAll()
+			res, err := mscalendar.SyncStatusAll()
+			require.Nil(t, err)
+			require.NotEmpty(t, res)
 		})
 	}
 }

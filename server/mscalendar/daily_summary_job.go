@@ -6,8 +6,6 @@ package mscalendar
 import (
 	"sync"
 	"time"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
 const dailySummaryJobInterval = 15 * time.Minute
@@ -31,14 +29,6 @@ func NewDailySummaryJob(env Env) *DailySummaryJob {
 func (j *DailySummaryJob) Start() {
 	go func() {
 		defer close(j.cancelled)
-		mscal := New(j.Env, "")
-		_, err := mscal.GetRemoteUser(j.Env.BotUserID)
-		if err != nil {
-			j.Logger.Errorf("Please connect bot user using `/%s connect_bot`, then re-enable the daily summary job.", config.CommandTrigger)
-			j.Cancel()
-			return
-		}
-
 		firstRun := j.timerUntilFirstRun()
 
 		var ticker *time.Ticker

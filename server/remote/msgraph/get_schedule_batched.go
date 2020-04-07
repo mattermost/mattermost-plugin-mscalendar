@@ -1,8 +1,7 @@
 package msgraph
 
 import (
-	"errors"
-	"strconv"
+	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
@@ -30,7 +29,7 @@ type getScheduleBatchResponse struct {
 	Responses []*getScheduleSingleResponse `json:"responses"`
 }
 
-type getScheduleRequest struct {
+type getScheduleRequestParams struct {
 	// List of emails of users that we want to check
 	Schedules []string `json:"schedules"`
 
@@ -47,14 +46,17 @@ type getScheduleRequest struct {
 	AvailabilityViewInterval int `json:"availabilityViewInterval"`
 }
 
-func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
-	params := &getScheduleRequest{
+func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, endTime *remote.DateTime, availabilityViewInterval int) ([]*remote.ScheduleInformation, error) {
+	params := &getScheduleRequestParams{
 		StartTime:                startTime,
 		EndTime:                  endTime,
 		AvailabilityViewInterval: availabilityViewInterval,
 	}
 
-	allRequests := prepareGetScheduleRequests(remoteUserID, schedules, params)
+	allRequests := []*singleRequest{}
+	for _, req := range requests {
+		allRequests = append(allRequests, makeSingleRequestForGetSchedule(req, params))
+	}
 	batchRequests := prepareBatchRequests(allRequests)
 
 	var batchResponses []*getScheduleBatchResponse
@@ -70,26 +72,12 @@ func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime,
 	}
 
 	result := []*remote.ScheduleInformation{}
-
-	for i, batchRes := range batchResponses {
-		length := maxNumRequestsPerBatch
-		if i == len(batchResponses)-1 {
-			length = len(allRequests) % maxNumRequestsPerBatch
-		}
-
-		sorted := make([]*getScheduleSingleResponse, length)
-
-		for _, res := range batchRes.Responses {
-			if res.Body.Error != nil {
-				return nil, errors.New(res.Body.Error.Message)
-			}
-			id, _ := strconv.Atoi(res.ID)
-			sorted[id] = res
-		}
-
-		for _, r := range sorted {
-			for _, sched := range r.Body.Value {
-				result = append(result, sched)
+	for _, batchRes := range batchResponses {
+		for _, r := range batchRes.Responses {
+			if r.Body.Error == nil {
+				result = append(result, r.Body.Value...)
+			} else {
+				c.Errorf("Failed to process schedule. %s", r.Body.Error.Message)
 			}
 		}
 	}
@@ -97,46 +85,21 @@ func (c *client) GetSchedule(remoteUserID string, schedules []string, startTime,
 	return result, nil
 }
 
-func prepareGetScheduleRequests(remoteUserID string, schedules []string, params *getScheduleRequest) []*singleRequest {
-	u := "/Users/" + remoteUserID + "/calendar/getSchedule"
-
-	makeRequest := func(schedBatch []string) *singleRequest {
-		req := &singleRequest{
-			URL:    u,
-			Method: "POST",
-			Body: &getScheduleRequest{
-				Schedules:                schedBatch,
-				StartTime:                params.StartTime,
-				EndTime:                  params.EndTime,
-				AvailabilityViewInterval: params.AvailabilityViewInterval,
-			},
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-		}
-		return req
+func makeSingleRequestForGetSchedule(request *remote.ScheduleUserInfo, params *getScheduleRequestParams) *singleRequest {
+	u := "/Users/" + request.RemoteUserID + "/calendar/getSchedule"
+	req := &singleRequest{
+		URL:    u,
+		Method: http.MethodPost,
+		ID:     request.RemoteUserID,
+		Body: &getScheduleRequestParams{
+			Schedules:                []string{request.Mail},
+			StartTime:                params.StartTime,
+			EndTime:                  params.EndTime,
+			AvailabilityViewInterval: params.AvailabilityViewInterval,
+		},
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
 	}
-
-	allRequests := []*singleRequest{}
-
-	numUsers := len(schedules)
-	numRequests := numUsers / maxNumUsersPerRequest
-	if numUsers%maxNumUsersPerRequest != 0 {
-		numRequests += 1
-	}
-
-	for i := 0; i < numRequests; i++ {
-		startIdx := i * maxNumUsersPerRequest
-		endIdx := startIdx + maxNumUsersPerRequest
-		if i == numRequests-1 {
-			endIdx = len(schedules)
-		}
-
-		slice := schedules[startIdx:endIdx]
-		req := makeRequest(slice)
-		req.ID = strconv.Itoa(i)
-		allRequests = append(allRequests, req)
-	}
-
-	return allRequests
+	return req
 }
