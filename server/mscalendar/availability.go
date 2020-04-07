@@ -117,7 +117,7 @@ func (m *mscalendar) setUserStatuses(filteredUsers store.UserIndex, schedules []
 			continue
 		}
 
-		res = m.setStatusFromAvailability(mattermostUserID, status, s.AvailabilityView)
+		res = m.setStatusFromAvailability(mattermostUserID, status, s)
 	}
 	if res != "" {
 		return res, nil
@@ -138,8 +138,8 @@ func (m *mscalendar) GetAvailabilities(remoteUserID string, scheduleIDs []string
 	return client.GetSchedule(remoteUserID, scheduleIDs, start, end, availabilityTimeWindowSize)
 }
 
-func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, av remote.AvailabilityView) string {
-	currentAvailability := av[0]
+func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus string, s *remote.ScheduleInformation) string {
+	currentAvailability := s.AvailabilityView[0]
 	u := NewUser(mattermostUserID)
 
 	if !m.ShouldChangeStatus(u) {
@@ -147,7 +147,11 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 	}
 
 	if !m.HasAvailabilityChanged(u, currentAvailability) {
-		return "Status not changed because there is no update since last status change."
+		ok, newEventTime := m.HasNewEventStarted(u, s)
+		if !ok {
+			return "Status not changed because there is no update since last status change."
+		}
+		u.LastStatusUpdateEventTime = *newEventTime
 	}
 
 	u.LastStatusUpdateAvailability = currentAvailability
@@ -165,9 +169,8 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "online")
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus)
-		} else {
-			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus)
 		}
+		return fmt.Sprintf("User is free, and is already set to %s.", currentStatus)
 	case remote.AvailabilityViewTentative, remote.AvailabilityViewBusy:
 		if currentStatus != "dnd" {
 			if m.ShouldNotifyStatusChange(u) {
@@ -177,9 +180,8 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "dnd")
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus)
-		} else {
-			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus)
 		}
+		return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus)
 	case remote.AvailabilityViewOutOfOffice:
 		if currentStatus != "offline" {
 			if m.ShouldNotifyStatusChange(u) {
@@ -189,9 +191,8 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 			}
 			m.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, "offline")
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus)
-		} else {
-			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus)
 		}
+		return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus)
 	case remote.AvailabilityViewWorkingElsewhere:
 		return fmt.Sprintf("User is working elsewhere. Pending implementation.")
 	}

@@ -34,6 +34,7 @@ type User struct {
 	OAuth2Token                  *oauth2.Token
 	Settings                     Settings `json:"mattermostSettings,omitempty"`
 	LastStatusUpdateAvailability byte
+	LastStatusUpdateEventTime    remote.DateTime
 }
 
 type Settings struct {

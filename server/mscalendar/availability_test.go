@@ -108,6 +108,15 @@ func TestSyncStatusAll(t *testing.T) {
 					Mail: "bot_email@example.com",
 				},
 			}, nil).Times(1)
+			s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
+				MattermostUserID: "user_mm_id",
+				OAuth2Token:      token,
+				Remote: &remote.User{
+					ID:   "user_remote_id",
+					Mail: "user_email@example.com",
+				},
+			}, nil).Times(1)
+			s.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
 
 			mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
 
@@ -122,7 +131,7 @@ func TestSyncStatusAll(t *testing.T) {
 			if tc.newStatus == "" {
 				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
 			} else {
-				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", tc.newStatus).Times(1)
+				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Return(nil)
 			}
 
 			mscalendar := New(env, "")

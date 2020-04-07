@@ -11,6 +11,15 @@ const (
 	AvailabilityViewWorkingElsewhere = '4'
 )
 
+const (
+	ScheduleStatusFree             = "free"
+	ScheduleStatusTentative        = "tentative"
+	ScheduleStatusBusy             = "busy"
+	ScheduleStatusOof              = "oof"
+	ScheduleStatusWorkingElsewhere = "workingElsewhere"
+	ScheduleStatusUnknown          = "unknown"
+)
+
 type ScheduleInformationError struct {
 	Message      string `json:"message"`
 	ResponseCode string `json:"responseCode"`
@@ -29,7 +38,16 @@ type ScheduleInformation struct {
 
 	Error *ScheduleInformationError `json:"error"`
 
-	// ScheduleItems []interface{} `json:"scheduleItems,omitempty"`
+	ScheduleItems []*ScheduleItem `json:"scheduleItems,omitempty"`
 	// WorkingHours interface{} `json:"workingHours,omitempty"`
 	// Error *FreeBusyError `json:"error,omitempty"`
+}
+
+type ScheduleItem struct {
+	IsPrivate bool
+	Status    string
+	Subject   string
+	Location  string
+	Start     DateTime
+	End       DateTime
 }

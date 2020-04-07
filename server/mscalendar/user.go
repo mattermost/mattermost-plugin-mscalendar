@@ -137,6 +137,15 @@ func (m *mscalendar) HasAvailabilityChanged(u *User, currentAvailability byte) b
 	return u.LastStatusUpdateAvailability != currentAvailability
 }
 
+func (m *mscalendar) HasNewEventStarted(u *User, schedule *remote.ScheduleInformation) (bool, *remote.DateTime) {
+	for _, e := range schedule.ScheduleItems {
+		if e.Start.Time().After(u.LastStatusUpdateEventTime.Time()) {
+			return true, &e.Start
+		}
+	}
+	return false, nil
+}
+
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	err := m.Filter(
 		withClient,
