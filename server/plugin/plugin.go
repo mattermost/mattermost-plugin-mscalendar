@@ -133,7 +133,17 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
-		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(e.bot, e.Dependencies.Store, e.Dependencies.Store, "/settings", pluginURL)
+		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
+			e.bot,
+			e.Dependencies.Store,
+			e.Dependencies.Store,
+			"/settings",
+			pluginURL,
+			func(userID string) string {
+				timezone, _ := mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
+				return timezone
+			},
+		)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)

@@ -19,15 +19,17 @@ type dailySummarySetting struct {
 	optionsM    []string
 	optionsAPM  []string
 	store       settingspanel.SettingStore
+	getTimezone func(userID string) string
 }
 
-func NewDailySummarySetting(inStore settingspanel.SettingStore) settingspanel.Setting {
+func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) string) settingspanel.Setting {
 	os := &dailySummarySetting{
 		title:       "Daily Summary",
-		description: "When do you want to receive the daily summary",
+		description: "When do you want to receive the daily summary.\n If you update this setting, it will automatically update to your the timezone currently set on your calendar.",
 		id:          store.DailySummarySettingID,
 		dependsOn:   "",
 		store:       inStore,
+		getTimezone: getTimezone,
 	}
 	os.optionsH = []string{}
 	for i := 0; i < 12; i++ {
@@ -56,15 +58,15 @@ func (s *dailySummarySetting) Set(userID string, value interface{}) error {
 func (s *dailySummarySetting) Get(userID string) (interface{}, error) {
 	value, err := s.store.GetSetting(userID, s.id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	dsum, ok := value.(*store.DailySummarySettings)
+	_, ok := value.(*store.DailySummarySettings)
 	if !ok {
-		return "", errors.New("current value is not a Daily Summary Setting")
+		return nil, errors.New("current value is not a Daily Summary Setting")
 	}
 
-	return dsum, nil
+	return value, nil
 }
 
 func (s *dailySummarySetting) GetID() string {
@@ -93,16 +95,16 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		if err != nil {
 			return nil, err
 		}
+		dsum := dsumRaw.(*store.DailySummarySettings)
 
-		currentH := "0"
+		currentH := "8"
 		currentM := "00"
 		currentAPM := "AM"
-		fullTime := "0:00AM"
+		fullTime := "8:00AM"
 		currentEnable := false
 		currentTextValue := "Not set."
 
-		if dsumRaw != nil {
-			dsum := dsumRaw.(*store.DailySummarySettings)
+		if dsum != nil {
 			fullTime = dsum.PostTime
 			currentEnable = dsum.Enable
 			splitted := strings.Split(fullTime, ":")
@@ -116,6 +118,9 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 			currentTextValue = fmt.Sprintf("%s (%s) (%s)", dsum.PostTime, dsum.Timezone, enableText)
 		}
 
+		timezone := s.getTimezone(userID)
+		fullTime = fullTime + " " + timezone
+
 		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
 
 		actionOptionsH := model.PostAction{
@@ -127,7 +132,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 				},
 			},
 			Type:          "select",
-			Options:       s.makeHOptions(currentM, currentAPM),
+			Options:       s.makeHOptions(currentM, currentAPM, timezone),
 			DefaultOption: fullTime,
 		}
 
@@ -140,7 +145,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 				},
 			},
 			Type:          "select",
-			Options:       s.makeMOptions(currentH, currentAPM),
+			Options:       s.makeMOptions(currentH, currentAPM, timezone),
 			DefaultOption: fullTime,
 		}
 
@@ -153,7 +158,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 				},
 			},
 			Type:          "select",
-			Options:       s.makeAPMOptions(currentH, currentM),
+			Options:       s.makeAPMOptions(currentH, currentM, timezone),
 			DefaultOption: fullTime,
 		}
 
@@ -172,7 +177,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 					URL: settingHandler,
 					Context: map[string]interface{}{
 						settingspanel.ContextIDKey:          s.id,
-						settingspanel.ContextButtonValueKey: enable,
+						settingspanel.ContextButtonValueKey: enable + " " + timezone,
 					},
 				},
 			}
@@ -194,7 +199,7 @@ func (s *dailySummarySetting) IsDisabled(foreignValue interface{}) bool {
 	return foreignValue == "false"
 }
 
-func (s *dailySummarySetting) makeHOptions(minute, apm string) []*model.PostActionOptions {
+func (s *dailySummarySetting) makeHOptions(minute, apm, timezone string) []*model.PostActionOptions {
 	out := []*model.PostActionOptions{}
 	for i, o := range s.optionsH {
 		if i == 0 && apm == "PM" {
@@ -202,24 +207,24 @@ func (s *dailySummarySetting) makeHOptions(minute, apm string) []*model.PostActi
 		}
 		out = append(out, &model.PostActionOptions{
 			Text:  o,
-			Value: fmt.Sprintf("%s:%s%s", o, minute, apm),
+			Value: fmt.Sprintf("%s:%s%s %s", o, minute, apm, timezone),
 		})
 	}
 	return out
 }
 
-func (s *dailySummarySetting) makeMOptions(hour, apm string) []*model.PostActionOptions {
+func (s *dailySummarySetting) makeMOptions(hour, apm, timezone string) []*model.PostActionOptions {
 	out := []*model.PostActionOptions{}
 	for _, o := range s.optionsM {
 		out = append(out, &model.PostActionOptions{
 			Text:  o,
-			Value: fmt.Sprintf("%s:%s%s", hour, o, apm),
+			Value: fmt.Sprintf("%s:%s%s %s", hour, o, apm, timezone),
 		})
 	}
 	return out
 }
 
-func (s *dailySummarySetting) makeAPMOptions(hour, minute string) []*model.PostActionOptions {
+func (s *dailySummarySetting) makeAPMOptions(hour, minute, timezone string) []*model.PostActionOptions {
 	out := []*model.PostActionOptions{}
 
 	storeHour := hour
@@ -229,7 +234,7 @@ func (s *dailySummarySetting) makeAPMOptions(hour, minute string) []*model.PostA
 	o := s.optionsAPM[0]
 	out = append(out, &model.PostActionOptions{
 		Text:  o,
-		Value: fmt.Sprintf("%s:%s%s", storeHour, minute, o),
+		Value: fmt.Sprintf("%s:%s%s %s", storeHour, minute, o, timezone),
 	})
 
 	storeHour = hour
@@ -239,7 +244,7 @@ func (s *dailySummarySetting) makeAPMOptions(hour, minute string) []*model.PostA
 	o = s.optionsAPM[1]
 	out = append(out, &model.PostActionOptions{
 		Text:  o,
-		Value: fmt.Sprintf("%s:%s%s", storeHour, minute, o),
+		Value: fmt.Sprintf("%s:%s%s %s", storeHour, minute, o, timezone),
 	})
 	return out
 }

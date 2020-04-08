@@ -19,7 +19,7 @@ type Setting interface {
 }
 
 type Panel interface {
-	Set(userID, settingID string, value string) error
+	Set(userID, settingID string, value interface{}) error
 	Print(userID string)
 	GetUpdatePost(userID string) (*model.Post, error)
 	Clear(userID string) error
@@ -67,7 +67,7 @@ func NewSettingsPanel(settings []Setting, poster bot.Poster, logger bot.Logger, 
 	}
 }
 
-func (p *panel) Set(userID, settingID string, value string) error {
+func (p *panel) Set(userID, settingID string, value interface{}) error {
 	s, ok := p.settings[settingID]
 	if !ok {
 		return errors.New("cannot find setting " + settingID)

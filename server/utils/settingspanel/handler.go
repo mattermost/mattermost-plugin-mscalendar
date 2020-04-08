@@ -55,8 +55,7 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	idString := id.(string)
-	valueString := value.(string)
-	sh.panel.Set(mattermostUserID, idString, valueString)
+	sh.panel.Set(mattermostUserID, idString, value)
 
 	response := model.PostActionIntegrationResponse{}
 	post, err := sh.panel.GetUpdatePost(mattermostUserID)

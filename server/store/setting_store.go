@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
@@ -84,22 +85,44 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 		return err
 	}
 
+	stringValue := value.(string)
+	splittedValue := strings.Split(stringValue, " ")
+	timezone := strings.Join(splittedValue[1:], " ")
+
+	found := false
 	for _, dsum := range dsumIndex {
 		if dsum.MattermostUserID == userID {
-			stringValue := value.(string)
-			if stringValue == "true" {
+			found = true
+
+			if splittedValue[0] == "true" {
 				dsum.Enable = true
 				break
 			}
 
-			if stringValue == "false" {
+			if splittedValue[0] == "false" {
 				dsum.Enable = false
 				break
 			}
 
-			dsum.PostTime = value.(string)
+			dsum.PostTime = splittedValue[0]
+			dsum.Timezone = timezone
 			break
 		}
+	}
+
+	if !found {
+		timeStr := splittedValue[0]
+		if splittedValue[0] == "true" || splittedValue[0] == "false" {
+			timeStr = "8:00AM"
+		}
+
+		dsum := &DailySummarySettings{
+			MattermostUserID: userID,
+			PostTime:         timeStr,
+			Timezone:         timezone,
+			Enable:           splittedValue[0] == "true",
+		}
+		dsumIndex = append(dsumIndex, dsum)
 	}
 
 	err = s.SaveDailySummaryIndex(dsumIndex)
