@@ -5,8 +5,9 @@ package mscalendar
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
 	"golang.org/x/oauth2"
@@ -28,7 +29,7 @@ func newTestNotificationProcessor(env Env) NotificationProcessor {
 	return processor
 }
 
-func newTestEvent(locationDisplayName string) *remote.Event {
+func newTestEvent(locationDisplayName string, subjectDisplayName string) *remote.Event {
 	return &remote.Event{
 		ID: "remote_event_id",
 		Organizer: &remote.Attendee{
@@ -44,7 +45,7 @@ func newTestEvent(locationDisplayName string) *remote.Event {
 			Response: "event_response",
 		},
 		Weblink:           "event_weblink",
-		Subject:           "event_subject",
+		Subject:           subjectDisplayName,
 		BodyPreview:       "event_body_preview",
 		ResponseRequested: true,
 	}
@@ -79,7 +80,7 @@ func newTestNotification(clientState string, recommendRenew bool) *remote.Notifi
 		SubscriptionID:      "remote_subscription_id",
 		IsBare:              true,
 		SubscriptionCreator: &remote.User{},
-		Event:               newTestEvent("event_location_display_name"),
+		Event:               newTestEvent("event_location_display_name", "event_subject"),
 		Subscription:        &remote.Subscription{},
 		ClientState:         clientState,
 		RecommendRenew:      recommendRenew,
@@ -108,7 +109,7 @@ func TestProcessNotification(t *testing.T) {
 			name:          "prior event exists",
 			expectedError: "",
 			notification:  newTestNotification("stored_client_state", false),
-			priorEvent:    newTestEvent("prior_event_location_display_name"),
+			priorEvent:    newTestEvent("prior_event_location_display_name", "other_event_subject"),
 		}, {
 			name:          "sub renewal recommended",
 			expectedError: "",

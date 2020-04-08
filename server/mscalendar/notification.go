@@ -47,6 +47,8 @@ const (
 	ResponseNone  = "notResponded"
 )
 
+var importantNotificationChanges []string = []string{FieldSubject, FieldDuration, FieldWhen}
+
 type NotificationProcessor interface {
 	Configure(Env)
 	Enqueue(notifications ...*remote.Notification)
@@ -257,7 +259,26 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		return false, nil
 	}
 
+	allChanges := append([]string{}, added...)
+	allChanges = append(allChanges, updated...)
+	allChanges = append(allChanges, deleted...)
+
+	hasImportantChanges := false
+	for _, k := range allChanges {
+		if isImportantChange(k) {
+			hasImportantChanges = true
+			break
+		}
+	}
+
+	if !hasImportantChanges {
+		return false, nil
+	}
+
 	for _, k := range added {
+		if !isImportantChange(k) {
+			continue
+		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
 			Value: newFields[k].Strings(),
@@ -265,6 +286,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 	for _, k := range updated {
+		if !isImportantChange(k) {
+			continue
+		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
 			Value: fmt.Sprintf("~~%s~~ \u2192 %s", priorFields[k].Strings(), newFields[k].Strings()),
@@ -272,6 +296,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 	for _, k := range deleted {
+		if !isImportantChange(k) {
+			continue
+		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
 			Value: fmt.Sprintf("~~%s~~", priorFields[k].Strings()),
@@ -283,6 +310,15 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		sa.Actions = GetPostActionSelect(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
 	}
 	return true, sa
+}
+
+func isImportantChange(fieldName string) bool {
+	for _, ic := range importantNotificationChanges {
+		if ic == fieldName {
+			return true
+		}
+	}
+	return false
 }
 
 func (processor *notificationProcessor) actionURL(action string) string {
