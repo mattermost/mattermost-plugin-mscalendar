@@ -112,8 +112,8 @@ func (m *mscalendar) GetAvailabilities(users store.UserIndex) ([]*remote.Schedul
 		})
 	}
 
-	start := remote.NewDateTime(time.Now().UTC(), "UTC")
-	end := remote.NewDateTime(time.Now().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
+	start := remote.NewDateTime(timeNowFunc().UTC(), "UTC")
+	end := remote.NewDateTime(timeNowFunc().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
 
 	return m.client.GetSchedule(params, start, end, availabilityTimeWindowSize)
 }

@@ -6,6 +6,7 @@ package mscalendar
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -94,10 +95,19 @@ func TestSyncStatusAll(t *testing.T) {
 
 			mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil)
 
+			loc, err := time.LoadLocation("EST")
+			require.Nil(t, err)
+			hour, minute := 9, 0
+			moment := makeTime(hour, minute, loc)
+			timeNowFunc = func() time.Time { return moment }
+
 			mockClient.EXPECT().GetSchedule(gomock.Any(), gomock.Any(), gomock.Any(), 15).DoAndReturn(
 				func(params []*remote.ScheduleUserInfo, start, end *remote.DateTime, window int) ([]*remote.ScheduleInformation, error) {
-					require.Equal(t, params[0].Mail, "user_email@example.com")
-					require.Equal(t, params[0].RemoteUserID, "user_remote_id")
+					require.Equal(t, "user_email@example.com", params[0].Mail)
+					require.Equal(t, "user_remote_id", params[0].RemoteUserID)
+					require.Equal(t, "user_remote_id", params[0].RemoteUserID)
+					require.Equal(t, time.Duration(0), start.Time().Sub(moment))
+					require.Equal(t, time.Duration(15*time.Minute), end.Time().Sub(moment))
 					return []*remote.ScheduleInformation{tc.sched}, nil
 				})
 
