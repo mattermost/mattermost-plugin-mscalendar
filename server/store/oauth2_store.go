@@ -13,7 +13,7 @@ type OAuth2StateStore interface {
 }
 
 func (s *pluginStore) VerifyOAuth2State(state string) error {
-	data, err := s.subscriptionKV.Load(state)
+	data, err := s.oauth2KV.Load(state)
 	if err != nil {
 		return err
 	}
@@ -24,5 +24,5 @@ func (s *pluginStore) VerifyOAuth2State(state string) error {
 }
 
 func (s *pluginStore) StoreOAuth2State(state string) error {
-	return s.subscriptionKV.Store(state, []byte(state))
+	return s.oauth2KV.Store(state, []byte(state))
 }
