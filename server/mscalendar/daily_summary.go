@@ -125,9 +125,9 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 	requests := []*remote.ViewCalendarParams{}
 	for _, dsum := range dsumIndex {
-		shouldPost, err := shouldPostDailySummary(dsum, now)
-		if err != nil {
-			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, err.Error())
+		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
+		if shouldPostErr != nil {
+			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, shouldPostErr.Error())
 			continue
 		}
 		if !shouldPost {
