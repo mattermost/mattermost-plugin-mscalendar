@@ -15,6 +15,9 @@ import (
 
 const dailySummaryTimeWindow = time.Minute * 2
 
+// Run daily summary job every 15 minutes
+const DailySummaryJobInterval = 15 * time.Minute
+
 var timeNowFunc = time.Now
 
 type DailySummary interface {
@@ -46,8 +49,8 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, errors.New("Invalid time value: " + timeStr)
 	}
 
-	if t.Minute()%int(dailySummaryJobInterval/time.Minute) != 0 {
-		return nil, errors.Errorf("Time must be a multiple of %d minutes.", dailySummaryJobInterval/time.Minute)
+	if t.Minute()%int(DailySummaryJobInterval/time.Minute) != 0 {
+		return nil, errors.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
 	}
 
 	timezone, err := m.GetTimezone(user)
