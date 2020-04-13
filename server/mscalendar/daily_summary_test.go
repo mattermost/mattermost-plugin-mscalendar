@@ -101,7 +101,7 @@ func TestShouldPostDailySummary(t *testing.T) {
 			c.Set(moment)
 			timeNowFunc = c.Now
 
-			dsum := &store.DailySummarySettings{
+			dsum := &store.DailySummaryUserSettings{
 				Enable:   tc.enabled,
 				PostTime: tc.postTime,
 				Timezone: tc.timeZone,

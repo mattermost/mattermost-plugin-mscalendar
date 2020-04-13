@@ -64,7 +64,7 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 	}
 }
 
-func dailySummaryResponse(dsum *store.DailySummarySettings) string {
+func dailySummaryResponse(dsum *store.DailySummaryUserSettings) string {
 	if dsum.PostTime == "" {
 		return "Your daily summary time is not yet configured.\n" + dailySummarySetTimeErrorMessage
 	}
