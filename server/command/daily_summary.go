@@ -22,7 +22,7 @@ func (c *Command) dailySummary(parameters ...string) (string, error) {
 
 	switch parameters[0] {
 	case "view":
-		postStr, err := c.MSCalendar.GetDailySummary(c.user())
+		postStr, err := c.MSCalendar.GetDailySummaryForUser(c.user())
 		if err != nil {
 			return err.Error(), err
 		}
