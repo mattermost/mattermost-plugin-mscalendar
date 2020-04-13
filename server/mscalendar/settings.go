@@ -19,7 +19,7 @@ func (c *mscalendar) ClearSettingsPosts(userID string) {
 	c.SettingsPanel.Clear(userID)
 }
 
-func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getTimezone func(userID string) string) settingspanel.Panel {
+func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getTimezone func(userID string) (string, error)) settingspanel.Panel {
 	settings := []settingspanel.Setting{}
 	settings = append(settings, settingspanel.NewBoolSetting(
 		store.UpdateStatusSettingID,

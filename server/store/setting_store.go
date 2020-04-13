@@ -3,8 +3,6 @@ package store
 import (
 	"fmt"
 	"strings"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
 const (
@@ -58,25 +56,10 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	case GetConfirmationSettingID:
 		return user.Settings.GetConfirmation, nil
 	case DailySummarySettingID:
-		return s.getDailySummarySettingForUser(userID)
+		return s.LoadDailySummaryUserSettings(userID)
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}
-}
-
-func (s *pluginStore) getDailySummarySettingForUser(userID string) (*DailySummaryUserSettings, error) {
-	dsumIndex, err := s.LoadDailySummaryIndex()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, dsum := range dsumIndex {
-		if dsum.MattermostUserID == userID {
-			return dsum, nil
-		}
-	}
-
-	return nil, nil
 }
 
 func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
@@ -122,7 +105,7 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 }
 
 func (s *pluginStore) SetPanelPostID(userID string, postID string) error {
-	err := kvstore.StoreJSON(s.settingsPanelKV, userID, postID)
+	err := s.settingsPanelKV.Store(userID, []byte(postID))
 	if err != nil {
 		return err
 	}
@@ -130,13 +113,12 @@ func (s *pluginStore) SetPanelPostID(userID string, postID string) error {
 }
 
 func (s *pluginStore) GetPanelPostID(userID string) (string, error) {
-	var postID string
-	err := kvstore.LoadJSON(s.settingsPanelKV, userID, &postID)
+	postID, err := s.settingsPanelKV.Load(userID)
 	if err != nil {
 		return "", err
 	}
 
-	return postID, nil
+	return string(postID), nil
 }
 
 func (s *pluginStore) DeletePanelPostID(userID string) error {

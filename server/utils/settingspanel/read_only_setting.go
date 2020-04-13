@@ -36,7 +36,7 @@ func (s *readOnlySetting) Get(userID string) (interface{}, error) {
 	}
 	stringValue, ok := value.(string)
 	if !ok {
-		return "", errors.New("current value is not a bool")
+		return "", errors.New("current value is not a string")
 	}
 
 	return stringValue, nil

@@ -19,13 +19,13 @@ type dailySummarySetting struct {
 	optionsM    []string
 	optionsAPM  []string
 	store       settingspanel.SettingStore
-	getTimezone func(userID string) string
+	getTimezone func(userID string) (string, error)
 }
 
-func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) string) settingspanel.Setting {
+func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) (string, error)) settingspanel.Setting {
 	os := &dailySummarySetting{
 		title:       "Daily Summary",
-		description: "When do you want to receive the daily summary.\n If you update this setting, it will automatically update to your the timezone currently set on your calendar.",
+		description: "When do you want to receive the daily summary?\n If you update this setting, it will automatically update to your the timezone currently set on your calendar.",
 		id:          store.DailySummarySettingID,
 		dependsOn:   "",
 		store:       inStore,
@@ -47,6 +47,10 @@ func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func
 }
 
 func (s *dailySummarySetting) Set(userID string, value interface{}) error {
+	_, ok := value.(string)
+	if !ok {
+		return errors.New("trying to set Daily Summary Setting without a string value")
+	}
 	err := s.store.SetSetting(userID, s.id, value)
 	if err != nil {
 		return err
@@ -118,7 +122,14 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 			currentTextValue = fmt.Sprintf("%s (%s) (%s)", dsum.PostTime, dsum.Timezone, enableText)
 		}
 
-		timezone := s.getTimezone(userID)
+		timezone, err := s.getTimezone(userID)
+		if err != nil {
+			if dsum != nil {
+				timezone = dsum.Timezone
+			} else {
+				timezone = "UTC"
+			}
+		}
 		fullTime = fullTime + " " + timezone
 
 		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
@@ -164,26 +175,24 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 		actions = []*model.PostAction{&actionOptionsH, &actionOptionsM, &actionOptionsAPM}
 
-		if currentTextValue != "Not set" {
-			buttonText := "Enable"
-			enable := "true"
-			if currentEnable {
-				buttonText = "Disable"
-				enable = "false"
-			}
-			actionToggle := model.PostAction{
-				Name: buttonText,
-				Integration: &model.PostActionIntegration{
-					URL: settingHandler,
-					Context: map[string]interface{}{
-						settingspanel.ContextIDKey:          s.id,
-						settingspanel.ContextButtonValueKey: enable + " " + timezone,
-					},
-				},
-			}
-
-			actions = append(actions, &actionToggle)
+		buttonText := "Enable"
+		enable := "true"
+		if currentEnable {
+			buttonText = "Disable"
+			enable = "false"
 		}
+		actionToggle := model.PostAction{
+			Name: buttonText,
+			Integration: &model.PostActionIntegration{
+				URL: settingHandler,
+				Context: map[string]interface{}{
+					settingspanel.ContextIDKey:          s.id,
+					settingspanel.ContextButtonValueKey: enable + " " + timezone,
+				},
+			},
+		}
+
+		actions = append(actions, &actionToggle)
 	}
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)

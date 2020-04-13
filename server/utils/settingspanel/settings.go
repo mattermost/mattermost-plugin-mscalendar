@@ -21,7 +21,7 @@ type Setting interface {
 type Panel interface {
 	Set(userID, settingID string, value interface{}) error
 	Print(userID string)
-	GetUpdatePost(userID string) (*model.Post, error)
+	ToPost(userID string) (*model.Post, error)
 	Clear(userID string) error
 	URL() string
 	GetSettingIDs() []string
@@ -103,7 +103,6 @@ func (p *panel) Print(userID string) {
 			continue
 		}
 		sas = append(sas, sa)
-
 	}
 	postID, err := p.poster.DMWithAttachments(userID, sas...)
 	if err != nil {
@@ -117,7 +116,7 @@ func (p *panel) Print(userID string) {
 	}
 }
 
-func (p *panel) GetUpdatePost(userID string) (*model.Post, error) {
+func (p *panel) ToPost(userID string) (*model.Post, error) {
 	post := &model.Post{}
 
 	sas := []*model.SlackAttachment{}

@@ -138,9 +138,8 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.Dependencies.Store,
 			"/settings",
 			pluginURL,
-			func(userID string) string {
-				timezone, _ := mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
-				return timezone
+			func(userID string) (string, error) {
+				return mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
 			},
 		)
 
