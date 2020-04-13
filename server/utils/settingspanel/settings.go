@@ -15,7 +15,7 @@ type Setting interface {
 	IsDisabled(foreignValue interface{}) bool
 	GetTitle() string
 	GetDescription() string
-	GetSlackAttachments(userID, settngHandler string, disabled bool) (*model.SlackAttachment, error)
+	GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error)
 }
 
 type Panel interface {
