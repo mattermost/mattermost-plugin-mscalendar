@@ -140,7 +140,7 @@ func (m *mscalendar) HasAvailabilityChanged(u *User, currentAvailability byte) b
 func (m *mscalendar) HasNewEventStarted(u *User, schedule *remote.ScheduleInformation) (bool, *remote.DateTime) {
 	for _, e := range schedule.ScheduleItems {
 		if e.Start.Time().After(u.LastStatusUpdateEventTime.Time()) {
-			return true, &e.Start
+			return true, e.Start
 		}
 	}
 	return false, nil

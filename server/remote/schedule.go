@@ -48,6 +48,6 @@ type ScheduleItem struct {
 	Status    string
 	Subject   string
 	Location  string
-	Start     DateTime
-	End       DateTime
+	Start     *DateTime
+	End       *DateTime
 }

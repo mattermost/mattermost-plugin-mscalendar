@@ -147,11 +147,11 @@ func (m *mscalendar) setStatusFromAvailability(mattermostUserID, currentStatus s
 	}
 
 	if !m.HasAvailabilityChanged(u, currentAvailability) {
-		ok, newEventTime := m.HasNewEventStarted(u, s)
-		if !ok {
+		hasStarted, newEventTime := m.HasNewEventStarted(u, s)
+		if !hasStarted {
 			return "Status not changed because there is no update since last status change."
 		}
-		u.LastStatusUpdateEventTime = *newEventTime
+		u.LastStatusUpdateEventTime = newEventTime
 	}
 
 	u.LastStatusUpdateAvailability = currentAvailability
