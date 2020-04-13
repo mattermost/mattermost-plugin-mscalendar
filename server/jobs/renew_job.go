@@ -19,7 +19,7 @@ func NewRenewJob() RegisteredJob {
 	}
 }
 
-// runDailySummaryJob delivers the daily calendar summary to all users who have their settings configured to receive it now
+// runRenewJob calls renews the event subscription for each connected user
 func runRenewJob(env mscalendar.Env) {
 	uindex, err := env.Store.LoadUserIndex()
 	if err != nil {
