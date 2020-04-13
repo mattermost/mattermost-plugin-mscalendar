@@ -94,106 +94,111 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 	currentValueMessage := "Disabled"
 
 	actions := []*model.PostAction{}
-	if !disabled {
-		dsumRaw, err := s.Get(userID)
-		if err != nil {
-			return nil, err
+
+	if disabled {
+		text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
+		sa := model.SlackAttachment{
+			Title:   title,
+			Text:    text,
+			Actions: actions,
 		}
-		dsum := dsumRaw.(*store.DailySummaryUserSettings)
-
-		currentH := "8"
-		currentM := "00"
-		currentAPM := "AM"
-		fullTime := "8:00AM"
-		currentEnable := false
-		currentTextValue := "Not set."
-
-		if dsum != nil {
-			fullTime = dsum.PostTime
-			currentEnable = dsum.Enable
-			splitted := strings.Split(fullTime, ":")
-			currentH = splitted[0]
-			currentM = splitted[1][:2]
-			currentAPM = splitted[1][2:]
-			enableText := "Disabled"
-			if currentEnable {
-				enableText = "Enabled"
-			}
-			currentTextValue = fmt.Sprintf("%s (%s) (%s)", dsum.PostTime, dsum.Timezone, enableText)
-		}
-
-		timezone, err := s.getTimezone(userID)
-		if err != nil {
-			if dsum != nil {
-				timezone = dsum.Timezone
-			} else {
-				timezone = "UTC"
-			}
-		}
-		fullTime = fullTime + " " + timezone
-
-		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
-
-		actionOptionsH := model.PostAction{
-			Name: "H:",
-			Integration: &model.PostActionIntegration{
-				URL: settingHandler,
-				Context: map[string]interface{}{
-					settingspanel.ContextIDKey: s.id,
-				},
-			},
-			Type:          "select",
-			Options:       s.makeHOptions(currentM, currentAPM, timezone),
-			DefaultOption: fullTime,
-		}
-
-		actionOptionsM := model.PostAction{
-			Name: "M:",
-			Integration: &model.PostActionIntegration{
-				URL: settingHandler,
-				Context: map[string]interface{}{
-					settingspanel.ContextIDKey: s.id,
-				},
-			},
-			Type:          "select",
-			Options:       s.makeMOptions(currentH, currentAPM, timezone),
-			DefaultOption: fullTime,
-		}
-
-		actionOptionsAPM := model.PostAction{
-			Name: "AM/PM:",
-			Integration: &model.PostActionIntegration{
-				URL: settingHandler,
-				Context: map[string]interface{}{
-					settingspanel.ContextIDKey: s.id,
-				},
-			},
-			Type:          "select",
-			Options:       s.makeAPMOptions(currentH, currentM, timezone),
-			DefaultOption: fullTime,
-		}
-
-		actions = []*model.PostAction{&actionOptionsH, &actionOptionsM, &actionOptionsAPM}
-
-		buttonText := "Enable"
-		enable := "true"
-		if currentEnable {
-			buttonText = "Disable"
-			enable = "false"
-		}
-		actionToggle := model.PostAction{
-			Name: buttonText,
-			Integration: &model.PostActionIntegration{
-				URL: settingHandler,
-				Context: map[string]interface{}{
-					settingspanel.ContextIDKey:          s.id,
-					settingspanel.ContextButtonValueKey: enable + " " + timezone,
-				},
-			},
-		}
-
-		actions = append(actions, &actionToggle)
+		return &sa, nil
 	}
+
+	dsumRaw, err := s.Get(userID)
+	if err != nil {
+		return nil, err
+	}
+	dsum := dsumRaw.(*store.DailySummaryUserSettings)
+
+	currentH := "8"
+	currentM := "00"
+	currentAPM := "AM"
+	fullTime := "8:00AM"
+	currentEnable := false
+	currentTextValue := "Not set."
+
+	if dsum != nil {
+		fullTime = dsum.PostTime
+		currentEnable = dsum.Enable
+		splitted := strings.Split(fullTime, ":")
+		currentH = splitted[0]
+		currentM = splitted[1][:2]
+		currentAPM = splitted[1][2:]
+		enableText := "Disabled"
+		if currentEnable {
+			enableText = "Enabled"
+		}
+		currentTextValue = fmt.Sprintf("%s (%s) (%s)", dsum.PostTime, dsum.Timezone, enableText)
+	}
+
+	timezone, err := s.getTimezone(userID)
+	if err != nil {
+		return nil, errors.New("could not load the timezone from Microsoft, err= " + err.Error())
+	}
+	fullTime = fullTime + " " + timezone
+
+	currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
+
+	actionOptionsH := model.PostAction{
+		Name: "H:",
+		Integration: &model.PostActionIntegration{
+			URL: settingHandler,
+			Context: map[string]interface{}{
+				settingspanel.ContextIDKey: s.id,
+			},
+		},
+		Type:          "select",
+		Options:       s.makeHOptions(currentM, currentAPM, timezone),
+		DefaultOption: fullTime,
+	}
+
+	actionOptionsM := model.PostAction{
+		Name: "M:",
+		Integration: &model.PostActionIntegration{
+			URL: settingHandler,
+			Context: map[string]interface{}{
+				settingspanel.ContextIDKey: s.id,
+			},
+		},
+		Type:          "select",
+		Options:       s.makeMOptions(currentH, currentAPM, timezone),
+		DefaultOption: fullTime,
+	}
+
+	actionOptionsAPM := model.PostAction{
+		Name: "AM/PM:",
+		Integration: &model.PostActionIntegration{
+			URL: settingHandler,
+			Context: map[string]interface{}{
+				settingspanel.ContextIDKey: s.id,
+			},
+		},
+		Type:          "select",
+		Options:       s.makeAPMOptions(currentH, currentM, timezone),
+		DefaultOption: fullTime,
+	}
+
+	actions = []*model.PostAction{&actionOptionsH, &actionOptionsM, &actionOptionsAPM}
+
+	buttonText := "Enable"
+	enable := "true"
+	if currentEnable {
+		buttonText = "Disable"
+		enable = "false"
+	}
+	actionToggle := model.PostAction{
+		Name: buttonText,
+		Integration: &model.PostActionIntegration{
+			URL: settingHandler,
+			Context: map[string]interface{}{
+				settingspanel.ContextIDKey:          s.id,
+				settingspanel.ContextButtonValueKey: enable + " " + timezone,
+			},
+		},
+	}
+
+	actions = append(actions, &actionToggle)
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
