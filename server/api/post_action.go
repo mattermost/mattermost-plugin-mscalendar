@@ -13,7 +13,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
-func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscalendar.MSCalendar, *mscalendar.User, string, string, string) {
+func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscal mscalendar.MSCalendar, user *mscalendar.User, eventID string, option string, postID string) {
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 
 	request := model.PostActionIntegrationRequestFromJson(req.Body)
@@ -27,8 +27,8 @@ func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (msca
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return nil, nil, "", "", ""
 	}
-	option, _ := request.Context["selected_option"].(string)
-	mscal := mscalendar.New(api.Env, mattermostUserID)
+	option, _ = request.Context["selected_option"].(string)
+	mscal = mscalendar.New(api.Env, mattermostUserID)
 
 	return mscal, mscalendar.NewUser(mattermostUserID), eventID, option, request.PostId
 }
@@ -106,7 +106,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 	}
 
 	sa := sas[0]
-	sa.Actions = mscalendar.GetPostActionSelect(eventID, response, req.URL.String())
+	sa.Actions = mscalendar.NewPostActionForEventResponse(eventID, response, req.URL.String())
 	postResponse := model.PostActionIntegrationResponse{}
 	model.ParseSlackAttachment(p, []*model.SlackAttachment{sa})
 

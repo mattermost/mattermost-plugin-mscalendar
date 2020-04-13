@@ -243,7 +243,7 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	}
 
 	if n.Event.ResponseRequested && !n.Event.IsOrganizer {
-		sa.Actions = GetPostActionSelect(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
+		sa.Actions = NewPostActionForEventResponse(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
 	}
 	return sa
 }
@@ -259,8 +259,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		return false, nil
 	}
 
-	allChanges := append([]string{}, added...)
-	allChanges = append(allChanges, updated...)
+	allChanges := append(added, updated...)
 	allChanges = append(allChanges, deleted...)
 
 	hasImportantChanges := false
@@ -307,7 +306,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 	}
 
 	if n.Event.ResponseRequested && !n.Event.IsOrganizer {
-		sa.Actions = GetPostActionSelect(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
+		sa.Actions = NewPostActionForEventResponse(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
 	}
 	return true, sa
 }
@@ -360,7 +359,7 @@ func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment
 	}
 }
 
-func GetPostActionSelect(eventID, response, url string) []*model.PostAction {
+func NewPostActionForEventResponse(eventID, response, url string) []*model.PostAction {
 	context := map[string]interface{}{
 		config.EventIDKey: eventID,
 	}
