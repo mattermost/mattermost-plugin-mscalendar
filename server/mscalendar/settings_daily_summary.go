@@ -61,7 +61,7 @@ func (s *dailySummarySetting) Get(userID string) (interface{}, error) {
 		return nil, err
 	}
 
-	_, ok := value.(*store.DailySummarySettings)
+	_, ok := value.(*store.DailySummaryUserSettings)
 	if !ok {
 		return nil, errors.New("current value is not a Daily Summary Setting")
 	}
@@ -95,7 +95,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		if err != nil {
 			return nil, err
 		}
-		dsum := dsumRaw.(*store.DailySummarySettings)
+		dsum := dsumRaw.(*store.DailySummaryUserSettings)
 
 		currentH := "8"
 		currentM := "00"

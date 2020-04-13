@@ -64,7 +64,7 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	}
 }
 
-func (s *pluginStore) getDailySummarySettingForUser(userID string) (*DailySummarySettings, error) {
+func (s *pluginStore) getDailySummarySettingForUser(userID string) (*DailySummaryUserSettings, error) {
 	dsumIndex, err := s.LoadDailySummaryIndex()
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (s *pluginStore) getDailySummarySettingForUser(userID string) (*DailySummar
 }
 
 func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
-	dsumIndex, err := s.LoadDailySummaryIndex()
+	dsum, err := s.LoadDailySummaryUserSettings(userID)
 	if err != nil {
 		return err
 	}
@@ -89,43 +89,31 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 	splittedValue := strings.Split(stringValue, " ")
 	timezone := strings.Join(splittedValue[1:], " ")
 
-	found := false
-	for _, dsum := range dsumIndex {
-		if dsum.MattermostUserID == userID {
-			found = true
-
-			if splittedValue[0] == "true" {
-				dsum.Enable = true
-				break
-			}
-
-			if splittedValue[0] == "false" {
-				dsum.Enable = false
-				break
-			}
-
-			dsum.PostTime = splittedValue[0]
-			dsum.Timezone = timezone
-			break
-		}
-	}
-
-	if !found {
+	if dsum == nil {
 		timeStr := splittedValue[0]
 		if splittedValue[0] == "true" || splittedValue[0] == "false" {
 			timeStr = "8:00AM"
 		}
 
-		dsum := &DailySummarySettings{
+		dsum = &DailySummaryUserSettings{
 			MattermostUserID: userID,
 			PostTime:         timeStr,
 			Timezone:         timezone,
 			Enable:           splittedValue[0] == "true",
 		}
-		dsumIndex = append(dsumIndex, dsum)
+	} else {
+		switch splittedValue[0] {
+		case "true":
+			dsum.Enable = true
+		case "false":
+			dsum.Enable = false
+		default:
+			dsum.PostTime = splittedValue[0]
+			dsum.Timezone = timezone
+		}
 	}
 
-	err = s.SaveDailySummaryIndex(dsumIndex)
+	err = s.StoreDailySummaryUserSettings(dsum)
 	if err != nil {
 		return err
 	}
