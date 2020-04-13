@@ -92,7 +92,7 @@
                 "display_name": "Enable Daily Summary",
                 "type": "bool",
                 "help_text": "When enabled, Mattermost users will a receive a daily summary of their scheduled events in Microsoft Calendar. Users can choose when the summary will be sent to them.",
-                "default": true
+                "default": false
             }
         ]
     }
