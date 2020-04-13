@@ -8,14 +8,9 @@ import (
 
 const maxNumUsersPerRequest = 20
 
-type apiError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
 type getScheduleResponse struct {
 	Value []*remote.ScheduleInformation `json:"value,omitempty"`
-	Error *apiError
+	Error *remote.ApiError              `json:"error,omitempty"`
 }
 
 type getScheduleSingleResponse struct {

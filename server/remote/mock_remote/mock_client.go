@@ -166,6 +166,21 @@ func (mr *MockClientMockRecorder) DeleteSubscription(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSubscription", reflect.TypeOf((*MockClient)(nil).DeleteSubscription), arg0)
 }
 
+// DoBatchViewCalendarRequests mocks base method
+func (m *MockClient) DoBatchViewCalendarRequests(arg0 []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DoBatchViewCalendarRequests", arg0)
+	ret0, _ := ret[0].([]*remote.ViewCalendarResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoBatchViewCalendarRequests indicates an expected call of DoBatchViewCalendarRequests
+func (mr *MockClientMockRecorder) DoBatchViewCalendarRequests(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoBatchViewCalendarRequests", reflect.TypeOf((*MockClient)(nil).DoBatchViewCalendarRequests), arg0)
+}
+
 // FindMeetingTimes mocks base method
 func (m *MockClient) FindMeetingTimes(arg0 string, arg1 *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	m.ctrl.T.Helper()

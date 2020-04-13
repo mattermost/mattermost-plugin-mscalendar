@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -32,7 +33,14 @@ func (m *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
 }
 
 func (m *mscalendar) SyncStatusAll() (string, error) {
-	err := m.Filter(withSuperuserClient)
+	isAdmin, err := m.IsAuthorizedAdmin(m.actingUser.MattermostUserID)
+	if err != nil {
+		return "", err
+	}
+	if !isAdmin {
+		return "", errors.Errorf("Non-admin user attempting SyncStatusAll %s", m.actingUser.MattermostUserID)
+	}
+	err = m.Filter(withSuperuserClient)
 	if err != nil {
 		return "", err
 	}

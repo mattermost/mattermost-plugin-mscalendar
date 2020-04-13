@@ -21,6 +21,7 @@ type Client interface {
 	FindMeetingTimes(remoteUserID string, meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
 	GetCalendars(remoteUserID string) ([]*Calendar, error)
 	GetDefaultCalendarView(remoteUserID string, startTime, endTime time.Time) ([]*Event, error)
+	DoBatchViewCalendarRequests([]*ViewCalendarParams) ([]*ViewCalendarResponse, error)
 	GetEvent(remoteUserID, eventID string) (*Event, error)
 	GetMailboxSettings(remoteUserID string) (*MailboxSettings, error)
 	GetMe() (*User, error)
