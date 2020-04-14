@@ -81,3 +81,14 @@ func (s pluginStore) Delete(key string) error {
 	}
 	return nil
 }
+
+func (s pluginStore) CompareAndDelete(key string, oldValue []byte) (bool, error) {
+	ok, appErr := s.api.KVCompareAndDelete(key, oldValue)
+	if appErr != nil {
+		return false, errors.WithMessagef(appErr, "failed plugin KVCompareAndDelete %q", key)
+	}
+
+	return ok, nil
+}
+
+func (s pluginStore) ClearCaches() {}

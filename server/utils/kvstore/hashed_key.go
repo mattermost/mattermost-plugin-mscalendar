@@ -44,6 +44,12 @@ func (s hashedKeyStore) Delete(key string) error {
 	return s.store.Delete(hashKey(s.prefix, key))
 }
 
+func (s hashedKeyStore) CompareAndDelete(key string, oldValue []byte) (bool, error) {
+	return s.store.CompareAndDelete(key, oldValue)
+}
+
+func (s hashedKeyStore) ClearCaches() {}
+
 func hashKey(prefix, hashableKey string) string {
 	if hashableKey == "" {
 		return prefix

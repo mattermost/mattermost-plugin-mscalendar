@@ -50,7 +50,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	return &pluginStore{
 		basicKV:            basicKV,
-		userKV:             kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix),
+		userKV:             kvstore.NewCachedStore(kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix), "userCache", 5000),
 		userIndexKV:        kvstore.NewHashedKeyStore(basicKV, UserIndexKeyPrefix),
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),

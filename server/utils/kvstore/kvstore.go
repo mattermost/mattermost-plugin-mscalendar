@@ -18,6 +18,8 @@ type KVStore interface {
 	StoreTTL(key string, data []byte, ttlSeconds int64) error
 	StoreWithOptions(key string, value []byte, opts model.PluginKVSetOptions) (bool, error)
 	Delete(key string) error
+	CompareAndDelete(key string, oldValue []byte) (bool, error)
+	ClearCaches()
 }
 
 var ErrNotFound = errors.New("not found")
@@ -108,4 +110,30 @@ func AtomicModify(s KVStore, key string, modify func(initialValue []byte, storeE
 		b, err := modify(initialValue, storeErr)
 		return b, nil, err
 	})
+}
+
+func AtomicDelete(s KVStore, key string, doSomething func(initialValue []byte, storeErr error) error) error {
+	currentAttemp := 0
+	for {
+		initialBytes, appErr := s.Load(key)
+		err := doSomething(initialBytes, appErr)
+		if err != nil {
+			return errors.Wrap(err, "deletion error")
+		}
+		ok, err := s.CompareAndDelete(key, initialBytes)
+		if err != nil {
+			return errors.Wrap(err, "problem deleting value")
+		}
+
+		if ok {
+			return nil
+		}
+
+		currentAttemp++
+		if currentAttemp >= atomicRetryLimit {
+			return errors.New("reached delete attemp limit")
+		}
+
+		time.Sleep(atomicRetryWait)
+	}
 }
