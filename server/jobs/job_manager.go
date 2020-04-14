@@ -77,7 +77,7 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 		if enabled && !active {
 			err := jm.activateJob(job)
 			if err != nil {
-				jm.env.Logger.Errorf("Error activating job", "id", job.id, "error", err.Error())
+				jm.env.Logger.Errorf("Error activating %s job. %s", job.id, err.Error())
 			}
 		}
 
@@ -85,7 +85,7 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 		if !enabled && active {
 			err := jm.deactivateJob(job)
 			if err != nil {
-				jm.env.Logger.Errorf("Error deactivating job", "id", job.id, "error", err.Error())
+				jm.env.Logger.Errorf("Error deactivating %s job. %s", job.id, err.Error())
 			}
 		}
 
@@ -100,7 +100,7 @@ func (jm *JobManager) Close() error {
 		job := v.(*activeJob)
 		err := jm.deactivateJob(job.RegisteredJob)
 		if err != nil {
-			jm.env.Logger.Debugf("Failed to deactivate job", "error", err.Error())
+			jm.env.Logger.Debugf("Failed to deactivate job. %s", err.Error())
 		}
 
 		return true
