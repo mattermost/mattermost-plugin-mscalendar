@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -76,11 +77,12 @@ func TestSyncStatusAll(t *testing.T) {
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
-					Store:     s,
-					Logger:    logger,
-					Poster:    poster,
-					Remote:    mockRemote,
-					PluginAPI: mockPluginAPI,
+					Store:             s,
+					Logger:            logger,
+					Poster:            poster,
+					Remote:            mockRemote,
+					PluginAPI:         mockPluginAPI,
+					IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return true, nil },
 				},
 			}
 
@@ -90,7 +92,7 @@ func TestSyncStatusAll(t *testing.T) {
 					RemoteID:         "user_remote_id",
 					Email:            "user_email@example.com",
 				},
-			}, nil).AnyTimes()
+			}, nil).Times(1)
 
 			token := &oauth2.Token{
 				AccessToken: "bot_oauth_token",
@@ -121,7 +123,8 @@ func TestSyncStatusAll(t *testing.T) {
 			}
 
 			mscalendar := New(env, "")
-			mscalendar.SyncStatusAll()
+			_, err := mscalendar.SyncStatusAll()
+			require.Nil(t, err)
 		})
 	}
 }
