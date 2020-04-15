@@ -16,13 +16,13 @@ type Calendar struct {
 }
 
 type ViewCalendarParams struct {
-	RemoteID  string
-	StartTime time.Time
-	EndTime   time.Time
+	RemoteUserID string
+	StartTime    time.Time
+	EndTime      time.Time
 }
 
 type ViewCalendarResponse struct {
-	RemoteID string
-	Events   []*Event
-	Error    *ApiError
+	RemoteUserID string
+	Events       []*Event
+	Error        *ApiError
 }

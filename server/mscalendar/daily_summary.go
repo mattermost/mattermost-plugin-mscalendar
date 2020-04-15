@@ -136,9 +136,9 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 		start, end := getTodayHoursForTimezone(now, dsum.Timezone)
 		req := &remote.ViewCalendarParams{
-			RemoteID:  dsum.RemoteID,
-			StartTime: start,
-			EndTime:   end,
+			RemoteUserID: dsum.RemoteID,
+			StartTime:    start,
+			EndTime:      end,
 		}
 		requests = append(requests, req)
 	}
@@ -151,7 +151,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	mappedPostTimes := map[string]string{}
 	byRemoteID := dsumIndex.ByRemoteID()
 	for _, res := range responses {
-		dsum := byRemoteID[res.RemoteID]
+		dsum := byRemoteID[res.RemoteUserID]
 		if res.Error != nil {
 			m.Logger.Errorf("Error rendering user %s calendar: %s %s", dsum.MattermostUserID, res.Error.Code, res.Error.Message)
 		}

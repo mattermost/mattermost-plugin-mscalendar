@@ -152,8 +152,8 @@ func TestProcessAllDailySummary(t *testing.T) {
 				hour, minute := 10, 0 // Time is "10:00AM"
 				moment := makeTime(hour, minute, loc)
 				mockClient.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
-					{RemoteID: "user1_remote_id", Events: []*remote.Event{}},
-					{RemoteID: "user2_remote_id", Events: []*remote.Event{
+					{RemoteUserID: "user1_remote_id", Events: []*remote.Event{}},
+					{RemoteUserID: "user2_remote_id", Events: []*remote.Event{
 						{
 							Subject: "The subject",
 							Start:   remote.NewDateTime(moment, "Mountain Standard Time"),

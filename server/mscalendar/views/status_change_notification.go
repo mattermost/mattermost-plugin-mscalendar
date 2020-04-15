@@ -8,7 +8,14 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
-func RenderStatusChangeNotificationView(events []*remote.ScheduleItem, status, url string) *model.SlackAttachment {
+var prettyStatuses = map[string]string{
+	model.STATUS_ONLINE:  "Online",
+	model.STATUS_AWAY:    "Away",
+	model.STATUS_DND:     "DND",
+	model.STATUS_OFFLINE: "Offline",
+}
+
+func RenderStatusChangeNotificationView(events []*remote.Event, status, url string) *model.SlackAttachment {
 	for _, e := range events {
 		if e.Start.Time().After(time.Now()) {
 			return statusChangeAttachments(e, status, url)
@@ -17,21 +24,21 @@ func RenderStatusChangeNotificationView(events []*remote.ScheduleItem, status, u
 	return statusChangeAttachments(nil, status, url)
 }
 
-func renderScheduleItem(si *remote.ScheduleItem, status string) string {
-	if si == nil {
-		return fmt.Sprintf("You have no upcoming events.\n Shall I change your status to %s?", status)
+func renderScheduleItem(event *remote.Event, status string) string {
+	if event == nil {
+		return fmt.Sprintf("You have no upcoming events.\n Shall I change your status to %s?", prettyStatuses[status])
 	}
 
-	resp := fmt.Sprintf("Your event with subject `%s` will start soon.", si.Subject)
-	if si.Subject == "" {
+	resp := fmt.Sprintf("Your event with subject `%s` will start soon.", event.Subject)
+	if event.Subject == "" {
 		resp = "An event with no subject will start soon."
 	}
 
-	resp += "\nShall I change your status to %s?"
+	resp += fmt.Sprintf("\nShall I change your status to %s?", prettyStatuses[status])
 	return resp
 }
 
-func statusChangeAttachments(event *remote.ScheduleItem, status, url string) *model.SlackAttachment {
+func statusChangeAttachments(event *remote.Event, status, url string) *model.SlackAttachment {
 	actionYes := &model.PostAction{
 		Name: "Yes",
 		Integration: &model.PostActionIntegration{
