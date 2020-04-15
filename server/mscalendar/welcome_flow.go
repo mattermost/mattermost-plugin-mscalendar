@@ -13,11 +13,11 @@ type welcomeFlow struct {
 	onFlowDone func(userID string)
 }
 
-func NewWelcomeFlow(url string, bot bot.FlowController, onFlowDone func(userID string)) *welcomeFlow {
+func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer) *welcomeFlow {
 	wf := welcomeFlow{
-		url:        url,
+		url:        "/welcome",
 		controller: bot,
-		onFlowDone: onFlowDone,
+		onFlowDone: welcomer.WelcomeFlowEnd,
 	}
 	wf.makeSteps()
 	return &wf
@@ -42,7 +42,7 @@ func (wf *welcomeFlow) Length() int {
 }
 
 func (wf *welcomeFlow) StepDone(userID string, step int, value bool) {
-	wf.controller.NextStep(step, userID, value)
+	wf.controller.NextStep(userID, step, value)
 }
 
 func (wf *welcomeFlow) FlowDone(userID string) {
@@ -64,7 +64,7 @@ func (wf *welcomeFlow) makeSteps() {
 		Title:                "Confirm status change",
 		Message:              "Do you want to receive confirmations before we update your status for each event?",
 		PropertyName:         store.GetConfirmationPropertyName,
-		TrueButtonMessage:    "Yes - I will like to get confirmations",
+		TrueButtonMessage:    "Yes - I would like to get confirmations",
 		FalseButtonMessage:   "No - Update my status automatically",
 		TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
 		FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
@@ -72,7 +72,7 @@ func (wf *welcomeFlow) makeSteps() {
 		Title:                "Subscribe to events",
 		Message:              "Do you want to receive notifications when you receive a new event?",
 		PropertyName:         store.SubscribePropertyName,
-		TrueButtonMessage:    "Yes - I will like to receive notifications",
+		TrueButtonMessage:    "Yes - I would like to receive notifications for new events",
 		FalseButtonMessage:   "No - Do not notify me of new events",
 		TrueResponseMessage:  "Great, you will receive a message any time you receive a new event.",
 		FalseResponseMessage: "Great, you will not receive any notification on new events.",

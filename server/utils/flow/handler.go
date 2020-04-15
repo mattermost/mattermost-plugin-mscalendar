@@ -25,8 +25,8 @@ func Init(h *httputils.Handler, flow Flow, store FlowStore) {
 		store: store,
 	}
 
-	oauth2Router := h.Router.PathPrefix("/").Subrouter()
-	oauth2Router.HandleFunc(flow.URL(), fh.handleFlow).Methods("POST")
+	flowRouter := h.Router.PathPrefix("/").Subrouter()
+	flowRouter.HandleFunc(flow.URL(), fh.handleFlow).Methods(http.MethodPost)
 }
 
 func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +49,6 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	property := step.GetPropertyName()
-
 	valueString := r.URL.Query().Get(property)
 	if valueString == "" {
 		utils.SlackAttachmentError(w, "Correct property not set")
@@ -57,7 +56,6 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	value := valueString == "true"
-
 	err = fh.store.SetProperty(mattermostUserID, property, value)
 	if err != nil {
 		utils.SlackAttachmentError(w, "There has been a problem setting the property, err="+err.Error())
@@ -67,7 +65,6 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	response := model.PostActionIntegrationResponse{}
 	post := model.Post{}
 	model.ParseSlackAttachment(&post, []*model.SlackAttachment{step.ResponseSlackAttachment(value)})
-
 	response.Update = &post
 
 	w.Header().Set("Content-Type", "application/json")

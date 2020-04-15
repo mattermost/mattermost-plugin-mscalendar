@@ -98,3 +98,43 @@ func (s *pluginStore) RemovePostID(userID, propertyName string) error {
 
 	return nil
 }
+
+func (s *pluginStore) GetCurrentStep(userID string) (int, error) {
+	user, err := s.LoadUser(userID)
+	if err != nil {
+		return 0, err
+	}
+
+	return user.Flags.WelcomeFlowStep, nil
+}
+func (s *pluginStore) SetCurrentStep(userID string, step int) error {
+	user, err := s.LoadUser(userID)
+	if err != nil {
+		return err
+	}
+
+	user.Flags.WelcomeFlowStep = step
+
+	err = s.StoreUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *pluginStore) DeleteCurrentStep(userID string) error {
+	user, err := s.LoadUser(userID)
+	if err != nil {
+		return err
+	}
+
+	user.Flags.WelcomeFlowStep = 0
+
+	err = s.StoreUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

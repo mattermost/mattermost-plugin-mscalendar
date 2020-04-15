@@ -168,10 +168,10 @@ func TestProcessAllDailySummary(t *testing.T) {
 
 				mockPoster := deps.Poster.(*mock_bot.MockPoster)
 				gomock.InOrder(
-					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return(nil).Times(1),
+					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return("postID", nil).Times(1),
 					mockPoster.EXPECT().DM("user2_mm_id", `Times are shown in Pacific Standard Time
 Wednesday February 12
-* 9:00AM - 11:00AM `+"`The subject`\n").Return(nil).Times(1),
+* 9:00AM - 11:00AM `+"`The subject`\n").Return("postID", nil).Times(1),
 				)
 
 				s.EXPECT().ModifyDailySummaryIndex(gomock.Any()).Return(nil)

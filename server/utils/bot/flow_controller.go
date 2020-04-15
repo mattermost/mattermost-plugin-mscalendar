@@ -4,7 +4,7 @@ import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 
 type FlowController interface {
 	Start(userID string) error
-	NextStep(from int, userID string, value bool) error
+	NextStep(userID string, from int, value bool) error
 	Cancel(userID string) error
 }
 
@@ -16,7 +16,7 @@ func (bot *bot) Start(userID string) error {
 	return bot.processStep(userID, bot.flow.Step(0), 0)
 }
 
-func (bot *bot) NextStep(from int, userID string, value bool) error {
+func (bot *bot) NextStep(userID string, from int, value bool) error {
 	step, err := bot.getFlowStep(userID)
 	if err != nil {
 		return err
@@ -67,20 +67,15 @@ func (bot *bot) Cancel(userID string) error {
 }
 
 func (bot *bot) setFlowStep(userID string, step int) error {
-	// TODO: Use KVStore for HA
-	bot.currentStep[userID] = step
-	return nil
+	return bot.flowStore.SetCurrentStep(userID, step)
 }
 
 func (bot *bot) getFlowStep(userID string) (int, error) {
-	// TODO: Use KVStore for HA
-	return bot.currentStep[userID], nil
+	return bot.flowStore.GetCurrentStep(userID)
 }
 
 func (bot *bot) removeFlowStep(userID string) error {
-	// TODO: Use KVStore for HA
-	delete(bot.currentStep, userID)
-	return nil
+	return bot.flowStore.DeleteCurrentStep(userID)
 }
 
 func (bot *bot) processStep(userID string, step flow.Step, i int) error {
@@ -101,7 +96,7 @@ func (bot *bot) processStep(userID string, step flow.Step, i int) error {
 	}
 
 	if step.IsEmpty() {
-		return bot.NextStep(i, userID, false)
+		return bot.NextStep(userID, i, false)
 	}
 
 	err = bot.flowStore.SetPostID(userID, step.GetPropertyName(), postID)

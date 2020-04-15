@@ -41,7 +41,7 @@ func TestConnect(t *testing.T) {
 				mscal.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
 				mscal.EXPECT().Welcome("user_id").Return(nil)
 			},
-			expectedOutput: fmt.Sprintf(mscalendar.ConnectSuccessTemplate, "http://localhost"),
+			expectedOutput: fmt.Sprintf(mscalendar.WelcomeMessage, "http://localhost"),
 			expectedError:  "",
 		},
 		{

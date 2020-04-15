@@ -43,8 +43,7 @@ func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) (string
 func (bot *bot) DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) (string, error) {
 	post := model.Post{}
 	model.ParseSlackAttachment(&post, attachments)
-	postID, err := bot.dm(mattermostUserID, &post)
-	return postID, err
+	return bot.dm(mattermostUserID, &post)
 }
 
 func (bot *bot) dm(mattermostUserID string, post *model.Post) (string, error) {

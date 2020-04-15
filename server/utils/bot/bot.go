@@ -34,8 +34,6 @@ type bot struct {
 
 	flow      flow.Flow
 	flowStore flow.FlowStore
-	// TODO: Remove this and store this information in KVStore for HA
-	currentStep map[string]int
 }
 
 func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
@@ -49,7 +47,6 @@ func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
 func (bot *bot) RegisterFlow(flow flow.Flow, flowStore flow.FlowStore) {
 	bot.flow = flow
 	bot.flowStore = flowStore
-	bot.currentStep = make(map[string]int)
 }
 
 func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {

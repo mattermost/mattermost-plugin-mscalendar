@@ -24,7 +24,7 @@ func (c *Command) connect(parameters ...string) (string, error) {
 		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), nil
 	}
 
-	out := fmt.Sprintf(mscalendar.ConnectSuccessTemplate, c.Config.PluginURL)
+	out := fmt.Sprintf(mscalendar.WelcomeMessage, c.Config.PluginURL)
 
 	err = c.MSCalendar.Welcome(c.Args.UserId)
 	if err != nil {

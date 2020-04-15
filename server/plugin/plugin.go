@@ -128,7 +128,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.bot = e.bot.WithConfig(stored.BotConfig)
 
-		mscalendarBot := mscalendar.GetMSCalendarBot(e.bot, e.Env, pluginURL)
+		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		e.Config.BotUserID = e.bot.MattermostUserID()
 		e.Dependencies.Logger = e.bot
@@ -137,7 +137,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 
-		welcomeFlow := mscalendar.NewWelcomeFlow("/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
+		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer)
 		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
 
 		if e.notificationProcessor == nil {

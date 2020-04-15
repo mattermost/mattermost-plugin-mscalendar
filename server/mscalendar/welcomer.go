@@ -29,11 +29,7 @@ type mscBot struct {
 }
 
 const (
-	WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
-Here is some info to prove we got you logged in
-- Name: %s
-`
-	ConnectSuccessTemplate = `Welcome to the Microsoft Calendar.
+	WelcomeMessage = `Welcome to the Microsoft Calendar plugin.
 	[Click here to link your account.](%s/oauth2/connect)`
 )
 
@@ -53,7 +49,7 @@ func (m *mscalendar) WelcomeFlowEnd(userID string) {
 	m.Welcomer.WelcomeFlowEnd(userID)
 }
 
-func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) Bot {
+func NewMSCalendarBot(bot bot.Bot, env Env, pluginURL string) Bot {
 	return &mscBot{
 		Bot:       bot,
 		Env:       env,
@@ -62,9 +58,9 @@ func GetMSCalendarBot(bot bot.Bot, env Env, pluginURL string) Bot {
 }
 
 func (bot *mscBot) Welcome(userID string) error {
-	bot.cleanPostIDs(userID)
+	bot.cleanWelcomePost(userID)
 
-	postID, err := bot.DMWithAttachments(userID, bot.getConnectAttachment())
+	postID, err := bot.DMWithAttachments(userID, bot.newConnectAttachment())
 	if err != nil {
 		return err
 	}
@@ -83,7 +79,7 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 		post := &model.Post{
 			Id: postID,
 		}
-		model.ParseSlackAttachment(post, []*model.SlackAttachment{bot.getConnectedAttachment(userLogin)})
+		model.ParseSlackAttachment(post, []*model.SlackAttachment{bot.newConnectedAttachment(userLogin)})
 		bot.DMUpdatePost(post)
 	}
 
@@ -92,7 +88,7 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 
 func (bot *mscBot) AfterDisconnect(userID string) error {
 	errCancel := bot.Cancel(userID)
-	errClean := bot.cleanPostIDs(userID)
+	errClean := bot.cleanWelcomePost(userID)
 	if errCancel != nil {
 		return errCancel
 	}
@@ -103,29 +99,20 @@ func (bot *mscBot) AfterDisconnect(userID string) error {
 	return nil
 }
 
-func (bot *mscBot) notifyWelcome(userID string) error {
-	user, err := bot.Store.LoadUser(userID)
-	if err != nil {
-		return err
-	}
-	_, err = bot.DM(userID, WelcomeMessage, user.Remote.Mail)
-	return err
-}
-
 func (bot *mscBot) WelcomeFlowEnd(userID string) {
 	bot.notifySettings(userID)
 }
 
-func (bot *mscBot) getConnectAttachment() *model.SlackAttachment {
+func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
 	sa := model.SlackAttachment{
 		Title: "Connect",
-		Text:  fmt.Sprintf(ConnectSuccessTemplate, bot.pluginURL),
+		Text:  fmt.Sprintf(WelcomeMessage, bot.pluginURL),
 	}
 
 	return &sa
 }
 
-func (bot *mscBot) getConnectedAttachment(userLogin string) *model.SlackAttachment {
+func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachment {
 	return &model.SlackAttachment{
 		Title: "Connect",
 		Text:  ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost.",
@@ -140,7 +127,7 @@ func (bot *mscBot) notifySettings(userID string) error {
 	return nil
 }
 
-func (bot *mscBot) cleanPostIDs(mattermostUserID string) error {
+func (bot *mscBot) cleanWelcomePost(mattermostUserID string) error {
 	postID, err := bot.Store.DeleteUserWelcomePost(mattermostUserID)
 	if err != nil {
 		return err
@@ -156,19 +143,18 @@ func (bot *mscBot) cleanPostIDs(mattermostUserID string) error {
 }
 
 func (bot *mscBot) SetProperty(userID, propertyName string, value bool) error {
-	if propertyName != store.SubscribePropertyName {
-		return bot.Dependencies.Store.SetProperty(userID, propertyName, value)
-	}
-
-	if value {
-		mscalendar := New(bot.Env, userID)
-		_, err := mscalendar.CreateMyEventSubscription()
-		if err != nil {
-			return err
+	if propertyName == store.SubscribePropertyName {
+		if value {
+			m := New(bot.Env, userID)
+			_, err := m.CreateMyEventSubscription()
+			if err != nil {
+				return err
+			}
 		}
+		return nil
 	}
 
-	return nil
+	return bot.Dependencies.Store.SetProperty(userID, propertyName, value)
 }
 
 func (bot *mscBot) SetPostID(userID, propertyName, postID string) error {
@@ -181,4 +167,14 @@ func (bot *mscBot) GetPostID(userID, propertyName string) (string, error) {
 
 func (bot *mscBot) RemovePostID(userID, propertyName string) error {
 	return bot.Dependencies.Store.RemovePostID(userID, propertyName)
+}
+
+func (bot *mscBot) GetCurrentStep(userID string) (int, error) {
+	return bot.Dependencies.Store.GetCurrentStep(userID)
+}
+func (bot *mscBot) SetCurrentStep(userID string, step int) error {
+	return bot.Dependencies.Store.SetCurrentStep(userID, step)
+}
+func (bot *mscBot) DeleteCurrentStep(userID string) error {
+	return bot.Dependencies.Store.DeleteCurrentStep(userID)
 }
