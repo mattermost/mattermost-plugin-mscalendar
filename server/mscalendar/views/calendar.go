@@ -10,7 +10,7 @@ import (
 
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
-		return "No events were found", nil
+		return "You have no upcoming events.", nil
 	}
 
 	if timeZone != "" {
