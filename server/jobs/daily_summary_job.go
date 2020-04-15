@@ -4,7 +4,8 @@
 package jobs
 
 import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"time"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
@@ -25,16 +26,9 @@ func NewDailySummaryJob() RegisteredJob {
 
 // runDailySummaryJob delivers the daily calendar summary to all users who have their settings configured to receive it now
 func runDailySummaryJob(env mscalendar.Env) {
-	mscal := mscalendar.New(env, "")
-	_, err := mscal.GetRemoteUser(env.BotUserID)
-	if err != nil {
-		env.Logger.Errorf("Please connect bot user using `/%s connect_bot`, in order to run the daily summary job.", config.CommandTrigger)
-		return
-	}
-
 	env.Logger.Debugf("Daily summary job beginning")
 
-	err = mscal.ProcessAllDailySummary()
+	err := mscalendar.New(env, "").ProcessAllDailySummary(time.Now())
 	if err != nil {
 		env.Logger.Errorf("Error during daily summary job", "error", err.Error())
 	}
