@@ -146,7 +146,15 @@ func (bot *mscBot) SetProperty(userID, propertyName string, value bool) error {
 	if propertyName == store.SubscribePropertyName {
 		if value {
 			m := New(bot.Env, userID)
-			_, err := m.CreateMyEventSubscription()
+			l, err := m.ListRemoteSubscriptions()
+			if err != nil {
+				return err
+			}
+			if len(l) >= 1 {
+				return nil
+			}
+
+			_, err = m.CreateMyEventSubscription()
 			if err != nil {
 				return err
 			}

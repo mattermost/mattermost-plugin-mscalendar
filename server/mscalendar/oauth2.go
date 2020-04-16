@@ -122,12 +122,12 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return nil
 	}
 
-	app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
-
 	err = app.Store.StoreUserInIndex(u)
 	if err != nil {
 		return err
 	}
+
+	app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
 
 	return nil
 }
