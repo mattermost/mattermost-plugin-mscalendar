@@ -72,7 +72,7 @@ func RenderScheduleItem(s remote.ScheduleItem, timezone string) (string, error) 
 
 	message += fmt.Sprintf("\n%s-%s (%s)", start.Format(time.Kitchen), end.Format(time.Kitchen), timezone)
 	if s.Subject == "" {
-		message += fmt.Sprintf("\nNo subject.")
+		message += "\nSubject: unknown"
 	} else {
 		message += fmt.Sprintf("\nSubject: %s", s.Subject)
 	}
