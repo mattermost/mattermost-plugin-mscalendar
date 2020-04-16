@@ -29,6 +29,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type Env struct {
@@ -131,6 +132,16 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
+		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
+			e.bot,
+			e.Dependencies.Store,
+			e.Dependencies.Store,
+			"/settings",
+			pluginURL,
+			func(userID string) (string, error) {
+				return mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
+			},
+		)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -140,6 +151,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
 		if e.jobManager == nil {
