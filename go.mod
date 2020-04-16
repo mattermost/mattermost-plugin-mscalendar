@@ -3,7 +3,6 @@ module github.com/mattermost/mattermost-plugin-mscalendar
 go 1.13
 
 require (
-	github.com/benbjohnson/clock v1.0.0
 	github.com/golang/mock v1.2.0
 	github.com/gorilla/mux v1.7.3
 	github.com/jarcoal/httpmock v1.0.4
