@@ -50,6 +50,18 @@ func (mr *MockMSCalendarMockRecorder) AcceptEvent(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptEvent", reflect.TypeOf((*MockMSCalendar)(nil).AcceptEvent), arg0, arg1)
 }
 
+// ClearSettingsPosts mocks base method
+func (m *MockMSCalendar) ClearSettingsPosts(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ClearSettingsPosts", arg0)
+}
+
+// ClearSettingsPosts indicates an expected call of ClearSettingsPosts
+func (mr *MockMSCalendarMockRecorder) ClearSettingsPosts(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSettingsPosts", reflect.TypeOf((*MockMSCalendar)(nil).ClearSettingsPosts), arg0)
+}
+
 // CreateCalendar mocks base method
 func (m *MockMSCalendar) CreateCalendar(arg0 *mscalendar.User, arg1 *remote.Calendar) (*remote.Calendar, error) {
 	m.ctrl.T.Helper()
@@ -342,6 +354,18 @@ func (m *MockMSCalendar) LoadMyEventSubscription() (*store.Subscription, error) 
 func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
+}
+
+// PrintSettings mocks base method
+func (m *MockMSCalendar) PrintSettings(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PrintSettings", arg0)
+}
+
+// PrintSettings indicates an expected call of PrintSettings
+func (mr *MockMSCalendarMockRecorder) PrintSettings(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrintSettings", reflect.TypeOf((*MockMSCalendar)(nil).PrintSettings), arg0)
 }
 
 // ProcessAllDailySummary mocks base method

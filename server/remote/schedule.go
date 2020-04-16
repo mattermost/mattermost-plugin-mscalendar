@@ -9,9 +9,7 @@ const (
 	AvailabilityViewBusy             = '2'
 	AvailabilityViewOutOfOffice      = '3'
 	AvailabilityViewWorkingElsewhere = '4'
-)
 
-const (
 	ScheduleStatusFree             = "free"
 	ScheduleStatusTentative        = "tentative"
 	ScheduleStatusBusy             = "busy"

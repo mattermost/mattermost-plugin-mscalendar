@@ -17,7 +17,10 @@ import (
 )
 
 const (
-	availabilityTimeWindowSize = 10 * time.Minute
+	availabilityTimeWindowSize      = 10 * time.Minute
+	StatusSyncJobInterval           = 5 * time.Minute
+	upcomingEventNotificationTime   = 10 * time.Minute
+	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
 )
 
 type Availability interface {
@@ -119,6 +122,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 		}
 
 		mattermostUserID := usersByRemoteID[s.RemoteUserID].MattermostUserID
+		m.notifyUpcomingEvent(mattermostUserID, s.Events)
 		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
@@ -218,7 +222,8 @@ func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus s
 func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, events []*remote.Event) error {
 	if user.Settings.GetConfirmation {
 		url := fmt.Sprintf("%s%s%s", m.Config.PluginURLPath, config.PathPostAction, config.PathConfirmStatusChange)
-		return m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(events, status, url))
+		_, err := m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(events, status, url))
+		return err
 	}
 
 	_, appErr := m.PluginAPI.UpdateMattermostUserStatus(user.MattermostUserID, model.STATUS_DND)
@@ -247,6 +252,37 @@ func (m *mscalendar) GetAvailabilities(users []*store.User) ([]*remote.ViewCalen
 	}
 
 	return m.client.DoBatchViewCalendarRequests(params)
+}
+
+func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remote.Event) {
+	var timezone string
+	for _, event := range events {
+		upcomingTime := time.Now().Add(upcomingEventNotificationTime)
+		start := event.Start.Time()
+		diff := start.Sub(upcomingTime)
+
+		if (diff < upcomingEventNotificationWindow) && (diff > -upcomingEventNotificationWindow) {
+			var err error
+			if timezone == "" {
+				timezone, err = m.GetTimezoneByID(mattermostUserID)
+				if err != nil {
+					m.Logger.Errorf("notifyUpcomingEvent error getting timezone, err=%s", err.Error())
+					return
+				}
+			}
+
+			message, err := views.RenderScheduleItem(event, timezone)
+			if err != nil {
+				m.Logger.Errorf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
+				continue
+			}
+			err = m.Poster.DM(mattermostUserID, message)
+			if err != nil {
+				m.Logger.Errorf("notifyUpcomingEvent error creating DM, err=", err.Error())
+				continue
+			}
+		}
+	}
 }
 
 func filterBusyEvents(events []*remote.Event) []*remote.Event {

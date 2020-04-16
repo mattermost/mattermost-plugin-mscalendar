@@ -42,7 +42,7 @@ const (
 
 type NotificationProcessor interface {
 	Configure(Env)
-	Enqueue(notifications ...*remote.Notification)
+	Enqueue(notifications ...*remote.Notification) error
 	Quit()
 }
 
@@ -50,28 +50,30 @@ type notificationProcessor struct {
 	Env
 	envChan chan Env
 
-	incoming  chan *remote.Notification
-	queue     chan *remote.Notification
-	queueSize int
-	quit      chan bool
+	queue chan *remote.Notification
+	quit  chan bool
 }
 
 func NewNotificationProcessor(env Env) NotificationProcessor {
 	processor := &notificationProcessor{
-		Env:      env,
-		envChan:  make(chan (Env)),
-		incoming: make(chan (*remote.Notification)),
-		queue:    make(chan (*remote.Notification), maxQueueSize),
-		quit:     make(chan (bool)),
+		Env:     env,
+		envChan: make(chan (Env)),
+		queue:   make(chan (*remote.Notification), maxQueueSize),
+		quit:    make(chan (bool)),
 	}
 	go processor.work()
 	return processor
 }
 
-func (processor *notificationProcessor) Enqueue(notifications ...*remote.Notification) {
+func (processor *notificationProcessor) Enqueue(notifications ...*remote.Notification) error {
 	for _, n := range notifications {
-		processor.incoming <- n
+		select {
+		case processor.queue <- n:
+		default:
+			return errors.Errorf("webhook notification: queue full, dropped notification")
+		}
 	}
+	return nil
 }
 
 func (processor *notificationProcessor) Configure(env Env) {
@@ -85,16 +87,7 @@ func (processor *notificationProcessor) Quit() {
 func (processor *notificationProcessor) work() {
 	for {
 		select {
-		case n := <-processor.incoming:
-			if processor.queueSize >= maxQueueSize {
-				processor.Env.Logger.Errorf("webhook notification: queue full (`%v`), dropped notification", processor.queueSize)
-				continue
-			}
-			processor.queueSize++
-			processor.queue <- n
-
 		case n := <-processor.queue:
-			processor.queueSize--
 			err := processor.processNotification(n)
 			if err != nil {
 				processor.Logger.With(bot.LogContext{
@@ -186,7 +179,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		prior = &store.Event{}
 	}
 
-	err = processor.Poster.DMWithAttachments(creator.MattermostUserID, sa)
+	_, err = processor.Poster.DMWithAttachments(creator.MattermostUserID, sa)
 	if err != nil {
 		return err
 	}
