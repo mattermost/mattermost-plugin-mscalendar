@@ -76,6 +76,9 @@ func (m *mscalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	}
 
 	subscriptionID := m.actingUser.Settings.EventSubscriptionID
+	if subscriptionID == "" {
+		return nil, nil
+	}
 	renewed, err := m.client.RenewSubscription(subscriptionID)
 	if err != nil {
 		return nil, err

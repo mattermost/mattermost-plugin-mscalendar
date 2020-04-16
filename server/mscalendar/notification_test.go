@@ -187,3 +187,21 @@ func TestProcessNotification(t *testing.T) {
 		})
 	}
 }
+
+func TestProcessNotificationOverflow(t *testing.T) {
+	t.Run("overflow", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		processor := &notificationProcessor{
+			queue: make(chan (*remote.Notification), maxQueueSize),
+		}
+
+		for i := 0; i < maxQueueSize; i++ {
+			err := processor.Enqueue(&remote.Notification{})
+			require.NoError(t, err)
+		}
+		err := processor.Enqueue(&remote.Notification{})
+		require.Error(t, err)
+	})
+}
