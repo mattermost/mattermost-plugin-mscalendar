@@ -5,9 +5,15 @@ package api
 
 import (
 	"net/http"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
 func (api *api) notification(w http.ResponseWriter, req *http.Request) {
-	api.NotificationProcessor.Enqueue(
+	err := api.NotificationProcessor.Enqueue(
 		api.Env.Remote.HandleWebhook(w, req)...)
+	if err != nil {
+		httputils.WriteInternalServerError(w, err)
+		return
+	}
 }
