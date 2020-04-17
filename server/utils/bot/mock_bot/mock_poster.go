@@ -72,20 +72,6 @@ func (mr *MockPosterMockRecorder) DMUpdate(arg0, arg1 interface{}, arg2 ...inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMUpdate", reflect.TypeOf((*MockPoster)(nil).DMUpdate), varargs...)
 }
 
-// DMUpdatePost mocks base method
-func (m *MockPoster) DMUpdatePost(arg0 *model.Post) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DMUpdatePost", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DMUpdatePost indicates an expected call of DMUpdatePost
-func (mr *MockPosterMockRecorder) DMUpdatePost(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMUpdatePost", reflect.TypeOf((*MockPoster)(nil).DMUpdatePost), arg0)
-}
-
 // DMWithAttachments mocks base method
 func (m *MockPoster) DMWithAttachments(arg0 string, arg1 ...*model.SlackAttachment) (string, error) {
 	m.ctrl.T.Helper()
@@ -135,4 +121,18 @@ func (mr *MockPosterMockRecorder) Ephemeral(arg0, arg1, arg2 interface{}, arg3 .
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ephemeral", reflect.TypeOf((*MockPoster)(nil).Ephemeral), varargs...)
+}
+
+// UpdatePost mocks base method
+func (m *MockPoster) UpdatePost(arg0 *model.Post) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePost", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePost indicates an expected call of UpdatePost
+func (mr *MockPosterMockRecorder) UpdatePost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePost", reflect.TypeOf((*MockPoster)(nil).UpdatePost), arg0)
 }

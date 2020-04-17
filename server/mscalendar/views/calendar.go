@@ -64,3 +64,22 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	}
 	return result
 }
+
+func RenderScheduleItem(s remote.ScheduleItem, timezone string) (string, error) {
+	message := "You have an upcoming event:"
+	start := s.Start.In(timezone).Time()
+	end := s.End.In(timezone).Time()
+
+	message += fmt.Sprintf("\n%s-%s (%s)", start.Format(time.Kitchen), end.Format(time.Kitchen), timezone)
+	if s.Subject == "" {
+		message += "\nSubject: unknown"
+	} else {
+		message += fmt.Sprintf("\nSubject: %s", s.Subject)
+	}
+
+	if s.Location != "" {
+		message += fmt.Sprintf("\nLocation: %s", s.Location)
+	}
+
+	return message, nil
+}

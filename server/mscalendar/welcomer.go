@@ -80,7 +80,7 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 			Id: postID,
 		}
 		model.ParseSlackAttachment(post, []*model.SlackAttachment{bot.newConnectedAttachment(userLogin)})
-		bot.DMUpdatePost(post)
+		bot.UpdatePost(post)
 	}
 
 	return bot.Start(userID)

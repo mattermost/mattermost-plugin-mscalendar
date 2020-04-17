@@ -28,14 +28,18 @@ type Poster interface {
 	DeletePost(postID string) error
 
 	// DMUpdatePost substitute one post with another
-	DMUpdatePost(post *model.Post) error
+	UpdatePost(post *model.Post) error
 }
 
 // DM posts a simple Direct Message to the specified user
 func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) (string, error) {
-	return bot.dm(mattermostUserID, &model.Post{
+	postID, err := bot.dm(mattermostUserID, &model.Post{
 		Message: fmt.Sprintf(format, args...),
 	})
+	if err != nil {
+		return "", err
+	}
+	return postID, nil
 }
 
 // DMWithAttachments posts a Direct Message that contains Slack attachments.
@@ -54,11 +58,11 @@ func (bot *bot) dm(mattermostUserID string, post *model.Post) (string, error) {
 	}
 	post.ChannelId = channel.Id
 	post.UserId = bot.mattermostUserID
-	post, err = bot.pluginAPI.CreatePost(post)
+	sentPost, err := bot.pluginAPI.CreatePost(post)
 	if err != nil {
 		return "", err
 	}
-	return post.Id, nil
+	return sentPost.Id, nil
 }
 
 // DM posts a simple Direct Message to the specified user
@@ -107,7 +111,7 @@ func (bot *bot) DeletePost(postID string) error {
 	return nil
 }
 
-func (bot *bot) DMUpdatePost(post *model.Post) error {
+func (bot *bot) UpdatePost(post *model.Post) error {
 	_, appErr := bot.pluginAPI.UpdatePost(post)
 	if appErr != nil {
 		return appErr

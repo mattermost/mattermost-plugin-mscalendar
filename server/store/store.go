@@ -11,6 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 const (
@@ -21,6 +22,7 @@ const (
 	SubscriptionKeyPrefix     = "sub_"
 	EventKeyPrefix            = "ev_"
 	WelcomeKeyPrefix          = "welcome_"
+	SettingsPanelPrefix       = "settings_panel_"
 	DailySummaryKeyPrefix     = "dsum_"
 )
 
@@ -35,6 +37,8 @@ type Store interface {
 	EventStore
 	WelcomeStore
 	flow.FlowStore
+	settingspanel.SettingStore
+	settingspanel.PanelStore
 	DailySummaryStore
 }
 
@@ -47,6 +51,7 @@ type pluginStore struct {
 	subscriptionKV     kvstore.KVStore
 	eventKV            kvstore.KVStore
 	welcomeIndexKV     kvstore.KVStore
+	settingsPanelKV    kvstore.KVStore
 	dailySummaryKV     kvstore.KVStore
 	Logger             bot.Logger
 }
@@ -63,6 +68,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 		dailySummaryKV:     kvstore.NewHashedKeyStore(basicKV, DailySummaryKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
 		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
+		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
 		Logger:             logger,
 	}
 }
