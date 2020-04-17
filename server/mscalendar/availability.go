@@ -173,6 +173,9 @@ func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus s
 	}
 
 	if len(user.ActiveEvents) == 0 {
+		if currentStatus == model.STATUS_DND {
+			return "User was already marked as busy. No status change.", nil
+		}
 		err := m.setStatusOrAskUser(user, model.STATUS_DND, events)
 		if err != nil {
 			return "", err
@@ -226,7 +229,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, events 
 		return err
 	}
 
-	_, appErr := m.PluginAPI.UpdateMattermostUserStatus(user.MattermostUserID, model.STATUS_DND)
+	_, appErr := m.PluginAPI.UpdateMattermostUserStatus(user.MattermostUserID, status)
 	if appErr != nil {
 		return appErr
 	}

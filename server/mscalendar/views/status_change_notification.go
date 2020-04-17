@@ -11,7 +11,7 @@ import (
 var prettyStatuses = map[string]string{
 	model.STATUS_ONLINE:  "Online",
 	model.STATUS_AWAY:    "Away",
-	model.STATUS_DND:     "DND",
+	model.STATUS_DND:     "Do Not Disturb",
 	model.STATUS_OFFLINE: "Offline",
 }
 

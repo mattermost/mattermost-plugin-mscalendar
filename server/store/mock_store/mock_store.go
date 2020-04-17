@@ -295,20 +295,6 @@ func (mr *MockStoreMockRecorder) ModifyUserIndex(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyUserIndex", reflect.TypeOf((*MockStore)(nil).ModifyUserIndex), arg0)
 }
 
-// StoreDailySummaryUserSettings mocks base method
-func (m *MockStore) StoreDailySummaryUserSettings(arg0 *store.DailySummaryUserSettings) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StoreDailySummaryUserSettings", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// StoreDailySummaryUserSettings indicates an expected call of StoreDailySummaryUserSettings
-func (mr *MockStoreMockRecorder) StoreDailySummaryUserSettings(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreDailySummaryUserSettings", reflect.TypeOf((*MockStore)(nil).StoreDailySummaryUserSettings), arg0)
-}
-
 // SetPanelPostID mocks base method
 func (m *MockStore) SetPanelPostID(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -335,6 +321,20 @@ func (m *MockStore) SetSetting(arg0, arg1 string, arg2 interface{}) error {
 func (mr *MockStoreMockRecorder) SetSetting(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSetting", reflect.TypeOf((*MockStore)(nil).SetSetting), arg0, arg1, arg2)
+}
+
+// StoreDailySummaryUserSettings mocks base method
+func (m *MockStore) StoreDailySummaryUserSettings(arg0 *store.DailySummaryUserSettings) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreDailySummaryUserSettings", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreDailySummaryUserSettings indicates an expected call of StoreDailySummaryUserSettings
+func (mr *MockStoreMockRecorder) StoreDailySummaryUserSettings(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreDailySummaryUserSettings", reflect.TypeOf((*MockStore)(nil).StoreDailySummaryUserSettings), arg0)
 }
 
 // StoreOAuth2State mocks base method
