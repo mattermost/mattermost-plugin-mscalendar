@@ -167,7 +167,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	}
 
 	var sa *model.SlackAttachment
-	prior, err := processor.Store.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
+	prior, err := processor.Store.LoadUserEvent(creator.MattermostUserID, n.Event.ICalUID)
 	if err != nil && err != store.ErrNotFound {
 		return err
 	}
@@ -180,6 +180,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 				"SubscriptionID":   n.SubscriptionID,
 				"ChangeType":       n.ChangeType,
 				"EventID":          n.Event.ID,
+				"EventICalUID":     n.Event.ICalUID,
 			}).Debugf("webhook notification: no changes detected in event.")
 			return nil
 		}

@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -81,20 +82,8 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	err := calendar.RespondToEvent(user, eventID, option)
-	if err != nil && !strings.HasPrefix(err.Error(), "202") {
+	if err != nil && !strings.HasPrefix(err.Error(), "202") && !strings.HasPrefix(err.Error(), "404") {
 		utils.SlackAttachmentError(w, "Error: Failed to respond to event: "+err.Error())
-		return
-	}
-
-	var response string
-	switch option {
-	case mscalendar.OptionYes:
-		response = mscalendar.ResponseYes
-	case mscalendar.OptionNo:
-		response = mscalendar.ResponseNo
-	case mscalendar.OptionMaybe:
-		response = mscalendar.ResponseMaybe
-	default:
 		return
 	}
 
@@ -111,12 +100,37 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 	}
 
 	sa := sas[0]
-	sa.Actions = mscalendar.NewPostActionForEventResponse(eventID, response, req.URL.String())
+
+	if strings.HasPrefix(err.Error(), "202") {
+		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+			Title: "Response",
+			Value: fmt.Sprintf("You have %s this event", prettyOption(option)),
+			Short: false,
+		})
+	}
+
+	sa.Actions = []*model.PostAction{}
 	postResponse := model.PostActionIntegrationResponse{}
 	model.ParseSlackAttachment(p, []*model.SlackAttachment{sa})
 
 	postResponse.Update = p
 
+	if strings.HasPrefix(err.Error(), "404") {
+		postResponse.EphemeralText = "Event has changed since this message. Please change your status directly on MS Calendar."
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(postResponse.ToJson())
+}
+
+func prettyOption(option string) string {
+	switch option {
+	case mscalendar.OptionYes:
+		return "accepted"
+	case mscalendar.OptionNo:
+		return "declined"
+	case mscalendar.OptionMaybe:
+		return "tentatively accepted"
+	default:
+		return ""
+	}
 }

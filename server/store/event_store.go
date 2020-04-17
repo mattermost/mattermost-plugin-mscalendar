@@ -56,7 +56,7 @@ func (s *pluginStore) StoreUserEvent(mattermostUserID string, event *Event) erro
 	if err != nil {
 		return err
 	}
-	err = s.eventKV.StoreTTL(eventKey(mattermostUserID, event.Remote.ID), data, ttl)
+	err = s.eventKV.StoreTTL(eventKey(mattermostUserID, event.Remote.ICalUID), data, ttl)
 	if err != nil {
 		return err
 	}

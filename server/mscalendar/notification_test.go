@@ -31,7 +31,8 @@ func newTestNotificationProcessor(env Env) NotificationProcessor {
 
 func newTestEvent(locationDisplayName string, subjectDisplayName string) *remote.Event {
 	return &remote.Event{
-		ID: "remote_event_id",
+		ID:      "remote_event_id",
+		ICalUID: "remote_event_uid",
 		Organizer: &remote.Attendee{
 			EmailAddress: &remote.EmailAddress{
 				Address: "event_organizer_email",
@@ -164,11 +165,11 @@ func TestProcessNotification(t *testing.T) {
 				mockClient.EXPECT().GetNotificationData(tc.notification).Return(tc.notification, nil).Times(1)
 
 				if tc.priorEvent != nil {
-					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_id").Return(&store.Event{
+					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_uid").Return(&store.Event{
 						Remote: tc.priorEvent,
 					}, nil).Times(1)
 				} else {
-					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_id").Return(nil, store.ErrNotFound).Times(1)
+					mockStore.EXPECT().LoadUserEvent("creator_mm_id", "remote_event_uid").Return(nil, store.ErrNotFound).Times(1)
 				}
 
 				mockPoster.EXPECT().DMWithAttachments("creator_mm_id", gomock.Any()).Return("", nil).Times(1)
