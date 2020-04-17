@@ -37,6 +37,9 @@ func (c *Command) subscribe(parameters ...string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if storedSub == nil {
+			return fmt.Sprintf("Not subscribed. Use `/mscalendar subscribe` to subscribe."), nil
+		}
 		return fmt.Sprintf("Subscription %s renewed until %s", storedSub.Remote.ID, storedSub.Remote.ExpirationDateTime), nil
 
 	case len(parameters) == 1 && parameters[0] == "delete":
