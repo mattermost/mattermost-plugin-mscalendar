@@ -11,20 +11,25 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscal mscalendar.MSCalendar, user *mscalendar.User, eventID string, option string, postID string) {
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
+	if mattermostUserID == "" {
+		utils.SlackAttachmentError(w, "Error: not authorized")
+		return nil, nil, "", "", ""
+	}
 
 	request := model.PostActionIntegrationRequestFromJson(req.Body)
 	if request == nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: invalid request")
 		return nil, nil, "", "", ""
 	}
 
 	eventID, ok := request.Context[config.EventIDKey].(string)
 	if !ok {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: missing event ID")
 		return nil, nil, "", "", ""
 	}
 	option, _ = request.Context["selected_option"].(string)
@@ -41,7 +46,7 @@ func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
 	err := mscalendar.AcceptEvent(user, eventID)
 	if err != nil {
 		api.Logger.Warnf(err.Error())
-		http.Error(w, "Failed to accept event: "+err.Error(), http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: Failed to accept event: "+err.Error())
 		return
 	}
 }
@@ -53,7 +58,7 @@ func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
 	}
 	err := mscalendar.DeclineEvent(user, eventID)
 	if err != nil {
-		http.Error(w, "Failed to decline event: "+err.Error(), http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: Failed to decline event: "+err.Error())
 		return
 	}
 }
@@ -65,7 +70,7 @@ func (api *api) postActionTentative(w http.ResponseWriter, req *http.Request) {
 	}
 	err := mscalendar.TentativelyAcceptEvent(user, eventID)
 	if err != nil {
-		http.Error(w, "Failed to tentatively accept event: "+err.Error(), http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: Failed to tentatively accept event: "+err.Error())
 		return
 	}
 }
@@ -77,7 +82,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 	}
 	err := calendar.RespondToEvent(user, eventID, option)
 	if err != nil && !strings.HasPrefix(err.Error(), "202") {
-		http.Error(w, "Failed to respond to event: "+err.Error(), http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: Failed to respond to event: "+err.Error())
 		return
 	}
 
@@ -95,13 +100,13 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	p, err := api.PluginAPI.GetPost(postID)
 	if err != nil {
-		http.Error(w, "Failed to update the post: "+err.Error(), http.StatusInternalServerError)
+		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+err.Error())
 		return
 	}
 
 	sas := p.Attachments()
 	if len(sas) == 0 {
-		http.Error(w, "Failed to update the post: "+err.Error(), http.StatusInternalServerError)
+		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+err.Error())
 		return
 	}
 
