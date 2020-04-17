@@ -10,6 +10,7 @@ func (c *Command) disconnect(parameters ...string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	c.MSCalendar.ClearSettingsPosts(c.Args.UserId)
 
 	return "Successfully disconnected your account", nil
 }

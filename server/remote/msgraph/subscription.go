@@ -13,7 +13,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
-const subscribeTTL = 10 * time.Minute
+const subscribeTTL = 48 * time.Hour
 
 func newRandomString() string {
 	b := make([]byte, 96)
