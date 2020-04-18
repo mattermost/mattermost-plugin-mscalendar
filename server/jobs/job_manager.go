@@ -70,7 +70,7 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 
 	jm.registeredJobs.Range(func(k interface{}, v interface{}) bool {
 		job := v.(RegisteredJob)
-		enabled := job.isEnabledByConfig(env)
+		enabled := (job.isEnabledByConfig == nil) || job.isEnabledByConfig(env)
 		_, active := jm.activeJobs.Load(job.id)
 
 		// Config is set to enable. Job is inactive, so activate the job.
