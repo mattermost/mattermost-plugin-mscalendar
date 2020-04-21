@@ -4,22 +4,17 @@
 package jobs
 
 import (
-	"time"
-
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 // Unique id for the status sync job
 const statusSyncJobID = "status_sync"
 
-// Run status sync job every 5 minutes
-const statusSyncJobInterval = 5 * time.Minute
-
 // NewStatusSyncJob creates a RegisteredJob with the parameters specific to the StatusSyncJob
 func NewStatusSyncJob() RegisteredJob {
 	return RegisteredJob{
 		id:                statusSyncJobID,
-		interval:          statusSyncJobInterval,
+		interval:          mscalendar.StatusSyncJobInterval,
 		work:              runStatusSyncJob,
 		isEnabledByConfig: isStatusSyncJobEnabled,
 	}

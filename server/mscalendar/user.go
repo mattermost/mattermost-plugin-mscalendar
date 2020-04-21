@@ -94,6 +94,10 @@ func (m *mscalendar) GetTimezone(user *User) (string, error) {
 	return settings.TimeZone, nil
 }
 
+func (m *mscalendar) GetTimezoneByID(mattermostUserID string) (string, error) {
+	return m.GetTimezone(NewUser(mattermostUserID))
+}
+
 func (user *User) String() string {
 	if user.MattermostUser != nil {
 		return fmt.Sprintf("@%s", user.MattermostUser.Username)
