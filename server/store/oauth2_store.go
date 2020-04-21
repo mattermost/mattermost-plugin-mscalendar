@@ -5,8 +5,6 @@ package store
 
 import (
 	"errors"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 const (
@@ -25,7 +23,7 @@ func (s *pluginStore) VerifyOAuth2State(state string) error {
 		return err
 	}
 
-	if string(data) != state || err == store.ErrNotFound {
+	if string(data) != state || err == ErrNotFound {
 		return errors.New("authentication attempt expired, please try again")
 	}
 	return nil
