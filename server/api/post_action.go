@@ -101,7 +101,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	sa := sas[0]
 
-	if strings.HasPrefix(err.Error(), "202") {
+	if err == nil || strings.HasPrefix(err.Error(), "202") {
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: "Response",
 			Value: fmt.Sprintf("You have %s this event", prettyOption(option)),
@@ -115,7 +115,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	postResponse.Update = p
 
-	if strings.HasPrefix(err.Error(), "404") {
+	if err != nil && strings.HasPrefix(err.Error(), "404") {
 		postResponse.EphemeralText = "Event has changed since this message. Please change your status directly on MS Calendar."
 	}
 	w.Header().Set("Content-Type", "application/json")

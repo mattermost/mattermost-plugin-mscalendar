@@ -299,7 +299,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 
-	if n.Event.ResponseRequested && !n.Event.IsOrganizer {
+	if n.Event.ResponseRequested && !n.Event.IsOrganizer && !n.Event.IsCancelled {
 		sa.Actions = NewPostActionForEventResponse(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
 	}
 	return true, sa
