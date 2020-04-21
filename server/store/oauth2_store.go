@@ -20,10 +20,13 @@ type OAuth2StateStore interface {
 func (s *pluginStore) VerifyOAuth2State(state string) error {
 	data, err := s.oauth2KV.Load(state)
 	if err != nil {
+		if err == ErrNotFound {
+			return errors.New("authentication attempt expired, please try again")
+		}
 		return err
 	}
 
-	if string(data) != state || err == ErrNotFound {
+	if string(data) != state {
 		return errors.New("authentication attempt expired, please try again")
 	}
 	return nil
