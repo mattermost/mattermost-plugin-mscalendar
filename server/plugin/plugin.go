@@ -218,6 +218,9 @@ func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.
 
 func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
 	env := p.getEnv()
+	if mattermostUserID == env.BotUserID {
+		return true, nil
+	}
 
 	for _, userID := range strings.Split(env.Config.AdminUserIDs, ",") {
 		if userID == mattermostUserID {
