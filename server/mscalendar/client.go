@@ -11,7 +11,7 @@ import (
 
 type Client interface {
 	MakeClient() (remote.Client, error)
-	MakeSuperuserClient() remote.Client
+	MakeSuperuserClient() (remote.Client, error)
 }
 
 func (m *mscalendar) MakeClient() (remote.Client, error) {
@@ -23,10 +23,6 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 	return m.Remote.MakeClient(context.Background(), m.actingUser.OAuth2Token), nil
 }
 
-func (m *mscalendar) MakeSuperuserClient(client remote.Client) (remote.Client, error) {
-	token, err := client.GetSuperuserToken()
-	if err != nil {
-		return nil, err
-	}
-	return m.Remote.MakeSuperuserClient(context.Background(), token), nil
+func (m *mscalendar) MakeSuperuserClient() (remote.Client, error) {
+	return m.Remote.MakeSuperuserClient(context.Background())
 }
