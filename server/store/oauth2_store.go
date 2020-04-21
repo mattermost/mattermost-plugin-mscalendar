@@ -27,7 +27,7 @@ func (s *pluginStore) VerifyOAuth2State(state string) error {
 	}
 
 	if string(data) != state {
-		return errors.New("authentication attempt expired, please try again")
+		return errors.New("invalid oauth state, please try again")
 	}
 	return nil
 }
