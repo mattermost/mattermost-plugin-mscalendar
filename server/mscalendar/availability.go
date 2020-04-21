@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
@@ -14,7 +15,10 @@ import (
 )
 
 const (
-	availabilityTimeWindowSize = 15
+	availabilityTimeWindowSize      = 15
+	StatusSyncJobInterval           = 5 * time.Minute
+	upcomingEventNotificationTime   = 10 * time.Minute
+	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
 )
 
 type Availability interface {
@@ -92,6 +96,8 @@ func (m *mscalendar) setUserStatuses(users store.UserIndex, schedules []*remote.
 		}
 
 		mattermostUserID := usersByEmail[s.ScheduleID].MattermostUserID
+
+		m.notifyUpcomingEvent(mattermostUserID, s.ScheduleItems)
 		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
@@ -106,6 +112,36 @@ func (m *mscalendar) setUserStatuses(users store.UserIndex, schedules []*remote.
 	return utils.JSONBlock(schedules), nil
 }
 
+func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, items []remote.ScheduleItem) {
+	var timezone string
+	for _, scheduleItem := range items {
+		upcomingTime := time.Now().Add(upcomingEventNotificationTime)
+		start := scheduleItem.Start.Time()
+		diff := start.Sub(upcomingTime)
+
+		if (diff < upcomingEventNotificationWindow) && (diff > -upcomingEventNotificationWindow) {
+			var err error
+			if timezone == "" {
+				timezone, err = m.GetTimezoneByID(mattermostUserID)
+				if err != nil {
+					m.Logger.Errorf("notifyUpcomingEvent error getting timezone, err=%s", err.Error())
+					return
+				}
+			}
+
+			message, err := views.RenderScheduleItem(scheduleItem, timezone)
+			if err != nil {
+				m.Logger.Errorf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
+				continue
+			}
+			err = m.Poster.DM(mattermostUserID, message)
+			if err != nil {
+				m.Logger.Errorf("notifyUpcomingEvent error creating DM, err=", err.Error())
+				continue
+			}
+		}
+	}
+}
 func (m *mscalendar) GetAvailabilities(users store.UserIndex) ([]*remote.ScheduleInformation, error) {
 	err := m.Filter(withClient)
 	if err != nil {

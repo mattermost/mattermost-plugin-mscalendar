@@ -37,6 +37,7 @@ func TestDisconnect(t *testing.T) {
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().DisconnectUser("user_id").Return(nil).Times(1)
+				mscal.EXPECT().ClearSettingsPosts("user_id").Return().Times(1)
 			},
 			expectedOutput: "Successfully disconnected your account",
 			expectedError:  "",
