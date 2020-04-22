@@ -5,6 +5,7 @@ package remote
 
 type Event struct {
 	ID                         string               `json:"id,omitempty"`
+	ICalUID                    string               `json:"iCalUId,omitempty"`
 	Subject                    string               `json:"subject,omitempty"`
 	BodyPreview                string               `json:"bodyPreview,omitempty"`
 	Body                       *ItemBody            `json:"Body,omitempty"`

@@ -41,6 +41,11 @@ type ScheduleInformation struct {
 	// Error *FreeBusyError `json:"error,omitempty"`
 }
 
+type ScheduleUserInfo struct {
+	RemoteUserID string
+	Mail         string
+}
+
 type ScheduleItem struct {
 	IsPrivate bool
 	Status    string

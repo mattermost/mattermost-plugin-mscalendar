@@ -13,10 +13,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
 )
 
 func TestProcessAllDailySummary(t *testing.T) {
@@ -75,26 +73,9 @@ func TestProcessAllDailySummary(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				token := &oauth2.Token{
-					AccessToken: "bot_oauth_token",
-				}
-				s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
-					MattermostUserID: "bot_mm_id",
-					OAuth2Token:      token,
-					Remote: &remote.User{
-						ID:   "bot_remote_id",
-						Mail: "bot_email@example.com",
-					},
-				}, nil).Times(1)
-
-				mockPluginAPI := deps.PluginAPI.(*mock_plugin_api.MockPluginAPI)
-				mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
-
 				mockClient := client.(*mock_remote.MockClient)
 				mockRemote := deps.Remote.(*mock_remote.MockRemote)
-				mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-				mockClient.EXPECT().GetSuperuserToken().Return("the token", nil).Times(1)
-				mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "the token").Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil).Times(1)
 
 				mockClient.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{}, errors.New("error fetching events"))
 			},
@@ -131,21 +112,6 @@ func TestProcessAllDailySummary(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				token := &oauth2.Token{
-					AccessToken: "bot_oauth_token",
-				}
-				s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
-					MattermostUserID: "bot_mm_id",
-					OAuth2Token:      token,
-					Remote: &remote.User{
-						ID:   "bot_remote_id",
-						Mail: "bot_email@example.com",
-					},
-				}, nil).Times(1)
-
-				mockPluginAPI := deps.PluginAPI.(*mock_plugin_api.MockPluginAPI)
-				mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
-
 				mockClient := client.(*mock_remote.MockClient)
 				loc, err := time.LoadLocation("MST")
 				require.Nil(t, err)
@@ -162,9 +128,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 					}},
 				}, nil)
 				mockRemote := deps.Remote.(*mock_remote.MockRemote)
-				mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-				mockClient.EXPECT().GetSuperuserToken().Return("the token", nil).Times(1)
-				mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "the token").Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil).Times(1)
 
 				mockPoster := deps.Poster.(*mock_bot.MockPoster)
 				gomock.InOrder(

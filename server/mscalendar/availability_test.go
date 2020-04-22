@@ -10,7 +10,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
@@ -102,7 +101,7 @@ func TestSyncStatusAll(t *testing.T) {
 				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id"},
 			}, nil)
 
-			papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
+			papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
 
 			if tc.newStatus == "" {
 				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
@@ -117,8 +116,9 @@ func TestSyncStatusAll(t *testing.T) {
 			}
 
 			mscalendar := New(env, "")
-			_, err := mscalendar.SyncStatusAll()
+			res, err := mscalendar.SyncStatusAll()
 			require.Nil(t, err)
+			require.NotEmpty(t, res)
 		})
 	}
 }
@@ -150,7 +150,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
 				}, nil)
-				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{&model.Status{Status: "online", UserId: "user_mm_id"}}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", UserId: "user_mm_id"}}, nil)
 
 				s.EXPECT().StoreUserActiveEvents("user_mm_id", []string{"event_id " + moment.Format(time.RFC3339)})
 				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(1)
@@ -212,23 +212,7 @@ func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 		},
 	}, nil).Times(1)
 
-	token := &oauth2.Token{
-		AccessToken: "bot_oauth_token",
-	}
-	s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
-		MattermostUserID: "bot_mm_id",
-		OAuth2Token:      token,
-		Remote: &remote.User{
-			ID:   "bot_remote_id",
-			Mail: "bot_email@example.com",
-		},
-	}, nil).Times(1)
-
-	mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
-
-	mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-	mockClient.EXPECT().GetSuperuserToken().Return("bot_bearer_token", nil)
-	mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "bot_bearer_token").Return(mockClient)
+	mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil)
 
 	return env, mockClient
 }
