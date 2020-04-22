@@ -168,6 +168,9 @@ func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus s
 
 	remoteHashes := []string{}
 	for _, e := range events {
+		if e.IsCancelled {
+			continue
+		}
 		h := fmt.Sprintf("%s %s", e.ID, e.Start.Time().UTC().Format(time.RFC3339))
 		remoteHashes = append(remoteHashes, h)
 	}
@@ -260,6 +263,9 @@ func (m *mscalendar) GetAvailabilities(users []*store.User) ([]*remote.ViewCalen
 func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remote.Event) {
 	var timezone string
 	for _, event := range events {
+		if event.IsCancelled {
+			continue
+		}
 		upcomingTime := time.Now().Add(upcomingEventNotificationTime)
 		start := event.Start.Time()
 		diff := start.Sub(upcomingTime)
