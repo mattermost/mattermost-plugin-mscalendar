@@ -3,6 +3,7 @@ package mscalendar
 import (
 	"fmt"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
@@ -120,7 +121,7 @@ func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachme
 }
 
 func (bot *mscBot) notifySettings(userID string) error {
-	_, err := bot.DM(userID, "Feel free to change these settings anytime") //[settings](%s/settings) anytime.", bot.pluginURL)
+	_, err := bot.DM(userID, "Feel free to change these settings anytime by typing `/%s settings`", config.CommandTrigger)
 	if err != nil {
 		return err
 	}

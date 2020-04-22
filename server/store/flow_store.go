@@ -16,9 +16,9 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		user.Flags.WelcomeUpdateStatus = value
+		user.Settings.UpdateStatus = value
 	case GetConfirmationPropertyName:
-		user.Flags.WelcomeGetConfirmation = value
+		user.Settings.GetConfirmation = value
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -39,11 +39,11 @@ func (s *pluginStore) SetPostID(userID, propertyName, postID string) error {
 
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		user.Flags.WelcomeUpdateStatusPostID = postID
+		user.WelcomeFlowStatus.UpdateStatusPostID = postID
 	case GetConfirmationPropertyName:
-		user.Flags.WelcomeGetConfirmationPostID = postID
+		user.WelcomeFlowStatus.GetConfirmationPostID = postID
 	case SubscribePropertyName:
-		user.Flags.WelcomeSubscribePostID = postID
+		user.WelcomeFlowStatus.SubscribePostID = postID
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -64,11 +64,11 @@ func (s *pluginStore) GetPostID(userID, propertyName string) (string, error) {
 
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		return user.Flags.WelcomeUpdateStatusPostID, nil
+		return user.WelcomeFlowStatus.UpdateStatusPostID, nil
 	case GetConfirmationPropertyName:
-		return user.Flags.WelcomeGetConfirmationPostID, nil
+		return user.WelcomeFlowStatus.GetConfirmationPostID, nil
 	case SubscribePropertyName:
-		return user.Flags.WelcomeSubscribePostID, nil
+		return user.WelcomeFlowStatus.SubscribePostID, nil
 	default:
 		return "", fmt.Errorf("property %s not found", propertyName)
 	}
@@ -82,11 +82,11 @@ func (s *pluginStore) RemovePostID(userID, propertyName string) error {
 
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		user.Flags.WelcomeUpdateStatusPostID = ""
+		user.WelcomeFlowStatus.UpdateStatusPostID = ""
 	case GetConfirmationPropertyName:
-		user.Flags.WelcomeGetConfirmationPostID = ""
+		user.WelcomeFlowStatus.GetConfirmationPostID = ""
 	case SubscribePropertyName:
-		user.Flags.WelcomeSubscribePostID = ""
+		user.WelcomeFlowStatus.SubscribePostID = ""
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -105,7 +105,7 @@ func (s *pluginStore) GetCurrentStep(userID string) (int, error) {
 		return 0, err
 	}
 
-	return user.Flags.WelcomeFlowStep, nil
+	return user.WelcomeFlowStatus.Step, nil
 }
 func (s *pluginStore) SetCurrentStep(userID string, step int) error {
 	user, err := s.LoadUser(userID)
@@ -113,7 +113,7 @@ func (s *pluginStore) SetCurrentStep(userID string, step int) error {
 		return err
 	}
 
-	user.Flags.WelcomeFlowStep = step
+	user.WelcomeFlowStatus.Step = step
 
 	err = s.StoreUser(user)
 	if err != nil {
@@ -129,7 +129,7 @@ func (s *pluginStore) DeleteCurrentStep(userID string) error {
 		return err
 	}
 
-	user.Flags.WelcomeFlowStep = 0
+	user.WelcomeFlowStatus.Step = 0
 
 	err = s.StoreUser(user)
 	if err != nil {
