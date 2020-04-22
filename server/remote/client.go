@@ -26,7 +26,7 @@ type Client interface {
 	GetMailboxSettings(remoteUserID string) (*MailboxSettings, error)
 	GetMe() (*User, error)
 	GetNotificationData(*Notification) (*Notification, error)
-	GetSchedule(remoteUserID string, schedules []string, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
+	GetSchedule(requests []*ScheduleUserInfo, startTime, endTime *DateTime, availabilityViewInterval int) ([]*ScheduleInformation, error)
 	ListSubscriptions() ([]*Subscription, error)
 	RenewSubscription(subscriptionID string) (*Subscription, error)
 	TentativelyAcceptEvent(remoteUserID, eventID string) error

@@ -8,7 +8,6 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -31,22 +30,5 @@ func (c *Command) connect(parameters ...string) (string, error) {
 		out = ConnectErrorMessage + err.Error()
 	}
 
-	return out, nil
-}
-
-func (c *Command) connectBot(parameters ...string) (string, error) {
-	isAdmin, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
-	if err != nil || !isAdmin {
-		return "", errors.New("non-admin user attempting to connect bot account")
-	}
-
-	ru, err := c.MSCalendar.GetRemoteUser(c.Config.BotUserID)
-	if err == nil {
-		return fmt.Sprintf(ConnectBotAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), nil
-	}
-
-	out := fmt.Sprintf(ConnectBotSuccessTemplate,
-		config.ApplicationName,
-		c.Config.PluginURL)
 	return out, nil
 }

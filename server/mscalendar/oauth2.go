@@ -49,14 +49,6 @@ func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error
 	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
 }
 
-func (app *oauth2App) InitOAuth2ForBot(mattermostUserID string) (url string, err error) {
-	isAdmin, adminErr := app.IsAuthorizedAdmin(mattermostUserID)
-	if adminErr != nil || !isAdmin {
-		return "", errors.New("non-admin attempting to connect bot account")
-	}
-	return app.InitOAuth2(app.Config.BotUserID)
-}
-
 func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	if authedUserID == "" || code == "" || state == "" {
 		return errors.New("missing user, code or state")
@@ -71,13 +63,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 
 	mattermostUserID := strings.Split(state, "_")[1]
 	if mattermostUserID != authedUserID {
-		if mattermostUserID != app.Config.BotUserID {
-			return errors.New("not authorized, user ID mismatch")
-		}
-		isAdmin, authErr := app.IsAuthorizedAdmin(authedUserID)
-		if authErr != nil || !isAdmin {
-			return errors.New("non-admin user attempting to set up bot account")
-		}
+		return errors.New("not authorized, user ID mismatch")
 	}
 
 	ctx := context.Background()
@@ -115,11 +101,6 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	err = app.Store.StoreUser(u)
 	if err != nil {
 		return err
-	}
-
-	if mattermostUserID == app.Config.BotUserID {
-		app.Poster.DM(authedUserID, BotWelcomeMessage, me.Mail)
-		return nil
 	}
 
 	err = app.Store.StoreUserInIndex(u)
