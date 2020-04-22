@@ -165,8 +165,14 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 			return
 		}
 		stringChangeTo := changeTo.(string)
+		prettyChangeTo, ok := request.Context["pretty_change_to"]
+		if !ok {
+			prettyChangeTo = changeTo
+		}
+		stringPrettyChangeTo := prettyChangeTo.(string)
+
 		api.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, stringChangeTo)
-		returnText = fmt.Sprintf("The status has been changed to %s.", stringChangeTo)
+		returnText = fmt.Sprintf("The status has been changed to %s.", stringPrettyChangeTo)
 	}
 
 	sa := &model.SlackAttachment{

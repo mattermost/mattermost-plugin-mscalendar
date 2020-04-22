@@ -44,8 +44,9 @@ func statusChangeAttachments(event *remote.Event, status, url string) *model.Sla
 		Integration: &model.PostActionIntegration{
 			URL: url,
 			Context: map[string]interface{}{
-				"value":     true,
-				"change_to": status,
+				"value":            true,
+				"change_to":        status,
+				"pretty_change_to": prettyStatuses[status],
 			},
 		},
 	}
