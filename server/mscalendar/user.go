@@ -145,10 +145,6 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		return err
 	}
 
-	if mattermostUserID == m.Config.BotUserID {
-		return nil
-	}
-
 	err = m.Store.DeleteUserFromIndex(mattermostUserID)
 	if err != nil {
 		return err

@@ -287,18 +287,18 @@ func (mr *MockClientMockRecorder) GetNotificationData(arg0 interface{}) *gomock.
 }
 
 // GetSchedule mocks base method
-func (m *MockClient) GetSchedule(arg0 string, arg1 []string, arg2, arg3 *remote.DateTime, arg4 int) ([]*remote.ScheduleInformation, error) {
+func (m *MockClient) GetSchedule(arg0 []*remote.ScheduleUserInfo, arg1, arg2 *remote.DateTime, arg3 int) ([]*remote.ScheduleInformation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSchedule", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetSchedule", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]*remote.ScheduleInformation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSchedule indicates an expected call of GetSchedule
-func (mr *MockClientMockRecorder) GetSchedule(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) GetSchedule(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchedule", reflect.TypeOf((*MockClient)(nil).GetSchedule), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchedule", reflect.TypeOf((*MockClient)(nil).GetSchedule), arg0, arg1, arg2, arg3)
 }
 
 // GetSuperuserToken mocks base method
