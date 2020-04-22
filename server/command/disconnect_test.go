@@ -42,38 +42,6 @@ func TestDisconnect(t *testing.T) {
 			expectedOutput: "Successfully disconnected your account",
 			expectedError:  "",
 		},
-		{
-			name:    "non-admin disconnecting bot account",
-			command: "disconnect_bot",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(false, nil).Times(1)
-			},
-			expectedOutput: "",
-			expectedError:  "Command /mscalendar disconnect_bot failed: non-admin user attempting to disconnect bot account",
-		},
-		{
-			name:    "bot disconnect failed",
-			command: "disconnect_bot",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mscal.EXPECT().DisconnectUser("bot_user_id").Return(errors.New("Some error")).Times(1)
-			},
-			expectedOutput: "",
-			expectedError:  "Command /mscalendar disconnect_bot failed: Some error",
-		},
-		{
-			name:    "bot disconnect successful",
-			command: "disconnect_bot",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mscal.EXPECT().DisconnectUser("bot_user_id").Return(nil).Times(1)
-			},
-			expectedOutput: "Successfully disconnected bot user",
-			expectedError:  "",
-		},
 	}
 
 	for _, tc := range tcs {

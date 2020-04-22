@@ -40,6 +40,15 @@ const (
 	OptionMaybe        = "Maybe"
 )
 
+const (
+	ResponseYes   = "accepted"
+	ResponseMaybe = "tentativelyAccepted"
+	ResponseNo    = "declined"
+	ResponseNone  = "notResponded"
+)
+
+var importantNotificationChanges []string = []string{FieldSubject, FieldDuration, FieldWhen}
+
 type NotificationProcessor interface {
 	Configure(Env)
 	Enqueue(notifications ...*remote.Notification) error
@@ -158,7 +167,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	}
 
 	var sa *model.SlackAttachment
-	prior, err := processor.Store.LoadUserEvent(creator.MattermostUserID, n.Event.ID)
+	prior, err := processor.Store.LoadUserEvent(creator.MattermostUserID, n.Event.ICalUID)
 	if err != nil && err != store.ErrNotFound {
 		return err
 	}
@@ -171,6 +180,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 				"SubscriptionID":   n.SubscriptionID,
 				"ChangeType":       n.ChangeType,
 				"EventID":          n.Event.ID,
+				"EventICalUID":     n.Event.ICalUID,
 			}).Debugf("webhook notification: no changes detected in event.")
 			return nil
 		}
@@ -226,7 +236,9 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 		})
 	}
 
-	processor.addPostActionSelect(sa, n.Event)
+	if n.Event.ResponseRequested && !n.Event.IsOrganizer {
+		sa.Actions = NewPostActionForEventResponse(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
+	}
 	return sa
 }
 
@@ -241,7 +253,25 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		return false, nil
 	}
 
+	allChanges := append(added, updated...)
+	allChanges = append(allChanges, deleted...)
+
+	hasImportantChanges := false
+	for _, k := range allChanges {
+		if isImportantChange(k) {
+			hasImportantChanges = true
+			break
+		}
+	}
+
+	if !hasImportantChanges {
+		return false, nil
+	}
+
 	for _, k := range added {
+		if !isImportantChange(k) {
+			continue
+		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
 			Value: newFields[k].Strings(),
@@ -249,6 +279,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 	for _, k := range updated {
+		if !isImportantChange(k) {
+			continue
+		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
 			Value: fmt.Sprintf("~~%s~~ \u2192 %s", priorFields[k].Strings(), newFields[k].Strings()),
@@ -256,6 +289,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 	for _, k := range deleted {
+		if !isImportantChange(k) {
+			continue
+		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
 			Value: fmt.Sprintf("~~%s~~", priorFields[k].Strings()),
@@ -263,12 +299,23 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		})
 	}
 
-	processor.addPostActionSelect(sa, n.Event)
+	if n.Event.ResponseRequested && !n.Event.IsOrganizer && !n.Event.IsCancelled {
+		sa.Actions = NewPostActionForEventResponse(n.Event.ID, n.Event.ResponseStatus.Response, processor.actionURL(config.PathRespond))
+	}
 	return true, sa
 }
 
+func isImportantChange(fieldName string) bool {
+	for _, ic := range importantNotificationChanges {
+		if ic == fieldName {
+			return true
+		}
+	}
+	return false
+}
+
 func (processor *notificationProcessor) actionURL(action string) string {
-	return fmt.Sprintf("%s/%s/%s", processor.Config.PluginURLPath, config.PathPostAction, action)
+	return fmt.Sprintf("%s%s%s", processor.Config.PluginURLPath, config.PathPostAction, action)
 }
 
 func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
@@ -306,20 +353,16 @@ func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment
 	}
 }
 
-func (processor *notificationProcessor) addPostActionSelect(sa *model.SlackAttachment, event *remote.Event) {
-	if !event.ResponseRequested {
-		return
-	}
-
+func NewPostActionForEventResponse(eventID, response, url string) []*model.PostAction {
 	context := map[string]interface{}{
-		config.EventIDKey: event.ID,
+		config.EventIDKey: eventID,
 	}
 
 	pa := &model.PostAction{
 		Name: "Response",
 		Type: model.POST_ACTION_TYPE_SELECT,
 		Integration: &model.PostActionIntegration{
-			URL:     processor.actionURL(config.PathRespond),
+			URL:     url,
 			Context: context,
 		},
 	}
@@ -327,18 +370,17 @@ func (processor *notificationProcessor) addPostActionSelect(sa *model.SlackAttac
 	for _, o := range []string{OptionNotResponded, OptionYes, OptionNo, OptionMaybe} {
 		pa.Options = append(pa.Options, &model.PostActionOptions{Text: o, Value: o})
 	}
-	switch event.ResponseStatus.Response {
-	case "notResponded":
+	switch response {
+	case ResponseNone:
 		pa.DefaultOption = OptionNotResponded
-	case "accepted":
+	case ResponseYes:
 		pa.DefaultOption = OptionYes
-	case "declined":
+	case ResponseNo:
 		pa.DefaultOption = OptionNo
-	case "tentativelyAccepted":
+	case ResponseMaybe:
 		pa.DefaultOption = OptionMaybe
 	}
-
-	sa.Actions = []*model.PostAction{pa}
+	return []*model.PostAction{pa}
 }
 
 func eventToFields(e *remote.Event) fields.Fields {
