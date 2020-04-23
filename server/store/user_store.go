@@ -48,6 +48,7 @@ type Settings struct {
 	EventSubscriptionID string
 	UpdateStatus        bool
 	GetConfirmation     bool
+	GetReminders        bool
 }
 
 func (settings Settings) String() string {

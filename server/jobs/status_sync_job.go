@@ -15,16 +15,16 @@ func NewStatusSyncJob() RegisteredJob {
 	return RegisteredJob{
 		id:                statusSyncJobID,
 		interval:          mscalendar.StatusSyncJobInterval,
-		work:              runStatusSyncJob,
+		work:              runSyncJob,
 		isEnabledByConfig: isStatusSyncJobEnabled,
 	}
 }
 
 // runStatusSyncJob synchronizes all users' statuses between mscalendar and Mattermost.
-func runStatusSyncJob(env mscalendar.Env) {
+func runSyncJob(env mscalendar.Env) {
 	env.Logger.Debugf("User status sync job beginning")
 
-	_, err := mscalendar.New(env, "").SyncStatusAll()
+	_, err := mscalendar.New(env, "").SyncAll()
 	if err != nil {
 		env.Logger.Errorf("Error during user status sync job: %v", err)
 	}

@@ -25,26 +25,26 @@ const (
 
 type Availability interface {
 	GetAvailabilities(users []*store.User) ([]*remote.ViewCalendarResponse, error)
-	SyncStatus(mattermostUserID string) (string, error)
-	SyncStatusAll() (string, error)
+	Sync(mattermostUserID string) (string, error)
+	SyncAll() (string, error)
 }
 
-func (m *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
+func (m *mscalendar) Sync(mattermostUserID string) (string, error) {
 	user, err := m.Store.LoadUserFromIndex(mattermostUserID)
 	if err != nil {
 		return "", err
 	}
 
-	return m.syncStatusUsers(store.UserIndex{user})
+	return m.syncUsers(store.UserIndex{user})
 }
 
-func (m *mscalendar) SyncStatusAll() (string, error) {
+func (m *mscalendar) SyncAll() (string, error) {
 	isAdmin, err := m.IsAuthorizedAdmin(m.actingUser.MattermostUserID)
 	if err != nil {
 		return "", err
 	}
 	if !isAdmin {
-		return "", errors.Errorf("Non-admin user attempting SyncStatusAll %s", m.actingUser.MattermostUserID)
+		return "", errors.Errorf("Non-admin user attempting SyncAll %s", m.actingUser.MattermostUserID)
 	}
 	err = m.Filter(withSuperuserClient)
 	if err != nil {
@@ -59,10 +59,10 @@ func (m *mscalendar) SyncStatusAll() (string, error) {
 		return "", err
 	}
 
-	return m.syncStatusUsers(userIndex)
+	return m.syncUsers(userIndex)
 }
 
-func (m *mscalendar) syncStatusUsers(userIndex store.UserIndex) (string, error) {
+func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 	if len(userIndex) == 0 {
 		return "No connected users found", nil
 	}
@@ -74,12 +74,12 @@ func (m *mscalendar) syncStatusUsers(userIndex store.UserIndex) (string, error) 
 		if err != nil {
 			return "", err
 		}
-		if user.Settings.UpdateStatus {
+		if user.Settings.UpdateStatus || user.Settings.GetReminders {
 			users = append(users, user)
 		}
 	}
 	if len(users) == 0 {
-		return "No users want to have their status updated", nil
+		return "No users need to be synced", nil
 	}
 
 	schedules, err := m.GetAvailabilities(users)
@@ -90,18 +90,56 @@ func (m *mscalendar) syncStatusUsers(userIndex store.UserIndex) (string, error) 
 		return "No schedule info found", nil
 	}
 
+	m.deliverReminders(users, schedules)
 	out, err := m.setUserStatuses(users, schedules)
 	if err != nil {
-		return out, err
+		return "", err
 	}
 
 	return out, nil
 }
 
-func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.ViewCalendarResponse) (string, error) {
-	mattermostUserIDs := []string{}
+func (m *mscalendar) deliverReminders(users []*store.User, schedules []*remote.ViewCalendarResponse) {
+	toNotify := []*store.User{}
 	for _, u := range users {
+		if u.Settings.GetReminders {
+			toNotify = append(toNotify, u)
+		}
+	}
+
+	usersByRemoteID := map[string]*store.User{}
+	for _, u := range toNotify {
+		usersByRemoteID[u.Remote.ID] = u
+	}
+
+	for _, s := range schedules {
+		user, ok := usersByRemoteID[s.RemoteUserID]
+		if !ok {
+			continue
+		}
+		if s.Error != nil {
+			m.Logger.Errorf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
+			continue
+		}
+
+		mattermostUserID := usersByRemoteID[s.RemoteUserID].MattermostUserID
+		m.notifyUpcomingEvent(mattermostUserID, s.Events)
+	}
+}
+
+func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.ViewCalendarResponse) (string, error) {
+	toUpdate := []*store.User{}
+	for _, u := range users {
+		if u.Settings.UpdateStatus {
+			toUpdate = append(toUpdate, u)
+		}
+	}
+
+	mattermostUserIDs := []string{}
+	usersByRemoteID := map[string]*store.User{}
+	for _, u := range toUpdate {
 		mattermostUserIDs = append(mattermostUserIDs, u.MattermostUserID)
+		usersByRemoteID[u.Remote.ID] = u
 	}
 
 	statuses, appErr := m.PluginAPI.GetMattermostUserStatusesByIds(mattermostUserIDs)
@@ -113,21 +151,18 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 		statusMap[s.UserId] = s.Status
 	}
 
-	usersByRemoteID := map[string]*store.User{}
-	for _, u := range users {
-		usersByRemoteID[u.Remote.ID] = u
-	}
-
 	var res string
 	for _, s := range schedules {
-		user := usersByRemoteID[s.RemoteUserID]
+		user, ok := usersByRemoteID[s.RemoteUserID]
+		if !ok {
+			continue
+		}
 		if s.Error != nil {
 			m.Logger.Errorf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
 			continue
 		}
 
 		mattermostUserID := usersByRemoteID[s.RemoteUserID].MattermostUserID
-		m.notifyUpcomingEvent(mattermostUserID, s.Events)
 		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
