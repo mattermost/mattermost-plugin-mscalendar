@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"net/url"
 	"sort"
 	"time"
 
@@ -65,7 +66,7 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	return result
 }
 
-func RenderScheduleItem(event *remote.Event, timezone string) (string, error) {
+func RenderUpcomingEvent(event *remote.Event, timezone string) (string, error) {
 	message := "You have an upcoming event:"
 	start := event.Start.In(timezone).Time()
 	end := event.End.In(timezone).Time()
@@ -80,6 +81,12 @@ func RenderScheduleItem(event *remote.Event, timezone string) (string, error) {
 	if event.Location != nil && event.Location.DisplayName != "" {
 		message += fmt.Sprintf("\nLocation: %s", event.Location.DisplayName)
 	}
+
+	link, err := url.QueryUnescape(event.Weblink)
+	if err != nil {
+		return "", err
+	}
+	message += fmt.Sprintf("\nClick [here](%s) to see more details", link)
 
 	return message, nil
 }

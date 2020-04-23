@@ -215,21 +215,30 @@ func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus s
 	switch currentAvailability {
 	case remote.AvailabilityViewFree:
 		if currentStatus == "dnd" {
-			m.setStatusOrAskUser(user, "online", sched)
+			err := m.setStatusOrAskUser(user, "online", sched)
+			if err != nil {
+				return "", err
+			}
 			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus), nil
 		} else {
 			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus), nil
 		}
 	case remote.AvailabilityViewBusy:
 		if currentStatus != "dnd" {
-			m.setStatusOrAskUser(user, "dnd", sched)
+			err := m.setStatusOrAskUser(user, "dnd", sched)
+			if err != nil {
+				return "", err
+			}
 			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus), nil
 		} else {
 			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus), nil
 		}
 	case remote.AvailabilityViewOutOfOffice:
 		if currentStatus != "offline" {
-			m.setStatusOrAskUser(user, "offline", sched)
+			err := m.setStatusOrAskUser(user, "offline", sched)
+			if err != nil {
+				return "", err
+			}
 			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus), nil
 		} else {
 			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus), nil
@@ -297,7 +306,7 @@ func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remo
 				}
 			}
 
-			message, err := views.RenderScheduleItem(event, timezone)
+			message, err := views.RenderUpcomingEvent(event, timezone)
 			if err != nil {
 				m.Logger.Errorf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
 				continue

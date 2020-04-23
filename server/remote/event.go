@@ -15,7 +15,7 @@ type Event struct {
 	IsOrganizer                bool                 `json:"isOrganizer,omitempty"`
 	ResponseRequested          bool                 `json:"responseRequested,omitempty"`
 	ShowAs                     string               `json:"showAs,omitempty"`
-	Weblink                    string               `json:"weblink,omitempty"`
+	Weblink                    string               `json:"webLink,omitempty"`
 	Start                      *DateTime            `json:"start,omitempty"`
 	End                        *DateTime            `json:"end,omitempty"`
 	ReminderMinutesBeforeStart int                  `json:"reminderMinutesBeforeStart,omitempty"`
