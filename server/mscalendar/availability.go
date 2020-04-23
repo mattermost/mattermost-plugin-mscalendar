@@ -5,7 +5,6 @@ package mscalendar
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -13,32 +12,30 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 )
 
 const (
-	availabilityTimeWindowSize      = 10 // minutes
+	availabilityTimeWindowSize      = 10 * time.Minute
 	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
 )
 
 type Availability interface {
-	GetAvailabilities(users []*store.User) ([]*remote.ScheduleInformation, error)
+	GetAvailabilities(users []*store.User) ([]*remote.ViewCalendarResponse, error)
 	SyncStatus(mattermostUserID string) (string, error)
 	SyncStatusAll() (string, error)
 }
 
 func (m *mscalendar) SyncStatus(mattermostUserID string) (string, error) {
-	user, err := m.Store.LoadUser(mattermostUserID)
+	user, err := m.Store.LoadUserFromIndex(mattermostUserID)
 	if err != nil {
 		return "", err
 	}
-	if !user.Settings.UpdateStatus {
-		return fmt.Sprintf("Your settings are set up to not update your status. You can change your settings using `/%s settings`", config.CommandTrigger), nil
-	}
 
-	return m.syncStatusUsers([]*store.User{user})
+	return m.syncStatusUsers(store.UserIndex{user})
 }
 
 func (m *mscalendar) SyncStatusAll() (string, error) {
@@ -62,88 +59,25 @@ func (m *mscalendar) SyncStatusAll() (string, error) {
 		return "", err
 	}
 
-	statusSyncUsers := []*store.User{}
-	reminderUsers := []*store.User{}
+	return m.syncStatusUsers(userIndex)
+}
+
+func (m *mscalendar) syncStatusUsers(userIndex store.UserIndex) (string, error) {
+	if len(userIndex) == 0 {
+		return "No connected users found", nil
+	}
+
+	users := []*store.User{}
 	for _, u := range userIndex {
+		// TODO fetch users from kvstore in batches, and process in batches instead of all at once
 		user, err := m.Store.LoadUser(u.MattermostUserID)
 		if err != nil {
 			return "", err
 		}
 		if user.Settings.UpdateStatus {
-			statusSyncUsers = append(statusSyncUsers, user)
-		}
-		if user.Settings.GetReminders {
-			reminderUsers = append(reminderUsers, user)
+			users = append(users, user)
 		}
 	}
-
-	w := sync.WaitGroup{}
-	m.Logger.Debugf("%d user(s) want their status updated", len(statusSyncUsers))
-	if len(statusSyncUsers) > 0 {
-		w.Add(1)
-		go func() {
-			res, err := m.syncStatusUsers(statusSyncUsers)
-			if err != nil {
-				m.Logger.Errorf("Error syncing user statuses. Error: %v", err)
-			}
-			if res != "" {
-				m.Logger.Debugf(res)
-			}
-			m.Logger.Debugf("Status sync finished")
-			w.Done()
-		}()
-	}
-
-	m.Logger.Debugf("%d user(s) want a reminder for upcoming events", len(reminderUsers))
-	if len(reminderUsers) > 0 {
-		w.Add(1)
-		go func() {
-			err := m.deliverReminders(reminderUsers)
-			if err != nil {
-				m.Logger.Errorf("Error delivering reminders. Error: %v", err)
-			}
-			m.Logger.Debugf("Reminder deliveries finished")
-			w.Done()
-		}()
-	}
-
-	w.Wait()
-	return "", nil
-}
-
-func (m *mscalendar) deliverReminders(users []*store.User) error {
-	err := m.Filter(withClient)
-	if err != nil {
-		return err
-	}
-
-	start := time.Now().UTC()
-	end := time.Now().UTC().Add(availabilityTimeWindowSize * time.Minute)
-
-	usersByRemoteID := map[string]*store.User{}
-	params := []*remote.ViewCalendarParams{}
-	for _, u := range users {
-		params = append(params, &remote.ViewCalendarParams{
-			RemoteUserID: u.Remote.ID,
-			StartTime:    start,
-			EndTime:      end,
-		})
-		usersByRemoteID[u.Remote.ID] = u
-	}
-
-	responses, err := m.client.DoBatchViewCalendarRequests(params)
-	if err != nil {
-		return err
-	}
-	for _, res := range responses {
-		u := usersByRemoteID[res.RemoteUserID]
-		m.notifyUpcomingEvent(u.MattermostUserID, res.Events)
-	}
-
-	return nil
-}
-
-func (m *mscalendar) syncStatusUsers(users []*store.User) (string, error) {
 	if len(users) == 0 {
 		return "No users want to have their status updated", nil
 	}
@@ -159,7 +93,7 @@ func (m *mscalendar) syncStatusUsers(users []*store.User) (string, error) {
 	return m.setUserStatuses(users, schedules)
 }
 
-func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.ScheduleInformation) (string, error) {
+func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.ViewCalendarResponse) (string, error) {
 	mattermostUserIDs := []string{}
 	for _, u := range users {
 		mattermostUserIDs = append(mattermostUserIDs, u.MattermostUserID)
@@ -174,20 +108,21 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Sc
 		statusMap[s.UserId] = s.Status
 	}
 
-	usersByEmail := map[string]*store.User{}
+	usersByRemoteID := map[string]*store.User{}
 	for _, u := range users {
-		usersByEmail[u.Remote.Mail] = u
+		usersByRemoteID[u.Remote.ID] = u
 	}
 
 	var res string
 	for _, s := range schedules {
-		user := usersByEmail[s.ScheduleID]
+		user := usersByRemoteID[s.RemoteUserID]
 		if s.Error != nil {
 			m.Logger.Errorf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
 			continue
 		}
 
-		mattermostUserID := usersByEmail[s.ScheduleID].MattermostUserID
+		mattermostUserID := usersByRemoteID[s.RemoteUserID].MattermostUserID
+		m.notifyUpcomingEvent(mattermostUserID, s.Events)
 		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
@@ -206,47 +141,94 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Sc
 	return utils.JSONBlock(schedules), nil
 }
 
-func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus string, sched *remote.ScheduleInformation) (string, error) {
-	if len(sched.AvailabilityView) == 0 {
-		return "No availabilities to process", nil
-	}
-	currentAvailability := sched.AvailabilityView[0]
+func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
+	events := filterBusyEvents(res.Events)
 
-	switch currentAvailability {
-	case remote.AvailabilityViewFree:
-		if currentStatus == "dnd" {
-			m.setStatusOrAskUser(user, "online", sched)
-			return fmt.Sprintf("User is free. Setting user from %s to online.", currentStatus), nil
-		} else {
-			return fmt.Sprintf("User is free, and is already set to %s.", currentStatus), nil
-		}
-	case remote.AvailabilityViewBusy:
-		if currentStatus != "dnd" {
-			m.setStatusOrAskUser(user, "dnd", sched)
-			return fmt.Sprintf("User is busy. Setting user from %s to dnd.", currentStatus), nil
-		} else {
-			return fmt.Sprintf("User is busy, and is already set to %s.", currentStatus), nil
-		}
-	case remote.AvailabilityViewOutOfOffice:
-		if currentStatus != "offline" {
-			m.setStatusOrAskUser(user, "offline", sched)
-			return fmt.Sprintf("User is out of office. Setting user from %s to offline", currentStatus), nil
-		} else {
-			return fmt.Sprintf("User is out of office, and is already set to %s.", currentStatus), nil
-		}
-	case remote.AvailabilityViewWorkingElsewhere:
-		return fmt.Sprintf("User is working elsewhere. Pending implementation."), nil
-	case remote.AvailabilityViewTentative:
-		return fmt.Sprintf("User's availability is tentative. Don't change status."), nil
+	if len(user.ActiveEvents) == 0 && len(events) == 0 {
+		return "No events in local or remote. No status change.", nil
 	}
 
-	return fmt.Sprintf("Availability view doesn't match %d", currentAvailability), nil
+	var message string
+	if len(user.ActiveEvents) > 0 && len(events) == 0 {
+		if currentStatus == model.STATUS_DND {
+			err := m.setStatusOrAskUser(user, model.STATUS_ONLINE, events)
+			if err != nil {
+				return "", err
+			}
+			message = "User is no longer busy in calendar. Set status to online."
+		} else {
+			message = "User is no longer busy in calendar, but is not set to DND. No status change."
+		}
+		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
+		if err != nil {
+			return "", err
+		}
+		return message, nil
+	}
+
+	remoteHashes := []string{}
+	for _, e := range events {
+		if e.IsCancelled {
+			continue
+		}
+		h := fmt.Sprintf("%s %s", e.ID, e.Start.Time().UTC().Format(time.RFC3339))
+		remoteHashes = append(remoteHashes, h)
+	}
+
+	if len(user.ActiveEvents) == 0 {
+		if currentStatus == model.STATUS_DND {
+			return "User was already marked as busy. No status change.", nil
+		}
+		err := m.setStatusOrAskUser(user, model.STATUS_DND, events)
+		if err != nil {
+			return "", err
+		}
+		err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
+		if err != nil {
+			return "", err
+		}
+		return "User was free, but is now busy. Set status to DND.", nil
+	}
+
+	newEventExists := false
+	for _, r := range remoteHashes {
+		found := false
+		for _, loc := range user.ActiveEvents {
+			if loc == r {
+				found = true
+				break
+			}
+		}
+		if !found {
+			newEventExists = true
+			break
+		}
+	}
+
+	if !newEventExists {
+		return fmt.Sprintf("No change in active events. Total number of events: %d", len(events)), nil
+	}
+
+	if currentStatus != model.STATUS_DND {
+		err := m.setStatusOrAskUser(user, model.STATUS_DND, events)
+		if err != nil {
+			return "", err
+		}
+		message = "User was free, but is now busy. Set status to DND."
+	} else {
+		message = "User is already busy. No status change."
+	}
+	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
+	if err != nil {
+		return "", err
+	}
+	return message, nil
 }
 
-func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, sched *remote.ScheduleInformation) error {
+func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, events []*remote.Event) error {
 	if user.Settings.GetConfirmation {
 		url := fmt.Sprintf("%s%s%s", m.Config.PluginURLPath, config.PathPostAction, config.PathConfirmStatusChange)
-		_, err := m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(sched, status, url))
+		_, err := m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(events, status, url))
 		return err
 	}
 
@@ -257,24 +239,25 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, sched *
 	return nil
 }
 
-func (m *mscalendar) GetAvailabilities(users []*store.User) ([]*remote.ScheduleInformation, error) {
+func (m *mscalendar) GetAvailabilities(users []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, err
 	}
 
-	params := []*remote.ScheduleUserInfo{}
+	start := time.Now().UTC()
+	end := time.Now().UTC().Add(availabilityTimeWindowSize)
+
+	params := []*remote.ViewCalendarParams{}
 	for _, u := range users {
-		params = append(params, &remote.ScheduleUserInfo{
+		params = append(params, &remote.ViewCalendarParams{
 			RemoteUserID: u.Remote.ID,
-			Mail:         u.Remote.Mail,
+			StartTime:    start,
+			EndTime:      end,
 		})
 	}
 
-	start := remote.NewDateTime(timeNowFunc().UTC(), "UTC")
-	end := remote.NewDateTime(timeNowFunc().UTC().Add(availabilityTimeWindowSize*time.Minute), "UTC")
-
-	return m.client.GetSchedule(params, start, end, availabilityTimeWindowSize)
+	return m.client.DoBatchViewCalendarRequests(params)
 }
 
 func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remote.Event) {
