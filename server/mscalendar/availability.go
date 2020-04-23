@@ -90,7 +90,12 @@ func (m *mscalendar) syncStatusUsers(userIndex store.UserIndex) (string, error) 
 		return "No schedule info found", nil
 	}
 
-	return m.setUserStatuses(users, schedules)
+	out, err := m.setUserStatuses(users, schedules)
+	if err != nil {
+		return out, err
+	}
+
+	return out, nil
 }
 
 func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.ViewCalendarResponse) (string, error) {
@@ -171,15 +176,20 @@ func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus s
 		if e.IsCancelled {
 			continue
 		}
-		h := fmt.Sprintf("%s %s", e.ID, e.Start.Time().UTC().Format(time.RFC3339))
+		h := fmt.Sprintf("%s %s", e.ICalUID, e.Start.Time().UTC().Format(time.RFC3339))
 		remoteHashes = append(remoteHashes, h)
 	}
 
 	if len(user.ActiveEvents) == 0 {
+		var err error
 		if currentStatus == model.STATUS_DND {
+			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
+			if err != nil {
+				return "", err
+			}
 			return "User was already marked as busy. No status change.", nil
 		}
-		err := m.setStatusOrAskUser(user, model.STATUS_DND, events)
+		err = m.setStatusOrAskUser(user, model.STATUS_DND, events)
 		if err != nil {
 			return "", err
 		}
@@ -229,7 +239,10 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, events 
 	if user.Settings.GetConfirmation {
 		url := fmt.Sprintf("%s%s%s", m.Config.PluginURLPath, config.PathPostAction, config.PathConfirmStatusChange)
 		_, err := m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(events, status, url))
-		return err
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
 	_, appErr := m.PluginAPI.UpdateMattermostUserStatus(user.MattermostUserID, status)
