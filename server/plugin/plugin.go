@@ -77,7 +77,7 @@ func (p *Plugin) OnDeactivate() error {
 	e := p.getEnv()
 	if e.jobManager != nil {
 		if err := e.jobManager.Close(); err != nil {
-			p.env.Logger.Errorf("OnDeactivate: Failed to close job manager", "error", err.Error())
+			p.env.Logger.Errorf("OnDeactivate: Failed to close job manager: %v", err)
 			return err
 		}
 	}
