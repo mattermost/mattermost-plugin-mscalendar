@@ -127,7 +127,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	for _, dsum := range dsumIndex {
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
-			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, shouldPostErr.Error())
+			m.Logger.Errorf("Error posting daily summary for user %s: %v", dsum.MattermostUserID, shouldPostErr)
 			continue
 		}
 		if !shouldPost {
@@ -157,7 +157,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 		}
 		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone)
 		if err != nil {
-			m.Logger.Errorf("Error rendering user %s calendar: %s", dsum.MattermostUserID, err.Error())
+			m.Logger.Errorf("Error rendering user %s calendar: %v", dsum.MattermostUserID, err)
 		}
 
 		m.Poster.DM(dsum.MattermostUserID, postStr)
