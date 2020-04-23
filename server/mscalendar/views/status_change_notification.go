@@ -15,22 +15,22 @@ var prettyStatuses = map[string]string{
 	model.STATUS_OFFLINE: "Offline",
 }
 
-func RenderStatusChangeNotificationView(events []*remote.Event, status, url string) *model.SlackAttachment {
-	for _, e := range events {
-		if e.Start.Time().After(time.Now()) {
-			return statusChangeAttachments(e, status, url)
+func RenderStatusChangeNotificationView(sched *remote.ScheduleInformation, status, url string) *model.SlackAttachment {
+	for _, s := range sched.ScheduleItems {
+		if s.Start.Time().After(time.Now()) {
+			return statusChangeAttachments(s, status, url)
 		}
 	}
 	return statusChangeAttachments(nil, status, url)
 }
 
-func renderScheduleItem(event *remote.Event, status string) string {
-	if event == nil {
+func renderScheduleItem(s *remote.ScheduleItem, status string) string {
+	if s == nil {
 		return fmt.Sprintf("You have no upcoming events.\n Shall I change your status to %s?", prettyStatuses[status])
 	}
 
-	resp := fmt.Sprintf("Your event with subject `%s` will start soon.", event.Subject)
-	if event.Subject == "" {
+	resp := fmt.Sprintf("Your event with subject `%s` will start soon.", s.Subject)
+	if s.Subject == "" {
 		resp = "An event with no subject will start soon."
 	}
 
@@ -38,7 +38,7 @@ func renderScheduleItem(event *remote.Event, status string) string {
 	return resp
 }
 
-func statusChangeAttachments(event *remote.Event, status, url string) *model.SlackAttachment {
+func statusChangeAttachments(s *remote.ScheduleItem, status, url string) *model.SlackAttachment {
 	actionYes := &model.PostAction{
 		Name: "Yes",
 		Integration: &model.PostActionIntegration{
@@ -63,7 +63,7 @@ func statusChangeAttachments(event *remote.Event, status, url string) *model.Sla
 
 	sa := &model.SlackAttachment{
 		Title:   "Status change",
-		Text:    renderScheduleItem(event, status),
+		Text:    renderScheduleItem(s, status),
 		Actions: []*model.PostAction{actionYes, actionNo},
 	}
 

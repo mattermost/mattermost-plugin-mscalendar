@@ -22,7 +22,6 @@ type UserStore interface {
 	ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
-	StoreUserActiveEvents(mattermostUserID string, events []string) error
 }
 
 type UserIndex []*UserShort
@@ -41,13 +40,13 @@ type User struct {
 	Settings                     Settings `json:"mattermostSettings,omitempty"`
 	LastStatusUpdateAvailability byte
 	LastStatusUpdateEventTime    *remote.DateTime
-	ActiveEvents                 []string `json:"events"`
 }
 
 type Settings struct {
 	EventSubscriptionID string
 	UpdateStatus        bool
 	GetConfirmation     bool
+	GetReminders        bool
 }
 
 func (settings Settings) String() string {
@@ -208,15 +207,6 @@ func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
 		}
 		return userIndex, nil
 	})
-}
-
-func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []string) error {
-	u, err := s.LoadUser(mattermostUserID)
-	if err != nil {
-		return err
-	}
-	u.ActiveEvents = events
-	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
 }
 
 func (index UserIndex) ByMattermostID() map[string]*UserShort {

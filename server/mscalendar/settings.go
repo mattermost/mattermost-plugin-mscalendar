@@ -35,6 +35,13 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		store.UpdateStatusSettingID,
 		settingStore,
 	))
+	settings = append(settings, settingspanel.NewBoolSetting(
+		store.GetRemindersSettingID,
+		"Get Reminders",
+		"Do you want to get reminders for upcoming events?",
+		"",
+		settingStore,
+	))
 	settings = append(settings, NewDailySummarySetting(
 		settingStore,
 		getTimezone,
