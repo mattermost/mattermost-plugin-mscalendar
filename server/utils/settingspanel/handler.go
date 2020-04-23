@@ -24,13 +24,13 @@ func Init(h *httputils.Handler, panel Panel) {
 	}
 
 	panelRouter := h.Router.PathPrefix("/").Subrouter()
-	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods("POST")
+	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods(http.MethodPost)
 }
 
 func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
-		utils.SlackAttachmentError(w, "Error: Not authorized.")
+		utils.SlackAttachmentError(w, "Error: Not authorized")
 		return
 	}
 

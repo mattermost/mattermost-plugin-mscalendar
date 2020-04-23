@@ -15,52 +15,52 @@ const dailySummaryHelp = "### Daily summary commands:\n" +
 
 const dailySummarySetTimeErrorMessage = "Please enter a time, for example:\n`/mscalendar summary time 8:00AM`"
 
-func (c *Command) dailySummary(parameters ...string) (string, error) {
+func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
-		return dailySummaryHelp, nil
+		return dailySummaryHelp, false, nil
 	}
 
 	switch parameters[0] {
 	case "view":
 		postStr, err := c.MSCalendar.GetDailySummaryForUser(c.user())
 		if err != nil {
-			return err.Error(), err
+			return err.Error(), false, err
 		}
-		return postStr, nil
+		return postStr, false, nil
 	case "time":
 		if len(parameters) != 2 {
-			return dailySummarySetTimeErrorMessage, nil
+			return dailySummarySetTimeErrorMessage, false, nil
 		}
 		val := parameters[1]
 
 		dsum, err := c.MSCalendar.SetDailySummaryPostTime(c.user(), val)
 		if err != nil {
-			return err.Error() + "\n" + dailySummarySetTimeErrorMessage, nil
+			return err.Error() + "\n" + dailySummarySetTimeErrorMessage, false, nil
 		}
 
-		return dailySummaryResponse(dsum), nil
+		return dailySummaryResponse(dsum), false, nil
 	case "settings":
 		dsum, err := c.MSCalendar.GetDailySummarySettingsForUser(c.user())
 		if err != nil {
-			return err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + dailySummaryHelp, nil
+			return err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + dailySummaryHelp, false, nil
 		}
 
-		return dailySummaryResponse(dsum), nil
+		return dailySummaryResponse(dsum), false, nil
 	case "enable":
 		dsum, err := c.MSCalendar.SetDailySummaryEnabled(c.user(), true)
 		if err != nil {
-			return err.Error(), err
+			return err.Error(), false, err
 		}
 
-		return dailySummaryResponse(dsum), nil
+		return dailySummaryResponse(dsum), false, nil
 	case "disable":
 		dsum, err := c.MSCalendar.SetDailySummaryEnabled(c.user(), false)
 		if err != nil {
-			return err.Error(), err
+			return err.Error(), false, err
 		}
-		return dailySummaryResponse(dsum), nil
+		return dailySummaryResponse(dsum), false, nil
 	default:
-		return "Invalid command. Please try again\n\n" + dailySummaryHelp, nil
+		return "Invalid command. Please try again\n\n" + dailySummaryHelp, false, nil
 	}
 }
 

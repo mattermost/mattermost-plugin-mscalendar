@@ -32,7 +32,7 @@ func Init(h *httputils.Handler, flow Flow, store FlowStore) {
 func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
-		utils.SlackAttachmentError(w, "Error: Not authorized.")
+		utils.SlackAttachmentError(w, "Error: Not authorized")
 		return
 	}
 

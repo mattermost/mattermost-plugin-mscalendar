@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -202,7 +203,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		Config:     env.Config,
 		MSCalendar: mscalendar.New(env.Env, args.UserId),
 	}
-	out, err := command.Handle()
+	out, mustRedirectToDM, err := command.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
@@ -211,7 +212,18 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	if out != "" {
 		env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
 	}
-	return &model.CommandResponse{}, nil
+
+	response := &model.CommandResponse{}
+	if mustRedirectToDM {
+		t, appErr := p.API.GetTeam(args.TeamId)
+		if appErr != nil {
+			return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, appErr.Error(), http.StatusInternalServerError)
+		}
+		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.BotUserName)
+		response.GotoLocation = dmURL
+	}
+
+	return response, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.Request) {

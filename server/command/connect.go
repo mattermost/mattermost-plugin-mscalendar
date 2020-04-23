@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 const (
@@ -17,18 +16,18 @@ const (
 	ConnectErrorMessage                = "There has been a problem while trying to connect. err="
 )
 
-func (c *Command) connect(parameters ...string) (string, error) {
+func (c *Command) connect(parameters ...string) (string, bool, error) {
 	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
-		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), nil
+		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), false, nil
 	}
 
-	out := fmt.Sprintf(mscalendar.WelcomeMessage, c.Config.PluginURL)
+	out := "" //fmt.Sprintf(mscalendar.WelcomeMessage, c.Config.PluginURL)
 
 	err = c.MSCalendar.Welcome(c.Args.UserId)
 	if err != nil {
 		out = ConnectErrorMessage + err.Error()
 	}
 
-	return out, nil
+	return out, true, nil
 }
