@@ -206,19 +206,19 @@ func (mr *MockMSCalendarMockRecorder) GetActingUser() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActingUser", reflect.TypeOf((*MockMSCalendar)(nil).GetActingUser))
 }
 
-// GetAvailabilities mocks base method
-func (m *MockMSCalendar) GetAvailabilities(arg0 []*store.User) ([]*remote.ViewCalendarResponse, error) {
+// GetCalendarViews mocks base method
+func (m *MockMSCalendar) GetCalendarViews(arg0 []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAvailabilities", arg0)
+	ret := m.ctrl.Call(m, "GetCalendarViews", arg0)
 	ret0, _ := ret[0].([]*remote.ViewCalendarResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAvailabilities indicates an expected call of GetAvailabilities
-func (mr *MockMSCalendarMockRecorder) GetAvailabilities(arg0 interface{}) *gomock.Call {
+// GetCalendarViews indicates an expected call of GetCalendarViews
+func (mr *MockMSCalendarMockRecorder) GetCalendarViews(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvailabilities", reflect.TypeOf((*MockMSCalendar)(nil).GetAvailabilities), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendarViews", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendarViews), arg0)
 }
 
 // GetCalendars mocks base method

@@ -219,36 +219,36 @@ func TestReminders(t *testing.T) {
 		},
 		"One remote event, but it is too far in the future.": {
 			remoteEvents: []*remote.Event{
-				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, but it is in the past.": {
 			remoteEvents: []*remote.Event{
-				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(-15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(-15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, but it is to soon in the future. Reminder has already occurred.": {
 			remoteEvents: []*remote.Event{
-				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(2*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(2*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,
 		},
 		"One remote event, and is in the range for the reminder. Reminder should occur.": {
 			remoteEvents: []*remote.Event{
-				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   1,
 			shouldLogError: false,
 		},
 		"Two remote event, and are in the range for the reminder. Two reminders should occur.": {
 			remoteEvents: []*remote.Event{
-				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
-				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   2,
 			shouldLogError: false,
@@ -275,7 +275,7 @@ func TestReminders(t *testing.T) {
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
-				Settings: store.Settings{GetReminders: true},
+				Settings: store.Settings{ReceiveReminders: true},
 			}, nil)
 			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
 				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},

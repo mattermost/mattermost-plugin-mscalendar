@@ -17,14 +17,14 @@ import (
 )
 
 const (
-	availabilityTimeWindowSize      = 10 * time.Minute
+	calendarViewTimeWindowSize      = 10 * time.Minute
 	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
 )
 
 type Availability interface {
-	GetAvailabilities(users []*store.User) ([]*remote.ViewCalendarResponse, error)
+	GetCalendarViews(users []*store.User) ([]*remote.ViewCalendarResponse, error)
 	Sync(mattermostUserID string) (string, error)
 	SyncAll() (string, error)
 }
@@ -74,7 +74,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if user.Settings.UpdateStatus || user.Settings.GetReminders {
+		if user.Settings.UpdateStatus || user.Settings.ReceiveReminders {
 			users = append(users, user)
 		}
 	}
@@ -82,16 +82,16 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 		return "No users need to be synced", nil
 	}
 
-	schedules, err := m.GetAvailabilities(users)
+	calendarViews, err := m.GetCalendarViews(users)
 	if err != nil {
 		return "", err
 	}
-	if len(schedules) == 0 {
-		return "No schedule info found", nil
+	if len(calendarViews) == 0 {
+		return "No calendar views found", nil
 	}
 
-	m.deliverReminders(users, schedules)
-	out, err := m.setUserStatuses(users, schedules)
+	m.deliverReminders(users, calendarViews)
+	out, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
 		return "", err
 	}
@@ -99,10 +99,10 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 	return out, nil
 }
 
-func (m *mscalendar) deliverReminders(users []*store.User, schedules []*remote.ViewCalendarResponse) {
+func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remote.ViewCalendarResponse) {
 	toNotify := []*store.User{}
 	for _, u := range users {
-		if u.Settings.GetReminders {
+		if u.Settings.ReceiveReminders {
 			toNotify = append(toNotify, u)
 		}
 	}
@@ -115,22 +115,22 @@ func (m *mscalendar) deliverReminders(users []*store.User, schedules []*remote.V
 		usersByRemoteID[u.Remote.ID] = u
 	}
 
-	for _, s := range schedules {
-		user, ok := usersByRemoteID[s.RemoteUserID]
+	for _, view := range calendarViews {
+		user, ok := usersByRemoteID[view.RemoteUserID]
 		if !ok {
 			continue
 		}
-		if s.Error != nil {
-			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
+		if view.Error != nil {
+			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, view.Error.Message)
 			continue
 		}
 
-		mattermostUserID := usersByRemoteID[s.RemoteUserID].MattermostUserID
-		m.notifyUpcomingEvent(mattermostUserID, s.Events)
+		mattermostUserID := usersByRemoteID[view.RemoteUserID].MattermostUserID
+		m.notifyUpcomingEvents(mattermostUserID, view.Events)
 	}
 }
 
-func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.ViewCalendarResponse) (string, error) {
+func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remote.ViewCalendarResponse) (string, error) {
 	toUpdate := []*store.User{}
 	for _, u := range users {
 		if u.Settings.UpdateStatus {
@@ -138,7 +138,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 		}
 	}
 	if len(toUpdate) == 0 {
-		return "No users want their status", nil
+		return "No users want their status updated", nil
 	}
 
 	mattermostUserIDs := []string{}
@@ -158,24 +158,24 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 	}
 
 	var res string
-	for _, s := range schedules {
-		user, ok := usersByRemoteID[s.RemoteUserID]
+	for _, view := range calendarViews {
+		user, ok := usersByRemoteID[view.RemoteUserID]
 		if !ok {
 			continue
 		}
-		if s.Error != nil {
-			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
+		if view.Error != nil {
+			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, view.Error.Message)
 			continue
 		}
 
-		mattermostUserID := usersByRemoteID[s.RemoteUserID].MattermostUserID
+		mattermostUserID := usersByRemoteID[view.RemoteUserID].MattermostUserID
 		status, ok := statusMap[mattermostUserID]
 		if !ok {
 			continue
 		}
 
 		var err error
-		res, err = m.setStatusFromAvailability(user, status, s)
+		res, err = m.setStatusFromCalendarView(user, status, view)
 		if err != nil {
 			m.Logger.Warnf("Error setting user %s status. %s", user.Remote.Mail, err.Error())
 		}
@@ -184,10 +184,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 		return res, nil
 	}
 
-	return utils.JSONBlock(schedules), nil
+	return utils.JSONBlock(calendarViews), nil
 }
 
-func (m *mscalendar) setStatusFromAvailability(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
+func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
 	events := filterBusyEvents(res.Events)
 
 	if len(user.ActiveEvents) == 0 && len(events) == 0 {
@@ -293,14 +293,14 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, events 
 	return nil
 }
 
-func (m *mscalendar) GetAvailabilities(users []*store.User) ([]*remote.ViewCalendarResponse, error) {
+func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, err
 	}
 
 	start := time.Now().UTC()
-	end := time.Now().UTC().Add(availabilityTimeWindowSize)
+	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
 	params := []*remote.ViewCalendarParams{}
 	for _, u := range users {
@@ -314,7 +314,7 @@ func (m *mscalendar) GetAvailabilities(users []*store.User) ([]*remote.ViewCalen
 	return m.client.DoBatchViewCalendarRequests(params)
 }
 
-func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remote.Event) {
+func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*remote.Event) {
 	var timezone string
 	for _, event := range events {
 		if event.IsCancelled {
@@ -329,19 +329,19 @@ func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remo
 			if timezone == "" {
 				timezone, err = m.GetTimezoneByID(mattermostUserID)
 				if err != nil {
-					m.Logger.Warnf("notifyUpcomingEvent error getting timezone, err=%s", err.Error())
+					m.Logger.Warnf("notifyUpcomingEvents error getting timezone, err=%s", err.Error())
 					return
 				}
 			}
 
-			message, err := views.RenderScheduleItem(event, timezone)
+			message, err := views.RenderUpcomingEvent(event, timezone)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
 				continue
 			}
 			err = m.Poster.DM(mattermostUserID, message)
 			if err != nil {
-				m.Logger.Warnf("notifyUpcomingEvent error creating DM, err=", err.Error())
+				m.Logger.Warnf("notifyUpcomingEvents error creating DM, err=", err.Error())
 				continue
 			}
 		}

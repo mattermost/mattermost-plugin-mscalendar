@@ -20,7 +20,7 @@ func NewStatusSyncJob() RegisteredJob {
 	}
 }
 
-// runStatusSyncJob synchronizes all users' statuses between mscalendar and Mattermost.
+// runSyncJob synchronizes all users' statuses between mscalendar and Mattermost.
 func runSyncJob(env mscalendar.Env) {
 	env.Logger.Debugf("User status sync job beginning")
 

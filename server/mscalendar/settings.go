@@ -36,9 +36,9 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		settingStore,
 	))
 	settings = append(settings, settingspanel.NewBoolSetting(
-		store.GetRemindersSettingID,
-		"Get Reminders",
-		"Do you want to get reminders for upcoming events?",
+		store.ReceiveRemindersSettingID,
+		"Receive Reminders",
+		"Do you want to receive reminders for upcoming events?",
 		"",
 		settingStore,
 	))

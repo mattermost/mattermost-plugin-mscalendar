@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"net/url"
 	"sort"
 	"time"
 
@@ -20,22 +21,42 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 		}
 	}
 
-	resp := "Times are shown in " + events[0].Start.TimeZone + "\n"
+	resp := "Times are shown in " + events[0].Start.TimeZone
 	for _, group := range groupEventsByDate(events) {
-		resp += group[0].Start.Time().Format("Monday January 02") + "\n"
+		resp += "\n" + group[0].Start.Time().Format("Monday January 02") + "\n\n"
+		resp += renderTableHeader()
 		for _, e := range group {
-			resp += fmt.Sprintf("* %s\n", renderEvent(e))
+			eventString, err := renderEvent(e, true)
+			if err != nil {
+				return "", err
+			}
+			resp += fmt.Sprintf("\n%s", eventString)
 		}
 	}
 
 	return resp, nil
 }
 
-func renderEvent(event *remote.Event) string {
+func renderTableHeader() string {
+	return `| Time | Subject |
+| :--: | :-- |`
+}
+
+func renderEvent(event *remote.Event, asRow bool) (string, error) {
 	start := event.Start.Time().Format(time.Kitchen)
 	end := event.End.Time().Format(time.Kitchen)
 
-	return fmt.Sprintf("%s - %s `%s`", start, end, event.Subject)
+	format := "(%s - %s) [%s](%s)"
+	if asRow {
+		format = "| %s - %s | [%s](%s) |"
+	}
+
+	link, err := url.QueryUnescape(event.Weblink)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(format, start, end, event.Subject, link), nil
 }
 
 func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
@@ -65,21 +86,12 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	return result
 }
 
-func RenderScheduleItem(event *remote.Event, timezone string) (string, error) {
-	message := "You have an upcoming event:"
-	start := event.Start.In(timezone).Time()
-	end := event.End.In(timezone).Time()
-
-	message += fmt.Sprintf("\n%s-%s (%s)", start.Format(time.Kitchen), end.Format(time.Kitchen), timezone)
-	if event.Subject == "" {
-		message += "\nSubject: unknown"
-	} else {
-		message += fmt.Sprintf("\nSubject: %s", event.Subject)
+func RenderUpcomingEvent(event *remote.Event, timezone string) (string, error) {
+	message := "You have an upcoming event:\n"
+	eventString, err := renderEvent(event, false)
+	if err != nil {
+		return "", err
 	}
 
-	if event.Location != nil && event.Location.DisplayName != "" {
-		message += fmt.Sprintf("\nLocation: %s", event.Location.DisplayName)
-	}
-
-	return message, nil
+	return message + eventString, nil
 }
