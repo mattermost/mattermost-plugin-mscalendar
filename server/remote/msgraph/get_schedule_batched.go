@@ -72,7 +72,7 @@ func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, end
 			if r.Body.Error == nil {
 				result = append(result, r.Body.Value...)
 			} else {
-				c.Errorf("Failed to process schedule. %s", r.Body.Error.Message)
+				c.Warnf("Failed to process schedule. %s", r.Body.Error.Message)
 			}
 		}
 	}
