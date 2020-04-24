@@ -28,69 +28,70 @@ func TestSyncStatusAll(t *testing.T) {
 	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 	for name, tc := range map[string]struct {
-		remoteEvents  []*remote.Event
-		apiError      *remote.ApiError
-		activeEvents  []string
-		currentStatus string
-		newStatus     string
-		eventsToStore []string
-		errorLogged   string
+		remoteEvents   []*remote.Event
+		apiError       *remote.ApiError
+		activeEvents   []string
+		currentStatus  string
+		newStatus      string
+		eventsToStore  []string
+		shouldLogError bool
 	}{
 		"Most common case, no events local or remote. No status change.": {
-			remoteEvents:  []*remote.Event{},
-			activeEvents:  []string{},
-			currentStatus: "online",
-			newStatus:     "",
-			eventsToStore: nil,
-			errorLogged:   "",
+			remoteEvents:   []*remote.Event{},
+			activeEvents:   []string{},
+			currentStatus:  "online",
+			newStatus:      "",
+			eventsToStore:  nil,
+			shouldLogError: false,
 		},
 		"New remote event. Change status to DND.": {
-			remoteEvents:  []*remote.Event{busyEvent},
-			activeEvents:  []string{},
-			currentStatus: "online",
-			newStatus:     "dnd",
-			eventsToStore: []string{eventHash},
-			errorLogged:   "",
+			remoteEvents:   []*remote.Event{busyEvent},
+			activeEvents:   []string{},
+			currentStatus:  "online",
+			newStatus:      "dnd",
+			eventsToStore:  []string{eventHash},
+			shouldLogError: false,
 		},
 		"Locally stored event is finished. Change status to online.": {
-			remoteEvents:  []*remote.Event{},
-			activeEvents:  []string{eventHash},
-			currentStatus: "dnd",
-			newStatus:     "online",
-			eventsToStore: []string{},
-			errorLogged:   "",
+			remoteEvents:   []*remote.Event{},
+			activeEvents:   []string{eventHash},
+			currentStatus:  "dnd",
+			newStatus:      "online",
+			eventsToStore:  []string{},
+			shouldLogError: false,
 		},
 		"Locally stored event is still happening. No status change.": {
-			remoteEvents:  []*remote.Event{busyEvent},
-			activeEvents:  []string{eventHash},
-			currentStatus: "dnd",
-			newStatus:     "",
-			eventsToStore: nil,
-			errorLogged:   "",
+			remoteEvents:   []*remote.Event{busyEvent},
+			activeEvents:   []string{eventHash},
+			currentStatus:  "dnd",
+			newStatus:      "",
+			eventsToStore:  nil,
+			shouldLogError: false,
 		},
 		"User has manually set themselves to online during event. Locally stored event is still happening, but we will ignore it. No status change.": {
-			remoteEvents:  []*remote.Event{busyEvent},
-			activeEvents:  []string{eventHash},
-			currentStatus: "online",
-			newStatus:     "",
-			eventsToStore: nil,
-			errorLogged:   "",
+			remoteEvents:   []*remote.Event{busyEvent},
+			activeEvents:   []string{eventHash},
+			currentStatus:  "online",
+			newStatus:      "",
+			eventsToStore:  nil,
+			shouldLogError: false,
 		},
 		"Ignore non-busy event": {
-			remoteEvents:  []*remote.Event{{ID: "event_id_2", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "free"}},
-			activeEvents:  []string{},
-			currentStatus: "online",
-			newStatus:     "",
-			eventsToStore: nil,
-			errorLogged:   "",
+			remoteEvents:   []*remote.Event{{ID: "event_id_2", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "free"}},
+			activeEvents:   []string{},
+			currentStatus:  "online",
+			newStatus:      "",
+			eventsToStore:  nil,
+			shouldLogError: false,
 		},
 		"Remote API error. Error should be logged": {
-			remoteEvents:  nil,
-			apiError:      &remote.ApiError{Code: "403", Message: "Forbidden"},
-			activeEvents:  []string{eventHash},
-			currentStatus: "online",
-			newStatus:     "",
-			eventsToStore: nil,
+			remoteEvents:   nil,
+			activeEvents:   []string{eventHash},
+			currentStatus:  "online",
+			newStatus:      "",
+			eventsToStore:  nil,
+			apiError:       &remote.ApiError{Code: "403", Message: "Forbidden"},
+			shouldLogError: true,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -130,10 +131,10 @@ func TestSyncStatusAll(t *testing.T) {
 				s.EXPECT().StoreUserActiveEvents("user_mm_id", tc.eventsToStore).Return(nil).Times(1)
 			}
 
-			if tc.apiError == nil {
-				logger.EXPECT().Warnf(gomock.Any()).Times(0)
+			if tc.shouldLogError {
+				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", tc.apiError.Message).Times(1)
 			} else {
-				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", "Forbidden").Times(1)
+				logger.EXPECT().Warnf(gomock.Any()).Times(0)
 			}
 
 			m := New(env, "")
@@ -206,49 +207,57 @@ func TestSyncStatusUserConfig(t *testing.T) {
 
 func TestReminders(t *testing.T) {
 	for name, tc := range map[string]struct {
-		remoteEvents []*remote.Event
-		numReminders int
-		apiError     *remote.ApiError
+		remoteEvents   []*remote.Event
+		numReminders   int
+		apiError       *remote.ApiError
+		shouldLogError bool
 	}{
 		"Most common case, no remote events. No reminder.": {
-			remoteEvents: []*remote.Event{},
-			numReminders: 0,
+			remoteEvents:   []*remote.Event{},
+			numReminders:   0,
+			shouldLogError: false,
 		},
 		"One remote event, but it is too far in the future.": {
 			remoteEvents: []*remote.Event{
 				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
-			numReminders: 0,
+			numReminders:   0,
+			shouldLogError: false,
 		},
 		"One remote event, but it is in the past.": {
 			remoteEvents: []*remote.Event{
 				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(-15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
-			numReminders: 0,
+			numReminders:   0,
+			shouldLogError: false,
 		},
 		"One remote event, but it is to soon in the future. Reminder has already occurred.": {
 			remoteEvents: []*remote.Event{
 				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(2*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
-			numReminders: 0,
+			numReminders:   0,
+			shouldLogError: false,
 		},
 		"One remote event, and is in the range for the reminder. Reminder should occur.": {
 			remoteEvents: []*remote.Event{
 				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
-			numReminders: 1,
+			numReminders:   1,
+			shouldLogError: false,
 		},
 		"Two remote event, and are in the range for the reminder. Two reminders should occur.": {
 			remoteEvents: []*remote.Event{
 				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
-			numReminders: 2,
+			numReminders:   2,
+			shouldLogError: false,
 		},
 		"Remote API Error. Error should be logged.": {
-			remoteEvents: []*remote.Event{},
-			numReminders: 0,
-			// apiError: &remote.Api
+			remoteEvents:   []*remote.Event{},
+			numReminders:   0,
+			apiError:       &remote.ApiError{Code: "403", Message: "Forbidden"},
+			shouldLogError: true,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -281,10 +290,10 @@ func TestReminders(t *testing.T) {
 				loadUser.Times(1)
 			}
 
-			if tc.apiError == nil {
-				logger.EXPECT().Warnf(gomock.Any()).Times(0)
+			if tc.shouldLogError {
+				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", tc.apiError.Message).Times(1)
 			} else {
-				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", "Forbidden").Times(1)
+				logger.EXPECT().Warnf(gomock.Any()).Times(0)
 			}
 
 			m := New(env, "")
