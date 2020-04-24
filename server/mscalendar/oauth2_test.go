@@ -363,18 +363,16 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 			OAuth2ClientSecret: "fakeclientsecret",
 		},
 		PluginURL: "http://localhost",
-		BotUserID: "bot-user-id",
 	}
 
 	env := Env{
 		Config: conf,
 		Dependencies: &Dependencies{
-			Store:             mock_store.NewMockStore(ctrl),
-			Logger:            &bot.NilLogger{},
-			Poster:            mock_bot.NewMockPoster(ctrl),
-			Remote:            remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
-			PluginAPI:         mock_plugin_api.NewMockPluginAPI(ctrl),
-			IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return false, nil },
+			Store:     mock_store.NewMockStore(ctrl),
+			Logger:    &bot.NilLogger{},
+			Poster:    mock_bot.NewMockPoster(ctrl),
+			Remote:    remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
+			PluginAPI: mock_plugin_api.NewMockPluginAPI(ctrl),
 		},
 	}
 

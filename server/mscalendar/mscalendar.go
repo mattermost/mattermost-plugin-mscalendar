@@ -25,13 +25,12 @@ type MSCalendar interface {
 
 // Dependencies contains all API dependencies
 type Dependencies struct {
-	Logger            bot.Logger
-	PluginAPI         PluginAPI
-	Poster            bot.Poster
-	Remote            remote.Remote
-	Store             store.Store
-	SettingsPanel     settingspanel.Panel
-	IsAuthorizedAdmin func(string) (bool, error)
+	Logger        bot.Logger
+	PluginAPI     PluginAPI
+	Poster        bot.Poster
+	Remote        remote.Remote
+	Store         store.Store
+	SettingsPanel settingspanel.Panel
 }
 
 type PluginAPI interface {
@@ -56,9 +55,6 @@ type mscalendar struct {
 }
 
 func New(env Env, actingMattermostUserID string) MSCalendar {
-	if actingMattermostUserID == "" {
-		actingMattermostUserID = env.Config.BotUserID
-	}
 	return &mscalendar{
 		Env:        env,
 		actingUser: NewUser(actingMattermostUserID),

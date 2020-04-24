@@ -102,14 +102,6 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 }
 
 func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
-	isAdmin, err := m.IsAuthorizedAdmin(m.actingUser.MattermostUserID)
-	if err != nil {
-		return err
-	}
-	if !isAdmin {
-		return errors.Errorf("Non-admin user attempting ProcessAllDailySummary %s", m.actingUser.MattermostUserID)
-	}
-
 	dsumIndex, err := m.Store.LoadDailySummaryIndex()
 	if err != nil {
 		return err

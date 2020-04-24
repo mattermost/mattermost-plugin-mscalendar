@@ -312,16 +312,14 @@ func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 	logger := mock_bot.NewMockLogger(ctrl)
 
-	conf := &config.Config{BotUserID: "bot_mm_id"}
 	env := Env{
-		Config: conf,
+		Config: &config.Config{},
 		Dependencies: &Dependencies{
-			Store:             s,
-			Logger:            logger,
-			Poster:            poster,
-			Remote:            mockRemote,
-			PluginAPI:         mockPluginAPI,
-			IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return true, nil },
+			Store:     s,
+			Logger:    logger,
+			Poster:    poster,
+			Remote:    mockRemote,
+			PluginAPI: mockPluginAPI,
 		},
 	}
 

@@ -130,7 +130,7 @@ func TestProcessNotification(t *testing.T) {
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 			mockClient := mock_remote.NewMockClient(ctrl)
 
-			conf := &config.Config{BotUserID: "bot_mm_id", PluginVersion: "x.x.x"}
+			conf := &config.Config{PluginVersion: "x.x.x"}
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{

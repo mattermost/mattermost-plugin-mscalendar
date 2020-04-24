@@ -4,6 +4,15 @@
 package command
 
 func (c *Command) availability(parameters ...string) (string, error) {
+	authorized, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
+	if err != nil {
+		return "", err
+	}
+
+	if !authorized {
+		return "Not authorized", nil
+	}
+
 	switch {
 	case len(parameters) == 0:
 		resString, err := c.MSCalendar.Sync(c.Args.UserId)
