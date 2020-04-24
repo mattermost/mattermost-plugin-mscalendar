@@ -106,6 +106,9 @@ func (m *mscalendar) deliverReminders(users []*store.User, schedules []*remote.V
 			toNotify = append(toNotify, u)
 		}
 	}
+	if len(toNotify) == 0 {
+		return
+	}
 
 	usersByRemoteID := map[string]*store.User{}
 	for _, u := range toNotify {
@@ -118,7 +121,7 @@ func (m *mscalendar) deliverReminders(users []*store.User, schedules []*remote.V
 			continue
 		}
 		if s.Error != nil {
-			m.Logger.Errorf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
+			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
 			continue
 		}
 
@@ -133,6 +136,9 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 		if u.Settings.UpdateStatus {
 			toUpdate = append(toUpdate, u)
 		}
+	}
+	if len(toUpdate) == 0 {
+		return "No users want their status", nil
 	}
 
 	mattermostUserIDs := []string{}
@@ -158,7 +164,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 			continue
 		}
 		if s.Error != nil {
-			m.Logger.Errorf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
+			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, s.Error.Message)
 			continue
 		}
 
@@ -171,7 +177,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, schedules []*remote.Vi
 		var err error
 		res, err = m.setStatusFromAvailability(user, status, s)
 		if err != nil {
-			m.Logger.Errorf("Error setting user %s status. %s", user.Remote.Mail, err.Error())
+			m.Logger.Warnf("Error setting user %s status. %s", user.Remote.Mail, err.Error())
 		}
 	}
 	if res != "" {
@@ -323,19 +329,19 @@ func (m *mscalendar) notifyUpcomingEvent(mattermostUserID string, events []*remo
 			if timezone == "" {
 				timezone, err = m.GetTimezoneByID(mattermostUserID)
 				if err != nil {
-					m.Logger.Errorf("notifyUpcomingEvent error getting timezone, err=%s", err.Error())
+					m.Logger.Warnf("notifyUpcomingEvent error getting timezone, err=%s", err.Error())
 					return
 				}
 			}
 
 			message, err := views.RenderScheduleItem(event, timezone)
 			if err != nil {
-				m.Logger.Errorf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
+				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
 				continue
 			}
 			err = m.Poster.DM(mattermostUserID, message)
 			if err != nil {
-				m.Logger.Errorf("notifyUpcomingEvent error creating DM, err=", err.Error())
+				m.Logger.Warnf("notifyUpcomingEvent error creating DM, err=", err.Error())
 				continue
 			}
 		}

@@ -19,21 +19,22 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
 func TestSyncStatusAll(t *testing.T) {
 	moment := time.Now().UTC()
 	eventHash := "event_id " + moment.Format(time.RFC3339)
-	busyEvent := &remote.Event{ID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 	for name, tc := range map[string]struct {
 		remoteEvents  []*remote.Event
+		apiError      *remote.ApiError
 		activeEvents  []string
 		currentStatus string
 		newStatus     string
 		eventsToStore []string
+		errorLogged   string
 	}{
 		"Most common case, no events local or remote. No status change.": {
 			remoteEvents:  []*remote.Event{},
@@ -41,6 +42,7 @@ func TestSyncStatusAll(t *testing.T) {
 			currentStatus: "online",
 			newStatus:     "",
 			eventsToStore: nil,
+			errorLogged:   "",
 		},
 		"New remote event. Change status to DND.": {
 			remoteEvents:  []*remote.Event{busyEvent},
@@ -48,6 +50,7 @@ func TestSyncStatusAll(t *testing.T) {
 			currentStatus: "online",
 			newStatus:     "dnd",
 			eventsToStore: []string{eventHash},
+			errorLogged:   "",
 		},
 		"Locally stored event is finished. Change status to online.": {
 			remoteEvents:  []*remote.Event{},
@@ -55,6 +58,7 @@ func TestSyncStatusAll(t *testing.T) {
 			currentStatus: "dnd",
 			newStatus:     "online",
 			eventsToStore: []string{},
+			errorLogged:   "",
 		},
 		"Locally stored event is still happening. No status change.": {
 			remoteEvents:  []*remote.Event{busyEvent},
@@ -62,6 +66,7 @@ func TestSyncStatusAll(t *testing.T) {
 			currentStatus: "dnd",
 			newStatus:     "",
 			eventsToStore: nil,
+			errorLogged:   "",
 		},
 		"User has manually set themselves to online during event. Locally stored event is still happening, but we will ignore it. No status change.": {
 			remoteEvents:  []*remote.Event{busyEvent},
@@ -69,10 +74,20 @@ func TestSyncStatusAll(t *testing.T) {
 			currentStatus: "online",
 			newStatus:     "",
 			eventsToStore: nil,
+			errorLogged:   "",
 		},
 		"Ignore non-busy event": {
 			remoteEvents:  []*remote.Event{{ID: "event_id_2", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "free"}},
 			activeEvents:  []string{},
+			currentStatus: "online",
+			newStatus:     "",
+			eventsToStore: nil,
+			errorLogged:   "",
+		},
+		"Remote API error. Error should be logged": {
+			remoteEvents:  nil,
+			apiError:      &remote.ApiError{Code: "403", Message: "Forbidden"},
+			activeEvents:  []string{eventHash},
 			currentStatus: "online",
 			newStatus:     "",
 			eventsToStore: nil,
@@ -85,7 +100,7 @@ func TestSyncStatusAll(t *testing.T) {
 			env, client := makeStatusSyncTestEnv(ctrl)
 			deps := env.Dependencies
 
-			c, papi, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Store.(*mock_store.MockStore)
+			c, papi, s, logger := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Store.(*mock_store.MockStore), deps.Logger.(*mock_bot.MockLogger)
 
 			s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
 				MattermostUserID: "user_mm_id",
@@ -98,7 +113,7 @@ func TestSyncStatusAll(t *testing.T) {
 			}, nil).Times(1)
 
 			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
-				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id"},
+				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},
 			}, nil)
 
 			papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
@@ -115,8 +130,14 @@ func TestSyncStatusAll(t *testing.T) {
 				s.EXPECT().StoreUserActiveEvents("user_mm_id", tc.eventsToStore).Return(nil).Times(1)
 			}
 
-			mscalendar := New(env, "")
-			res, err := mscalendar.SyncAll()
+			if tc.apiError == nil {
+				logger.EXPECT().Warnf(gomock.Any()).Times(0)
+			} else {
+				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", "Forbidden").Times(1)
+			}
+
+			m := New(env, "")
+			res, err := m.SyncAll()
 			require.Nil(t, err)
 			require.NotEmpty(t, res)
 		})
@@ -137,7 +158,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(0)
 			},
 		},
-		"GetConfirmation enabled": {
+		"UpdateStatus enabled and GetConfirmation enabled": {
 			settings: store.Settings{
 				UpdateStatus:    true,
 				GetConfirmation: true,
@@ -145,7 +166,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, poster, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
@@ -183,14 +204,105 @@ func TestSyncStatusUserConfig(t *testing.T) {
 	}
 }
 
+func TestReminders(t *testing.T) {
+	for name, tc := range map[string]struct {
+		remoteEvents []*remote.Event
+		numReminders int
+		apiError     *remote.ApiError
+	}{
+		"Most common case, no remote events. No reminder.": {
+			remoteEvents: []*remote.Event{},
+			numReminders: 0,
+		},
+		"One remote event, but it is too far in the future.": {
+			remoteEvents: []*remote.Event{
+				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			numReminders: 0,
+		},
+		"One remote event, but it is in the past.": {
+			remoteEvents: []*remote.Event{
+				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(-15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			numReminders: 0,
+		},
+		"One remote event, but it is to soon in the future. Reminder has already occurred.": {
+			remoteEvents: []*remote.Event{
+				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(2*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			numReminders: 0,
+		},
+		"One remote event, and is in the range for the reminder. Reminder should occur.": {
+			remoteEvents: []*remote.Event{
+				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			numReminders: 1,
+		},
+		"Two remote event, and are in the range for the reminder. Two reminders should occur.": {
+			remoteEvents: []*remote.Event{
+				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				&remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			numReminders: 2,
+		},
+		"Remote API Error. Error should be logged.": {
+			remoteEvents: []*remote.Event{},
+			numReminders: 0,
+			// apiError: &remote.Api
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			env, client := makeStatusSyncTestEnv(ctrl)
+			deps := env.Dependencies
+
+			c, s, poster, logger := client.(*mock_remote.MockClient), deps.Store.(*mock_store.MockStore), deps.Poster.(*mock_bot.MockPoster), deps.Logger.(*mock_bot.MockLogger)
+
+			loadUser := s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
+				MattermostUserID: "user_mm_id",
+				Remote: &remote.User{
+					ID:   "user_remote_id",
+					Mail: "user_email@example.com",
+				},
+				Settings: store.Settings{GetReminders: true},
+			}, nil)
+			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
+				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},
+			}, nil)
+
+			if tc.numReminders > 0 {
+				poster.EXPECT().DM("user_mm_id", gomock.Any()).Times(tc.numReminders)
+				loadUser.Times(2)
+				c.EXPECT().GetMailboxSettings("user_remote_id").Times(1).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
+			} else {
+				poster.EXPECT().DM(gomock.Any(), gomock.Any()).Times(0)
+				loadUser.Times(1)
+			}
+
+			if tc.apiError == nil {
+				logger.EXPECT().Warnf(gomock.Any()).Times(0)
+			} else {
+				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", "Forbidden").Times(1)
+			}
+
+			m := New(env, "")
+			res, err := m.SyncAll()
+			require.Nil(t, err)
+			require.NotEmpty(t, res)
+		})
+	}
+}
+
 func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 	s := mock_store.NewMockStore(ctrl)
 	poster := mock_bot.NewMockPoster(ctrl)
 	mockRemote := mock_remote.NewMockRemote(ctrl)
 	mockClient := mock_remote.NewMockClient(ctrl)
 	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+	logger := mock_bot.NewMockLogger(ctrl)
 
-	logger := &bot.NilLogger{}
 	conf := &config.Config{BotUserID: "bot_mm_id"}
 	env := Env{
 		Config: conf,
