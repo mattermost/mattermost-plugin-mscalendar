@@ -6,6 +6,7 @@ package mscalendar
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -48,6 +49,14 @@ const (
 )
 
 var importantNotificationChanges []string = []string{FieldSubject, FieldDuration, FieldWhen}
+
+var notificationFieldOrder []string = []string{
+	FieldWhen,
+	FieldLocation,
+	FieldDuration,
+	FieldAttendees,
+	FieldImportance,
+}
 
 type NotificationProcessor interface {
 	Configure(Env)
@@ -222,16 +231,13 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(new) " + sa.Title
 
-	for n, v := range eventToFields(n.Event) {
-		// skip some fields
-		switch n {
-		case FieldBodyPreview, FieldSubject, FieldOrganizer, FieldResponseStatus:
-			continue
-		}
+	fields := eventToFields(n.Event)
+	for _, k := range notificationFieldOrder {
+		v := fields[k]
 
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
-			Title: n,
-			Value: fmt.Sprintf("%s", v.Strings()),
+			Title: k,
+			Value: fmt.Sprintf("%s", strings.Join(v.Strings(), ", ")),
 			Short: true,
 		})
 	}
@@ -274,7 +280,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: newFields[k].Strings(),
+			Value: strings.Join(newFields[k].Strings(), ", "),
 			Short: true,
 		})
 	}
@@ -284,7 +290,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: fmt.Sprintf("~~%s~~ \u2192 %s", priorFields[k].Strings(), newFields[k].Strings()),
+			Value: fmt.Sprintf("~~%s~~ \u2192 %s", strings.Join(priorFields[k].Strings(), ", "), strings.Join(newFields[k].Strings(), ", ")),
 			Short: true,
 		})
 	}
@@ -294,7 +300,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: fmt.Sprintf("~~%s~~", priorFields[k].Strings()),
+			Value: fmt.Sprintf("~~%s~~", strings.Join(priorFields[k].Strings(), ", ")),
 			Short: true,
 		})
 	}
@@ -434,23 +440,35 @@ func eventToFields(e *remote.Event) fields.Fields {
 	attendees := []fields.Value{}
 	for _, a := range e.Attendees {
 		attendees = append(attendees, fields.NewStringValue(
-			fmt.Sprintf("[%s](mailto:%s) (%s)",
-				a.EmailAddress.Name, a.EmailAddress.Address, a.Status.Response)))
+			fmt.Sprintf("[%s](mailto:%s)",
+				a.EmailAddress.Name, a.EmailAddress.Address)))
+	}
+
+	if len(attendees) == 0 {
+		attendees = append(attendees, fields.NewStringValue("None"))
 	}
 
 	ff := fields.Fields{
-		FieldSubject:     fields.NewStringValue(e.Subject),
-		FieldBodyPreview: fields.NewStringValue(e.BodyPreview),
-		FieldImportance:  fields.NewStringValue(e.Importance),
-		FieldWhen:        fields.NewStringValue(startDate),
-		FieldDuration:    fields.NewStringValue(dur),
+		FieldSubject:     fields.NewStringValue(valueOrNotDefined(e.Subject)),
+		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
+		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
+		FieldWhen:        fields.NewStringValue(valueOrNotDefined(startDate)),
+		FieldDuration:    fields.NewStringValue(valueOrNotDefined(dur)),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),
-		FieldLocation:       fields.NewStringValue(e.Location.DisplayName),
+		FieldLocation:       fields.NewStringValue(valueOrNotDefined(e.Location.DisplayName)),
 		FieldResponseStatus: fields.NewStringValue(e.ResponseStatus.Response),
 		FieldAttendees:      fields.NewMultiValue(attendees...),
 	}
 
 	return ff
+}
+
+func valueOrNotDefined(s string) string {
+	if s == "" {
+		return "Not defined"
+	}
+
+	return s
 }
