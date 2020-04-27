@@ -3,6 +3,8 @@ package msgraph
 import (
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -60,7 +62,7 @@ func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, end
 		res := &getScheduleBatchResponse{}
 		err := c.batchRequest(req, res)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "msgraph batch GetSchedule")
 		}
 
 		batchResponses = append(batchResponses, res)

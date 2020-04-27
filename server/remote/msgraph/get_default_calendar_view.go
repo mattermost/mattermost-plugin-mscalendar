@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -34,7 +36,7 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
 		c.ctx, http.MethodGet, paramStr, nil, res)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph GetDefaultCalendarView")
 	}
 
 	return res.Value, nil
@@ -59,7 +61,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 		batchRes := &calendarViewBatchResponse{}
 		err := c.batchRequest(req, batchRes)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
 		}
 
 		batchResponses = append(batchResponses, batchRes)

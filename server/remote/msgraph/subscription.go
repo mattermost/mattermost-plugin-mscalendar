@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
@@ -31,7 +33,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscript
 	}
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph CreateMySubscription")
 	}
 
 	c.Logger.With(bot.LogContext{
@@ -47,7 +49,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscript
 func (c *client) DeleteSubscription(subscriptionID string) error {
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().Delete(c.ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "msgraph DeleteSubscription")
 	}
 
 	c.Logger.With(bot.LogContext{
@@ -67,7 +69,7 @@ func (c *client) RenewSubscription(subscriptionID string) (*remote.Subscription,
 	sub := remote.Subscription{}
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph RenewSubscription")
 	}
 
 	c.Logger.With(bot.LogContext{
@@ -84,7 +86,7 @@ func (c *client) ListSubscriptions() ([]*remote.Subscription, error) {
 	}
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph ListSubscriptions")
 	}
 	return v.Value, nil
 }
