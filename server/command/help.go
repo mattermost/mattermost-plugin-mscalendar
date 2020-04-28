@@ -18,19 +18,23 @@ func (c *Command) help(parameters ...string) (string, error) {
 		c.Config.BuildHash,
 		c.Config.BuildDate)
 	resp += "\n"
-	resp += fmt.Sprintf("* /%s\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s help\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s info\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s connect\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s viewcal\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s showcals\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s subscribe\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s unsubscribe\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s createcal <name>\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s deletecal <id>\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s createevent\n", config.CommandTrigger)
-	resp += fmt.Sprintf("* /%s findmeetings (Optional: <attendees>)\n", config.CommandTrigger)
+	resp += getCommandText("")
+	resp += getCommandText("help")
+	resp += getCommandText("info")
+	resp += getCommandText("connect")
+	resp += getCommandText("viewcal")
+	resp += getCommandText("showcals")
+	resp += getCommandText("subscribe")
+	resp += getCommandText("unsubscribe")
+	resp += getCommandText("createcal <name>")
+	resp += getCommandText("deletecal <id>")
+	resp += getCommandText("createevent")
+	resp += getCommandText("findmeetings (Optional: <attendees>)")
 	resp += "  * <attendees> - space delimited <type>:<email> combinations \n"
 	resp += "  * <type> options - required, optional \n"
 	return resp, nil
+}
+
+func getCommandText(s string) string {
+	return fmt.Sprintf("/%s %s\n", config.CommandTrigger, s)
 }
