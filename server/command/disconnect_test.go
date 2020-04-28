@@ -7,6 +7,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
@@ -22,10 +24,31 @@ func TestDisconnect(t *testing.T) {
 		expectedError  string
 	}{
 		{
+			name:    "user not connected",
+			command: "disconnect",
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, store.ErrNotFound).Times(1)
+			},
+			expectedOutput: getNotConnectedText(),
+			expectedError:  "",
+		},
+		{
+			name:    "error fetching user",
+			command: "disconnect",
+			setup: func(m mscalendar.MSCalendar) {
+				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, errors.New("Some error")).Times(1)
+			},
+			expectedOutput: "",
+			expectedError:  "Command /mscalendar disconnect failed: Some error",
+		},
+		{
 			name:    "disconnect failed",
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, nil).Times(1)
 				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("Some error")).Times(1)
 			},
 			expectedOutput: "",
@@ -36,6 +59,7 @@ func TestDisconnect(t *testing.T) {
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, nil).Times(1)
 				mscal.EXPECT().DisconnectUser("user_id").Return(nil).Times(1)
 				mscal.EXPECT().ClearSettingsPosts("user_id").Return().Times(1)
 			},
