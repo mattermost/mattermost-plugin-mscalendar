@@ -16,7 +16,10 @@ func (c *mscalendar) PrintSettings(userID string) {
 }
 
 func (c *mscalendar) ClearSettingsPosts(userID string) {
-	c.SettingsPanel.Clear(userID)
+	err := c.SettingsPanel.Clear(userID)
+	if err != nil {
+		c.Logger.Warnf("error clearing settings posts, " + err.Error())
+	}
 }
 
 func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getTimezone func(userID string) (string, error)) settingspanel.Panel {
