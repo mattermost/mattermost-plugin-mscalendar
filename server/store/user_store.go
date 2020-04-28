@@ -33,17 +33,25 @@ type UserShort struct {
 }
 
 type User struct {
-	PluginVersion    string
-	Remote           *remote.User
-	MattermostUserID string
-	OAuth2Token      *oauth2.Token
-	Settings         Settings `json:"mattermostSettings,omitempty"`
+	PluginVersion     string
+	Remote            *remote.User
+	MattermostUserID  string
+	OAuth2Token       *oauth2.Token
+	Settings          Settings          `json:"mattermostSettings,omitempty"`
+	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 }
 
 type Settings struct {
 	EventSubscriptionID string
 	UpdateStatus        bool
 	GetConfirmation     bool
+}
+
+type WelcomeFlowStatus struct {
+	UpdateStatusPostID    string
+	GetConfirmationPostID string
+	SubscribePostID       string
+	Step                  int
 }
 
 func (settings Settings) String() string {

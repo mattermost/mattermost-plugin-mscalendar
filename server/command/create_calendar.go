@@ -4,9 +4,9 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-func (c *Command) createCalendar(parameters ...string) (string, error) {
+func (c *Command) createCalendar(parameters ...string) (string, bool, error) {
 	if len(parameters) != 1 {
-		return "Please provide the name of one calendar to create", nil
+		return "Please provide the name of one calendar to create", false, nil
 	}
 
 	calIn := &remote.Calendar{
@@ -15,7 +15,7 @@ func (c *Command) createCalendar(parameters ...string) (string, error) {
 
 	_, err := c.MSCalendar.CreateCalendar(c.user(), calIn)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	return "", nil
+	return "", false, nil
 }

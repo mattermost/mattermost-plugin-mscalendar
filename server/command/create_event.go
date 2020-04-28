@@ -27,40 +27,40 @@ func getCreateEventFlagSet() *flag.FlagSet {
 	return flagSet
 }
 
-func (c *Command) createEvent(parameters ...string) (string, error) {
+func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 
 	if len(parameters) == 0 {
-		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), nil
+		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), false, nil
 	}
 
 	tz, err := c.MSCalendar.GetTimezone(c.user())
 	if err != nil {
-		return "", nil
+		return "", false, nil
 	}
 
 	event, err := parseCreateArgs(parameters, tz)
 	if err != nil {
-		return err.Error(), nil
+		return err.Error(), false, nil
 	}
 
 	createFlagSet := getCreateEventFlagSet()
 	err = createFlagSet.Parse(parameters)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	mattermostUserIDs, err := createFlagSet.GetStringSlice("attendees")
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	calEvent, err := c.MSCalendar.CreateEvent(c.user(), event, mattermostUserIDs)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	resp := "Event Created\n" + utils.JSONBlock(&calEvent)
 
-	return resp, nil
+	return resp, false, nil
 }
 
 func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
