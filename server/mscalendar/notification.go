@@ -390,21 +390,22 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 }
 
 func eventToFields(e *remote.Event) fields.Fields {
-	date := func(dt *remote.DateTime) (time.Time, string) {
-		if dt == nil {
-			return time.Time{}, "n/a"
+	date := func(dtStart, dtEnd *remote.DateTime) (time.Time, time.Time, string) {
+		if dtStart == nil || dtEnd == nil {
+			return time.Time{}, time.Time{}, "n/a"
 		}
-		t := dt.Time()
-		format := "Monday, January 02"
-		if t.Year() != time.Now().Year() {
-			format = "Monday, January 02, 2006"
+		tStart := dtStart.Time()
+		tEnd := dtEnd.Time()
+		startFormat := "Monday, January 02"
+		if tStart.Year() != time.Now().Year() {
+			startFormat = "Monday, January 02, 2006"
 		}
-		format += " at " + time.Kitchen
-		return t, t.Format(format)
+		startFormat += " · (" + time.Kitchen
+		endFormat := " - " + time.Kitchen + ")"
+		return tStart, tEnd, tStart.Format(startFormat) + tEnd.Format(endFormat)
 	}
 
-	start, startDate := date(e.Start)
-	end, _ := date(e.End)
+	start, end, formattedDate := date(e.Start, e.End)
 
 	minutes := int(end.Sub(start).Round(time.Minute).Minutes())
 	hours := int(end.Sub(start).Hours())
@@ -452,7 +453,7 @@ func eventToFields(e *remote.Event) fields.Fields {
 		FieldSubject:     fields.NewStringValue(valueOrNotDefined(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
 		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
-		FieldWhen:        fields.NewStringValue(valueOrNotDefined(startDate)),
+		FieldWhen:        fields.NewStringValue(valueOrNotDefined(formattedDate)),
 		FieldDuration:    fields.NewStringValue(valueOrNotDefined(dur)),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
