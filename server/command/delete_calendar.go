@@ -1,13 +1,13 @@
 package command
 
-func (c *Command) deleteCalendar(parameters ...string) (string, error) {
+func (c *Command) deleteCalendar(parameters ...string) (string, bool, error) {
 	if len(parameters) != 1 {
-		return "Please provide the ID of only one calendar ", nil
+		return "Please provide the ID of only one calendar ", false, nil
 	}
 
 	err := c.MSCalendar.DeleteCalendar(c.user(), parameters[0])
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	return "", nil
+	return "", false, nil
 }

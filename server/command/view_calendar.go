@@ -9,16 +9,17 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 )
 
-func (c *Command) viewCalendar(parameters ...string) (string, error) {
+func (c *Command) viewCalendar(parameters ...string) (string, bool, error) {
 	tz, err := c.MSCalendar.GetTimezone(c.user())
 	if err != nil {
-		return "Error: No timezone found", err
+		return "Error: No timezone found", false, err
 	}
 
 	events, err := c.MSCalendar.ViewCalendar(c.user(), time.Now().Add(-24*time.Hour), time.Now().Add(14*24*time.Hour))
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
-	return views.RenderCalendarView(events, tz)
+	out, err := views.RenderCalendarView(events, tz)
+	return out, false, err
 }

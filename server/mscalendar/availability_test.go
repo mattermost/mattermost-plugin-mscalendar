@@ -112,7 +112,7 @@ func TestSyncStatusAll(t *testing.T) {
 					return []*remote.ScheduleInformation{tc.sched}, nil
 				})
 
-			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{&model.Status{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
+			mockPluginAPI.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: tc.currentStatus, UserId: "user_mm_id"}}, nil)
 
 			if tc.newStatus == "" {
 				mockPluginAPI.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)

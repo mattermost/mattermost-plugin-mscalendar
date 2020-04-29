@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
@@ -91,7 +92,7 @@ func (p *panel) URL() string {
 func (p *panel) Print(userID string) {
 	err := p.cleanPreviousSettingsPosts(userID)
 	if err != nil {
-		p.logger.Errorf("could not clean previous setting post")
+		p.logger.Errorf("could not clean previous setting post, " + err.Error())
 	}
 
 	sas := []*model.SlackAttachment{}
@@ -136,13 +137,17 @@ func (p *panel) ToPost(userID string) (*model.Post, error) {
 
 func (p *panel) cleanPreviousSettingsPosts(userID string) error {
 	postID, err := p.store.GetPanelPostID(userID)
+	if err == kvstore.ErrNotFound {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
 
 	err = p.poster.DeletePost(postID)
 	if err != nil {
-		p.logger.Errorf("could not delete setting post")
+		p.logger.Errorf("could not delete setting post, %s", err)
 	}
 
 	err = p.store.DeletePanelPostID(userID)
