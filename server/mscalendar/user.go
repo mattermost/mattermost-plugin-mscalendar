@@ -116,6 +116,7 @@ func (user *User) Markdown() string {
 }
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
+	m.AfterDisconnect(mattermostUserID)
 	err := m.Filter(
 		withClient,
 	)

@@ -38,8 +38,9 @@ func TestConnect(t *testing.T) {
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
+				mscal.EXPECT().Welcome("user_id").Return(nil)
 			},
-			expectedOutput: "[Click here to link your Microsoft Calendar account.](http://localhost/oauth2/connect)",
+			expectedOutput: "",
 			expectedError:  "",
 		},
 	}
@@ -69,7 +70,7 @@ func TestConnect(t *testing.T) {
 				tc.setup(mscal)
 			}
 
-			out, err := command.Handle()
+			out, _, err := command.Handle()
 			if tc.expectedOutput != "" {
 				require.Equal(t, tc.expectedOutput, out)
 			}

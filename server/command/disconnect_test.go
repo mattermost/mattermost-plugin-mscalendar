@@ -69,7 +69,7 @@ func TestDisconnect(t *testing.T) {
 				tc.setup(mscal)
 			}
 
-			out, err := command.Handle()
+			out, _, err := command.Handle()
 			if tc.expectedOutput != "" {
 				require.Equal(t, tc.expectedOutput, out)
 			}

@@ -14,6 +14,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_welcomer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -42,7 +43,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	app, env := newOAuth2TestApp(ctrl)
 	ss := env.Dependencies.Store.(*mock_store.MockStore)
-	poster := env.Dependencies.Poster.(*mock_bot.MockPoster)
+	welcomer := env.Dependencies.Welcomer.(*mock_welcomer.MockWelcomer)
 
 	state := ""
 	gomock.InOrder(
@@ -68,11 +69,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		ss.EXPECT().StoreUserInIndex(gomock.Any()).Return(nil).Times(1),
-		poster.EXPECT().DM(
-			gomock.Eq(fakeID),
-			gomock.Eq(WelcomeMessage),
-			gomock.Eq("mail-value"),
-		).Return(nil).Times(1),
+		welcomer.EXPECT().AfterSuccessfullyConnect(fakeID, "mail-value").Return(nil).Times(1),
 	)
 
 	err = app.CompleteOAuth2(fakeID, fakeCode, state)
@@ -216,7 +213,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 					gomock.Eq("mail-value"),
 					gomock.Eq("mscalendar"),
 					gomock.Eq("sample-username"),
-				).Return(nil).Times(1)
+				).Return("post_id", nil).Times(1)
 			},
 		},
 		{
@@ -368,11 +365,13 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 	env := Env{
 		Config: conf,
 		Dependencies: &Dependencies{
-			Store:     mock_store.NewMockStore(ctrl),
-			Logger:    &bot.NilLogger{},
-			Poster:    mock_bot.NewMockPoster(ctrl),
-			Remote:    remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
-			PluginAPI: mock_plugin_api.NewMockPluginAPI(ctrl),
+			Store:             mock_store.NewMockStore(ctrl),
+			Logger:            &bot.NilLogger{},
+			Poster:            mock_bot.NewMockPoster(ctrl),
+			Remote:            remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
+			PluginAPI:         mock_plugin_api.NewMockPluginAPI(ctrl),
+			Welcomer:          mock_welcomer.NewMockWelcomer(ctrl),
+			IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return false, nil },
 		},
 	}
 

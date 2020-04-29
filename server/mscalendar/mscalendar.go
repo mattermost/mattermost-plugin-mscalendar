@@ -19,18 +19,21 @@ type MSCalendar interface {
 	EventResponder
 	Subscriptions
 	Users
+	Welcomer
 	Settings
 	DailySummary
 }
 
 // Dependencies contains all API dependencies
 type Dependencies struct {
-	Logger        bot.Logger
-	PluginAPI     PluginAPI
-	Poster        bot.Poster
-	Remote        remote.Remote
-	Store         store.Store
-	SettingsPanel settingspanel.Panel
+	Logger            bot.Logger
+	PluginAPI         PluginAPI
+	Poster            bot.Poster
+	Remote            remote.Remote
+	Store             store.Store
+	SettingsPanel     settingspanel.Panel
+	IsAuthorizedAdmin func(string) (bool, error)
+	Welcomer          Welcomer
 }
 
 type PluginAPI interface {

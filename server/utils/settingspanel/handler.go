@@ -24,13 +24,13 @@ func Init(h *httputils.Handler, panel Panel) {
 	}
 
 	panelRouter := h.Router.PathPrefix("/").Subrouter()
-	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods("POST")
+	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods(http.MethodPost)
 }
 
 func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
-		utils.SlackAttachmentError(w, "Error: not authorized")
+		utils.SlackAttachmentError(w, "Error: Not authorized")
 		return
 	}
 
@@ -56,7 +56,11 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	idString := id.(string)
-	sh.panel.Set(mattermostUserID, idString, value)
+	err := sh.panel.Set(mattermostUserID, idString, value)
+	if err != nil {
+		utils.SlackAttachmentError(w, "Error: cannot set the property, "+err.Error())
+		return
+	}
 
 	response := model.PostActionIntegrationResponse{}
 	post, err := sh.panel.ToPost(mattermostUserID)
