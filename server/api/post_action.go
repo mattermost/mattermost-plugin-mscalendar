@@ -4,14 +4,18 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
@@ -138,7 +142,7 @@ func prettyOption(option string) string {
 func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.Request) {
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		utils.SlackAttachmentError(w, "Not authorized.")
 		return
 	}
 
@@ -147,13 +151,13 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 
 	request := model.PostActionIntegrationRequestFromJson(req.Body)
 	if request == nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Invalid request.")
 		return
 	}
 
 	value, ok := request.Context["value"].(bool)
 	if !ok {
-		http.Error(w, `No recognizable value for property "value"`, http.StatusBadRequest)
+		utils.SlackAttachmentError(w, `No recognizable value for property "value".`)
 		return
 	}
 
@@ -161,7 +165,7 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 	if value {
 		changeTo, ok := request.Context["change_to"]
 		if !ok {
-			http.Error(w, "No state to change", http.StatusBadRequest)
+			utils.SlackAttachmentError(w, "No state to change to.")
 			return
 		}
 		stringChangeTo := changeTo.(string)
@@ -175,6 +179,16 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 		returnText = fmt.Sprintf("The status has been changed to %s.", stringPrettyChangeTo)
 	}
 
+	eventInfo, err := getEventInfo(request.Context)
+	if err != nil {
+		utils.SlackAttachmentError(w, err.Error())
+		return
+	}
+
+	if eventInfo != "" {
+		returnText = eventInfo + "\n" + returnText
+	}
+
 	sa := &model.SlackAttachment{
 		Title: "Status Change",
 		Text:  returnText,
@@ -185,4 +199,33 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 	response.Update = post
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response.ToJson())
+}
+
+func getEventInfo(ctx map[string]interface{}) (string, error) {
+	hasEvent, ok := ctx["hasEvent"].(bool)
+	if !ok {
+		return "", errors.New("Cannot check whether there is an event attached.")
+	}
+	if !hasEvent {
+		return "", nil
+	}
+
+	subject, ok := ctx["subject"].(string)
+	if !ok {
+		return "", errors.New("Cannot find the event subject.")
+	}
+
+	weblink, ok := ctx["weblink"].(string)
+	if !ok {
+		return "", errors.New("Cannot find the event weblink.")
+	}
+
+	marshalledStartTime, ok := ctx["startTime"].(string)
+	if !ok {
+		return "", errors.New("Cannot find the event start time.")
+	}
+	var startTime time.Time
+	json.Unmarshal([]byte(marshalledStartTime), &startTime)
+
+	return views.RenderEventWillStartLine(subject, weblink, startTime), nil
 }

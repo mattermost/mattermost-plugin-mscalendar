@@ -1,7 +1,9 @@
 package views
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -21,7 +23,28 @@ func RenderStatusChangeNotificationView(events []*remote.Event, status, url stri
 			return statusChangeAttachments(e, status, url)
 		}
 	}
+
+	nEvents := len(events)
+	if nEvents > 0 && status == model.STATUS_DND {
+		return statusChangeAttachments(events[nEvents-1], status, url)
+	}
+
 	return statusChangeAttachments(nil, status, url)
+}
+
+func RenderEventWillStartLine(subject, weblink string, startTime time.Time) string {
+	link, _ := url.QueryUnescape(weblink)
+	eventString := fmt.Sprintf("Your event [%s](%s) will start soon.", subject, link)
+	if subject == "" {
+		eventString = fmt.Sprintf("[An event with no subject](%s) will start soon.", link)
+	}
+	if startTime.Before(time.Now()) {
+		eventString = fmt.Sprintf("Your event [%s](%s) is ongoing.", subject, link)
+		if subject == "" {
+			eventString = fmt.Sprintf("[An event with no subject](%s) is ongoing.", link)
+		}
+	}
+	return eventString
 }
 
 func renderScheduleItem(event *remote.Event, status string) string {
@@ -29,10 +52,7 @@ func renderScheduleItem(event *remote.Event, status string) string {
 		return fmt.Sprintf("You have no upcoming events.\n Shall I change your status to %s?", prettyStatuses[status])
 	}
 
-	resp := fmt.Sprintf("Your event with subject `%s` will start soon.", event.Subject)
-	if event.Subject == "" {
-		resp = "An event with no subject will start soon."
-	}
+	resp := RenderEventWillStartLine(event.Subject, event.Weblink, event.Start.Time())
 
 	resp += fmt.Sprintf("\nShall I change your status to %s?", prettyStatuses[status])
 	return resp
@@ -47,6 +67,7 @@ func statusChangeAttachments(event *remote.Event, status, url string) *model.Sla
 				"value":            true,
 				"change_to":        status,
 				"pretty_change_to": prettyStatuses[status],
+				"hasEvent":         false,
 			},
 		},
 	}
@@ -56,9 +77,23 @@ func statusChangeAttachments(event *remote.Event, status, url string) *model.Sla
 		Integration: &model.PostActionIntegration{
 			URL: url,
 			Context: map[string]interface{}{
-				"value": false,
+				"value":    false,
+				"hasEvent": false,
 			},
 		},
+	}
+
+	if event != nil {
+		marshalledStart, _ := json.Marshal(event.Start.Time())
+		actionYes.Integration.Context["hasEvent"] = true
+		actionYes.Integration.Context["subject"] = event.Subject
+		actionYes.Integration.Context["weblink"] = event.Weblink
+		actionYes.Integration.Context["startTime"] = string(marshalledStart)
+
+		actionNo.Integration.Context["hasEvent"] = true
+		actionNo.Integration.Context["subject"] = event.Subject
+		actionNo.Integration.Context["weblink"] = event.Weblink
+		actionNo.Integration.Context["startTime"] = string(marshalledStart)
 	}
 
 	sa := &model.SlackAttachment{
