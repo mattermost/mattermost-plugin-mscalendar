@@ -33,7 +33,7 @@ func getNotConnectedText() string {
 // RegisterFunc is a function that allows the runner to register commands with the mattermost server.
 type RegisterFunc func(*model.Command) error
 
-type handleFunc func(parameters ...string) (string, error)
+type handleFunc func(parameters ...string) (string, bool, error)
 
 // Register should be called by the plugin to register all necessary commands
 func Register(registerFunc RegisterFunc) {
@@ -48,10 +48,10 @@ func Register(registerFunc RegisterFunc) {
 }
 
 // Handle should be called by the plugin when a command invocation is received from the Mattermost server.
-func (c *Command) Handle() (string, error) {
+func (c *Command) Handle() (string, bool, error) {
 	cmd, parameters, err := c.isValid()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	handler := c.help
@@ -85,12 +85,12 @@ func (c *Command) Handle() (string, error) {
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	}
-	out, err := handler(parameters...)
+	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {
-		return out, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
+		return out, false, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
 	}
 
-	return out, nil
+	return out, mustRedirectToDM, nil
 }
 
 func (c *Command) isValid() (subcommand string, parameters []string, err error) {
@@ -120,14 +120,14 @@ func (c *Command) user() *mscalendar.User {
 }
 
 func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
-	return func(parameters ...string) (string, error) {
+	return func(parameters ...string) (string, bool, error) {
 		connected, err := c.isConnected()
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
 
 		if !connected {
-			return getNotConnectedText(), nil
+			return getNotConnectedText(), false, nil
 		}
 		return handle(parameters...)
 	}

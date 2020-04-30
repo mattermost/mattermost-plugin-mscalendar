@@ -7,15 +7,15 @@ import (
 	"fmt"
 )
 
-func (c *Command) unsubscribe(parameters ...string) (string, error) {
+func (c *Command) unsubscribe(parameters ...string) (string, bool, error) {
 	_, err := c.MSCalendar.LoadMyEventSubscription()
 	if err != nil {
-		return "You are not subscribed to events.", nil
+		return "You are not subscribed to events.", false, nil
 	}
 
 	err = c.MSCalendar.DeleteMyEventSubscription()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	return fmt.Sprintf("You have unsubscribed from events."), nil
+	return fmt.Sprintf("You have unsubscribed from events."), false, nil
 }

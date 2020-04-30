@@ -3,12 +3,12 @@
 
 package command
 
-func (c *Command) disconnect(parameters ...string) (string, error) {
+func (c *Command) disconnect(parameters ...string) (string, bool, error) {
 	err := c.MSCalendar.DisconnectUser(c.Args.UserId)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	c.MSCalendar.ClearSettingsPosts(c.Args.UserId)
 
-	return "Successfully disconnected your account", nil
+	return "Successfully disconnected your account", false, nil
 }

@@ -3,23 +3,23 @@
 
 package command
 
-func (c *Command) debugAvailability(parameters ...string) (string, error) {
+func (c *Command) debugAvailability(parameters ...string) (string, bool, error) {
 	switch {
 	case len(parameters) == 0:
 		resString, err := c.MSCalendar.SyncStatus(c.Args.UserId)
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
 
-		return resString, nil
+		return resString, false, nil
 	case len(parameters) == 1 && parameters[0] == "all":
 		resString, err := c.MSCalendar.SyncStatusAll()
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
 
-		return resString, nil
+		return resString, false, nil
 	}
 
-	return "bad syntax", nil
+	return "bad syntax", false, nil
 }
