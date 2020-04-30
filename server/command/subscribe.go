@@ -5,17 +5,31 @@ package command
 
 import (
 	"fmt"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 func (c *Command) subscribe(parameters ...string) (string, error) {
-	_, err := c.MSCalendar.LoadMyEventSubscription()
-	if err == nil {
-		return "Already subscribed to events.", nil
+	if len(parameters) > 0 && parameters[0] == "list" {
+		return c.debugList()
 	}
 
-	storedSub, err := c.MSCalendar.CreateMyEventSubscription()
+	_, err := c.MSCalendar.LoadMyEventSubscription()
+	if err == nil {
+		return "You are already subscribed to events.", nil
+	}
+
+	_, err = c.MSCalendar.CreateMyEventSubscription()
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Subscription %s created.", storedSub.Remote.ID), nil
+	return "You are now subscribed to events.", nil
+}
+
+func (c *Command) debugList() (string, error) {
+	subs, err := c.MSCalendar.ListRemoteSubscriptions()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Subscriptions:%s", utils.JSONBlock(subs)), nil
 }

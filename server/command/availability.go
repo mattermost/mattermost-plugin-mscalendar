@@ -3,7 +3,7 @@
 
 package command
 
-func (c *Command) availability(parameters ...string) (string, error) {
+func (c *Command) debugAvailability(parameters ...string) (string, error) {
 	switch {
 	case len(parameters) == 0:
 		resString, err := c.MSCalendar.SyncStatus(c.Args.UserId)

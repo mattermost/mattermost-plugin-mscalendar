@@ -81,7 +81,7 @@ func (c *Command) Handle() (string, error) {
 	case "showcals":
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "availability":
-		handler = c.requireConnectedUser(c.availability)
+		handler = c.requireConnectedUser(c.debugAvailability)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	}

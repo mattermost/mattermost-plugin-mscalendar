@@ -17,5 +17,5 @@ func (c *Command) unsubscribe(parameters ...string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("User's subscription deleted"), nil
+	return fmt.Sprintf("You have unsubscribed from events."), nil
 }
