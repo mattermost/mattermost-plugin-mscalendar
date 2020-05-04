@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
@@ -23,24 +22,6 @@ func TestProcessAllDailySummary(t *testing.T) {
 		err           string
 		runAssertions func(deps *Dependencies, client remote.Client)
 	}{
-		{
-			name: "Error fetching user admin",
-			err:  "admin store error",
-			runAssertions: func(deps *Dependencies, client remote.Client) {
-				deps.IsAuthorizedAdmin = func(string) (bool, error) {
-					return false, errors.New("admin store error")
-				}
-			},
-		},
-		{
-			name: "User is not admin",
-			err:  "Non-admin user attempting ProcessAllDailySummary bot_mm_id",
-			runAssertions: func(deps *Dependencies, client remote.Client) {
-				deps.IsAuthorizedAdmin = func(string) (bool, error) {
-					return false, nil
-				}
-			},
-		},
 		{
 			name: "Error fetching index",
 			err:  "index store error",
@@ -118,8 +99,8 @@ func TestProcessAllDailySummary(t *testing.T) {
 				hour, minute := 10, 0 // Time is "10:00AM"
 				moment := makeTime(hour, minute, loc)
 				mockClient.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
-					{RemoteID: "user1_remote_id", Events: []*remote.Event{}},
-					{RemoteID: "user2_remote_id", Events: []*remote.Event{
+					{RemoteUserID: "user1_remote_id", Events: []*remote.Event{}},
+					{RemoteUserID: "user2_remote_id", Events: []*remote.Event{
 						{
 							Subject: "The subject",
 							Start:   remote.NewDateTime(moment, "Mountain Standard Time"),
@@ -132,10 +113,13 @@ func TestProcessAllDailySummary(t *testing.T) {
 
 				mockPoster := deps.Poster.(*mock_bot.MockPoster)
 				gomock.InOrder(
-					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return("postID", nil).Times(1),
+					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return("postID1", nil).Times(1),
 					mockPoster.EXPECT().DM("user2_mm_id", `Times are shown in Pacific Standard Time
 Wednesday February 12
-* 9:00AM - 11:00AM `+"`The subject`\n").Return("postID", nil).Times(1),
+
+| Time | Subject |
+| :--: | :-- |
+| 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
 				)
 
 				s.EXPECT().ModifyDailySummaryIndex(gomock.Any()).Return(nil)
@@ -156,16 +140,13 @@ Wednesday February 12
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 
 			logger := mock_bot.NewMockLogger(ctrl)
-			conf := &config.Config{BotUserID: "bot_mm_id"}
 			env := Env{
-				Config: conf,
 				Dependencies: &Dependencies{
-					Store:             s,
-					Logger:            logger,
-					Poster:            poster,
-					Remote:            mockRemote,
-					PluginAPI:         mockPluginAPI,
-					IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return true, nil },
+					Store:     s,
+					Logger:    logger,
+					Poster:    poster,
+					Remote:    mockRemote,
+					PluginAPI: mockPluginAPI,
 				},
 			}
 

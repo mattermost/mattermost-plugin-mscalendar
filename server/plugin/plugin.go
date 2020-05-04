@@ -132,12 +132,10 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
-		e.Config.BotUserID = e.bot.MattermostUserID()
 		e.Dependencies.Logger = e.bot
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
-		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -235,18 +233,6 @@ func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.
 	}
 
 	env.httpHandler.ServeHTTP(w, req)
-}
-
-func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
-	env := p.getEnv()
-
-	for _, userID := range strings.Split(env.Config.AdminUserIDs, ",") {
-		if userID == mattermostUserID {
-			return true, nil
-		}
-	}
-
-	return env.PluginAPI.IsSysAdmin(mattermostUserID)
 }
 
 func (p *Plugin) getEnv() Env {
