@@ -81,7 +81,7 @@ func (c *Command) Handle() (string, bool, error) {
 	case "showcals":
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "availability":
-		handler = c.requireConnectedUser(c.debugAvailability)
+		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	}
@@ -129,6 +129,20 @@ func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
 		if !connected {
 			return getNotConnectedText(), false, nil
 		}
+		return handle(parameters...)
+	}
+}
+
+func (c *Command) requireAdminUser(handle handleFunc) handleFunc {
+	return func(parameters ...string) (string, bool, error) {
+		authorized, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
+		if err != nil {
+			return "", false, err
+		}
+		if !authorized {
+			return "Not authorized", false, nil
+		}
+
 		return handle(parameters...)
 	}
 }
