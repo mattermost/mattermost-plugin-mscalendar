@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-api/cluster"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs/mock_cluster"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
@@ -29,9 +28,7 @@ func newTestEnv(ctrl *gomock.Controller) mscalendar.Env {
 	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 
 	logger := &bot.NilLogger{}
-	conf := &config.Config{BotUserID: "bot_mm_id"}
 	return mscalendar.Env{
-		Config: conf,
 		Dependencies: &mscalendar.Dependencies{
 			Store:     s,
 			Logger:    logger,

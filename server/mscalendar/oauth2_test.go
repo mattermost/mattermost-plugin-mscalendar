@@ -360,7 +360,6 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 			OAuth2ClientSecret: "fakeclientsecret",
 		},
 		PluginURL: "http://localhost",
-		BotUserID: "bot-user-id",
 	}
 
 	env := Env{

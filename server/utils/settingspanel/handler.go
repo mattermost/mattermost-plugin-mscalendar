@@ -42,7 +42,7 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 
 	id, ok := request.Context[ContextIDKey]
 	if !ok {
-		utils.SlackAttachmentError(w, "Error: no id in context")
+		utils.SlackAttachmentError(w, "Error: missing setting id")
 		return
 	}
 

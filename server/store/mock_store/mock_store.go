@@ -495,6 +495,20 @@ func (mr *MockStoreMockRecorder) StoreUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUser", reflect.TypeOf((*MockStore)(nil).StoreUser), arg0)
 }
 
+// StoreUserActiveEvents mocks base method
+func (m *MockStore) StoreUserActiveEvents(arg0 string, arg1 []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreUserActiveEvents", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreUserActiveEvents indicates an expected call of StoreUserActiveEvents
+func (mr *MockStoreMockRecorder) StoreUserActiveEvents(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserActiveEvents", reflect.TypeOf((*MockStore)(nil).StoreUserActiveEvents), arg0, arg1)
+}
+
 // StoreUserEvent mocks base method
 func (m *MockStore) StoreUserEvent(arg0 string, arg1 *store.Event) error {
 	m.ctrl.T.Helper()
