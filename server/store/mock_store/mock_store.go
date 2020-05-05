@@ -33,6 +33,20 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// DeleteCurrentStep mocks base method
+func (m *MockStore) DeleteCurrentStep(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCurrentStep", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCurrentStep indicates an expected call of DeleteCurrentStep
+func (mr *MockStoreMockRecorder) DeleteCurrentStep(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCurrentStep", reflect.TypeOf((*MockStore)(nil).DeleteCurrentStep), arg0)
+}
+
 // DeleteDailySummaryUserSettings mocks base method
 func (m *MockStore) DeleteDailySummaryUserSettings(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -117,6 +131,36 @@ func (mr *MockStoreMockRecorder) DeleteUserSubscription(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserSubscription", reflect.TypeOf((*MockStore)(nil).DeleteUserSubscription), arg0, arg1)
 }
 
+// DeleteUserWelcomePost mocks base method
+func (m *MockStore) DeleteUserWelcomePost(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUserWelcomePost", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteUserWelcomePost indicates an expected call of DeleteUserWelcomePost
+func (mr *MockStoreMockRecorder) DeleteUserWelcomePost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserWelcomePost", reflect.TypeOf((*MockStore)(nil).DeleteUserWelcomePost), arg0)
+}
+
+// GetCurrentStep mocks base method
+func (m *MockStore) GetCurrentStep(arg0 string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentStep", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCurrentStep indicates an expected call of GetCurrentStep
+func (mr *MockStoreMockRecorder) GetCurrentStep(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentStep", reflect.TypeOf((*MockStore)(nil).GetCurrentStep), arg0)
+}
+
 // GetPanelPostID mocks base method
 func (m *MockStore) GetPanelPostID(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
@@ -130,6 +174,21 @@ func (m *MockStore) GetPanelPostID(arg0 string) (string, error) {
 func (mr *MockStoreMockRecorder) GetPanelPostID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPanelPostID", reflect.TypeOf((*MockStore)(nil).GetPanelPostID), arg0)
+}
+
+// GetPostID mocks base method
+func (m *MockStore) GetPostID(arg0, arg1 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPostID", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPostID indicates an expected call of GetPostID
+func (mr *MockStoreMockRecorder) GetPostID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostID", reflect.TypeOf((*MockStore)(nil).GetPostID), arg0, arg1)
 }
 
 // GetSetting mocks base method
@@ -267,6 +326,21 @@ func (mr *MockStoreMockRecorder) LoadUserIndex() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserIndex", reflect.TypeOf((*MockStore)(nil).LoadUserIndex))
 }
 
+// LoadUserWelcomePost mocks base method
+func (m *MockStore) LoadUserWelcomePost(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadUserWelcomePost", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadUserWelcomePost indicates an expected call of LoadUserWelcomePost
+func (mr *MockStoreMockRecorder) LoadUserWelcomePost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadUserWelcomePost", reflect.TypeOf((*MockStore)(nil).LoadUserWelcomePost), arg0)
+}
+
 // ModifyDailySummaryIndex mocks base method
 func (m *MockStore) ModifyDailySummaryIndex(arg0 func(store.DailySummaryIndex) (store.DailySummaryIndex, error)) error {
 	m.ctrl.T.Helper()
@@ -295,18 +369,32 @@ func (mr *MockStoreMockRecorder) ModifyUserIndex(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyUserIndex", reflect.TypeOf((*MockStore)(nil).ModifyUserIndex), arg0)
 }
 
-// StoreDailySummaryUserSettings mocks base method
-func (m *MockStore) StoreDailySummaryUserSettings(arg0 *store.DailySummaryUserSettings) error {
+// RemovePostID mocks base method
+func (m *MockStore) RemovePostID(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StoreDailySummaryUserSettings", arg0)
+	ret := m.ctrl.Call(m, "RemovePostID", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// StoreDailySummaryUserSettings indicates an expected call of StoreDailySummaryUserSettings
-func (mr *MockStoreMockRecorder) StoreDailySummaryUserSettings(arg0 interface{}) *gomock.Call {
+// RemovePostID indicates an expected call of RemovePostID
+func (mr *MockStoreMockRecorder) RemovePostID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreDailySummaryUserSettings", reflect.TypeOf((*MockStore)(nil).StoreDailySummaryUserSettings), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePostID", reflect.TypeOf((*MockStore)(nil).RemovePostID), arg0, arg1)
+}
+
+// SetCurrentStep mocks base method
+func (m *MockStore) SetCurrentStep(arg0 string, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetCurrentStep", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetCurrentStep indicates an expected call of SetCurrentStep
+func (mr *MockStoreMockRecorder) SetCurrentStep(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCurrentStep", reflect.TypeOf((*MockStore)(nil).SetCurrentStep), arg0, arg1)
 }
 
 // SetPanelPostID mocks base method
@@ -323,6 +411,34 @@ func (mr *MockStoreMockRecorder) SetPanelPostID(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPanelPostID", reflect.TypeOf((*MockStore)(nil).SetPanelPostID), arg0, arg1)
 }
 
+// SetPostID mocks base method
+func (m *MockStore) SetPostID(arg0, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPostID", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPostID indicates an expected call of SetPostID
+func (mr *MockStoreMockRecorder) SetPostID(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPostID", reflect.TypeOf((*MockStore)(nil).SetPostID), arg0, arg1, arg2)
+}
+
+// SetProperty mocks base method
+func (m *MockStore) SetProperty(arg0, arg1 string, arg2 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetProperty", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetProperty indicates an expected call of SetProperty
+func (mr *MockStoreMockRecorder) SetProperty(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProperty", reflect.TypeOf((*MockStore)(nil).SetProperty), arg0, arg1, arg2)
+}
+
 // SetSetting mocks base method
 func (m *MockStore) SetSetting(arg0, arg1 string, arg2 interface{}) error {
 	m.ctrl.T.Helper()
@@ -335,6 +451,20 @@ func (m *MockStore) SetSetting(arg0, arg1 string, arg2 interface{}) error {
 func (mr *MockStoreMockRecorder) SetSetting(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSetting", reflect.TypeOf((*MockStore)(nil).SetSetting), arg0, arg1, arg2)
+}
+
+// StoreDailySummaryUserSettings mocks base method
+func (m *MockStore) StoreDailySummaryUserSettings(arg0 *store.DailySummaryUserSettings) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreDailySummaryUserSettings", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreDailySummaryUserSettings indicates an expected call of StoreDailySummaryUserSettings
+func (mr *MockStoreMockRecorder) StoreDailySummaryUserSettings(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreDailySummaryUserSettings", reflect.TypeOf((*MockStore)(nil).StoreDailySummaryUserSettings), arg0)
 }
 
 // StoreOAuth2State mocks base method
@@ -363,6 +493,20 @@ func (m *MockStore) StoreUser(arg0 *store.User) error {
 func (mr *MockStoreMockRecorder) StoreUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUser", reflect.TypeOf((*MockStore)(nil).StoreUser), arg0)
+}
+
+// StoreUserActiveEvents mocks base method
+func (m *MockStore) StoreUserActiveEvents(arg0 string, arg1 []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreUserActiveEvents", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreUserActiveEvents indicates an expected call of StoreUserActiveEvents
+func (mr *MockStoreMockRecorder) StoreUserActiveEvents(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserActiveEvents", reflect.TypeOf((*MockStore)(nil).StoreUserActiveEvents), arg0, arg1)
 }
 
 // StoreUserEvent mocks base method
@@ -405,6 +549,20 @@ func (m *MockStore) StoreUserSubscription(arg0 *store.User, arg1 *store.Subscrip
 func (mr *MockStoreMockRecorder) StoreUserSubscription(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserSubscription", reflect.TypeOf((*MockStore)(nil).StoreUserSubscription), arg0, arg1)
+}
+
+// StoreUserWelcomePost mocks base method
+func (m *MockStore) StoreUserWelcomePost(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreUserWelcomePost", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreUserWelcomePost indicates an expected call of StoreUserWelcomePost
+func (mr *MockStoreMockRecorder) StoreUserWelcomePost(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserWelcomePost", reflect.TypeOf((*MockStore)(nil).StoreUserWelcomePost), arg0, arg1)
 }
 
 // VerifyOAuth2State mocks base method

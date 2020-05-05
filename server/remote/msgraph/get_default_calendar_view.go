@@ -47,7 +47,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 	for _, params := range allParams {
 		u := getCalendarViewURL(params)
 		req := &singleRequest{
-			ID:      params.RemoteID,
+			ID:      params.RemoteUserID,
 			URL:     u,
 			Method:  http.MethodGet,
 			Headers: map[string]string{},
@@ -71,9 +71,9 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 	for _, batchRes := range batchResponses {
 		for _, res := range batchRes.Responses {
 			viewCalRes := &remote.ViewCalendarResponse{
-				RemoteID: res.ID,
-				Events:   res.Body.Value,
-				Error:    res.Body.Error,
+				RemoteUserID: res.ID,
+				Events:       res.Body.Value,
+				Error:        res.Body.Error,
 			}
 			result = append(result, viewCalRes)
 		}
@@ -84,7 +84,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 
 func getCalendarViewURL(params *remote.ViewCalendarParams) string {
 	paramStr := getQueryParamStringForCalendarView(params.StartTime, params.EndTime)
-	return "/Users/" + params.RemoteID + "/calendarView" + paramStr
+	return "/Users/" + params.RemoteUserID + "/calendarView" + paramStr
 }
 
 func getQueryParamStringForCalendarView(start, end time.Time) string {

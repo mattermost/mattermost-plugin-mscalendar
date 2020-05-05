@@ -11,7 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
-func (c *Command) findMeetings(parameters ...string) (string, error) {
+func (c *Command) findMeetings(parameters ...string) (string, bool, error) {
 	meetingParams := &remote.FindMeetingTimesParameters{}
 
 	var attendees []remote.Attendee
@@ -30,7 +30,7 @@ func (c *Command) findMeetings(parameters ...string) (string, error) {
 
 	meetings, err := c.MSCalendar.FindMeetingTimes(c.user(), meetingParams)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	timeZone, _ := c.MSCalendar.GetTimezone(c.user())
@@ -43,7 +43,7 @@ func (c *Command) findMeetings(parameters ...string) (string, error) {
 		resp += utils.JSONBlock(renderMeetingTime(m))
 	}
 
-	return resp, nil
+	return resp, false, nil
 }
 
 func renderMeetingTime(m *remote.MeetingTimeSuggestion) string {

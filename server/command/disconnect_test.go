@@ -51,7 +51,6 @@ func TestDisconnect(t *testing.T) {
 
 			conf := &config.Config{
 				PluginURL: "http://localhost",
-				BotUserID: "bot_user_id",
 			}
 
 			mscal := mock_mscalendar.NewMockMSCalendar(ctrl)
@@ -70,7 +69,7 @@ func TestDisconnect(t *testing.T) {
 				tc.setup(mscal)
 			}
 
-			out, err := command.Handle()
+			out, _, err := command.Handle()
 			if tc.expectedOutput != "" {
 				require.Equal(t, tc.expectedOutput, out)
 			}

@@ -36,7 +36,7 @@ type ScheduleInformation struct {
 
 	Error *ScheduleInformationError `json:"error"`
 
-	ScheduleItems []ScheduleItem `json:"scheduleItems,omitempty"`
+	ScheduleItems []*ScheduleItem `json:"scheduleItems,omitempty"`
 	// WorkingHours interface{} `json:"workingHours,omitempty"`
 	// Error *FreeBusyError `json:"error,omitempty"`
 }
@@ -51,6 +51,6 @@ type ScheduleItem struct {
 	Status    string
 	Subject   string
 	Location  string
-	Start     DateTime
-	End       DateTime
+	Start     *DateTime
+	End       *DateTime
 }

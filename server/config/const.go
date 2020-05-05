@@ -12,16 +12,17 @@ const (
 	Repository      = "mattermost-plugin-mscalendar"
 	CommandTrigger  = "mscalendar"
 
-	PathOAuth2       = "/oauth2"
-	PathComplete     = "/complete"
-	PathAPI          = "/api/v1"
-	PathPostAction   = "/action"
-	PathRespond      = "/respond"
-	PathAccept       = "/accept"
-	PathDecline      = "/decline"
-	PathTentative    = "/tentative"
-	PathNotification = "/notification/v1"
-	PathEvent        = "/event"
+	PathOAuth2              = "/oauth2"
+	PathComplete            = "/complete"
+	PathAPI                 = "/api/v1"
+	PathPostAction          = "/action"
+	PathRespond             = "/respond"
+	PathAccept              = "/accept"
+	PathDecline             = "/decline"
+	PathTentative           = "/tentative"
+	PathConfirmStatusChange = "/confirm"
+	PathNotification        = "/notification/v1"
+	PathEvent               = "/event"
 
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete

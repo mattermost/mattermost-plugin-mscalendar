@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
@@ -136,6 +137,10 @@ func (p *panel) ToPost(userID string) (*model.Post, error) {
 
 func (p *panel) cleanPreviousSettingsPosts(userID string) error {
 	postID, err := p.store.GetPanelPostID(userID)
+	if err == kvstore.ErrNotFound {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}

@@ -18,10 +18,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
-const WelcomeMessage = `### Welcome to the Microsoft Calendar plugin!
-Here is some info to prove we got you logged in
-- Name: %s
-`
 const BotWelcomeMessage = "Bot user connected to account %s."
 
 const RemoteUserAlreadyConnected = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account."
@@ -112,6 +108,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	app.Poster.DM(mattermostUserID, WelcomeMessage, me.Mail)
+	app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
+
 	return nil
 }

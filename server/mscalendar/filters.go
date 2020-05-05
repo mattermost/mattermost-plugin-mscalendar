@@ -3,8 +3,6 @@
 
 package mscalendar
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-
 type filterf func(*mscalendar) error
 
 func (m *mscalendar) Filter(filters ...filterf) error {
@@ -44,14 +42,7 @@ func withClient(m *mscalendar) error {
 		return nil
 	}
 
-	var client remote.Client
-	var err error
-	if m.actingUser.MattermostUserID == m.Config.BotUserID {
-		client, err = m.MakeSuperuserClient()
-
-	} else {
-		client, err = m.MakeClient()
-	}
+	client, err := m.MakeClient()
 
 	if err != nil {
 		return err

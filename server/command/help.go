@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
-func (c *Command) help(parameters ...string) (string, error) {
+func (c *Command) help(parameters ...string) (string, bool, error) {
 	resp := fmt.Sprintf("Mattermost Microsoft Calendar plugin version: %s, "+
 		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
 		c.Config.PluginVersion,
@@ -31,5 +31,5 @@ func (c *Command) help(parameters ...string) (string, error) {
 	resp += "* /mscalendar findmeetings (Optional: <attendees>)\n"
 	resp += "  * <attendees> - space delimited <type>:<email> combinations \n"
 	resp += "  * <type> options - required, optional \n"
-	return resp, nil
+	return resp, false, nil
 }
