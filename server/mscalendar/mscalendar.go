@@ -58,9 +58,6 @@ type mscalendar struct {
 }
 
 func New(env Env, actingMattermostUserID string) MSCalendar {
-	if actingMattermostUserID == "" {
-		actingMattermostUserID = env.Config.BotUserID
-	}
 	return &mscalendar{
 		Env:        env,
 		actingUser: NewUser(actingMattermostUserID),
