@@ -9,14 +9,25 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
-func (c *Command) connect(parameters ...string) (string, error) {
+const (
+	ConnectBotAlreadyConnectedTemplate = "The bot account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect_bot`."
+	ConnectBotSuccessTemplate          = "[Click here to link the bot's %s account.](%s/oauth2/connect_bot)"
+	ConnectAlreadyConnectedTemplate    = "Your Mattermost account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect`."
+	ConnectErrorMessage                = "There has been a problem while trying to connect. err="
+)
+
+func (c *Command) connect(parameters ...string) (string, bool, error) {
 	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
-		return fmt.Sprintf("Your Mattermost account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect`.", config.ApplicationName, ru.Mail, config.CommandTrigger), nil
+		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), false, nil
 	}
 
-	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
-		config.ApplicationName,
-		c.Config.PluginURL)
-	return out, nil
+	out := "" //fmt.Sprintf(mscalendar.WelcomeMessage, c.Config.PluginURL)
+
+	err = c.MSCalendar.Welcome(c.Args.UserId)
+	if err != nil {
+		out = ConnectErrorMessage + err.Error()
+	}
+
+	return out, true, nil
 }

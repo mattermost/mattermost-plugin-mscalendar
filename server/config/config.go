@@ -20,7 +20,6 @@ type StoredConfig struct {
 type Config struct {
 	StoredConfig
 
-	BotUserID              string
 	BuildDate              string
 	BuildHash              string
 	BuildHashShort         string

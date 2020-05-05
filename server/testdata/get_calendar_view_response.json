@@ -1,0 +1,67 @@
+{
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('837ba3dd-5f18-4f6d-a1c8-609408de0f72')/calendarView",
+    "value": [
+        {
+            "@odata.etag": "W/\"Rsx2xZXkVkex2DxZILyPUQAAGuVK+Q==\"",
+            "id": "AAMkADRjMDgzMWFjLWIxYjgtNGJlMC1iY2U2LWVlMzg3ZTc4ZDQwNgBGAAAAAADeW-I_YodJRJbshVQzIa1zBwBGzHbFleRWR7HYPFkgvI9RAAAAAAENAABGzHbFleRWR7HYPFkgvI9RAAAa6ocNAAA=",
+            "createdDateTime": "2020-04-14T20:33:33.6273939Z",
+            "lastModifiedDateTime": "2020-04-14T20:33:34.2891014Z",
+            "changeKey": "Rsx2xZXkVkex2DxZILyPUQAAGuVK+Q==",
+            "categories": [],
+            "originalStartTimeZone": "Pacific Standard Time",
+            "originalEndTimeZone": "Pacific Standard Time",
+            "iCalUId": "040000008200E00074C5B7101A82E0080000000021968AF79B12D601000000000000000010000000C0783E2C35DD7145B7943E4F751C3F29",
+            "reminderMinutesBeforeStart": 15,
+            "isReminderOn": true,
+            "hasAttachments": false,
+            "subject": "The Greatest Event of All Time",
+            "bodyPreview": "",
+            "importance": "normal",
+            "sensitivity": "normal",
+            "isAllDay": false,
+            "isCancelled": false,
+            "isOrganizer": true,
+            "responseRequested": true,
+            "seriesMasterId": null,
+            "showAs": "busy",
+            "type": "singleInstance",
+            "webLink": "https://outlook.office365.com/owa/?itemid=AAMkADRjMDgzMWFjLWIxYjgtNGJlMC1iY2U2LWVlMzg3ZTc4ZDQwNgBGAAAAAADeW%2FI%2BYodJRJbshVQzIa1zBwBGzHbFleRWR7HYPFkgvI9RAAAAAAENAABGzHbFleRWR7HYPFkgvI9RAAAa6ocNAAA%3D&exvsurl=1&path=/calendar/item",
+            "onlineMeetingUrl": null,
+            "isOnlineMeeting": false,
+            "onlineMeetingProvider": "unknown",
+            "recurrence": null,
+            "onlineMeeting": null,
+            "responseStatus": {
+                "response": "organizer",
+                "time": "0001-01-01T00:00:00Z"
+            },
+            "body": {
+                "contentType": "html",
+                "content": ""
+            },
+            "start": {
+                "dateTime": "2020-04-14T20:30:00.0000000",
+                "timeZone": "UTC"
+            },
+            "end": {
+                "dateTime": "2020-04-15T01:00:00.0000000",
+                "timeZone": "UTC"
+            },
+            "location": {
+                "displayName": "",
+                "locationType": "default",
+                "uniqueIdType": "unknown",
+                "address": {},
+                "coordinates": {}
+            },
+            "locations": [],
+            "attendees": [],
+            "organizer": {
+                "emailAddress": {
+                    "name": "First Last",
+                    "address": "useremail@test.onmicrosoft.com"
+                }
+            }
+        }
+    ]
+}

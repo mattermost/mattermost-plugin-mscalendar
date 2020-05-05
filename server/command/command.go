@@ -51,10 +51,10 @@ func Register(registerFunc RegisterFunc) {
 }
 
 // Handle should be called by the plugin when a command invocation is received from the Mattermost server.
-func (c *Command) Handle() (string, error) {
+func (c *Command) Handle() (string, bool, error) {
 	cmd, parameters, err := c.isValid()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	handler := c.help
@@ -86,12 +86,12 @@ func (c *Command) Handle() (string, error) {
 	case "settings":
 		handler = c.settings
 	}
-	out, err := handler(parameters...)
+	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {
-		return out, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
+		return out, false, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
 	}
 
-	return out, nil
+	return out, mustRedirectToDM, nil
 }
 
 func (c *Command) isValid() (subcommand string, parameters []string, err error) {

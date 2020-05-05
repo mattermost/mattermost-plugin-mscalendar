@@ -4,6 +4,7 @@
 package plugin
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
@@ -59,7 +61,7 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	p.initEnv(&p.env)
+	p.initEnv(&p.env, "")
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
 		return errors.Wrap(err, "couldn't get bundle path")
@@ -117,7 +119,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateEnv(func(e *Env) {
-		p.initEnv(e)
+		p.initEnv(e, pluginURL)
 
 		e.StoredConfig = stored
 		e.Config.MattermostSiteURL = *mattermostSiteURL
@@ -127,11 +129,13 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.Logger)
 
 		e.bot = e.bot.WithConfig(stored.BotConfig)
-		e.Config.BotUserID = e.bot.MattermostUserID()
+
+		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
+
 		e.Dependencies.Logger = e.bot
 		e.Dependencies.Poster = e.bot
+		e.Dependencies.Welcomer = mscalendarBot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
-		e.Dependencies.IsAuthorizedAdmin = p.IsAuthorizedAdmin
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -143,6 +147,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			},
 		)
 
+		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer)
+		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
+
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
 		} else {
@@ -151,6 +158,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
@@ -193,7 +201,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		Config:     env.Config,
 		MSCalendar: mscalendar.New(env.Env, args.UserId),
 	}
-	out, err := command.Handle()
+	out, mustRedirectToDM, err := command.Handle()
 	if err != nil {
 		p.API.LogError(err.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
@@ -202,7 +210,18 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	if out != "" {
 		env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
 	}
-	return &model.CommandResponse{}, nil
+
+	response := &model.CommandResponse{}
+	if mustRedirectToDM {
+		t, appErr := p.API.GetTeam(args.TeamId)
+		if appErr != nil {
+			return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, appErr.Error(), http.StatusInternalServerError)
+		}
+		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.BotUserName)
+		response.GotoLocation = dmURL
+	}
+
+	return response, nil
 }
 
 func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.Request) {
@@ -214,18 +233,6 @@ func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.
 	}
 
 	env.httpHandler.ServeHTTP(w, req)
-}
-
-func (p *Plugin) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
-	env := p.getEnv()
-
-	for _, userID := range strings.Split(env.Config.AdminUserIDs, ",") {
-		if userID == mattermostUserID {
-			return true, nil
-		}
-	}
-
-	return env.PluginAPI.IsSysAdmin(mattermostUserID)
 }
 
 func (p *Plugin) getEnv() Env {
@@ -271,11 +278,11 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	return nil
 }
 
-func (p *Plugin) initEnv(e *Env) error {
+func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
 	if e.bot == nil {
-		e.bot = bot.New(p.API, p.Helpers)
+		e.bot = bot.New(p.API, p.Helpers, pluginURL)
 		err := e.bot.Ensure(
 			&model.Bot{
 				Username:    config.BotUserName,

@@ -31,4 +31,5 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	postActionRouter.HandleFunc(config.PathDecline, api.postActionDecline).Methods("POST")
 	postActionRouter.HandleFunc(config.PathTentative, api.postActionTentative).Methods("POST")
 	postActionRouter.HandleFunc(config.PathRespond, api.postActionRespond).Methods("POST")
+	postActionRouter.HandleFunc(config.PathConfirmStatusChange, api.postActionConfirmStatusChange).Methods("POST")
 }
