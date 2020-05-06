@@ -61,10 +61,9 @@
             },
             {
                 "key": "OAuth2Authority",
-                "display_name": "Azure Directory (tenant) ID, or \"common\"",
+                "display_name": "Azure Directory (tenant) ID",
                 "type": "text",
-                "help_text": "\"common\", or Directory (tenant) ID.",
-                "default": "common"
+                "help_text": "Directory (tenant) ID"
             },
             {
                 "key": "OAuth2ClientId",
