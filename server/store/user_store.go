@@ -51,10 +51,8 @@ type Settings struct {
 }
 
 type WelcomeFlowStatus struct {
-	UpdateStatusPostID    string
-	GetConfirmationPostID string
-	SubscribePostID       string
-	Step                  int
+	PostIDs map[string]string
+	Step    int
 }
 
 func (settings Settings) String() string {
