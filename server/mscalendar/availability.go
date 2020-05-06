@@ -181,6 +181,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
 	events := filterBusyEvents(res.Events)
+	busyStatus := model.STATUS_DND
+	if user.Settings.ReceiveNotificationsWhileOnMeeting {
+		busyStatus = model.STATUS_AWAY
+	}
 
 	if len(user.ActiveEvents) == 0 && len(events) == 0 {
 		return "No events in local or remote. No status change.", nil
@@ -188,14 +192,14 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 
 	var message string
 	if len(user.ActiveEvents) > 0 && len(events) == 0 {
-		if currentStatus == model.STATUS_DND {
+		if currentStatus == busyStatus {
 			err := m.setStatusOrAskUser(user, model.STATUS_ONLINE, events)
 			if err != nil {
 				return "", err
 			}
 			message = "User is no longer busy in calendar. Set status to online."
 		} else {
-			message = "User is no longer busy in calendar, but is not set to DND. No status change."
+			message = "User is no longer busy in calendar, but is not set to busy. No status change."
 		}
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
@@ -215,14 +219,14 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 
 	if len(user.ActiveEvents) == 0 {
 		var err error
-		if currentStatus == model.STATUS_DND {
+		if currentStatus == busyStatus {
 			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 			if err != nil {
 				return "", err
 			}
 			return "User was already marked as busy. No status change.", nil
 		}
-		err = m.setStatusOrAskUser(user, model.STATUS_DND, events)
+		err = m.setStatusOrAskUser(user, busyStatus, events)
 		if err != nil {
 			return "", err
 		}
@@ -230,7 +234,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		if err != nil {
 			return "", err
 		}
-		return "User was free, but is now busy. Set status to DND.", nil
+		return "User was free, but is now busy. Set status to busy.", nil
 	}
 
 	newEventExists := false
@@ -252,12 +256,12 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		return fmt.Sprintf("No change in active events. Total number of events: %d", len(events)), nil
 	}
 
-	if currentStatus != model.STATUS_DND {
-		err := m.setStatusOrAskUser(user, model.STATUS_DND, events)
+	if currentStatus != busyStatus {
+		err := m.setStatusOrAskUser(user, busyStatus, events)
 		if err != nil {
 			return "", err
 		}
-		message = "User was free, but is now busy. Set status to DND."
+		message = "User was free, but is now busy. Set status to busy."
 	} else {
 		message = "User is already busy. No status change."
 	}

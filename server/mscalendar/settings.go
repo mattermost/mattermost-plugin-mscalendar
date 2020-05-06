@@ -39,6 +39,13 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		settingStore,
 	))
 	settings = append(settings, settingspanel.NewBoolSetting(
+		store.ReceiveNotificationsWhileOnMeeting,
+		"Receive notifications while on meetings",
+		"Do you want to still receive Mattermost notifications while you are on a meeting?",
+		store.UpdateStatusSettingID,
+		settingStore,
+	))
+	settings = append(settings, settingspanel.NewBoolSetting(
 		store.ReceiveRemindersSettingID,
 		"Receive Reminders",
 		"Do you want to receive reminders for upcoming events?",
