@@ -56,7 +56,9 @@ func renderEvent(event *remote.Event, asRow bool) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf(format, start, end, event.Subject, link), nil
+	subject := EnsureSubject(event.Subject)
+
+	return fmt.Sprintf(format, start, end, subject, link), nil
 }
 
 func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
@@ -94,4 +96,12 @@ func RenderUpcomingEvent(event *remote.Event, timezone string) (string, error) {
 	}
 
 	return message + eventString, nil
+}
+
+func EnsureSubject(s string) string {
+	if s == "" {
+		return "(No subject)"
+	}
+
+	return s
 }

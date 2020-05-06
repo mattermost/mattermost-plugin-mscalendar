@@ -14,6 +14,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -221,7 +222,7 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 		AuthorName: n.Event.Organizer.EmailAddress.Name,
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
 		TitleLink:  n.Event.Weblink,
-		Title:      n.Event.Subject,
+		Title:      views.EnsureSubject(n.Event.Subject),
 		Text:       n.Event.BodyPreview,
 	}
 }
@@ -449,7 +450,7 @@ func eventToFields(e *remote.Event) fields.Fields {
 	}
 
 	ff := fields.Fields{
-		FieldSubject:     fields.NewStringValue(valueOrNotDefined(e.Subject)),
+		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
 		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
 		FieldWhen:        fields.NewStringValue(valueOrNotDefined(formattedDate)),
