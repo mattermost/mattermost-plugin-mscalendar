@@ -31,7 +31,7 @@ follow [these instructions](#configuration) for install and configuration.
 
 ### Step 1: Create Mattermost App in Azure
 
-Sign into [portal.azure.com](https://portal.azure.com).
+Sign into [portal.azure.com](https://portal.azure.com) using an admin Azure account.
 
 #### Azure Active Directory
 
@@ -83,7 +83,11 @@ Afterwards, add application permissions by clicking `Add a permission` -> `Micro
 - MailboxSettings.Read
 - User.ReadAll
 
-Submit the form by clicking `Add permissions` at the bottom. You're all set for configuration inside of Azure.
+Submit the form by clicking `Add permissions` at the bottom.
+
+<img width="500" src="https://user-images.githubusercontent.com/6913320/80412303-abb07c80-889b-11ea-9640-7c2f264c790f.png"/>
+
+Click `Grant admin consent for...` to grant the permissions for the application. You're all set for configuration inside of Azure.
 
 ### Step 2: Configure Plugin Settings
 
