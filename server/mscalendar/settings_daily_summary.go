@@ -134,7 +134,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 	timezone, err := s.getTimezone(userID)
 	if err != nil {
-		return nil, fmt.Errorf("could not load the timezone from Microsoft. Error: %v", err)
+		return nil, fmt.Errorf("could not load the timezone from Microsoft. err=%v", err)
 	}
 	fullTime = fullTime + " " + timezone
 

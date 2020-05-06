@@ -79,7 +79,7 @@ func (p *Plugin) OnDeactivate() error {
 	e := p.getEnv()
 	if e.jobManager != nil {
 		if err := e.jobManager.Close(); err != nil {
-			p.env.Logger.Warnf("OnDeactivate: Failed to close job manager: %v", err)
+			p.env.Logger.Warnf("OnDeactivate: Failed to close job manager. err=%v", err)
 			return err
 		}
 	}
@@ -171,7 +171,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		err := e.jobManager.OnConfigurationChange(e.Env)
 		if err != nil {
-			e.Logger.Errorf("Error updating job manager with config. Error: %v", err)
+			e.Logger.Errorf("Error updating job manager with config. err=%v", err)
 		}
 	})
 

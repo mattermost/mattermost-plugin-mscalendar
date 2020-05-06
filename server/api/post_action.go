@@ -50,7 +50,7 @@ func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
 	}
 	err := mscalendar.AcceptEvent(user, eventID)
 	if err != nil {
-		api.Logger.Warnf(err.Error())
+		api.Logger.Warnf("Failed to accept event. err=%v", err)
 		utils.SlackAttachmentError(w, "Error: Failed to accept event: "+err.Error())
 		return
 	}

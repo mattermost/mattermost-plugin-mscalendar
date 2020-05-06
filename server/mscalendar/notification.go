@@ -79,7 +79,7 @@ func (processor *notificationProcessor) Enqueue(notifications ...*remote.Notific
 		select {
 		case processor.queue <- n:
 		default:
-			return errors.Errorf("webhook notification: queue full, dropped notification")
+			return fmt.Errorf("webhook notification: queue full, dropped notification")
 		}
 	}
 	return nil
