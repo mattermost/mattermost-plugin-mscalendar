@@ -144,8 +144,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		)
 
 		welcomeFlow := flow.NewFlow(mscalendar.MakeFlowSteps(), "/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
-		fmt.Printf("%v", welcomeFlow)
-		fmt.Printf("%v", welcomeFlow.Length())
 		e.bot.RegisterFlow(welcomeFlow, e.Store)
 
 		if e.notificationProcessor == nil {
