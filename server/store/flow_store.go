@@ -6,6 +6,7 @@ const (
 	UpdateStatusPropertyName    = "update_status"
 	GetConfirmationPropertyName = "get_confirmation"
 	SubscribePropertyName       = "subscribe"
+	AutoRespondPropertyName     = "auto_respond"
 )
 
 func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
@@ -19,6 +20,8 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 		user.Settings.UpdateStatus = value
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = value
+	case AutoRespondPropertyName:
+		user.Settings.AutoRespond = value
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -44,6 +47,8 @@ func (s *pluginStore) SetPostID(userID, propertyName, postID string) error {
 		user.WelcomeFlowStatus.GetConfirmationPostID = postID
 	case SubscribePropertyName:
 		user.WelcomeFlowStatus.SubscribePostID = postID
+	case AutoRespondPropertyName:
+		user.WelcomeFlowStatus.AutoRespondPostID = postID
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -69,6 +74,8 @@ func (s *pluginStore) GetPostID(userID, propertyName string) (string, error) {
 		return user.WelcomeFlowStatus.GetConfirmationPostID, nil
 	case SubscribePropertyName:
 		return user.WelcomeFlowStatus.SubscribePostID, nil
+	case AutoRespondPropertyName:
+		return user.WelcomeFlowStatus.AutoRespondPostID, nil
 	default:
 		return "", fmt.Errorf("property %s not found", propertyName)
 	}
@@ -87,6 +94,8 @@ func (s *pluginStore) RemovePostID(userID, propertyName string) error {
 		user.WelcomeFlowStatus.GetConfirmationPostID = ""
 	case SubscribePropertyName:
 		user.WelcomeFlowStatus.SubscribePostID = ""
+	case AutoRespondPropertyName:
+		user.WelcomeFlowStatus.AutoRespondPostID = ""
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}

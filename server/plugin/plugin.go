@@ -297,3 +297,13 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 
 	return nil
 }
+
+func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
+	env := p.getEnv()
+	m := mscalendar.New(env.Env, post.UserId)
+
+	err := m.HandleBusyDM(post)
+	if err != nil {
+		p.API.LogError(err.Error())
+	}
+}

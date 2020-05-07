@@ -25,6 +25,7 @@ func (c *Command) help(parameters ...string) (string, bool, error) {
 	resp += "* /mscalendar viewcal\n"
 	resp += "* /mscalendar showcals\n"
 	resp += "* /mscalendar subscribe\n"
+	resp += "* /mscalendar autorespond\n"
 	resp += "* /mscalendar createcal <name>\n"
 	resp += "* /mscalendar deletecal <id>\n"
 	resp += "* /mscalendar createevent\n"

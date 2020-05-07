@@ -17,6 +17,7 @@ type MSCalendar interface {
 	Availability
 	Calendar
 	EventResponder
+	AutoRespond
 	Subscriptions
 	Users
 	Welcomer
@@ -37,8 +38,11 @@ type Dependencies struct {
 }
 
 type PluginAPI interface {
+	GetMattermostChannel(mattermostChannelID string) (*model.Channel, error)
+	GetMattermostUsersInChannel(mattermostChannelID string, sortBy string, page int, perPage int) ([]*model.User, error)
 	GetMattermostUser(mattermostUserID string) (*model.User, error)
 	GetMattermostUserByUsername(mattermostUsername string) (*model.User, error)
+	GetMattermostUserStatus(mattermostUserID string) (*model.Status, error)
 	GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error)
 	IsSysAdmin(mattermostUserID string) (bool, error)
 	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)

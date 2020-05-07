@@ -48,12 +48,15 @@ type Settings struct {
 	UpdateStatus        bool
 	GetConfirmation     bool
 	ReceiveReminders    bool
+	AutoRespond         bool
+	AutoRespondMessage  string
 }
 
 type WelcomeFlowStatus struct {
 	UpdateStatusPostID    string
 	GetConfirmationPostID string
 	SubscribePostID       string
+	AutoRespondPostID     string
 	Step                  int
 }
 

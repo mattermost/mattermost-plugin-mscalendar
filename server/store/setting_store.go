@@ -6,10 +6,12 @@ import (
 )
 
 const (
-	UpdateStatusSettingID     = "update_status"
-	GetConfirmationSettingID  = "get_confirmation"
-	ReceiveRemindersSettingID = "get_reminders"
-	DailySummarySettingID     = "summary_setting"
+	UpdateStatusSettingID       = "update_status"
+	GetConfirmationSettingID    = "get_confirmation"
+	ReceiveRemindersSettingID   = "get_reminders"
+	DailySummarySettingID       = "summary_setting"
+	AutoRespondSettingID        = "auto_respond"
+	AutoRespondMessageSettingID = "auto_respond_message"
 )
 
 func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) error {
@@ -37,6 +39,18 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
 		user.Settings.ReceiveReminders = storableValue
+	case AutoRespondSettingID:
+		storableValue, ok := value.(bool)
+	  if !ok {
+		  return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
+		}
+	  user.Settings.AutoRespond = storableValue
+	case AutoRespondMessageSettingID:
+		storableValue, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("cannot read value %v for setting %s (expecting string)", value, settingID)
+		}
+		user.Settings.AutoRespondMessage = storableValue
 	case DailySummarySettingID:
 		s.updateDailySummarySettingForUser(userID, value)
 	default:
@@ -64,6 +78,10 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 		return user.Settings.GetConfirmation, nil
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
+	case AutoRespondSettingID:
+	  return user.Settings.AutoRespond, nil
+	case AutoRespondMessageSettingID:
+		return user.Settings.AutoRespondMessage, nil
 	case DailySummarySettingID:
 		return s.LoadDailySummaryUserSettings(userID)
 	default:
