@@ -19,6 +19,7 @@ type MSCalendar interface {
 	EventResponder
 	Subscriptions
 	Users
+	Welcomer
 	Settings
 	DailySummary
 }
@@ -32,6 +33,7 @@ type Dependencies struct {
 	Store             store.Store
 	SettingsPanel     settingspanel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
+	Welcomer          Welcomer
 }
 
 type PluginAPI interface {
@@ -40,6 +42,7 @@ type PluginAPI interface {
 	GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error)
 	IsSysAdmin(mattermostUserID string) (bool, error)
 	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)
+	GetPost(postID string) (*model.Post, error)
 }
 
 type Env struct {
@@ -55,9 +58,6 @@ type mscalendar struct {
 }
 
 func New(env Env, actingMattermostUserID string) MSCalendar {
-	if actingMattermostUserID == "" {
-		actingMattermostUserID = env.Config.BotUserID
-	}
 	return &mscalendar{
 		Env:        env,
 		actingUser: NewUser(actingMattermostUserID),

@@ -5,6 +5,7 @@ package mscalendar
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
@@ -115,6 +116,7 @@ func (user *User) Markdown() string {
 }
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
+	m.AfterDisconnect(mattermostUserID)
 	err := m.Filter(
 		withClient,
 	)
@@ -136,17 +138,13 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 
 		err = m.client.DeleteSubscription(eventSubscriptionID)
 		if err != nil {
-			m.Logger.Errorf("failed to delete remote subscription %s. %s", eventSubscriptionID, err.Error())
+			m.Logger.Errorf("failed to delete remote subscription %s: %v", eventSubscriptionID, err)
 		}
 	}
 
 	err = m.Store.DeleteUser(mattermostUserID)
 	if err != nil {
 		return err
-	}
-
-	if mattermostUserID == m.Config.BotUserID {
-		return nil
 	}
 
 	err = m.Store.DeleteUserFromIndex(mattermostUserID)
@@ -172,7 +170,18 @@ func (m *mscalendar) GetRemoteUser(mattermostUserID string) (*remote.User, error
 }
 
 func (m *mscalendar) IsAuthorizedAdmin(mattermostUserID string) (bool, error) {
-	return m.Dependencies.IsAuthorizedAdmin(mattermostUserID)
+	for _, userID := range strings.Split(m.AdminUserIDs, ",") {
+		if userID == mattermostUserID {
+			return true, nil
+		}
+	}
+
+	ok, err := m.PluginAPI.IsSysAdmin(mattermostUserID)
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
 }
 
 func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {

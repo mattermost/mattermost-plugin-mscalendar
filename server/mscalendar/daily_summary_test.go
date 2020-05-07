@@ -6,17 +6,14 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
 )
 
 func TestProcessAllDailySummary(t *testing.T) {
@@ -25,24 +22,6 @@ func TestProcessAllDailySummary(t *testing.T) {
 		err           string
 		runAssertions func(deps *Dependencies, client remote.Client)
 	}{
-		{
-			name: "Error fetching user admin",
-			err:  "admin store error",
-			runAssertions: func(deps *Dependencies, client remote.Client) {
-				deps.IsAuthorizedAdmin = func(string) (bool, error) {
-					return false, errors.New("admin store error")
-				}
-			},
-		},
-		{
-			name: "User is not admin",
-			err:  "Non-admin user attempting ProcessAllDailySummary bot_mm_id",
-			runAssertions: func(deps *Dependencies, client remote.Client) {
-				deps.IsAuthorizedAdmin = func(string) (bool, error) {
-					return false, nil
-				}
-			},
-		},
 		{
 			name: "Error fetching index",
 			err:  "index store error",
@@ -75,26 +54,9 @@ func TestProcessAllDailySummary(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				token := &oauth2.Token{
-					AccessToken: "bot_oauth_token",
-				}
-				s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
-					MattermostUserID: "bot_mm_id",
-					OAuth2Token:      token,
-					Remote: &remote.User{
-						ID:   "bot_remote_id",
-						Mail: "bot_email@example.com",
-					},
-				}, nil).Times(1)
-
-				mockPluginAPI := deps.PluginAPI.(*mock_plugin_api.MockPluginAPI)
-				mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
-
 				mockClient := client.(*mock_remote.MockClient)
 				mockRemote := deps.Remote.(*mock_remote.MockRemote)
-				mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-				mockClient.EXPECT().GetSuperuserToken().Return("the token", nil).Times(1)
-				mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "the token").Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil).Times(1)
 
 				mockClient.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{}, errors.New("error fetching events"))
 			},
@@ -131,29 +93,14 @@ func TestProcessAllDailySummary(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				token := &oauth2.Token{
-					AccessToken: "bot_oauth_token",
-				}
-				s.EXPECT().LoadUser("bot_mm_id").Return(&store.User{
-					MattermostUserID: "bot_mm_id",
-					OAuth2Token:      token,
-					Remote: &remote.User{
-						ID:   "bot_remote_id",
-						Mail: "bot_email@example.com",
-					},
-				}, nil).Times(1)
-
-				mockPluginAPI := deps.PluginAPI.(*mock_plugin_api.MockPluginAPI)
-				mockPluginAPI.EXPECT().GetMattermostUser("bot_mm_id").Return(&model.User{}, nil).Times(1)
-
 				mockClient := client.(*mock_remote.MockClient)
 				loc, err := time.LoadLocation("MST")
 				require.Nil(t, err)
 				hour, minute := 10, 0 // Time is "10:00AM"
 				moment := makeTime(hour, minute, loc)
 				mockClient.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
-					{RemoteID: "user1_remote_id", Events: []*remote.Event{}},
-					{RemoteID: "user2_remote_id", Events: []*remote.Event{
+					{RemoteUserID: "user1_remote_id", Events: []*remote.Event{}},
+					{RemoteUserID: "user2_remote_id", Events: []*remote.Event{
 						{
 							Subject: "The subject",
 							Start:   remote.NewDateTime(moment, "Mountain Standard Time"),
@@ -162,16 +109,17 @@ func TestProcessAllDailySummary(t *testing.T) {
 					}},
 				}, nil)
 				mockRemote := deps.Remote.(*mock_remote.MockRemote)
-				mockRemote.EXPECT().MakeClient(context.Background(), token).Return(mockClient).Times(1)
-				mockClient.EXPECT().GetSuperuserToken().Return("the token", nil).Times(1)
-				mockRemote.EXPECT().MakeSuperuserClient(context.Background(), "the token").Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil).Times(1)
 
 				mockPoster := deps.Poster.(*mock_bot.MockPoster)
 				gomock.InOrder(
-					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return(nil).Times(1),
+					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return("postID1", nil).Times(1),
 					mockPoster.EXPECT().DM("user2_mm_id", `Times are shown in Pacific Standard Time
 Wednesday February 12
-* 9:00AM - 11:00AM `+"`The subject`\n").Return(nil).Times(1),
+
+| Time | Subject |
+| :--: | :-- |
+| 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
 				)
 
 				s.EXPECT().ModifyDailySummaryIndex(gomock.Any()).Return(nil)
@@ -192,16 +140,13 @@ Wednesday February 12
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 
 			logger := mock_bot.NewMockLogger(ctrl)
-			conf := &config.Config{BotUserID: "bot_mm_id"}
 			env := Env{
-				Config: conf,
 				Dependencies: &Dependencies{
-					Store:             s,
-					Logger:            logger,
-					Poster:            poster,
-					Remote:            mockRemote,
-					PluginAPI:         mockPluginAPI,
-					IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return true, nil },
+					Store:     s,
+					Logger:    logger,
+					Poster:    poster,
+					Remote:    mockRemote,
+					PluginAPI: mockPluginAPI,
 				},
 			}
 

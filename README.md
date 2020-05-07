@@ -31,7 +31,7 @@ follow [these instructions](#configuration) for install and configuration.
 
 ### Step 1: Create Mattermost App in Azure
 
-Sign into [portal.azure.com](https://portal.azure.com).
+Sign into [portal.azure.com](https://portal.azure.com) using an admin Azure account.
 
 #### Azure Active Directory
 
@@ -83,7 +83,11 @@ Afterwards, add application permissions by clicking `Add a permission` -> `Micro
 - MailboxSettings.Read
 - User.ReadAll
 
-Submit the form by clicking `Add permissions` at the bottom. You're all set for configuration inside of Azure.
+Submit the form by clicking `Add permissions` at the bottom.
+
+<img width="500" src="https://user-images.githubusercontent.com/6913320/80412303-abb07c80-889b-11ea-9640-7c2f264c790f.png"/>
+
+Click `Grant admin consent for...` to grant the permissions for the application. You're all set for configuration inside of Azure.
 
 ### Step 2: Configure Plugin Settings
 
@@ -97,11 +101,3 @@ Copy the `Client ID` and `Tenant ID` from the Azure portal
 - `tenantID` - copy from Azure App
 - `clientID` - copy from Azure App
 - `Client Secret` - copy from Azure App (Generated in `Certificates & secrets`, earlier in these instructions)
-
-### Step 3: Configure Bot Account
-
-- Create a dedicated user in Azure to be linked to the bot
-- Log in as the dedicated user in your browser
-- Run the `/mscalendar connect_bot` command in Mattermost
-- Click the link in the command's response to complete the setup process
-- Sign out of the bot's Azure account in your browser

@@ -34,15 +34,16 @@ func (m *MockPoster) EXPECT() *MockPosterMockRecorder {
 }
 
 // DM mocks base method
-func (m *MockPoster) DM(arg0, arg1 string, arg2 ...interface{}) error {
+func (m *MockPoster) DM(arg0, arg1 string, arg2 ...interface{}) (string, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DM", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DM indicates an expected call of DM
@@ -50,6 +51,25 @@ func (mr *MockPosterMockRecorder) DM(arg0, arg1 interface{}, arg2 ...interface{}
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DM", reflect.TypeOf((*MockPoster)(nil).DM), varargs...)
+}
+
+// DMUpdate mocks base method
+func (m *MockPoster) DMUpdate(arg0, arg1 string, arg2 ...interface{}) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DMUpdate", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DMUpdate indicates an expected call of DMUpdate
+func (mr *MockPosterMockRecorder) DMUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMUpdate", reflect.TypeOf((*MockPoster)(nil).DMUpdate), varargs...)
 }
 
 // DMWithAttachments mocks base method

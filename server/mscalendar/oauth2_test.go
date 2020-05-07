@@ -14,6 +14,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_welcomer"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -42,7 +43,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	app, env := newOAuth2TestApp(ctrl)
 	ss := env.Dependencies.Store.(*mock_store.MockStore)
-	poster := env.Dependencies.Poster.(*mock_bot.MockPoster)
+	welcomer := env.Dependencies.Welcomer.(*mock_welcomer.MockWelcomer)
 
 	state := ""
 	gomock.InOrder(
@@ -68,58 +69,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		ss.EXPECT().StoreUserInIndex(gomock.Any()).Return(nil).Times(1),
-		poster.EXPECT().DM(
-			gomock.Eq(fakeID),
-			gomock.Eq(WelcomeMessage),
-			gomock.Eq("mail-value"),
-		).Return(nil).Times(1),
-	)
-
-	err = app.CompleteOAuth2(fakeID, fakeCode, state)
-	require.NoError(t, err)
-}
-
-func TestCompleteOAuth2ForBotHappy(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	statusOKGraphAPIResponder()
-
-	app, env := newOAuth2TestApp(ctrl)
-	ss := env.Dependencies.Store.(*mock_store.MockStore)
-	poster := env.Dependencies.Poster.(*mock_bot.MockPoster)
-	env.Dependencies.IsAuthorizedAdmin = func(mattermostUserID string) (bool, error) { return true, nil }
-
-	state := ""
-	gomock.InOrder(
-		ss.EXPECT().LoadUser(fakeBotID).Return(nil, errors.New("Connected user not found")).Times(1),
-		ss.EXPECT().StoreOAuth2State(gomock.Any()).DoAndReturn(
-			func(s string) error {
-				if !strings.HasSuffix(s, "_"+fakeBotID) {
-					return errors.New("invalid state " + s)
-				}
-				state = s
-				return nil
-			},
-		).Times(1),
-	)
-
-	redirectURL, err := app.InitOAuth2ForBot(fakeID)
-	require.NoError(t, err)
-	require.NotEmpty(t, redirectURL)
-	require.NotEmpty(t, state)
-
-	gomock.InOrder(
-		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
-		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
-		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
-		poster.EXPECT().DM(
-			gomock.Eq(fakeID),
-			gomock.Eq(BotWelcomeMessage),
-			gomock.Eq("mail-value"),
-		).Return(nil).Times(1),
+		welcomer.EXPECT().AfterSuccessfullyConnect(fakeID, "mail-value").Return(nil).Times(1),
 	)
 
 	err = app.CompleteOAuth2(fakeID, fakeCode, state)
@@ -187,58 +137,6 @@ func TestInitOAuth2(t *testing.T) {
 	}
 }
 
-func TestInitOAuth2ForBot(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	tcs := []struct {
-		name             string
-		mattermostUserID string
-		setup            func(dependencies *Dependencies)
-		expectError      bool
-		expectURL        string
-	}{
-		{
-			name:             "connecting bot, user is not admin",
-			mattermostUserID: fakeID,
-			setup: func(d *Dependencies) {
-				d.IsAuthorizedAdmin = func(userID string) (bool, error) { return false, nil }
-			},
-			expectError: true,
-		},
-		{
-			name:             "connecting bot, user is admin",
-			mattermostUserID: fakeID,
-			setup: func(d *Dependencies) {
-				d.IsAuthorizedAdmin = func(userID string) (bool, error) {
-					return true, nil
-				}
-
-				ss := d.Store.(*mock_store.MockStore)
-				ss.EXPECT().LoadUser(fakeBotID).Return(nil, errors.New("Remote user not found")).Times(1)
-				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
-			},
-			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+Mail.Read+Mail.Send&state=kbb9cs43z3fxxpc_fake_bot-user-id",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			app, env := newOAuth2TestApp(ctrl)
-			if tc.setup != nil {
-				tc.setup(env.Dependencies)
-			}
-			gotURL, err := app.InitOAuth2ForBot(tc.mattermostUserID)
-			if tc.expectError {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
-
-			require.Equal(t, noState(tc.expectURL), noState(gotURL))
-		})
-	}
-}
-
 func TestCompleteOAuth2Errors(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -282,20 +180,6 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			expectError: "not authorized, user ID mismatch",
 		},
 		{
-			name:             "connecting bot user, not admin",
-			mattermostUserID: "bot_user_id",
-			code:             fakeCode,
-			state:            "fake_bot-user-id",
-			setup: func(d *Dependencies) {
-				d.IsAuthorizedAdmin = func(mattermostUserID string) (bool, error) {
-					return false, nil
-				}
-
-				ss := d.Store.(*mock_store.MockStore)
-				ss.EXPECT().VerifyOAuth2State(gomock.Eq("fake_bot-user-id")).Return(nil).Times(1)
-			},
-		},
-		{
 			name:              "unable to exchange auth code for token",
 			mattermostUserID:  fakeID,
 			code:              fakeCode,
@@ -329,7 +213,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 					gomock.Eq("mail-value"),
 					gomock.Eq("mscalendar"),
 					gomock.Eq("sample-username"),
-				).Return(nil).Times(1)
+				).Return("post_id", nil).Times(1)
 			},
 		},
 		{
@@ -476,7 +360,6 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 			OAuth2ClientSecret: "fakeclientsecret",
 		},
 		PluginURL: "http://localhost",
-		BotUserID: "bot-user-id",
 	}
 
 	env := Env{
@@ -487,6 +370,7 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 			Poster:            mock_bot.NewMockPoster(ctrl),
 			Remote:            remote.Makers[msgraph.Kind](conf, &bot.NilLogger{}),
 			PluginAPI:         mock_plugin_api.NewMockPluginAPI(ctrl),
+			Welcomer:          mock_welcomer.NewMockWelcomer(ctrl),
 			IsAuthorizedAdmin: func(mattermostUserID string) (bool, error) { return false, nil },
 		},
 	}

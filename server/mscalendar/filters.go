@@ -41,16 +41,11 @@ func withClient(m *mscalendar) error {
 	if m.client != nil {
 		return nil
 	}
+
 	client, err := m.MakeClient()
+
 	if err != nil {
 		return err
-	}
-
-	if m.actingUser.MattermostUserID == m.Config.BotUserID {
-		client, err = m.MakeSuperuserClient(client)
-		if err != nil {
-			return err
-		}
 	}
 
 	m.client = client
@@ -61,14 +56,12 @@ func withSuperuserClient(m *mscalendar) error {
 	if m.client != nil {
 		return nil
 	}
-	client, err := m.MakeClient()
+
+	client, err := m.MakeSuperuserClient()
 	if err != nil {
 		return err
 	}
-	client, err = m.MakeSuperuserClient(client)
-	if err != nil {
-		return err
-	}
+
 	m.client = client
 	return nil
 }

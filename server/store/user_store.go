@@ -22,6 +22,7 @@ type UserStore interface {
 	ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
+	StoreUserActiveEvents(mattermostUserID string, events []string) error
 }
 
 type UserIndex []*UserShort
@@ -33,17 +34,27 @@ type UserShort struct {
 }
 
 type User struct {
-	PluginVersion    string
-	Remote           *remote.User
-	MattermostUserID string
-	OAuth2Token      *oauth2.Token
-	Settings         Settings `json:"mattermostSettings,omitempty"`
+	PluginVersion     string
+	Remote            *remote.User
+	MattermostUserID  string
+	OAuth2Token       *oauth2.Token
+	Settings          Settings          `json:"mattermostSettings,omitempty"`
+	ActiveEvents      []string          `json:"events"`
+	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 }
 
 type Settings struct {
 	EventSubscriptionID string
 	UpdateStatus        bool
 	GetConfirmation     bool
+	ReceiveReminders    bool
+}
+
+type WelcomeFlowStatus struct {
+	UpdateStatusPostID    string
+	GetConfirmationPostID string
+	SubscribePostID       string
+	Step                  int
 }
 
 func (settings Settings) String() string {
@@ -204,6 +215,15 @@ func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
 		}
 		return userIndex, nil
 	})
+}
+
+func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []string) error {
+	u, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+	u.ActiveEvents = events
+	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
 }
 
 func (index UserIndex) ByMattermostID() map[string]*UserShort {

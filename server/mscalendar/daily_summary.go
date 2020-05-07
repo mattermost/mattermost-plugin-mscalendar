@@ -102,14 +102,6 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 }
 
 func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
-	isAdmin, err := m.IsAuthorizedAdmin(m.actingUser.MattermostUserID)
-	if err != nil {
-		return err
-	}
-	if !isAdmin {
-		return errors.Errorf("Non-admin user attempting ProcessAllDailySummary %s", m.actingUser.MattermostUserID)
-	}
-
 	dsumIndex, err := m.Store.LoadDailySummaryIndex()
 	if err != nil {
 		return err
@@ -127,7 +119,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	for _, dsum := range dsumIndex {
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
-			m.Logger.Errorf("Error posting daily summary for user %s: %s", dsum.MattermostUserID, shouldPostErr.Error())
+			m.Logger.Errorf("Error posting daily summary for user %s: %v", dsum.MattermostUserID, shouldPostErr)
 			continue
 		}
 		if !shouldPost {
@@ -136,9 +128,9 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 		start, end := getTodayHoursForTimezone(now, dsum.Timezone)
 		req := &remote.ViewCalendarParams{
-			RemoteID:  dsum.RemoteID,
-			StartTime: start,
-			EndTime:   end,
+			RemoteUserID: dsum.RemoteID,
+			StartTime:    start,
+			EndTime:      end,
 		}
 		requests = append(requests, req)
 	}
@@ -151,13 +143,13 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	mappedPostTimes := map[string]string{}
 	byRemoteID := dsumIndex.ByRemoteID()
 	for _, res := range responses {
-		dsum := byRemoteID[res.RemoteID]
+		dsum := byRemoteID[res.RemoteUserID]
 		if res.Error != nil {
 			m.Logger.Errorf("Error rendering user %s calendar: %s %s", dsum.MattermostUserID, res.Error.Code, res.Error.Message)
 		}
 		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone)
 		if err != nil {
-			m.Logger.Errorf("Error rendering user %s calendar: %s", dsum.MattermostUserID, err.Error())
+			m.Logger.Errorf("Error rendering user %s calendar: %v", dsum.MattermostUserID, err)
 		}
 
 		m.Poster.DM(dsum.MattermostUserID, postStr)

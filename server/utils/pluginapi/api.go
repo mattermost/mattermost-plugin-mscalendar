@@ -35,7 +35,11 @@ func (a *API) GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*mod
 }
 
 func (a *API) UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error) {
-	return a.api.UpdateUserStatus(mattermostUserID, status)
+	s, err := a.api.UpdateUserStatus(mattermostUserID, status)
+	if err != nil {
+		return s, err
+	}
+	return s, nil
 }
 
 // IsSysAdmin returns true if the user is authorized to use the workflow plugin's admin-level APIs/commands.
@@ -87,4 +91,12 @@ func (a *API) SendEphemeralPost(channelID, mattermostUserID, message string) {
 		Message:   message,
 	}
 	_ = a.api.SendEphemeralPost(mattermostUserID, ephemeralPost)
+}
+
+func (a *API) GetPost(postID string) (*model.Post, error) {
+	p, appErr := a.api.GetPost(postID)
+	if appErr != nil {
+		return nil, appErr
+	}
+	return p, nil
 }

@@ -3,6 +3,7 @@ package settingspanel
 import (
 	"net/http"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
@@ -23,25 +24,25 @@ func Init(h *httputils.Handler, panel Panel) {
 	}
 
 	panelRouter := h.Router.PathPrefix("/").Subrouter()
-	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods("POST")
+	panelRouter.HandleFunc(panel.URL(), sh.handleAction).Methods(http.MethodPost)
 }
 
 func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		utils.SlackAttachmentError(w, "Error: Not authorized")
 		return
 	}
 
 	request := model.PostActionIntegrationRequestFromJson(r.Body)
 	if request == nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: invalid request")
 		return
 	}
 
 	id, ok := request.Context[ContextIDKey]
 	if !ok {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.SlackAttachmentError(w, "Error: missing setting id")
 		return
 	}
 
@@ -49,13 +50,17 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		value, ok = request.Context[ContextOptionValueKey]
 		if !ok {
-			http.Error(w, "valid key not found", http.StatusBadRequest)
+			utils.SlackAttachmentError(w, "Error: valid key not found")
 			return
 		}
 	}
 
 	idString := id.(string)
-	sh.panel.Set(mattermostUserID, idString, value)
+	err := sh.panel.Set(mattermostUserID, idString, value)
+	if err != nil {
+		utils.SlackAttachmentError(w, "Error: cannot set the property, "+err.Error())
+		return
+	}
 
 	response := model.PostActionIntegrationResponse{}
 	post, err := sh.panel.ToPost(mattermostUserID)

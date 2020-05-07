@@ -7,34 +7,27 @@ import (
 	"fmt"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/pkg/errors"
 )
 
-func (c *Command) connect(parameters ...string) (string, error) {
+const (
+	ConnectBotAlreadyConnectedTemplate = "The bot account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect_bot`."
+	ConnectBotSuccessTemplate          = "[Click here to link the bot's %s account.](%s/oauth2/connect_bot)"
+	ConnectAlreadyConnectedTemplate    = "Your Mattermost account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect`."
+	ConnectErrorMessage                = "There has been a problem while trying to connect. err="
+)
+
+func (c *Command) connect(parameters ...string) (string, bool, error) {
 	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
-		return fmt.Sprintf("Your Mattermost account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect`.", config.ApplicationName, ru.Mail, config.CommandTrigger), nil
+		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), false, nil
 	}
 
-	out := fmt.Sprintf("[Click here to link your %s account.](%s/oauth2/connect)",
-		config.ApplicationName,
-		c.Config.PluginURL)
-	return out, nil
-}
+	out := "" //fmt.Sprintf(mscalendar.WelcomeMessage, c.Config.PluginURL)
 
-func (c *Command) connectBot(parameters ...string) (string, error) {
-	isAdmin, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
-	if err != nil || !isAdmin {
-		return "", errors.New("non-admin user attempting to connect bot account")
+	err = c.MSCalendar.Welcome(c.Args.UserId)
+	if err != nil {
+		out = ConnectErrorMessage + err.Error()
 	}
 
-	ru, err := c.MSCalendar.GetRemoteUser(c.Config.BotUserID)
-	if err == nil {
-		return fmt.Sprintf("The bot account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect_bot`.", config.ApplicationName, ru.Mail, config.CommandTrigger), nil
-	}
-
-	out := fmt.Sprintf("[Click here to link the bot's %s account.](%s/oauth2/connect_bot)",
-		config.ApplicationName,
-		c.Config.PluginURL)
-	return out, nil
+	return out, true, nil
 }

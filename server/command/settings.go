@@ -3,8 +3,7 @@
 
 package command
 
-func (c *Command) settings(parameters ...string) (string, error) {
+func (c *Command) settings(parameters ...string) (string, bool, error) {
 	c.MSCalendar.PrintSettings(c.Args.UserId)
-	out := "The bot will show you the settings."
-	return out, nil
+	return "", true, nil
 }

@@ -38,41 +38,9 @@ func TestConnect(t *testing.T) {
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
-			},
-			expectedOutput: "[Click here to link your Microsoft Calendar account.](http://localhost/oauth2/connect)",
-			expectedError:  "",
-		},
-		{
-			name:    "non-admin connecting bot account",
-			command: "connect_bot",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(false, nil).Times(1)
+				mscal.EXPECT().Welcome("user_id").Return(nil)
 			},
 			expectedOutput: "",
-			expectedError:  "Command /mscalendar connect_bot failed: non-admin user attempting to connect bot account",
-		},
-		{
-			name:    "bot user already connected",
-			command: "connect_bot",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mscal.EXPECT().GetRemoteUser("bot_user_id").Return(&remote.User{Mail: "bot@email.com"}, nil).Times(1)
-			},
-			//The bot account is already connected to %s account `%s`. To connect to a different account, first run `/%s disconnect_bot
-			expectedOutput: "The bot account is already connected to Microsoft Calendar account `bot@email.com`. To connect to a different account, first run `/mscalendar disconnect_bot`.",
-			expectedError:  "",
-		},
-		{
-			name:    "bot user not connected",
-			command: "connect_bot",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().IsAuthorizedAdmin("user_id").Return(true, nil).Times(1)
-				mscal.EXPECT().GetRemoteUser("bot_user_id").Return(nil, errors.New("remote user not found")).Times(1)
-			},
-			expectedOutput: "[Click here to link the bot's Microsoft Calendar account.](http://localhost/oauth2/connect_bot)",
 			expectedError:  "",
 		},
 	}
@@ -84,7 +52,6 @@ func TestConnect(t *testing.T) {
 
 			conf := &config.Config{
 				PluginURL: "http://localhost",
-				BotUserID: "bot_user_id",
 			}
 
 			mscal := mock_mscalendar.NewMockMSCalendar(ctrl)
@@ -103,7 +70,7 @@ func TestConnect(t *testing.T) {
 				tc.setup(mscal)
 			}
 
-			out, err := command.Handle()
+			out, _, err := command.Handle()
 			if tc.expectedOutput != "" {
 				require.Equal(t, tc.expectedOutput, out)
 			}
