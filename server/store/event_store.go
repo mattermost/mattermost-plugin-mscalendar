@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
@@ -61,7 +61,7 @@ func (s *pluginStore) StoreUserEvent(mattermostUserID string, event *Event) erro
 		return err
 	}
 
-	s.Logger.With(bot.LogContext{
+	s.Logger.With(logger.LogContext{
 		"mattermostUserID": mattermostUserID,
 		"eventID":          event.Remote.ID,
 		"expires":          end.String(),
@@ -76,7 +76,7 @@ func (s *pluginStore) DeleteUserEvent(mattermostUserID, eventID string) error {
 		return err
 	}
 
-	s.Logger.With(bot.LogContext{
+	s.Logger.With(logger.LogContext{
 		"mattermostUserID": mattermostUserID,
 		"eventID":          eventID,
 	}).Debugf("store: deleted event.")

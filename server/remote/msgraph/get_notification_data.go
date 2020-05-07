@@ -7,8 +7,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
@@ -19,7 +19,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		event := remote.Event{}
 		_, err := c.CallJSON(http.MethodGet, wh.Resource, nil, &event)
 		if err != nil {
-			c.Logger.With(bot.LogContext{
+			c.Logger.With(logger.LogContext{
 				"Resource":       wh.Resource,
 				"subscriptionID": wh.SubscriptionID,
 			}).Infof("msgraph: failed to fetch notification data resource: `%v`.", err)
@@ -30,7 +30,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 		n.IsBare = false
 
 	default:
-		c.Logger.With(bot.LogContext{
+		c.Logger.With(logger.LogContext{
 			"subscriptionID": wh.SubscriptionID,
 		}).Infof("msgraph: unknown resource type: `%s`.", wh.ResourceData.DataType)
 		return nil, errors.New("unknown resource type: " + wh.ResourceData.DataType)

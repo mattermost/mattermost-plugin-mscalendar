@@ -6,11 +6,12 @@ package mscalendar
 import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	"github.com/larkox/mattermost-plugin-utils/bot/poster"
+	"github.com/larkox/mattermost-plugin-utils/panel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type MSCalendar interface {
@@ -26,12 +27,12 @@ type MSCalendar interface {
 
 // Dependencies contains all API dependencies
 type Dependencies struct {
-	Logger            bot.Logger
+	Logger            logger.Logger
 	PluginAPI         PluginAPI
-	Poster            bot.Poster
+	Poster            poster.Poster
 	Remote            remote.Remote
 	Store             store.Store
-	SettingsPanel     settingspanel.Panel
+	SettingsPanel     panel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
 	Welcomer          Welcomer
 }

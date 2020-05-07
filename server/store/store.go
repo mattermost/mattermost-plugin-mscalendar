@@ -8,10 +8,11 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	"github.com/larkox/mattermost-plugin-utils/flow"
+	"github.com/larkox/mattermost-plugin-utils/panel"
+	"github.com/larkox/mattermost-plugin-utils/panel/settings"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 const (
@@ -37,8 +38,8 @@ type Store interface {
 	EventStore
 	WelcomeStore
 	flow.FlowStore
-	settingspanel.SettingStore
-	settingspanel.PanelStore
+	settings.SettingStore
+	panel.PanelStore
 	DailySummaryStore
 }
 
@@ -53,10 +54,10 @@ type pluginStore struct {
 	welcomeIndexKV     kvstore.KVStore
 	settingsPanelKV    kvstore.KVStore
 	dailySummaryKV     kvstore.KVStore
-	Logger             bot.Logger
+	Logger             logger.Logger
 }
 
-func NewPluginStore(api plugin.API, logger bot.Logger) Store {
+func NewPluginStore(api plugin.API, logger logger.Logger) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	return &pluginStore{
 		basicKV:            basicKV,

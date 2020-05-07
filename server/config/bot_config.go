@@ -1,7 +1,4 @@
-// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
-
-package bot
+package config
 
 type BotConfig struct {
 	// AdminUserIDs contains a comma-separated list of user IDs that are allowed

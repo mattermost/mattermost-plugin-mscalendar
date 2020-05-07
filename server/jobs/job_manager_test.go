@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	mock_bot "github.com/larkox/mattermost-plugin-utils/bot/mocks"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-api/cluster"
@@ -17,8 +19,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
 func newTestEnv(ctrl *gomock.Controller) mscalendar.Env {
@@ -27,7 +27,7 @@ func newTestEnv(ctrl *gomock.Controller) mscalendar.Env {
 	mockRemote := mock_remote.NewMockRemote(ctrl)
 	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 
-	logger := &bot.NilLogger{}
+	logger := logger.NewNilLogger()
 	return mscalendar.Env{
 		Dependencies: &mscalendar.Dependencies{
 			Store:     s,

@@ -10,25 +10,25 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const Kind = "msgraph"
 
 type impl struct {
 	conf   *config.Config
-	logger bot.Logger
+	logger logger.Logger
 }
 
 func init() {
 	remote.Makers[Kind] = NewRemote
 }
 
-func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
+func NewRemote(conf *config.Config, logger logger.Logger) remote.Remote {
 	return &impl{
 		conf:   conf,
 		logger: logger,

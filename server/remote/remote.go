@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type Remote interface {
@@ -20,7 +20,7 @@ type Remote interface {
 	HandleWebhook(http.ResponseWriter, *http.Request) []*Notification
 }
 
-var Makers = map[string]func(*config.Config, bot.Logger) Remote{}
+var Makers = map[string]func(*config.Config, logger.Logger) Remote{}
 
 type ApiError struct {
 	Code    string `json:"code"`

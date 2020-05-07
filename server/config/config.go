@@ -1,7 +1,5 @@
 package config
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-
 // StoredConfig represents the data stored in and managed with the Mattermost
 // config.
 type StoredConfig struct {
@@ -12,7 +10,7 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
-	bot.BotConfig
+	BotConfig
 }
 
 // Config represents the the metadata handed to all request runners (command,

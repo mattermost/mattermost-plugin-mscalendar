@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const subscribeTTL = 48 * time.Hour
@@ -34,7 +34,7 @@ func (c *client) CreateMySubscription(notificationURL string) (*remote.Subscript
 		return nil, err
 	}
 
-	c.Logger.With(bot.LogContext{
+	c.Logger.With(logger.LogContext{
 		"subscriptionID":     sub.ID,
 		"resource":           sub.Resource,
 		"changeType":         sub.ChangeType,
@@ -50,7 +50,7 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 		return err
 	}
 
-	c.Logger.With(bot.LogContext{
+	c.Logger.With(logger.LogContext{
 		"subscriptionID": subscriptionID,
 	}).Debugf("msgraph: deleted subscription.")
 
@@ -70,7 +70,7 @@ func (c *client) RenewSubscription(subscriptionID string) (*remote.Subscription,
 		return nil, err
 	}
 
-	c.Logger.With(bot.LogContext{
+	c.Logger.With(logger.LogContext{
 		"subscriptionID":     subscriptionID,
 		"expirationDateTime": expires.Format(time.RFC3339),
 	}).Debugf("msgraph: renewed subscription.")

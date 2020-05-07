@@ -12,14 +12,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"golang.org/x/oauth2"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	mock_bot "github.com/larkox/mattermost-plugin-utils/bot/mocks"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
 func newTestNotificationProcessor(env Env) NotificationProcessor {
@@ -135,7 +136,7 @@ func TestProcessNotification(t *testing.T) {
 				Config: conf,
 				Dependencies: &Dependencies{
 					Store:     mockStore,
-					Logger:    &bot.NilLogger{},
+					Logger:    logger.NewNilLogger(),
 					Poster:    mockPoster,
 					Remote:    mockRemote,
 					PluginAPI: mockPluginAPI,

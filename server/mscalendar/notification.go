@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -16,7 +17,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/fields"
 )
 
@@ -107,7 +107,7 @@ func (processor *notificationProcessor) work() {
 		case n := <-processor.queue:
 			err := processor.processNotification(n)
 			if err != nil {
-				processor.Logger.With(bot.LogContext{
+				processor.Logger.With(logger.LogContext{
 					"subscriptionID": n.SubscriptionID,
 				}).Infof("webhook notification: failed: `%v`.", err)
 			}
@@ -161,7 +161,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		if err != nil {
 			return err
 		}
-		processor.Logger.With(bot.LogContext{
+		processor.Logger.With(logger.LogContext{
 			"MattermostUserID": creator.MattermostUserID,
 			"SubscriptionID":   n.SubscriptionID,
 		}).Debugf("webhook notification: renewed user subscription.")
@@ -183,7 +183,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		var changed bool
 		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote)
 		if !changed {
-			processor.Logger.With(bot.LogContext{
+			processor.Logger.With(logger.LogContext{
 				"MattermostUserID": creator.MattermostUserID,
 				"SubscriptionID":   n.SubscriptionID,
 				"ChangeType":       n.ChangeType,
@@ -208,7 +208,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return err
 	}
 
-	processor.Logger.With(bot.LogContext{
+	processor.Logger.With(logger.LogContext{
 		"MattermostUserID": creator.MattermostUserID,
 		"SubscriptionID":   n.SubscriptionID,
 	}).Debugf("Notified: %s.", sa.Title)

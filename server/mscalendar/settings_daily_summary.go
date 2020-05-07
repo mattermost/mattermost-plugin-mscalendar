@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/larkox/mattermost-plugin-utils/panel/settings"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
@@ -18,11 +18,11 @@ type dailySummarySetting struct {
 	optionsH    []string
 	optionsM    []string
 	optionsAPM  []string
-	store       settingspanel.SettingStore
+	store       settings.SettingStore
 	getTimezone func(userID string) (string, error)
 }
 
-func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) (string, error)) settingspanel.Setting {
+func NewDailySummarySetting(inStore settings.SettingStore, getTimezone func(userID string) (string, error)) settings.Setting {
 	os := &dailySummarySetting{
 		title:       "Daily Summary",
 		description: "When do you want to receive the daily summary?\n If you update this setting, it will automatically update to your the timezone currently set on your calendar.",
@@ -145,7 +145,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		Integration: &model.PostActionIntegration{
 			URL: settingHandler,
 			Context: map[string]interface{}{
-				settingspanel.ContextIDKey: s.id,
+				settings.ContextIDKey: s.id,
 			},
 		},
 		Type:          "select",
@@ -158,7 +158,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		Integration: &model.PostActionIntegration{
 			URL: settingHandler,
 			Context: map[string]interface{}{
-				settingspanel.ContextIDKey: s.id,
+				settings.ContextIDKey: s.id,
 			},
 		},
 		Type:          "select",
@@ -171,7 +171,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		Integration: &model.PostActionIntegration{
 			URL: settingHandler,
 			Context: map[string]interface{}{
-				settingspanel.ContextIDKey: s.id,
+				settings.ContextIDKey: s.id,
 			},
 		},
 		Type:          "select",
@@ -192,8 +192,8 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		Integration: &model.PostActionIntegration{
 			URL: settingHandler,
 			Context: map[string]interface{}{
-				settingspanel.ContextIDKey:          s.id,
-				settingspanel.ContextButtonValueKey: enable + " " + timezone,
+				settings.ContextIDKey:          s.id,
+				settings.ContextButtonValueKey: enable + " " + timezone,
 			},
 		},
 	}

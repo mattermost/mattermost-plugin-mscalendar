@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const renewSubscriptionBeforeExpiration = 12 * time.Hour
@@ -69,7 +69,7 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 
 		expires, err := time.Parse(time.RFC3339, wh.SubscriptionExpirationDateTime)
 		if err != nil {
-			r.logger.With(bot.LogContext{
+			r.logger.With(logger.LogContext{
 				"SubscriptionID": wh.SubscriptionID,
 			}).Infof("msgraph: invalid subscription expiration in webhook: `%v`.", err)
 			return nil

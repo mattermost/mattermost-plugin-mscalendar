@@ -6,8 +6,8 @@ package msgraph
 import (
 	"net/http"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 // CreateCalendar creates a calendar
@@ -17,7 +17,7 @@ func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*r
 	if err != nil {
 		return nil, err
 	}
-	c.Logger.With(bot.LogContext{
+	c.Logger.With(logger.LogContext{
 		"v": calOut,
 	}).Infof("msgraph: CreateCalendars created the following calendar.")
 	return &calOut, nil

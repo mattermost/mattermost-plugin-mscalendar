@@ -18,6 +18,9 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	"github.com/larkox/mattermost-plugin-utils/flow"
+	"github.com/larkox/mattermost-plugin-utils/panel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -26,17 +29,14 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type Env struct {
 	mscalendar.Env
-	bot                   bot.Bot
+	bot                   mscalendar.Bot
 	jobManager            *jobs.JobManager
 	notificationProcessor mscalendar.NotificationProcessor
 	httpHandler           *httputils.Handler
@@ -61,7 +61,7 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	p.initEnv(&p.env, "")
+	p.initEnv(&p.env, "", config.StoredConfig{})
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
 		return errors.Wrap(err, "couldn't get bundle path")
@@ -119,7 +119,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateEnv(func(e *Env) {
-		p.initEnv(e, pluginURL)
+		p.initEnv(e, pluginURL, stored)
 
 		e.StoredConfig = stored
 		e.Config.MattermostSiteURL = *mattermostSiteURL
@@ -128,13 +128,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURLPath = pluginURLPath
 		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.Logger)
 
-		e.bot = e.bot.WithConfig(stored.BotConfig)
-
-		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
-
 		e.Dependencies.Logger = e.bot
 		e.Dependencies.Poster = e.bot
-		e.Dependencies.Welcomer = mscalendarBot
+		e.Dependencies.Welcomer = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
@@ -147,8 +143,10 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			},
 		)
 
-		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer)
-		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
+		welcomeFlow := flow.NewFlow(mscalendar.MakeFlowSteps(), "/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
+		fmt.Printf("%v", welcomeFlow)
+		fmt.Printf("%v", welcomeFlow.Length())
+		e.bot.RegisterFlow(welcomeFlow, e.Store)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -158,8 +156,8 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
-		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
-		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
+		flow.Init(e.httpHandler.Router, welcomeFlow, mscalendar.NewWelcomeStore(e.Store, e.Env))
+		panel.Init(e.httpHandler.Router, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
 
 		if e.jobManager == nil {
@@ -278,11 +276,15 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	return nil
 }
 
-func (p *Plugin) initEnv(e *Env, pluginURL string) error {
+func (p *Plugin) initEnv(e *Env, pluginURL string, c config.StoredConfig) error {
 	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
 	if e.bot == nil {
-		e.bot = bot.New(p.API, p.Helpers, pluginURL)
+		lc := logger.Config{
+			AdminLogLevel:   c.AdminLogLevel,
+			AdminLogVerbose: c.AdminLogVerbose,
+		}
+		e.bot = mscalendar.NewBot(p.Helpers, p.API, c.AdminUserIDs, lc, pluginURL, e.Env)
 		err := e.bot.Ensure(
 			&model.Bot{
 				Username:    config.BotUserName,

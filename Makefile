@@ -103,9 +103,6 @@ ifneq ($(HAS_SERVER),)
 	mockgen -destination server/mscalendar/mock_plugin_api/mock_plugin_api.go -package mock_plugin_api github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar PluginAPI
 	mockgen -destination server/remote/mock_remote/mock_remote.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Remote
 	mockgen -destination server/remote/mock_remote/mock_client.go github.com/mattermost/mattermost-plugin-mscalendar/server/remote Client
-	mockgen -destination server/utils/bot/mock_bot/mock_poster.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Poster
-	mockgen -destination server/utils/bot/mock_bot/mock_admin.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Admin
-	mockgen -destination server/utils/bot/mock_bot/mock_logger.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Logger
 	mockgen -destination server/store/mock_store/mock_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store Store
 endif
 

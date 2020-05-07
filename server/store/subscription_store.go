@@ -4,10 +4,10 @@
 package store
 
 import (
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
@@ -47,7 +47,7 @@ func (s *pluginStore) StoreUserSubscription(user *User, subscription *Subscripti
 		return err
 	}
 
-	s.Logger.With(bot.LogContext{
+	s.Logger.With(logger.LogContext{
 		"mattermostUserID": user.MattermostUserID,
 		"remoteUserID":     subscription.Remote.CreatorID,
 		"subscriptionID":   subscription.Remote.ID,
@@ -70,7 +70,7 @@ func (s *pluginStore) DeleteUserSubscription(user *User, subscriptionID string) 
 		mattermostUserID = user.MattermostUserID
 	}
 
-	s.Logger.With(bot.LogContext{
+	s.Logger.With(logger.LogContext{
 		"mattermostUserID": mattermostUserID,
 		"subscriptionID":   subscriptionID,
 	}).Debugf("store: deleted mattermost user subscription.")

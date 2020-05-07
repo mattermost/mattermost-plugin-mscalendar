@@ -6,8 +6,8 @@ package msgraph
 import (
 	"net/http"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
@@ -20,7 +20,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.Logger.With(bot.LogContext{
+	c.Logger.With(logger.LogContext{
 		"UserID": remoteUserID,
 		"v":      v.Value,
 	}).Infof("msgraph: GetUserCalendars returned `%d` calendars.", len(v.Value))

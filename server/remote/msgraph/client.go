@@ -7,10 +7,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type client struct {
@@ -22,5 +22,5 @@ type client struct {
 	rbuilder   *msgraph.GraphServiceRequestBuilder
 
 	conf *config.Config
-	bot.Logger
+	logger.Logger
 }
