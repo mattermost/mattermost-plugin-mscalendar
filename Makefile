@@ -113,7 +113,6 @@ ifneq ($(HAS_SERVER),)
 	rm -rf ./server/mscalendar/mock_welcomer
 	rm -rf ./server/mscalendar/mock_plugin_api
 	rm -rf ./server/remote/mock_remote
-	rm -rf ./server/utils/bot/mock_bot
 	rm -rf ./server/store/mock_store
 endif
 
