@@ -4,6 +4,8 @@
 package mscalendar
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
@@ -54,7 +56,10 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 	}
 
 	autoRespondBool, ok := autoRespond.(bool)
-	if ok && autoRespondBool && len(storedRecipient.ActiveEvents) > 0 {
+	if !ok {
+		return errors.Errorf("Error retrieving setting: %s", store.AutoRespondSettingID)
+	}
+	if autoRespondBool && len(storedRecipient.ActiveEvents) > 0 {
 
 		autoRespondMessage, err := m.Store.GetSetting(storedRecipient.MattermostUserID, store.AutoRespondMessageSettingID)
 		if err != nil {
@@ -62,7 +67,10 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 		}
 
 		autoRespondMessageString, ok := autoRespondMessage.(string)
-		if autoRespondMessageString == "" || !ok {
+		if !ok {
+			return errors.Errorf("Error retrieving setting: %s", store.AutoRespondMessageSettingID)
+		}
+		if autoRespondMessageString == "" {
 			autoRespondMessageString = "This user is currently in a meeting."
 		}
 
