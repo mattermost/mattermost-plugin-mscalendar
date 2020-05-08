@@ -182,7 +182,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
 	events := filterBusyEvents(res.Events)
 	busyStatus := model.STATUS_DND
-	if user.Settings.ReceiveNotificationsWhileOnMeeting {
+	if user.Settings.ReceiveNotificationsDuringMeeting {
 		busyStatus = model.STATUS_AWAY
 	}
 
@@ -199,7 +199,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 			}
 			message = "User is no longer busy in calendar. Set status to online."
 		} else {
-			message = "User is no longer busy in calendar, but is not set to busy. No status change."
+			message = fmt.Sprintf("User is no longer busy in calendar, but is not set to busy(%s). No status change.", busyStatus)
 		}
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
@@ -234,7 +234,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		if err != nil {
 			return "", err
 		}
-		return "User was free, but is now busy. Set status to busy.", nil
+		return fmt.Sprintf("User was free, but is now busy(%s). Set status to busy.", busyStatus), nil
 	}
 
 	newEventExists := false
@@ -261,7 +261,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		if err != nil {
 			return "", err
 		}
-		message = "User was free, but is now busy. Set status to busy."
+		message = fmt.Sprintf("User was free, but is now busy. Set status to busy(%s).", busyStatus)
 	} else {
 		message = "User is already busy. No status change."
 	}

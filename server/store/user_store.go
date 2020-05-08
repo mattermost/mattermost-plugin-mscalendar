@@ -44,11 +44,11 @@ type User struct {
 }
 
 type Settings struct {
-	EventSubscriptionID                string
-	UpdateStatus                       bool
-	GetConfirmation                    bool
-	ReceiveReminders                   bool
-	ReceiveNotificationsWhileOnMeeting bool
+	EventSubscriptionID               string
+	UpdateStatus                      bool
+	GetConfirmation                   bool
+	ReceiveReminders                  bool
+	ReceiveNotificationsDuringMeeting bool
 }
 
 type WelcomeFlowStatus struct {

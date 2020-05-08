@@ -3,10 +3,10 @@ package store
 import "fmt"
 
 const (
-	UpdateStatusPropertyName               = "update_status"
-	GetConfirmationPropertyName            = "get_confirmation"
-	ReceiveNotificationsWhileOnMeetingName = "receive_notifications"
-	SubscribePropertyName                  = "subscribe"
+	UpdateStatusPropertyName              = "update_status"
+	GetConfirmationPropertyName           = "get_confirmation"
+	ReceiveNotificationsDuringMeetingName = "receive_notifications"
+	SubscribePropertyName                 = "subscribe"
 )
 
 func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
@@ -20,8 +20,8 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 		user.Settings.UpdateStatus = value
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = value
-	case ReceiveNotificationsWhileOnMeetingName:
-		user.Settings.ReceiveNotificationsWhileOnMeeting = value
+	case ReceiveNotificationsDuringMeetingName:
+		user.Settings.ReceiveNotificationsDuringMeeting = value
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}

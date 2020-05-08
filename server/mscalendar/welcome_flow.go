@@ -71,7 +71,7 @@ func (wf *welcomeFlow) makeSteps() {
 	}, &flow.SimpleStep{
 		Title:                "Receive notifications while on meetings",
 		Message:              "Do you want to receive notifications while you are on a meeting?",
-		PropertyName:         store.ReceiveNotificationsWhileOnMeetingName,
+		PropertyName:         store.ReceiveNotificationsDuringMeetingName,
 		TrueButtonMessage:    "Yes - I would like to set my status to Away during meetings to continue receiving notifications.",
 		FalseButtonMessage:   "No - I would like to set my status to Do Not Disturb during meetings to not receive notifications.",
 		TrueResponseMessage:  "Great, your status will be set to Away.",
