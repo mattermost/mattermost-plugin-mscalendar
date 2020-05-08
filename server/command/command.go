@@ -100,7 +100,7 @@ func (c *Command) isValid() (subcommand string, parameters []string, err error) 
 	split := strings.Fields(c.Args.Command)
 	command := split[0]
 	if command != "/"+config.CommandTrigger {
-		return "", nil, errors.Errorf("%q is not a supported command. Please contact your system administrator.", command)
+		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator.", command)
 	}
 
 	parameters = []string{}
