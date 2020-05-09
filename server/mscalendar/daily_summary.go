@@ -4,6 +4,7 @@
 package mscalendar
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
@@ -50,7 +51,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 	}
 
 	if t.Minute()%int(DailySummaryJobInterval/time.Minute) != 0 {
-		return nil, errors.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
+		return nil, fmt.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
 	}
 
 	timezone, err := m.GetTimezone(user)
@@ -119,7 +120,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	for _, dsum := range dsumIndex {
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
-			m.Logger.Errorf("Error posting daily summary for user %s: %v", dsum.MattermostUserID, shouldPostErr)
+			m.Logger.Warnf("Error posting daily summary for user %s. err=%v", dsum.MattermostUserID, shouldPostErr)
 			continue
 		}
 		if !shouldPost {
@@ -145,11 +146,11 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	for _, res := range responses {
 		dsum := byRemoteID[res.RemoteUserID]
 		if res.Error != nil {
-			m.Logger.Errorf("Error rendering user %s calendar: %s %s", dsum.MattermostUserID, res.Error.Code, res.Error.Message)
+			m.Logger.Warnf("Error rendering user %s calendar. err=%s %s", dsum.MattermostUserID, res.Error.Code, res.Error.Message)
 		}
 		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone)
 		if err != nil {
-			m.Logger.Errorf("Error rendering user %s calendar: %v", dsum.MattermostUserID, err)
+			m.Logger.Warnf("Error rendering user %s calendar. err=%v", dsum.MattermostUserID, err)
 		}
 
 		m.Poster.DM(dsum.MattermostUserID, postStr)

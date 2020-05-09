@@ -23,7 +23,7 @@ func NewRenewJob() RegisteredJob {
 func runRenewJob(env mscalendar.Env) {
 	uindex, err := env.Store.LoadUserIndex()
 	if err != nil {
-		env.Logger.Errorf("Renew job failed to load user index: %s", err.Error())
+		env.Logger.Errorf("Renew job failed to load user index. err=%v", err)
 		return
 	}
 	env.Logger.Debugf("Renew job: %v users", len(uindex))
@@ -33,7 +33,7 @@ func runRenewJob(env mscalendar.Env) {
 		env.Logger.Debugf("Renewing for user: %s", u.MattermostUserID)
 		_, err = asUser.RenewMyEventSubscription()
 		if err != nil {
-			env.Logger.Errorf("Error renewing subscription: %s", err.Error())
+			env.Logger.Errorf("Error renewing subscription. err=%v", err)
 		}
 
 		time.Sleep(ditherRenew)

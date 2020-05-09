@@ -5,13 +5,13 @@ package jobs
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/pkg/errors"
 )
 
 type JobManager struct {
@@ -56,10 +56,8 @@ func NewJobManager(papi cluster.JobPluginAPI, env mscalendar.Env) *JobManager {
 }
 
 // AddJob accepts a RegisteredJob, stores it, and activates it if enabled.
-func (jm *JobManager) AddJob(job RegisteredJob) error {
+func (jm *JobManager) AddJob(job RegisteredJob) {
 	jm.registeredJobs.Store(job.id, job)
-
-	return nil
 }
 
 // OnConfigurationChange activates/deactivates jobs based on their current state, and the current plugin config.
@@ -77,7 +75,7 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 		if enabled && !active {
 			err := jm.activateJob(job)
 			if err != nil {
-				jm.env.Logger.Errorf("Error activating %s job: %v", job.id, err)
+				jm.env.Logger.Warnf("Error activating %s job. err=%v", job.id, err)
 			}
 		}
 
@@ -85,7 +83,7 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 		if !enabled && active {
 			err := jm.deactivateJob(job)
 			if err != nil {
-				jm.env.Logger.Errorf("Error deactivating %s job: %v", job.id, err)
+				jm.env.Logger.Warnf("Error deactivating %s job. err=%v", job.id, err)
 			}
 		}
 
@@ -125,7 +123,7 @@ func (jm *JobManager) activateJob(job RegisteredJob) error {
 func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	v, ok := jm.activeJobs.Load(job.id)
 	if !ok {
-		return errors.Errorf("Attempted to deactivate a non-active job %s", job.id)
+		return fmt.Errorf("Attempted to deactivate a non-active job %s", job.id)
 	}
 
 	scheduledJob := v.(*activeJob)

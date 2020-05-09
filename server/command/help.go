@@ -18,19 +18,24 @@ func (c *Command) help(parameters ...string) (string, bool, error) {
 		c.Config.BuildHash,
 		c.Config.BuildDate)
 	resp += "\n"
-	resp += "* /mscalendar\n"
-	resp += "* /mscalendar help\n"
-	resp += "* /mscalendar info\n"
-	resp += "* /mscalendar connect\n"
-	resp += "* /mscalendar viewcal\n"
-	resp += "* /mscalendar showcals\n"
-	resp += "* /mscalendar subscribe\n"
-	resp += "* /mscalendar autorespond\n"
-	resp += "* /mscalendar createcal <name>\n"
-	resp += "* /mscalendar deletecal <id>\n"
-	resp += "* /mscalendar createevent\n"
-	resp += "* /mscalendar findmeetings (Optional: <attendees>)\n"
+	resp += getCommandText("")
+	resp += getCommandText("help")
+	resp += getCommandText("info")
+	resp += getCommandText("connect")
+	resp += getCommandText("viewcal")
+	resp += getCommandText("showcals")
+	resp += getCommandText("subscribe")
+	resp += getCommandText("unsubscribe")
+	resp += getCommandText("autorespond <message>")
+	resp += getCommandText("createcal <name>")
+	resp += getCommandText("deletecal <id>")
+	resp += getCommandText("createevent")
+	resp += getCommandText("findmeetings (Optional: <attendees>)")
 	resp += "  * <attendees> - space delimited <type>:<email> combinations \n"
 	resp += "  * <type> options - required, optional \n"
 	return resp, false, nil
+}
+
+func getCommandText(s string) string {
+	return fmt.Sprintf("/%s %s\n", config.CommandTrigger, s)
 }

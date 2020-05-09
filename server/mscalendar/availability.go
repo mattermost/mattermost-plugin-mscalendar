@@ -113,7 +113,7 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 			continue
 		}
 		if view.Error != nil {
-			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, view.Error.Message)
+			m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
 			continue
 		}
 
@@ -156,7 +156,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			continue
 		}
 		if view.Error != nil {
-			m.Logger.Warnf("Error getting availability for %s: %s", user.Remote.Mail, view.Error.Message)
+			m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
 			continue
 		}
 
@@ -169,7 +169,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		var err error
 		res, err = m.setStatusFromCalendarView(user, status, view)
 		if err != nil {
-			m.Logger.Warnf("Error setting user %s status. %s", user.Remote.Mail, err.Error())
+			m.Logger.Warnf("Error setting user %s status. err=%v", user.Remote.Mail, err)
 		}
 	}
 	if res != "" {
@@ -321,19 +321,19 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 			if timezone == "" {
 				timezone, err = m.GetTimezoneByID(mattermostUserID)
 				if err != nil {
-					m.Logger.Warnf("notifyUpcomingEvents error getting timezone, err=%s", err.Error())
+					m.Logger.Warnf("notifyUpcomingEvents error getting timezone. err=%v", err)
 					return
 				}
 			}
 
 			message, err := views.RenderUpcomingEvent(event, timezone)
 			if err != nil {
-				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item, err=", err.Error())
+				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
 			}
 			_, err = m.Poster.DM(mattermostUserID, message)
 			if err != nil {
-				m.Logger.Warnf("notifyUpcomingEvents error creating DM, err=", err.Error())
+				m.Logger.Warnf("notifyUpcomingEvents error creating DM. err=%v", err)
 				continue
 			}
 		}
