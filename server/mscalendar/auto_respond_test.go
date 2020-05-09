@@ -57,48 +57,48 @@ func newTestMattermostPost() *model.Post {
 
 func TestHandleBusyDM(t *testing.T) {
 	tcs := []struct {
-		name											string
-		expectedError							string
-		recipientActiveEvents			[]string
-		recipientStatusString			string
-		autoRespondSetting				interface{}
-		autoRespondMessageSetting	interface{}
+		name                      string
+		expectedError             string
+		recipientActiveEvents     []string
+		recipientStatusString     string
+		autoRespondSetting        interface{}
+		autoRespondMessageSetting interface{}
 	}{
 		{
-			name:												"Happy path, bot responds to DM",
-			expectedError:							"",
-			recipientActiveEvents:			[]string{"active_event_hash"},
-			recipientStatusString:			model.STATUS_DND,
-			autoRespondSetting:					true,
-			autoRespondMessageSetting:	"Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			name:                       "Happy path, bot responds to DM",
+			expectedError:              "",
+			recipientActiveEvents:      []string{"active_event_hash"},
+			recipientStatusString:      model.STATUS_DND,
+			autoRespondSetting:         true,
+			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 		},{
-			name:												"Autorespond message not set, fall back to default",
-			expectedError:							"",
-			recipientActiveEvents:			[]string{"active_event_hash"},
-			recipientStatusString:			model.STATUS_DND,
-			autoRespondSetting:					true,
-			autoRespondMessageSetting:	"",
+			name:                       "Autorespond message not set, fall back to default",
+			expectedError:              "",
+			recipientActiveEvents:      []string{"active_event_hash"},
+			recipientStatusString:      model.STATUS_DND,
+			autoRespondSetting:         true,
+			autoRespondMessageSetting:  "",
 		},{
-			name:												"Recipient has no active events",
-			expectedError:							"",
-			recipientActiveEvents:			[]string{},
-			recipientStatusString:			model.STATUS_DND,
-			autoRespondSetting:					true,
-			autoRespondMessageSetting:	"Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			name:                       "Recipient has no active events",
+			expectedError:              "",
+			recipientActiveEvents:      []string{},
+			recipientStatusString:      model.STATUS_DND,
+			autoRespondSetting:         true,
+			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 		},{
-			name:												"Recipient autorespond Setting turned off",
-			expectedError:							"",
-			recipientActiveEvents:			[]string{"active_event_hash"},
-			recipientStatusString:			model.STATUS_DND,
-			autoRespondSetting:					false,
-			autoRespondMessageSetting:	"Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			name:                       "Recipient autorespond Setting turned off",
+			expectedError:              "",
+			recipientActiveEvents:      []string{"active_event_hash"},
+			recipientStatusString:      model.STATUS_DND,
+			autoRespondSetting:         false,
+			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 		},{
-			name:												"Recipient user status is set to online",
-			expectedError:							"",
-			recipientActiveEvents:			[]string{"active_event_hash"},
-			recipientStatusString:			model.STATUS_ONLINE,
-			autoRespondSetting:					true,
-			autoRespondMessageSetting:	"Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			name:                       "Recipient user status is set to online",
+			expectedError:              "",
+			recipientActiveEvents:      []string{"active_event_hash"},
+			recipientStatusString:      model.STATUS_ONLINE,
+			autoRespondSetting:         true,
+			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 		},
 	}
 
@@ -155,7 +155,7 @@ func TestHandleBusyDM(t *testing.T) {
 			}
 
 			m := New(env, post.UserId)
-			err := m.HandleBusyDM(post)		
+			err := m.HandleBusyDM(post)
 
 			if tc.expectedError != "" {
 				require.Equal(t, tc.expectedError, err.Error())
