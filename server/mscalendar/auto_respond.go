@@ -6,8 +6,8 @@ package mscalendar
 import (
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type AutoRespond interface {
@@ -81,5 +81,5 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 }
 
 func (m *mscalendar) SetUserAutoRespondMessage(userID string, message string) error {
-		return m.Store.SetSetting(userID, store.AutoRespondMessageSettingID, message)
+	return m.Store.SetSetting(userID, store.AutoRespondMessageSettingID, message)
 }

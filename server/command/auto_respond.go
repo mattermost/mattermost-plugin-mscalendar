@@ -23,4 +23,3 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 
 	return fmt.Sprintf("Autorespond message changed to: '%s'", autoRespondMessage), false, nil
 }
-

@@ -41,10 +41,10 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 		user.Settings.ReceiveReminders = storableValue
 	case AutoRespondSettingID:
 		storableValue, ok := value.(bool)
-	  if !ok {
-		  return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
+		if !ok {
+			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
-	  user.Settings.AutoRespond = storableValue
+		user.Settings.AutoRespond = storableValue
 	case AutoRespondMessageSettingID:
 		storableValue, ok := value.(string)
 		if !ok {
@@ -79,7 +79,7 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
 	case AutoRespondSettingID:
-	  return user.Settings.AutoRespond, nil
+		return user.Settings.AutoRespond, nil
 	case AutoRespondMessageSettingID:
 		return user.Settings.AutoRespondMessage, nil
 	case DailySummarySettingID:
