@@ -52,10 +52,12 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		"",
 		settingStore,
 	))
-	settings = append(settings, settingspanel.NewEmptySetting(
-		"",
+	settings = append(settings, settingspanel.NewReadOnlySetting(
+		store.AutoRespondMessageSettingID,
 		"Auto Respond Message",
 		"You can set your auto-response message by typing `/mscalendar autorespond <message>`.",
+		"",
+		settingStore,
 	))
 	settings = append(settings, NewDailySummarySetting(
 		settingStore,
