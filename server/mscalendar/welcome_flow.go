@@ -80,7 +80,7 @@ func (wf *welcomeFlow) makeSteps() {
 		Title:   "Daily Summary",
 		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",
 	}, &flow.SimpleStep{
-		Title:                "Auto-respond to DMs",
+		Title:                "Auto Respond",
 		Message:              "Do you want to enable an automatic bot response to DMs when you are in a meeting?",
 		PropertyName:         store.AutoRespondPropertyName,
 		TrueButtonMessage:    "Yes - I would like to enable an automatic response",

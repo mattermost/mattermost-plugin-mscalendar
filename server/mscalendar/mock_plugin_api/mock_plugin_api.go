@@ -33,6 +33,21 @@ func (m *MockPluginAPI) EXPECT() *MockPluginAPIMockRecorder {
 	return m.recorder
 }
 
+// GetMattermostChannel mocks base method
+func (m *MockPluginAPI) GetMattermostChannel(arg0 string) (*model.Channel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMattermostChannel", arg0)
+	ret0, _ := ret[0].(*model.Channel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMattermostChannel indicates an expected call of GetMattermostChannel
+func (mr *MockPluginAPIMockRecorder) GetMattermostChannel(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostChannel", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostChannel), arg0)
+}
+
 // GetMattermostUser mocks base method
 func (m *MockPluginAPI) GetMattermostUser(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +78,21 @@ func (mr *MockPluginAPIMockRecorder) GetMattermostUserByUsername(arg0 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserByUsername", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserByUsername), arg0)
 }
 
+// GetMattermostUserStatus mocks base method
+func (m *MockPluginAPI) GetMattermostUserStatus(arg0 string) (*model.Status, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMattermostUserStatus", arg0)
+	ret0, _ := ret[0].(*model.Status)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMattermostUserStatus indicates an expected call of GetMattermostUserStatus
+func (mr *MockPluginAPIMockRecorder) GetMattermostUserStatus(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserStatus", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserStatus), arg0)
+}
+
 // GetMattermostUserStatusesByIds mocks base method
 func (m *MockPluginAPI) GetMattermostUserStatusesByIds(arg0 []string) ([]*model.Status, error) {
 	m.ctrl.T.Helper()
@@ -76,6 +106,21 @@ func (m *MockPluginAPI) GetMattermostUserStatusesByIds(arg0 []string) ([]*model.
 func (mr *MockPluginAPIMockRecorder) GetMattermostUserStatusesByIds(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserStatusesByIds", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserStatusesByIds), arg0)
+}
+
+// GetMattermostUsersInChannel mocks base method
+func (m *MockPluginAPI) GetMattermostUsersInChannel(arg0, arg1 string, arg2, arg3 int) ([]*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMattermostUsersInChannel", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMattermostUsersInChannel indicates an expected call of GetMattermostUsersInChannel
+func (mr *MockPluginAPIMockRecorder) GetMattermostUsersInChannel(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUsersInChannel", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUsersInChannel), arg0, arg1, arg2, arg3)
 }
 
 // GetPost mocks base method
