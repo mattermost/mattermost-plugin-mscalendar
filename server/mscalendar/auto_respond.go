@@ -10,6 +10,8 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
+const defaultMessage = "This user is currently in a meeting."
+
 type AutoRespond interface {
 	HandleBusyDM(post *model.Post) error
 	SetUserAutoRespondMessage(userID string, message string) error
@@ -55,28 +57,28 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 		return err
 	}
 
-	autoRespondBool, ok := autoRespond.(bool)
+	shouldRespond, ok := autoRespond.(bool)
 	if !ok {
 		return errors.Errorf("Error retrieving setting: %s", store.AutoRespondSettingID)
 	}
-	if autoRespondBool && len(storedRecipient.ActiveEvents) > 0 {
-
-		autoRespondMessage, err := m.Store.GetSetting(storedRecipient.MattermostUserID, store.AutoRespondMessageSettingID)
-		if err != nil {
-			return err
-		}
-
-		autoRespondMessageString, ok := autoRespondMessage.(string)
-		if !ok {
-			return errors.Errorf("Error retrieving setting: %s", store.AutoRespondMessageSettingID)
-		}
-		if autoRespondMessageString == "" {
-			autoRespondMessageString = "This user is currently in a meeting."
-		}
-
-		m.Poster.Ephemeral(post.UserId, post.ChannelId, autoRespondMessageString)
+	if !shouldRespond || len(storedRecipient.ActiveEvents) == 0 {
+		return nil
 	}
 
+	autoRespondMessage, err := m.Store.GetSetting(storedRecipient.MattermostUserID, store.AutoRespondMessageSettingID)
+	if err != nil {
+		return err
+	}
+
+	message, ok := autoRespondMessage.(string)
+	if !ok {
+		return errors.Errorf("Error retrieving setting: %s", store.AutoRespondMessageSettingID)
+	}
+	if message == "" {
+		message = defaultMessage
+	}
+
+	m.Poster.Ephemeral(post.UserId, post.ChannelId, message)
 	return nil
 }
 

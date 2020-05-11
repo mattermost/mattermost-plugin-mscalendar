@@ -14,7 +14,7 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 		return autoRespondHelp, false, nil
 	}
 
-	autoRespondMessage := strings.Join(parameters[0:], " ")
+	autoRespondMessage := strings.Join(parameters, " ")
 
 	err := c.MSCalendar.SetUserAutoRespondMessage(c.Args.UserId, autoRespondMessage)
 	if err != nil {

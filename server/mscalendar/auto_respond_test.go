@@ -63,6 +63,7 @@ func TestHandleBusyDM(t *testing.T) {
 		recipientStatusString     string
 		autoRespondSetting        interface{}
 		autoRespondMessageSetting interface{}
+		expectedDMMessage         string
 	}{
 		{
 			name:                       "Happy path, bot responds to DM",
@@ -71,6 +72,7 @@ func TestHandleBusyDM(t *testing.T) {
 			recipientStatusString:      model.STATUS_DND,
 			autoRespondSetting:         true,
 			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:          "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 		},{
 			name:                       "Autorespond message not set, fall back to default",
 			expectedError:              "",
@@ -78,6 +80,7 @@ func TestHandleBusyDM(t *testing.T) {
 			recipientStatusString:      model.STATUS_DND,
 			autoRespondSetting:         true,
 			autoRespondMessageSetting:  "",
+			expectedDMMessage:          "This user is currently in a meeting.",
 		},{
 			name:                       "Recipient has no active events",
 			expectedError:              "",
@@ -85,6 +88,7 @@ func TestHandleBusyDM(t *testing.T) {
 			recipientStatusString:      model.STATUS_DND,
 			autoRespondSetting:         true,
 			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:          "",
 		},{
 			name:                       "Recipient autorespond Setting turned off",
 			expectedError:              "",
@@ -92,6 +96,7 @@ func TestHandleBusyDM(t *testing.T) {
 			recipientStatusString:      model.STATUS_DND,
 			autoRespondSetting:         false,
 			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:          "",
 		},{
 			name:                       "Recipient user status is set to online",
 			expectedError:              "",
@@ -99,6 +104,7 @@ func TestHandleBusyDM(t *testing.T) {
 			recipientStatusString:      model.STATUS_ONLINE,
 			autoRespondSetting:         true,
 			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:          "",
 		},
 	}
 
@@ -146,10 +152,8 @@ func TestHandleBusyDM(t *testing.T) {
 				if (tc.autoRespondSetting.(bool) && len(tc.recipientActiveEvents) > 0) {
 					mockStore.EXPECT().GetSetting("mattermost_user_recipient_id", store.AutoRespondMessageSettingID).Return(tc.autoRespondMessageSetting, nil)
 
-					if (tc.autoRespondMessageSetting != "") {
-						mockPoster.EXPECT().Ephemeral("mattermost_user_sender_id", "mattermost_post_channel_id", "Hello, I'm in a meeting and will respond to your message as soon as I'm free.")
-					} else {
-						mockPoster.EXPECT().Ephemeral("mattermost_user_sender_id", "mattermost_post_channel_id", "This user is currently in a meeting.")
+					if (tc.expectedDMMessage != "") {
+						mockPoster.EXPECT().Ephemeral("mattermost_user_sender_id", "mattermost_post_channel_id", tc.expectedDMMessage)
 					}
 				}
 			}
