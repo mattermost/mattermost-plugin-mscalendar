@@ -21,16 +21,16 @@ func New(api plugin.API) *API {
 	}
 }
 
-func (a *API) GetMattermostChannel(mattermostChannelID string) (*model.Channel, error) {
-	c, appErr := a.api.GetChannel(mattermostChannelID)
+func (a *API) GetMattermostChannel(channelID string) (*model.Channel, error) {
+	c, appErr := a.api.GetChannel(channelID)
 	if appErr != nil {
 		return nil, appErr
 	}
 	return c, nil
 }
 
-func (a *API) GetMattermostUsersInChannel(mattermostChannelID string, sortBy string, page int, perPage int) ([]*model.User, error) {
-	u, appErr := a.api.GetUsersInChannel(mattermostChannelID, sortBy, page, perPage)
+func (a *API) GetMattermostUsersInChannel(channelID string, sortBy string, page int, perPage int) ([]*model.User, error) {
+	u, appErr := a.api.GetUsersInChannel(channelID, sortBy, page, perPage)
 	if appErr != nil {
 		return nil, appErr
 	}
