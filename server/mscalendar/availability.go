@@ -199,7 +199,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 			}
 			message = "User is no longer busy in calendar. Set status to online."
 		} else {
-			message = fmt.Sprintf("User is no longer busy in calendar, but is not set to busy(%s). No status change.", busyStatus)
+			message = fmt.Sprintf("User is no longer busy in calendar, but is not set to busy (%s). No status change.", busyStatus)
 		}
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
@@ -234,7 +234,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("User was free, but is now busy(%s). Set status to busy.", busyStatus), nil
+		return fmt.Sprintf("User was free, but is now busy (%s). Set status to busy.", busyStatus), nil
 	}
 
 	newEventExists := false
@@ -261,7 +261,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		if err != nil {
 			return "", err
 		}
-		message = fmt.Sprintf("User was free, but is now busy. Set status to busy(%s).", busyStatus)
+		message = fmt.Sprintf("User was free, but is now busy. Set status to busy (%s).", busyStatus)
 	} else {
 		message = "User is already busy. No status change."
 	}

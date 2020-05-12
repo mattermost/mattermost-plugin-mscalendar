@@ -5,7 +5,7 @@ import "fmt"
 const (
 	UpdateStatusPropertyName              = "update_status"
 	GetConfirmationPropertyName           = "get_confirmation"
-	ReceiveNotificationsDuringMeetingName = "receive_notifications"
+	ReceiveNotificationsDuringMeetingName = "receive_notifications_during_meetings"
 	SubscribePropertyName                 = "subscribe"
 )
 
