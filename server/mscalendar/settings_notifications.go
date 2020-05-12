@@ -16,15 +16,13 @@ type notificationSetting struct {
 }
 
 func NewNotificationsSetting(getCal func(string) MSCalendar) settingspanel.Setting {
-	os := &notificationSetting{
+	return &notificationSetting{
 		title:       "Receive notifications of new events",
 		description: "Do you want to subscribe to new events and receive a message when they are created?",
-		id:          "notification_setting",
+		id:          "new_or_updated_event_setting",
 		dependsOn:   "",
 		getCal:      getCal,
 	}
-
-	return os
 }
 
 func (s *notificationSetting) Set(userID string, value interface{}) error {

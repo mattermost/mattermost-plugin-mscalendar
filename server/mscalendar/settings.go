@@ -22,7 +22,7 @@ func (c *mscalendar) ClearSettingsPosts(userID string) {
 	}
 }
 
-func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getCalendar func(userID string) MSCalendar) settingspanel.Panel {
+func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getCal func(userID string) MSCalendar) settingspanel.Panel {
 	settings := []settingspanel.Setting{}
 	settings = append(settings, settingspanel.NewBoolSetting(
 		store.UpdateStatusSettingID,
@@ -45,10 +45,10 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		"",
 		settingStore,
 	))
-	settings = append(settings, NewNotificationsSetting(getCalendar))
+	settings = append(settings, NewNotificationsSetting(getCal))
 	settings = append(settings, NewDailySummarySetting(
 		settingStore,
-		func(userID string) (string, error) { return getCalendar(userID).GetTimezone(NewUser(userID)) },
+		func(userID string) (string, error) { return getCal(userID).GetTimezone(NewUser(userID)) },
 	))
 	return settingspanel.NewSettingsPanel(settings, bot, bot, panelStore, settingsHandler, pluginURL)
 }
