@@ -180,6 +180,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 }
 
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
+	if currentStatus == model.STATUS_OFFLINE && !user.Settings.GetConfirmation {
+		return "User offline and does not want status change confirmations. No status change", nil
+	}
+
 	events := filterBusyEvents(res.Events)
 	busyStatus := model.STATUS_DND
 	if user.Settings.ReceiveNotificationsDuringMeeting {
