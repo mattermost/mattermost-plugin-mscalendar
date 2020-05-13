@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 func getCreateEventFlagSet() *flag.FlagSet {
@@ -82,13 +83,13 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		})
 	for _, req := range requiredFlags {
 		if !flags[req] {
-			return nil, errors.Errorf("Missing required flag: `--%s` ", req)
+			return nil, fmt.Errorf("Missing required flag: `--%s` ", req)
 		}
 	}
 
 	help, err := createFlagSet.GetBool("help")
 	if help == true {
-		return nil, errors.Errorf(getCreateEventFlagSet().FlagUsages())
+		return nil, errors.New(getCreateEventFlagSet().FlagUsages())
 	}
 
 	subject, err := createFlagSet.GetString("test-subject")
@@ -97,7 +98,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	}
 	// check that next arg is not a flag "--"
 	if strings.HasPrefix(subject, "--") {
-		return nil, errors.Errorf("test-subject flag requires an argument")
+		return nil, errors.New("test-subject flag requires an argument")
 	}
 	event.Subject = subject
 
@@ -107,7 +108,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	}
 	// check that next arg is not a flag "--"
 	if strings.HasPrefix(body, "--") {
-		return nil, errors.Errorf("body flag requires an argument")
+		return nil, errors.New("body flag requires an argument")
 	}
 	event.Body = &remote.ItemBody{
 		Content: body,
@@ -118,7 +119,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		return nil, err
 	}
 	if strings.HasPrefix(startTime, "--") {
-		return nil, errors.Errorf("starttime flag requires an argument")
+		return nil, errors.New("starttime flag requires an argument")
 	}
 	event.Start = &remote.DateTime{
 		DateTime: startTime,
@@ -130,7 +131,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		return nil, err
 	}
 	if strings.HasPrefix(endTime, "--") {
-		return nil, errors.Errorf("endtime flag requires an argument")
+		return nil, errors.New("endtime flag requires an argument")
 	}
 	event.End = &remote.DateTime{
 		DateTime: endTime,
@@ -148,7 +149,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		return nil, err
 	}
 	if strings.HasPrefix(strconv.Itoa(int(reminder)), "--") {
-		return nil, errors.Errorf("reminder flag requires an argument")
+		return nil, errors.New("reminder flag requires an argument")
 	}
 	event.ReminderMinutesBeforeStart = reminder
 
@@ -158,7 +159,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	}
 	if len(location) != 0 {
 		if len(location) != 6 {
-			return nil, errors.Errorf("test-location flag requires 6 parameters, including a comma for empty values")
+			return nil, errors.New("test-location flag requires 6 parameters, including a comma for empty values")
 		}
 		event.Location = &remote.Location{
 			LocationType: "default",
