@@ -6,6 +6,7 @@ package mock_store
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	reflect "reflect"
 )
@@ -496,7 +497,7 @@ func (mr *MockStoreMockRecorder) StoreUser(arg0 interface{}) *gomock.Call {
 }
 
 // StoreUserActiveEvents mocks base method
-func (m *MockStore) StoreUserActiveEvents(arg0 string, arg1 []string) error {
+func (m *MockStore) StoreUserActiveEvents(arg0 string, arg1 []*remote.Event) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StoreUserActiveEvents", arg0, arg1)
 	ret0, _ := ret[0].(error)

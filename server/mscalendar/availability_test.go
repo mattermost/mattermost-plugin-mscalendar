@@ -24,21 +24,20 @@ import (
 
 func TestSyncStatusAll(t *testing.T) {
 	moment := time.Now().UTC()
-	eventHash := "event_id " + moment.Format(time.RFC3339)
 	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 	for name, tc := range map[string]struct {
 		remoteEvents   []*remote.Event
 		apiError       *remote.ApiError
-		activeEvents   []string
+		activeEvents   []*remote.Event
 		currentStatus  string
 		newStatus      string
-		eventsToStore  []string
+		eventsToStore  []*remote.Event
 		shouldLogError bool
 	}{
 		"Most common case, no events local or remote. No status change.": {
 			remoteEvents:   []*remote.Event{},
-			activeEvents:   []string{},
+			activeEvents:   []*remote.Event{},
 			currentStatus:  "online",
 			newStatus:      "",
 			eventsToStore:  nil,
@@ -46,23 +45,23 @@ func TestSyncStatusAll(t *testing.T) {
 		},
 		"New remote event. Change status to DND.": {
 			remoteEvents:   []*remote.Event{busyEvent},
-			activeEvents:   []string{},
+			activeEvents:   []*remote.Event{},
 			currentStatus:  "online",
 			newStatus:      "dnd",
-			eventsToStore:  []string{eventHash},
+			eventsToStore:  []*remote.Event{busyEvent},
 			shouldLogError: false,
 		},
 		"Locally stored event is finished. Change status to online.": {
 			remoteEvents:   []*remote.Event{},
-			activeEvents:   []string{eventHash},
+			activeEvents:   []*remote.Event{busyEvent},
 			currentStatus:  "dnd",
 			newStatus:      "online",
-			eventsToStore:  []string{},
+			eventsToStore:  []*remote.Event{},
 			shouldLogError: false,
 		},
 		"Locally stored event is still happening. No status change.": {
 			remoteEvents:   []*remote.Event{busyEvent},
-			activeEvents:   []string{eventHash},
+			activeEvents:   []*remote.Event{busyEvent},
 			currentStatus:  "dnd",
 			newStatus:      "",
 			eventsToStore:  nil,
@@ -70,7 +69,7 @@ func TestSyncStatusAll(t *testing.T) {
 		},
 		"User has manually set themselves to online during event. Locally stored event is still happening, but we will ignore it. No status change.": {
 			remoteEvents:   []*remote.Event{busyEvent},
-			activeEvents:   []string{eventHash},
+			activeEvents:   []*remote.Event{busyEvent},
 			currentStatus:  "online",
 			newStatus:      "",
 			eventsToStore:  nil,
@@ -78,7 +77,7 @@ func TestSyncStatusAll(t *testing.T) {
 		},
 		"Ignore non-busy event": {
 			remoteEvents:   []*remote.Event{{ID: "event_id_2", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "free"}},
-			activeEvents:   []string{},
+			activeEvents:   []*remote.Event{},
 			currentStatus:  "online",
 			newStatus:      "",
 			eventsToStore:  nil,
@@ -86,7 +85,7 @@ func TestSyncStatusAll(t *testing.T) {
 		},
 		"Remote API error. Error should be logged": {
 			remoteEvents:   nil,
-			activeEvents:   []string{eventHash},
+			activeEvents:   []*remote.Event{busyEvent},
 			currentStatus:  "online",
 			newStatus:      "",
 			eventsToStore:  nil,
@@ -174,7 +173,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				}, nil)
 				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", UserId: "user_mm_id"}}, nil)
 
-				s.EXPECT().StoreUserActiveEvents("user_mm_id", []string{"event_id " + moment.Format(time.RFC3339)})
+				s.EXPECT().StoreUserActiveEvents("user_mm_id", []*remote.Event{busyEvent})
 				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(1)
 				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
 			},

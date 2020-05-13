@@ -197,26 +197,25 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		} else {
 			message = "User is no longer busy in calendar, but is not set to DND. No status change."
 		}
-		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
+		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []*remote.Event{})
 		if err != nil {
 			return "", err
 		}
 		return message, nil
 	}
 
-	remoteHashes := []string{}
+	remoteEvents := []*remote.Event{}
 	for _, e := range events {
 		if e.IsCancelled {
 			continue
 		}
-		h := fmt.Sprintf("%s %s", e.ICalUID, e.Start.Time().UTC().Format(time.RFC3339))
-		remoteHashes = append(remoteHashes, h)
+		remoteEvents = append(remoteEvents, e)
 	}
 
 	if len(user.ActiveEvents) == 0 {
 		var err error
 		if currentStatus == model.STATUS_DND {
-			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
+			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteEvents)
 			if err != nil {
 				return "", err
 			}
@@ -226,7 +225,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		if err != nil {
 			return "", err
 		}
-		err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
+		err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteEvents)
 		if err != nil {
 			return "", err
 		}
@@ -234,10 +233,10 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 	}
 
 	newEventExists := false
-	for _, r := range remoteHashes {
+	for _, r := range remoteEvents {
 		found := false
 		for _, loc := range user.ActiveEvents {
-			if loc == r {
+			if eventsAreEqual(r, loc) {
 				found = true
 				break
 			}
@@ -261,7 +260,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 	} else {
 		message = "User is already busy. No status change."
 	}
-	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
+	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteEvents)
 	if err != nil {
 		return "", err
 	}
@@ -348,4 +347,11 @@ func filterBusyEvents(events []*remote.Event) []*remote.Event {
 		}
 	}
 	return result
+}
+
+// eventsAreEqual determines if two events are the same event, for the purposes of the status sync logic.
+func eventsAreEqual(e1, e2 *remote.Event) bool {
+	h1 := fmt.Sprintf("%s %s", e1.ICalUID, e1.Start.Time().UTC().Format(time.RFC3339))
+	h2 := fmt.Sprintf("%s %s", e2.ICalUID, e2.Start.Time().UTC().Format(time.RFC3339))
+	return h1 == h2
 }

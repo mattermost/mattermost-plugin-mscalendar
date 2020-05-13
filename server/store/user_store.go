@@ -22,7 +22,7 @@ type UserStore interface {
 	ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
-	StoreUserActiveEvents(mattermostUserID string, events []string) error
+	StoreUserActiveEvents(mattermostUserID string, events []*remote.Event) error
 }
 
 type UserIndex []*UserShort
@@ -39,7 +39,7 @@ type User struct {
 	MattermostUserID  string
 	OAuth2Token       *oauth2.Token
 	Settings          Settings          `json:"mattermostSettings,omitempty"`
-	ActiveEvents      []string          `json:"events"`
+	ActiveEvents      []*remote.Event   `json:"active_events"`
 	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 }
 
@@ -217,7 +217,7 @@ func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
 	})
 }
 
-func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []string) error {
+func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []*remote.Event) error {
 	u, err := s.LoadUser(mattermostUserID)
 	if err != nil {
 		return err
