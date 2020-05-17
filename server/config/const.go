@@ -15,6 +15,8 @@ const (
 	PathOAuth2              = "/oauth2"
 	PathComplete            = "/complete"
 	PathAPI                 = "/api/v1"
+	PathDialog              = "/dialog"
+	PathAutoRespond         = "/autorespond"
 	PathPostAction          = "/action"
 	PathRespond             = "/respond"
 	PathAccept              = "/accept"

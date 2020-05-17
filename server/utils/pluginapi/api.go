@@ -21,6 +21,14 @@ func New(api plugin.API) *API {
 	}
 }
 
+func (a *API) OpenInteractiveDialog(dialog model.OpenDialogRequest) error {
+	appErr := a.api.OpenInteractiveDialog(dialog)
+	if appErr != nil {
+		return appErr
+	}
+	return nil
+}
+
 func (a *API) GetMattermostChannel(channelID string) (*model.Channel, error) {
 	c, appErr := a.api.GetChannel(channelID)
 	if appErr != nil {

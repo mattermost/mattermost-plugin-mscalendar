@@ -399,6 +399,20 @@ func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
 }
 
+// OpenAutoRespondDialog mocks base method
+func (m *MockMSCalendar) OpenAutoRespondDialog(arg0 model.OpenDialogRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OpenAutoRespondDialog", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OpenAutoRespondDialog indicates an expected call of OpenAutoRespondDialog
+func (mr *MockMSCalendarMockRecorder) OpenAutoRespondDialog(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenAutoRespondDialog", reflect.TypeOf((*MockMSCalendar)(nil).OpenAutoRespondDialog), arg0)
+}
+
 // PrintSettings mocks base method
 func (m *MockMSCalendar) PrintSettings(arg0 string) {
 	m.ctrl.T.Helper()

@@ -15,6 +15,7 @@ const defaultMessage = "This user is currently in a meeting."
 type AutoRespond interface {
 	HandleBusyDM(post *model.Post) error
 	SetUserAutoRespondMessage(userID string, message string) error
+	OpenAutoRespondDialog(request model.OpenDialogRequest) error
 }
 
 func (m *mscalendar) HandleBusyDM(post *model.Post) error {
@@ -84,4 +85,8 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 
 func (m *mscalendar) SetUserAutoRespondMessage(userID string, message string) error {
 	return m.Store.SetSetting(userID, store.AutoRespondMessageSettingID, message)
+}
+
+func (m *mscalendar) OpenAutoRespondDialog(request model.OpenDialogRequest) error {
+	return m.PluginAPI.OpenInteractiveDialog(request)
 }

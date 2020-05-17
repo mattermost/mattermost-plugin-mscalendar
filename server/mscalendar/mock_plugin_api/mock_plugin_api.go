@@ -153,6 +153,20 @@ func (mr *MockPluginAPIMockRecorder) IsSysAdmin(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSysAdmin", reflect.TypeOf((*MockPluginAPI)(nil).IsSysAdmin), arg0)
 }
 
+// OpenInteractiveDialog mocks base method
+func (m *MockPluginAPI) OpenInteractiveDialog(arg0 model.OpenDialogRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OpenInteractiveDialog", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OpenInteractiveDialog indicates an expected call of OpenInteractiveDialog
+func (mr *MockPluginAPIMockRecorder) OpenInteractiveDialog(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenInteractiveDialog", reflect.TypeOf((*MockPluginAPI)(nil).OpenInteractiveDialog), arg0)
+}
+
 // UpdateMattermostUserStatus mocks base method
 func (m *MockPluginAPI) UpdateMattermostUserStatus(arg0, arg1 string) (*model.Status, error) {
 	m.ctrl.T.Helper()

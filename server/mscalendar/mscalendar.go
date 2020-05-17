@@ -38,6 +38,7 @@ type Dependencies struct {
 }
 
 type PluginAPI interface {
+	OpenInteractiveDialog(dialog model.OpenDialogRequest) error
 	GetMattermostChannel(mattermostChannelID string) (*model.Channel, error)
 	GetMattermostUsersInChannel(mattermostChannelID string, sortBy string, page int, perPage int) ([]*model.User, error)
 	GetMattermostUser(mattermostUserID string) (*model.User, error)
