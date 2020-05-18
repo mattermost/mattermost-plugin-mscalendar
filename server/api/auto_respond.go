@@ -12,7 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
-func (api *api) autorespond(w http.ResponseWriter, req *http.Request) {
+func (api *api) autoRespond(w http.ResponseWriter, req *http.Request) {
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
 		dialogResponseError(w, "Not authorized.")
