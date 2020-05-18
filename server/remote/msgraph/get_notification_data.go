@@ -4,10 +4,11 @@
 package msgraph
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -23,7 +24,7 @@ func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notific
 				"Resource":       wh.Resource,
 				"subscriptionID": wh.SubscriptionID,
 			}).Infof("msgraph: failed to fetch notification data resource: `%v`.", err)
-			return nil, err
+			return nil, errors.Wrap(err, "msgraph GetNotificationData")
 		}
 		n.Event = &event
 		n.ChangeType = wh.ChangeType

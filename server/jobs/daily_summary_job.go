@@ -30,7 +30,7 @@ func runDailySummaryJob(env mscalendar.Env) {
 
 	err := mscalendar.New(env, "").ProcessAllDailySummary(time.Now())
 	if err != nil {
-		env.Logger.Errorf("Error during daily summary job: %v", err)
+		env.Logger.Errorf("Error during daily summary job. err=%v", err)
 	}
 
 	env.Logger.Debugf("Daily summary job finished")

@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -18,7 +20,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	req.Expand("children")
 	err := req.JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph GetCalendars")
 	}
 	c.Logger.With(logger.LogContext{
 		"UserID": remoteUserID,

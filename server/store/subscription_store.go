@@ -4,8 +4,9 @@
 package store
 
 import (
+	"fmt"
+
 	"github.com/larkox/mattermost-plugin-utils/bot/logger"
-	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
@@ -34,7 +35,7 @@ func (s *pluginStore) LoadSubscription(subscriptionID string) (*Subscription, er
 
 func (s *pluginStore) StoreUserSubscription(user *User, subscription *Subscription) error {
 	if user.Remote.ID != subscription.Remote.CreatorID {
-		return errors.Errorf("User %q does not match the subscription creator %q",
+		return fmt.Errorf("User %q does not match the subscription creator %q",
 			user.Remote.ID, subscription.Remote.CreatorID)
 	}
 	err := kvstore.StoreJSON(s.subscriptionKV, subscription.Remote.ID, subscription)

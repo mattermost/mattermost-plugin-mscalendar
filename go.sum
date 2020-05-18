@@ -232,8 +232,8 @@ github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 h1:SOEGU9fKiNWd/HOJuq
 github.com/lann/builder v0.0.0-20180802200727-47ae307949d0/go.mod h1:dXGbAdH5GtBTC4WfIxhKZfyBF/HBFgRZSWwZ9g/He9o=
 github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 h1:P6pPBnrTSX3DEVR4fDembhRWSsG5rVo6hYhAB/ADZrk=
 github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0/go.mod h1:vmVJ0l/dxyfGW6FmdpVm2joNMFikkuWg0EoCKLGUMNw=
-github.com/larkox/mattermost-plugin-utils v0.1.9 h1:88bKzU9E016a2D/subk6DCqMjCOOTACwOzfk89+t2Gc=
-github.com/larkox/mattermost-plugin-utils v0.1.9/go.mod h1:TOdJ4+airMEStJU/6N4e9hhUlIFG/dv7tCYXfTXggjE=
+github.com/larkox/mattermost-plugin-utils v0.1.10 h1:0x/1YEDTqAMymuCLUtezFhhAaFfwCe/6AHncHu16AVw=
+github.com/larkox/mattermost-plugin-utils v0.1.10/go.mod h1:TOdJ4+airMEStJU/6N4e9hhUlIFG/dv7tCYXfTXggjE=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.3.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lunixbochs/vtclean v1.0.0/go.mod h1:pHhQNgMf3btfWnGBVipUOjRYhoOsdGqdm/+2c2E2WMI=

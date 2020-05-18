@@ -6,6 +6,8 @@ package msgraph
 import (
 	"net/http"
 	"net/url"
+
+	"github.com/pkg/errors"
 )
 
 type AuthResponse struct {
@@ -33,7 +35,7 @@ func (c *client) GetSuperuserToken() (string, error) {
 
 	_, err := c.CallFormPost(http.MethodPost, u, data, &res)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "msgraph GetSuperuserToken")
 	}
 
 	return res.AccessToken, nil

@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/larkox/mattermost-plugin-utils/bot/logger"
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -15,10 +17,10 @@ func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*r
 	var calOut = remote.Calendar{}
 	err := c.rbuilder.Users().ID(remoteUserID).Calendars().Request().JSONRequest(c.ctx, http.MethodPost, "", &calIn, &calOut)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph CreateCalendar")
 	}
 	c.Logger.With(logger.LogContext{
 		"v": calOut,
-	}).Infof("msgraph: CreateCalendars created the following calendar.")
+	}).Infof("msgraph: CreateCalendar created the following calendar.")
 	return &calOut, nil
 }

@@ -72,7 +72,7 @@ func (bot *welcomer) Welcome(userID string) error {
 func (bot *welcomer) AfterSuccessfullyConnect(userID, userLogin string) error {
 	postID, err := bot.Store.DeleteUserWelcomePost(userID)
 	if err != nil {
-		bot.Errorf("error deleting user welcom post id, err=" + err.Error())
+		bot.Errorf("error deleting user's welcome post id, err=%v", err)
 	}
 	if postID != "" {
 		post := &model.Post{
@@ -135,7 +135,7 @@ func (bot *welcomer) cleanWelcomePost(mattermostUserID string) error {
 	if postID != "" {
 		err = bot.DeletePost(postID)
 		if err != nil {
-			bot.Errorf(err.Error())
+			bot.Errorf("Error deleting post. err=%v", err)
 		}
 	}
 	return nil
