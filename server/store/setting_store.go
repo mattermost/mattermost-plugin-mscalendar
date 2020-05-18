@@ -10,6 +10,8 @@ const (
 	GetConfirmationSettingID  = "get_confirmation"
 	ReceiveRemindersSettingID = "get_reminders"
 	DailySummarySettingID     = "summary_setting"
+
+	TestSettingID = "test_id"
 )
 
 func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) error {
@@ -39,6 +41,8 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 		user.Settings.ReceiveReminders = storableValue
 	case DailySummarySettingID:
 		s.updateDailySummarySettingForUser(userID, value)
+	case TestSettingID:
+		user.Settings.Test = value.(string)
 	default:
 		return fmt.Errorf("setting %s not found", settingID)
 	}
@@ -66,6 +70,8 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 		return user.Settings.ReceiveReminders, nil
 	case DailySummarySettingID:
 		return s.LoadDailySummaryUserSettings(userID)
+	case TestSettingID:
+		return user.Settings.Test, nil
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}

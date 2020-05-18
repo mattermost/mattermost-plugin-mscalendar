@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/larkox/mattermost-plugin-utils/freetext_fetcher"
 	"github.com/larkox/mattermost-plugin-utils/panel/settings"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -261,4 +262,8 @@ func (s *dailySummarySetting) makeAPMOptions(hour, minute, timezone string) []*m
 		Value: fmt.Sprintf("%s:%s%s %s", storeHour, minute, o, timezone),
 	})
 	return out
+}
+
+func (s *dailySummarySetting) GetFreetextFetcher() freetext_fetcher.FreetextFetcher {
+	return nil
 }

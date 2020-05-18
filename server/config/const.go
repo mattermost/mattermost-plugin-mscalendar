@@ -23,6 +23,7 @@ const (
 	PathConfirmStatusChange = "/confirm"
 	PathNotification        = "/notification/v1"
 	PathEvent               = "/event"
+	PathFreeTextHandler     = "/freetextHandler"
 
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete

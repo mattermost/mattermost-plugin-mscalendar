@@ -6,7 +6,7 @@ require (
 	github.com/golang/mock v1.4.3
 	github.com/gorilla/mux v1.7.4
 	github.com/jarcoal/httpmock v1.0.4
-	github.com/larkox/mattermost-plugin-utils v0.1.7
+	github.com/larkox/mattermost-plugin-utils v0.1.10
 	github.com/mattermost/mattermost-plugin-api v0.0.9
 	github.com/mattermost/mattermost-server/v5 v5.22.2
 	github.com/pkg/errors v0.9.1

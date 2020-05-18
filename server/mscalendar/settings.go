@@ -1,8 +1,10 @@
 package mscalendar
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/larkox/mattermost-plugin-utils/panel"
 	"github.com/larkox/mattermost-plugin-utils/panel/settings"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
@@ -22,32 +24,58 @@ func (c *mscalendar) ClearSettingsPosts(userID string) {
 	}
 }
 
-func NewSettingsPanel(bot Bot, panelStore panel.PanelStore, settingStore settings.SettingStore, settingsHandler, pluginURL string, getTimezone func(userID string) (string, error)) panel.Panel {
+func NewSettingsPanel(
+	bot Bot,
+	pluginStore store.Store,
+	settingsHandler string,
+	pluginURL string,
+	getTimezone func(userID string) (string, error),
+	r *mux.Router,
+) panel.Panel {
 	settingList := []settings.Setting{}
 	settingList = append(settingList, settings.NewBoolSetting(
 		store.UpdateStatusSettingID,
 		"Update Status",
 		"Do you want to update your status on Mattermost when you are in a meeting?",
 		"",
-		settingStore,
+		pluginStore,
 	))
 	settingList = append(settingList, settings.NewBoolSetting(
 		store.GetConfirmationSettingID,
 		"Get Confirmation",
 		"Do you want to get a confirmation before automatically updating your status?",
 		store.UpdateStatusSettingID,
-		settingStore,
+		pluginStore,
 	))
 	settingList = append(settingList, settings.NewBoolSetting(
 		store.ReceiveRemindersSettingID,
 		"Receive Reminders",
 		"Do you want to receive reminders for upcoming events?",
 		"",
-		settingStore,
+		pluginStore,
 	))
 	settingList = append(settingList, NewDailySummarySetting(
-		settingStore,
+		pluginStore,
 		getTimezone,
 	))
-	return panel.NewSettingsPanel(settingList, bot, bot, panelStore, settingsHandler, pluginURL)
+	settingList = append(settingList, settings.NewFreetextSetting(
+		store.TestSettingID,
+		"Free text test",
+		"This is the setting description. It can also include information about the validation rules. In this case, the string must be longer than 3 characters.",
+		"Write what you want to store in this test value.",
+		"",
+		pluginStore,
+		config.PathFreeTextHandler,
+		pluginURL,
+		pluginStore,
+		func(in string) string {
+			if len(in) < 3 {
+				return "The string must be longer than 3 characters."
+			}
+			return ""
+		},
+		r,
+		bot,
+	))
+	return panel.NewSettingsPanel(settingList, bot, bot, pluginStore, settingsHandler, pluginURL)
 }

@@ -6,9 +6,11 @@ const (
 	UpdateStatusPropertyName    = "update_status"
 	GetConfirmationPropertyName = "get_confirmation"
 	SubscribePropertyName       = "subscribe"
+
+	TestPropertyName = "test_name"
 )
 
-func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
+func (s *pluginStore) SetProperty(userID, propertyName string, value interface{}) error {
 	user, err := s.LoadUser(userID)
 	if err != nil {
 		return err
@@ -16,9 +18,13 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		user.Settings.UpdateStatus = value
+		boolValue := value.(string) == "true"
+		user.Settings.UpdateStatus = boolValue
 	case GetConfirmationPropertyName:
-		user.Settings.GetConfirmation = value
+		boolValue := value.(string) == "true"
+		user.Settings.GetConfirmation = boolValue
+	case TestPropertyName:
+		user.Settings.Test = value.(string)
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -44,6 +50,8 @@ func (s *pluginStore) SetPostID(userID, propertyName, postID string) error {
 		user.WelcomeFlowStatus.GetConfirmationPostID = postID
 	case SubscribePropertyName:
 		user.WelcomeFlowStatus.SubscribePostID = postID
+	case TestPropertyName:
+		user.WelcomeFlowStatus.Test = postID
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -69,6 +77,8 @@ func (s *pluginStore) GetPostID(userID, propertyName string) (string, error) {
 		return user.WelcomeFlowStatus.GetConfirmationPostID, nil
 	case SubscribePropertyName:
 		return user.WelcomeFlowStatus.SubscribePostID, nil
+	case TestPropertyName:
+		return user.WelcomeFlowStatus.Test, nil
 	default:
 		return "", fmt.Errorf("property %s not found", propertyName)
 	}
@@ -87,6 +97,8 @@ func (s *pluginStore) RemovePostID(userID, propertyName string) error {
 		user.WelcomeFlowStatus.GetConfirmationPostID = ""
 	case SubscribePropertyName:
 		user.WelcomeFlowStatus.SubscribePostID = ""
+	case TestPropertyName:
+		user.WelcomeFlowStatus.Test = ""
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}

@@ -41,6 +41,10 @@ type User struct {
 	Settings          Settings          `json:"mattermostSettings,omitempty"`
 	ActiveEvents      []string          `json:"events"`
 	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
+	FreetextFetching  struct {
+		ID      string
+		Payload string
+	}
 }
 
 type Settings struct {
@@ -48,6 +52,7 @@ type Settings struct {
 	UpdateStatus        bool
 	GetConfirmation     bool
 	ReceiveReminders    bool
+	Test                string
 }
 
 type WelcomeFlowStatus struct {
@@ -55,6 +60,7 @@ type WelcomeFlowStatus struct {
 	GetConfirmationPostID string
 	SubscribePostID       string
 	Step                  int
+	Test                  string
 }
 
 func (settings Settings) String() string {

@@ -426,7 +426,7 @@ func (mr *MockStoreMockRecorder) SetPostID(arg0, arg1, arg2 interface{}) *gomock
 }
 
 // SetProperty mocks base method
-func (m *MockStore) SetProperty(arg0, arg1 string, arg2 bool) error {
+func (m *MockStore) SetProperty(arg0, arg1 string, arg2 interface{}) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetProperty", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -451,6 +451,50 @@ func (m *MockStore) SetSetting(arg0, arg1 string, arg2 interface{}) error {
 func (mr *MockStoreMockRecorder) SetSetting(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSetting", reflect.TypeOf((*MockStore)(nil).SetSetting), arg0, arg1, arg2)
+}
+
+// ShouldProcessFreetext mocks base method
+func (m *MockStore) ShouldProcessFreetext(arg0, arg1 string) (bool, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShouldProcessFreetext", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ShouldProcessFreetext indicates an expected call of ShouldProcessFreetext
+func (mr *MockStoreMockRecorder) ShouldProcessFreetext(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShouldProcessFreetext", reflect.TypeOf((*MockStore)(nil).ShouldProcessFreetext), arg0, arg1)
+}
+
+// StartFetching mocks base method
+func (m *MockStore) StartFetching(arg0, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartFetching", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StartFetching indicates an expected call of StartFetching
+func (mr *MockStoreMockRecorder) StartFetching(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartFetching", reflect.TypeOf((*MockStore)(nil).StartFetching), arg0, arg1, arg2)
+}
+
+// StopFetching mocks base method
+func (m *MockStore) StopFetching(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StopFetching", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StopFetching indicates an expected call of StopFetching
+func (mr *MockStoreMockRecorder) StopFetching(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopFetching", reflect.TypeOf((*MockStore)(nil).StopFetching), arg0, arg1)
 }
 
 // StoreDailySummaryUserSettings mocks base method

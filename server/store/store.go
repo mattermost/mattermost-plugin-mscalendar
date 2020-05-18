@@ -10,6 +10,7 @@ import (
 
 	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/larkox/mattermost-plugin-utils/flow"
+	"github.com/larkox/mattermost-plugin-utils/freetext_fetcher"
 	"github.com/larkox/mattermost-plugin-utils/panel"
 	"github.com/larkox/mattermost-plugin-utils/panel/settings"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
@@ -40,6 +41,7 @@ type Store interface {
 	flow.FlowStore
 	settings.SettingStore
 	panel.PanelStore
+	freetext_fetcher.FreetextStore
 	DailySummaryStore
 }
 

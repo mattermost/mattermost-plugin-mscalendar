@@ -20,6 +20,7 @@ import (
 
 	"github.com/larkox/mattermost-plugin-utils/bot/logger"
 	"github.com/larkox/mattermost-plugin-utils/flow"
+	"github.com/larkox/mattermost-plugin-utils/freetext_fetcher"
 	"github.com/larkox/mattermost-plugin-utils/panel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
@@ -132,19 +133,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = e.bot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
-		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
-			e.bot,
-			e.Dependencies.Store,
-			e.Dependencies.Store,
-			"/settings",
-			pluginURL,
-			func(userID string) (string, error) {
-				return mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
-			},
-		)
-
-		welcomeFlow := flow.NewFlow(mscalendar.MakeFlowSteps(), "/welcome", e.bot, e.Dependencies.Welcomer.WelcomeFlowEnd)
-		e.bot.RegisterFlow(welcomeFlow, e.Store)
 
 		if e.notificationProcessor == nil {
 			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
@@ -154,9 +142,33 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.httpHandler = httputils.NewHandler()
 		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
-		flow.Init(e.httpHandler.Router, welcomeFlow, mscalendar.NewWelcomeStore(e.Store, e.Env))
-		panel.Init(e.httpHandler.Router, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
+
+		freetext_fetcher.GetManager().Clear()
+		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
+			e.bot,
+			e.Dependencies.Store,
+			"/settings",
+			pluginURL,
+			func(userID string) (string, error) {
+				return mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
+			},
+			e.httpHandler.Router,
+		)
+		panel.Init(e.httpHandler.Router, e.Dependencies.SettingsPanel)
+
+		welcomeFlow := flow.NewFlow(
+			mscalendar.MakeFlowSteps(
+				e.Store,
+				e.httpHandler.Router,
+				e.bot,
+			),
+			"/welcome",
+			e.bot,
+			e.Dependencies.Welcomer.WelcomeFlowEnd,
+		)
+		e.bot.RegisterFlow(welcomeFlow, e.Store)
+		flow.Init(e.httpHandler.Router, welcomeFlow, mscalendar.NewWelcomeStore(e.Store, e.Env))
 
 		if e.jobManager == nil {
 			e.jobManager = jobs.NewJobManager(p.API, e.Env)
@@ -229,6 +241,10 @@ func (p *Plugin) ServeHTTP(pc *plugin.Context, w http.ResponseWriter, req *http.
 	}
 
 	env.httpHandler.ServeHTTP(w, req)
+}
+
+func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
+	freetext_fetcher.GetManager().MessageHasBeenPosted(c, post, p.API, p.env.bot, p.env.bot.MattermostUserID(), p.env.PluginURL)
 }
 
 func (p *Plugin) getEnv() Env {
