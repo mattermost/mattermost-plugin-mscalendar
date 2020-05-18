@@ -4,8 +4,6 @@
 package mscalendar
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-server/v5/model"
 )
@@ -38,10 +36,11 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 		storedUser, _ := m.Store.LoadUser(u.Id)
 		if u.Id != post.UserId {
 			storedRecipient = storedUser
+			break
 		}
 	}
 
-	if storedRecipient == nil {
+	if storedRecipient == nil || !storedRecipient.Settings.AutoRespond || len(storedRecipient.ActiveEvents) == 0 {
 		return nil
 	}
 
@@ -53,28 +52,7 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 		return nil
 	}
 
-	autoRespond, err := m.Store.GetSetting(storedRecipient.MattermostUserID, store.AutoRespondSettingID)
-	if err != nil {
-		return err
-	}
-
-	shouldRespond, ok := autoRespond.(bool)
-	if !ok {
-		return errors.Errorf("Error retrieving setting: %s", store.AutoRespondSettingID)
-	}
-	if !shouldRespond || len(storedRecipient.ActiveEvents) == 0 {
-		return nil
-	}
-
-	autoRespondMessage, err := m.Store.GetSetting(storedRecipient.MattermostUserID, store.AutoRespondMessageSettingID)
-	if err != nil {
-		return err
-	}
-
-	message, ok := autoRespondMessage.(string)
-	if !ok {
-		return errors.Errorf("Error retrieving setting: %s", store.AutoRespondMessageSettingID)
-	}
+	message := storedRecipient.Settings.AutoRespondMessage
 	if message == "" {
 		message = defaultMessage
 	}

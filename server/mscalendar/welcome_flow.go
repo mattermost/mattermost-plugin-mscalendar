@@ -87,6 +87,7 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseButtonMessage:   "No - Do not enable",
 		TrueResponseMessage:  "Great, the bot will automatically respond to DMs when you are in a meeting.",
 		FalseResponseMessage: "Great, automatic response will not be enabled.",
+		FalseSkip:            1,
 	}, &flow.EmptyStep{
 		Title:   "Set Bot Response Message",
 		Message: "Remember that you can set your autorespond message by typing `/mscalendar autorespond <message>`.",

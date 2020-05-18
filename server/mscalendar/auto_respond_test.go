@@ -29,10 +29,14 @@ func newTestMattermostChannel() *model.Channel {
 	}
 }
 
-func newTestStoreUser(activeEvents []string, mattermostUserID string) *store.User {
+func newTestStoreUser(activeEvents []string, mattermostUserID string, autoRespond bool, autoRespondMessage string) *store.User {
 	return &store.User {
 		ActiveEvents: activeEvents,
 		MattermostUserID: mattermostUserID,
+		Settings: store.Settings {
+			AutoRespond: autoRespond,
+			AutoRespondMessage: autoRespondMessage,
+		},
 	}
 }
 
@@ -61,8 +65,8 @@ func TestHandleBusyDM(t *testing.T) {
 		expectedError             string
 		recipientActiveEvents     []string
 		recipientStatusString     string
-		autoRespondSetting        interface{}
-		autoRespondMessageSetting interface{}
+		autoRespondSetting        bool
+		autoRespondMessageSetting string
 		expectedDMMessage         string
 	}{
 		{
@@ -136,7 +140,7 @@ func TestHandleBusyDM(t *testing.T) {
 			mattermostUserRecipient := newTestMattermostUser("mattermost_user_recipient_id")
 
 			recipientStatus := newTestMattermostStatus(tc.recipientStatusString)
-			storedRecipient := newTestStoreUser(tc.recipientActiveEvents, "mattermost_user_recipient_id")
+			storedRecipient := newTestStoreUser(tc.recipientActiveEvents, "mattermost_user_recipient_id", tc.autoRespondSetting, tc.autoRespondMessageSetting)
 
 			mockPluginAPI.EXPECT().GetMattermostChannel("mattermost_post_channel_id").Return(channel, nil)
 			mockPluginAPI.EXPECT().GetMattermostUsersInChannel("mattermost_post_channel_id", model.CHANNEL_SORT_BY_USERNAME, 0, 2).Return([]*model.User{mattermostUserSender, mattermostUserRecipient}, nil)
@@ -144,18 +148,12 @@ func TestHandleBusyDM(t *testing.T) {
 			mockStore.EXPECT().LoadUser("mattermost_user_sender_id").Return(nil, errors.New("user not found"))
 			mockStore.EXPECT().LoadUser("mattermost_user_recipient_id").Return(storedRecipient, nil)
 
-			mockPluginAPI.EXPECT().GetMattermostUserStatus("mattermost_user_recipient_id").Return(recipientStatus, nil)
+			if tc.autoRespondSetting && len(tc.recipientActiveEvents) > 0 {
+				mockPluginAPI.EXPECT().GetMattermostUserStatus("mattermost_user_recipient_id").Return(recipientStatus, nil)
+			}
 
-			if (tc.recipientStatusString != model.STATUS_ONLINE) {
-				mockStore.EXPECT().GetSetting("mattermost_user_recipient_id", store.AutoRespondSettingID).Return(tc.autoRespondSetting, nil)
-
-				if (tc.autoRespondSetting.(bool) && len(tc.recipientActiveEvents) > 0) {
-					mockStore.EXPECT().GetSetting("mattermost_user_recipient_id", store.AutoRespondMessageSettingID).Return(tc.autoRespondMessageSetting, nil)
-
-					if (tc.expectedDMMessage != "") {
-						mockPoster.EXPECT().Ephemeral("mattermost_user_sender_id", "mattermost_post_channel_id", tc.expectedDMMessage)
-					}
-				}
+			if tc.recipientStatusString != model.STATUS_ONLINE && tc.expectedDMMessage != "" {
+				mockPoster.EXPECT().Ephemeral("mattermost_user_sender_id", "mattermost_post_channel_id", tc.expectedDMMessage)
 			}
 
 			m := New(env, post.UserId)
