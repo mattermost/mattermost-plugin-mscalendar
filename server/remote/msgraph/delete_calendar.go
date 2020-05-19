@@ -3,12 +3,16 @@
 
 package msgraph
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+import (
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+)
 
 func (c *client) DeleteCalendar(remoteUserID string, calID string) error {
 	err := c.rbuilder.Users().ID(remoteUserID).Calendars().ID(calID).Request().Delete(c.ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "msgraph DeleteCalendar")
 	}
 	c.Logger.With(bot.LogContext{}).Infof("msgraph: DeleteCalendar deleted calendar `%v`.", calID)
 	return nil
