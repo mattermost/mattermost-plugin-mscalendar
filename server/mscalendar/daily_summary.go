@@ -64,11 +64,12 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, err
 	}
 	if dsum == nil {
-		dsum = &store.DailySummaryUserSettings{MattermostUserID: user.MattermostUserID, RemoteID: user.Remote.ID}
+		dsum = &store.DailySummaryUserSettings{MattermostUserID: user.MattermostUserID}
 	}
 
 	dsum.PostTime = timeStr
 	dsum.Timezone = timezone
+	dsum.RemoteID = user.Remote.ID
 
 	err = m.Store.StoreDailySummaryUserSettings(dsum)
 	if err != nil {
@@ -91,9 +92,10 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 		return nil, err
 	}
 	if dsum == nil {
-		dsum = &store.DailySummaryUserSettings{MattermostUserID: user.MattermostUserID, RemoteID: user.Remote.ID}
+		dsum = &store.DailySummaryUserSettings{MattermostUserID: user.MattermostUserID}
 	}
 	dsum.Enable = enable
+	dsum.RemoteID = user.Remote.ID
 
 	err = m.Store.StoreDailySummaryUserSettings(dsum)
 	if err != nil {
