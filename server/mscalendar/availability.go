@@ -198,11 +198,15 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	var message string
 	if len(user.ActiveEvents) > 0 && len(events) == 0 {
 		if currentStatus == busyStatus {
+			message = "User is no longer busy in calendar. Set status to online."
+			if user.LastStatus != "" {
+				message = fmt.Sprintf("User is no longer busy in calendar. Set status to previous status (%s)", user.LastStatus)
+			}
 			err := m.setStatusOrAskUser(user, status, events, true)
 			if err != nil {
 				return "", err
 			}
-			message = "User is no longer busy in calendar. Set status to online."
+
 		} else {
 			message = fmt.Sprintf("User is no longer busy in calendar, but is not set to busy (%s). No status change.", busyStatus)
 		}

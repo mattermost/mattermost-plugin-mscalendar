@@ -175,6 +175,25 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 		}
 		stringPrettyChangeTo := prettyChangeTo.(string)
 
+		statuses, err := api.PluginAPI.GetMattermostUserStatusesByIds([]string{mattermostUserID})
+		if err != nil || len(statuses) == 0 {
+			utils.SlackAttachmentError(w, "Cannot get current status.")
+			return
+		}
+		status := statuses[0]
+
+		if status.Manual {
+			user, err := api.Store.LoadUser(mattermostUserID)
+			if err != nil {
+				utils.SlackAttachmentError(w, "Cannot load user")
+				return
+			}
+			user.LastStatus = status.Status
+			err = api.Store.StoreUser(user)
+			if err != nil {
+				utils.SlackAttachmentError(w, "Cannot update user")
+			}
+		}
 		api.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, stringChangeTo)
 		returnText = fmt.Sprintf("The status has been changed to %s.", stringPrettyChangeTo)
 	}
