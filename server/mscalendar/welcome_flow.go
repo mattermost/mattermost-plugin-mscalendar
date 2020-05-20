@@ -59,7 +59,7 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseButtonMessage:   "No - Don't update my status",
 		TrueResponseMessage:  ":thumbsup: Got it! We'll automatically update your status in Mattermost.",
 		FalseResponseMessage: ":thumbsup: Got it! We won't update your status in Mattermost.",
-		FalseSkip:            1,
+		FalseSkip:            2,
 	}, &flow.SimpleStep{
 		Title:                "Confirm status change",
 		Message:              "Do you want to receive confirmations before we update your status for each event?",
@@ -68,6 +68,14 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseButtonMessage:   "No - Update my status automatically",
 		TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
 		FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
+	}, &flow.SimpleStep{
+		Title:                "Receive notifications while on meetings",
+		Message:              "Do you want to receive notifications while you are on a meeting?",
+		PropertyName:         store.ReceiveNotificationsDuringMeetingName,
+		TrueButtonMessage:    "Yes - I would like to set my status to Away during meetings to continue receiving notifications.",
+		FalseButtonMessage:   "No - I would like to set my status to Do Not Disturb during meetings to not receive notifications.",
+		TrueResponseMessage:  "Great, your status will be set to Away.",
+		FalseResponseMessage: "Great, your status will be set to DnD.",
 	}, &flow.SimpleStep{
 		Title:                "Subscribe to events",
 		Message:              "Do you want to receive notifications when you receive a new event?",
