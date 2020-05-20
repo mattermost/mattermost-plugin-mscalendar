@@ -101,3 +101,16 @@ Copy the `Client ID` and `Tenant ID` from the Azure portal
 - `tenantID` - copy from Azure App
 - `clientID` - copy from Azure App
 - `Client Secret` - copy from Azure App (Generated in `Certificates & secrets`, earlier in these instructions)
+
+**Scheduled Jobs**
+
+There are two scheduled jobs than can be disabled from the plugin settings in the system console.
+
+The Status Sync job runs every 5 minutes and is responsible for:
+
+- Applying status changes to Mattermost users when they are current availability on their calendar
+- Delivering upcoming event reminders to users
+
+The Daily Summary job runs every 15 minutes and is responsible for:
+
+- Delivering each user's calendar summary for the day, based on their settings of when they want to receive the summary
