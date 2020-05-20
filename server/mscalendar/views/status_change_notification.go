@@ -49,7 +49,7 @@ func RenderEventWillStartLine(subject, weblink string, startTime time.Time) stri
 
 func renderScheduleItem(event *remote.Event, status string) string {
 	if event == nil {
-		return fmt.Sprintf("You have no upcoming events.\n Shall I change your status to %s?", prettyStatuses[status])
+		return fmt.Sprintf("You have no upcoming events.\n Shall I change back your status to %s?", prettyStatuses[status])
 	}
 
 	resp := RenderEventWillStartLine(event.Subject, event.Weblink, event.Start.Time())
