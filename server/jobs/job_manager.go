@@ -62,7 +62,9 @@ func (jm *JobManager) AddJob(job RegisteredJob) {
 
 // OnConfigurationChange activates/deactivates jobs based on their current state, and the current plugin config.
 func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
+	jm.env.Logger.Debugf("Gaining lock for job manager config change")
 	jm.mux.Lock()
+	jm.env.Logger.Debugf("Gained lock for job manager config change")
 	defer jm.mux.Unlock()
 	jm.env = env
 
@@ -73,20 +75,27 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 
 		// Config is set to enable. Job is inactive, so activate the job.
 		if enabled && !active {
+			jm.env.Logger.Debugf("Activating %s job", job.id)
 			err := jm.activateJob(job)
 			if err != nil {
 				jm.env.Logger.Warnf("Error activating %s job. err=%v", job.id, err)
+			} else {
+				jm.env.Logger.Debugf("Activated %s job", job.id)
 			}
 		}
 
 		// Config is set to disable. Job is active, so deactivate the job.
 		if !enabled && active {
+			jm.env.Logger.Debugf("Deactivating %s job", job.id)
 			err := jm.deactivateJob(job)
 			if err != nil {
 				jm.env.Logger.Warnf("Error deactivating %s job. err=%v", job.id, err)
+			} else {
+				jm.env.Logger.Debugf("Deactivated %s job", job.id)
 			}
 		}
 
+		jm.env.Logger.Debugf("Done processing config for %s job", job.id)
 		return true
 	})
 	return nil
@@ -94,15 +103,20 @@ func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
 
 // Close deactivates all active jobs. It is called in the plugin hook OnDeactivate.
 func (jm *JobManager) Close() error {
+	jm.env.Logger.Debugf("Deactivating all mscalendar jobs due to plugin deactivation")
 	jm.activeJobs.Range(func(k interface{}, v interface{}) bool {
 		job := v.(*activeJob)
+		jm.env.Logger.Debugf("Deactivating %s job", job.id)
 		err := jm.deactivateJob(job.RegisteredJob)
 		if err != nil {
 			jm.env.Logger.Debugf("Failed to deactivate job: %v", err)
+		} else {
+			jm.env.Logger.Debugf("Deactivated %s job", job.id)
 		}
 
 		return true
 	})
+	jm.env.Logger.Debugf("Done deactivating all mscalendar jobs")
 	return nil
 }
 
@@ -112,9 +126,9 @@ func (jm *JobManager) activateJob(job RegisteredJob) error {
 	if err != nil {
 		return err
 	}
+	jm.env.Logger.Debugf("Done scheduling %s job", job.id)
 
 	actJob := newActiveJob(job, scheduled, context.Background())
-
 	jm.activeJobs.Store(job.id, actJob)
 	return nil
 }
@@ -131,6 +145,7 @@ func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	if err != nil {
 		return err
 	}
+	jm.env.Logger.Debugf("Done closing scheduled %s job", job.id)
 	jm.activeJobs.Delete(job.id)
 
 	return nil
