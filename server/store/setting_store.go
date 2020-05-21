@@ -74,17 +74,22 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
 	case DailySummarySettingID:
-		return s.LoadDailySummaryUserSettings(userID)
+		dsum L= user.Settings.DailySummary
+		if dsum == nil {
+			return nil, errors.New("Daily summary settings not found")
+		}
+		return dsum, nil
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}
 }
 
 func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
-	dsum, err := s.LoadDailySummaryUserSettings(userID)
+	user, err := s.LoadUser(userID)
 	if err != nil {
 		return err
 	}
+	dsum := user.Settings.DailySummary
 
 	stringValue := value.(string)
 	splittedValue := strings.Split(stringValue, " ")
@@ -97,10 +102,9 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 		}
 
 		dsum = &DailySummaryUserSettings{
-			MattermostUserID: userID,
-			PostTime:         timeStr,
-			Timezone:         timezone,
-			Enable:           splittedValue[0] == "true",
+			PostTime: timeStr,
+			Timezone: timezone,
+			Enable:   splittedValue[0] == "true",
 		}
 	} else {
 		switch splittedValue[0] {
@@ -114,7 +118,7 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 		}
 	}
 
-	err = s.StoreDailySummaryUserSettings(dsum)
+	err = s.StoreUser(user)
 	if err != nil {
 		return err
 	}

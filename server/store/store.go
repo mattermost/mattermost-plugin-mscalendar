@@ -23,7 +23,6 @@ const (
 	EventKeyPrefix            = "ev_"
 	WelcomeKeyPrefix          = "welcome_"
 	SettingsPanelPrefix       = "settings_panel_"
-	DailySummaryKeyPrefix     = "dsum_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -39,7 +38,6 @@ type Store interface {
 	flow.FlowStore
 	settingspanel.SettingStore
 	settingspanel.PanelStore
-	DailySummaryStore
 }
 
 type pluginStore struct {
@@ -52,7 +50,6 @@ type pluginStore struct {
 	eventKV            kvstore.KVStore
 	welcomeIndexKV     kvstore.KVStore
 	settingsPanelKV    kvstore.KVStore
-	dailySummaryKV     kvstore.KVStore
 	Logger             bot.Logger
 }
 
@@ -65,7 +62,6 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
-		dailySummaryKV:     kvstore.NewHashedKeyStore(basicKV, DailySummaryKeyPrefix),
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
 		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
 		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
