@@ -96,8 +96,14 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 			timeStr = "8:00AM"
 		}
 
+		user, err := s.LoadUser(userID)
+		if err != nil {
+			return err
+		}
+
 		dsum = &DailySummaryUserSettings{
 			MattermostUserID: userID,
+			RemoteID:         user.Remote.ID,
 			PostTime:         timeStr,
 			Timezone:         timezone,
 			Enable:           splittedValue[0] == "true",
