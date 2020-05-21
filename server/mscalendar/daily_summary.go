@@ -54,6 +54,13 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, fmt.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
 	}
 
+	err := m.Filter(
+		withRemoteUser(user),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	timezone, err := m.GetTimezone(user)
 	if err != nil {
 		return nil, err
@@ -80,8 +87,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 
 func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummaryUserSettings, error) {
 	err := m.Filter(
-		withClient,
-		withUserExpanded(user),
+		withRemoteUser(user),
 	)
 	if err != nil {
 		return nil, err
