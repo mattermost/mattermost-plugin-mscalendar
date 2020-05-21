@@ -132,7 +132,7 @@ func TestSyncStatusAll(t *testing.T) {
 			}
 
 			if tc.shouldLogError {
-				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", tc.apiError.Message).Times(1)
+				logger.EXPECT().Warnf("Error getting availability for %s. err=%s", "user_email@example.com", tc.apiError.Message).Times(1)
 			} else {
 				logger.EXPECT().Warnf(gomock.Any()).Times(0)
 			}
@@ -291,7 +291,7 @@ func TestReminders(t *testing.T) {
 			}
 
 			if tc.shouldLogError {
-				logger.EXPECT().Warnf("Error getting availability for %s: %s", "user_email@example.com", tc.apiError.Message).Times(1)
+				logger.EXPECT().Warnf("Error getting availability for %s. err=%s", "user_email@example.com", tc.apiError.Message).Times(1)
 			} else {
 				logger.EXPECT().Warnf(gomock.Any()).Times(0)
 			}

@@ -14,7 +14,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 // Handler handles commands
@@ -26,17 +26,14 @@ type Command struct {
 	MSCalendar mscalendar.MSCalendar
 }
 
-func getHelp() string {
-	help := `
-TODO: help text.
-`
-	return utils.CodeBlock(fmt.Sprintf(
-		help,
-	))
+func getNotConnectedText() string {
+	return fmt.Sprintf("It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/%s connect`.", config.CommandTrigger)
 }
 
 // RegisterFunc is a function that allows the runner to register commands with the mattermost server.
 type RegisterFunc func(*model.Command) error
+
+type handleFunc func(parameters ...string) (string, bool, error)
 
 // Register should be called by the plugin to register all necessary commands
 func Register(registerFunc RegisterFunc) {
@@ -64,27 +61,29 @@ func (c *Command) Handle() (string, bool, error) {
 	case "connect":
 		handler = c.connect
 	case "disconnect":
-		handler = c.disconnect
+		handler = c.requireConnectedUser(c.disconnect)
 	case "summary":
-		handler = c.dailySummary
+		handler = c.requireConnectedUser(c.dailySummary)
 	case "viewcal":
-		handler = c.viewCalendar
+		handler = c.requireConnectedUser(c.viewCalendar)
 	case "createcal":
-		handler = c.createCalendar
+		handler = c.requireConnectedUser(c.createCalendar)
 	case "createevent":
-		handler = c.createEvent
+		handler = c.requireConnectedUser(c.createEvent)
 	case "deletecal":
-		handler = c.deleteCalendar
+		handler = c.requireConnectedUser(c.deleteCalendar)
 	case "subscribe":
-		handler = c.subscribe
+		handler = c.requireConnectedUser(c.subscribe)
+	case "unsubscribe":
+		handler = c.requireConnectedUser(c.unsubscribe)
 	case "findmeetings":
-		handler = c.findMeetings
+		handler = c.requireConnectedUser(c.findMeetings)
 	case "showcals":
-		handler = c.showCalendars
+		handler = c.requireConnectedUser(c.showCalendars)
 	case "availability":
-		handler = c.availability
+		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
-		handler = c.settings
+		handler = c.requireConnectedUser(c.settings)
 	}
 	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {
@@ -101,7 +100,7 @@ func (c *Command) isValid() (subcommand string, parameters []string, err error) 
 	split := strings.Fields(c.Args.Command)
 	command := split[0]
 	if command != "/"+config.CommandTrigger {
-		return "", nil, errors.Errorf("%q is not a supported command. Please contact your system administrator.", command)
+		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator.", command)
 	}
 
 	parameters = []string{}
@@ -118,4 +117,44 @@ func (c *Command) isValid() (subcommand string, parameters []string, err error) 
 
 func (c *Command) user() *mscalendar.User {
 	return mscalendar.NewUser(c.Args.UserId)
+}
+
+func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
+	return func(parameters ...string) (string, bool, error) {
+		connected, err := c.isConnected()
+		if err != nil {
+			return "", false, err
+		}
+
+		if !connected {
+			return getNotConnectedText(), false, nil
+		}
+		return handle(parameters...)
+	}
+}
+
+func (c *Command) requireAdminUser(handle handleFunc) handleFunc {
+	return func(parameters ...string) (string, bool, error) {
+		authorized, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
+		if err != nil {
+			return "", false, err
+		}
+		if !authorized {
+			return "Not authorized", false, nil
+		}
+
+		return handle(parameters...)
+	}
+}
+
+func (c *Command) isConnected() (bool, error) {
+	_, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
+	if err == store.ErrNotFound {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

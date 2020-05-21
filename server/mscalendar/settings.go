@@ -18,7 +18,7 @@ func (c *mscalendar) PrintSettings(userID string) {
 func (c *mscalendar) ClearSettingsPosts(userID string) {
 	err := c.SettingsPanel.Clear(userID)
 	if err != nil {
-		c.Logger.Warnf("error clearing settings posts, " + err.Error())
+		c.Logger.Warnf("Error clearing settings posts. err=%v", err)
 	}
 }
 
@@ -35,6 +35,13 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		store.GetConfirmationSettingID,
 		"Get Confirmation",
 		"Do you want to get a confirmation before automatically updating your status?",
+		store.UpdateStatusSettingID,
+		settingStore,
+	))
+	settings = append(settings, settingspanel.NewBoolSetting(
+		store.ReceiveNotificationsDuringMeetingID,
+		"Receive notifications while on meetings",
+		"Do you want to still receive Mattermost notifications while you are on a meeting?\nIf you want notifications, you will be set as \"Away\" during meetings. If not, you will be set as \"Do Not Disturb\".",
 		store.UpdateStatusSettingID,
 		settingStore,
 	))

@@ -92,7 +92,7 @@ func (p *panel) URL() string {
 func (p *panel) Print(userID string) {
 	err := p.cleanPreviousSettingsPosts(userID)
 	if err != nil {
-		p.logger.Errorf("could not clean previous setting post, " + err.Error())
+		p.logger.Warnf("could not clean previous setting post. err=%v", err)
 	}
 
 	sas := []*model.SlackAttachment{}
@@ -100,20 +100,20 @@ func (p *panel) Print(userID string) {
 		s := p.settings[key]
 		sa, loopErr := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
 		if loopErr != nil {
-			p.logger.Errorf("error creating the slack attachment, err=" + loopErr.Error())
+			p.logger.Warnf("error creating the slack attachment. err=%v", loopErr)
 			continue
 		}
 		sas = append(sas, sa)
 	}
 	postID, err := p.poster.DMWithAttachments(userID, sas...)
 	if err != nil {
-		p.logger.Errorf("error creating the message, err=", err.Error())
+		p.logger.Warnf("error creating the message. err=%v", err)
 		return
 	}
 
 	err = p.store.SetPanelPostID(userID, postID)
 	if err != nil {
-		p.logger.Errorf("could not set the post IDs, err=", err.Error())
+		p.logger.Warnf("could not set the post IDs. err=%v", err)
 	}
 }
 
@@ -125,7 +125,7 @@ func (p *panel) ToPost(userID string) (*model.Post, error) {
 		s := p.settings[key]
 		sa, err := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
 		if err != nil {
-			p.logger.Errorf("error creating the slack attachment for setting %s, err=%s", s.GetID(), err.Error())
+			p.logger.Warnf("error creating the slack attachment for setting %s. err=%v", s.GetID(), err)
 			continue
 		}
 		sas = append(sas, sa)
@@ -147,7 +147,7 @@ func (p *panel) cleanPreviousSettingsPosts(userID string) error {
 
 	err = p.poster.DeletePost(postID)
 	if err != nil {
-		p.logger.Errorf("could not delete setting post, %s", err)
+		p.logger.Warnf("could not delete setting post. err=%v", err)
 	}
 
 	err = p.store.DeletePanelPostID(userID)
@@ -169,13 +169,13 @@ func (p *panel) isSettingDisabled(userID string, s Setting) bool {
 	}
 	dependency, ok := p.settings[dependencyID]
 	if !ok {
-		p.logger.Errorf("settings dependency %s not found", dependencyID)
+		p.logger.Warnf("settings dependency %s not found", dependencyID)
 		return false
 	}
 
 	value, err := dependency.Get(userID)
 	if err != nil {
-		p.logger.Errorf("cannot get dependency %s value", dependencyID)
+		p.logger.Warnf("cannot get dependency %s value. err=%v", dependencyID, err)
 		return false
 	}
 	return s.IsDisabled(value)

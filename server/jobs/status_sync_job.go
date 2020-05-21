@@ -26,7 +26,7 @@ func runSyncJob(env mscalendar.Env) {
 
 	_, err := mscalendar.New(env, "").SyncAll()
 	if err != nil {
-		env.Logger.Errorf("Error during user status sync job: %v", err)
+		env.Logger.Errorf("Error during user status sync job. err=%v", err)
 	}
 
 	env.Logger.Debugf("User status sync job finished")
