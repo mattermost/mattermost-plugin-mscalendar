@@ -285,7 +285,12 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	return message, nil
 }
 
-func (m *mscalendar) setStatusOrAskUser(user *store.User, status *model.Status, events []*remote.Event, isFree bool) error {
+// setStatusOrAskUser to which status change, and whether it should update the status automatically or ask the user.
+// - user: the user to change the status
+// - currentStatus: currentStatus, to decide whether to store this status when the user is free
+// - events: the list of events that are triggering this status change
+// - isFree: whether the user is free or busy, to decide to which status to change
+func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.Status, events []*remote.Event, isFree bool) error {
 	toSet := model.STATUS_ONLINE
 	if isFree && user.LastStatus != "" {
 		toSet = user.LastStatus
@@ -297,8 +302,8 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, status *model.Status, 
 		if user.Settings.ReceiveNotificationsDuringMeeting {
 			toSet = model.STATUS_AWAY
 		}
-		if !user.Settings.GetConfirmation && status.Manual {
-			user.LastStatus = status.Status
+		if !user.Settings.GetConfirmation && currentStatus.Manual {
+			user.LastStatus = currentStatus.Status
 		}
 	}
 
