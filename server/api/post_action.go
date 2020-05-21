@@ -86,7 +86,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	err := calendar.RespondToEvent(user, eventID, option)
-	if err != nil && !strings.Contains(err.Error(), "202 Accepted") && !strings.Contains(err.Error(), "404 Not Found") {
+	if err != nil && !isAcceptedError(err) && !isNotFoundError(err) {
 		utils.SlackAttachmentError(w, "Error: Failed to respond to event: "+err.Error())
 		return
 	}
@@ -105,7 +105,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	sa := sas[0]
 
-	if err == nil || strings.Contains(err.Error(), "202 Accepted") {
+	if err == nil || isAcceptedError(err) {
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: "Response",
 			Value: fmt.Sprintf("You have %s this event", prettyOption(option)),
@@ -119,7 +119,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	postResponse.Update = p
 
-	if err != nil && strings.Contains(err.Error(), "404 Not Found") {
+	if err != nil && isNotFoundError(err) {
 		postResponse.EphemeralText = "Event has changed since this message. Please change your status directly on MS Calendar."
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -228,4 +228,12 @@ func getEventInfo(ctx map[string]interface{}) (string, error) {
 	json.Unmarshal([]byte(marshalledStartTime), &startTime)
 
 	return views.RenderEventWillStartLine(subject, weblink, startTime), nil
+}
+
+func isAcceptedError(err error) bool {
+	return strings.Contains(err.Error(), "202 Accepted")
+}
+
+func isNotFoundError(err error) bool {
+	return strings.Contains(err.Error(), "404 Not Found")
 }
