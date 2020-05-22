@@ -96,9 +96,9 @@ func (s *pluginStore) updateDailySummarySettingForUser(userID string, value inte
 			timeStr = "8:00AM"
 		}
 
-		user, err := s.LoadUser(userID)
-		if err != nil {
-			return err
+		user, loadUserErr := s.LoadUser(userID)
+		if loadUserErr != nil {
+			return loadUserErr
 		}
 
 		dsum = &DailySummaryUserSettings{
