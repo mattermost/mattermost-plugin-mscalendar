@@ -120,6 +120,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", user.MattermostUserID, err)
 			continue
 		}
+		byRemoteID[storeUser.Remote.ID] = storeUser
 
 		dsum := storeUser.Settings.DailySummary
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)

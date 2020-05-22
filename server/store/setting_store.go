@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -74,7 +75,7 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
 	case DailySummarySettingID:
-		dsum L= user.Settings.DailySummary
+		dsum := user.Settings.DailySummary
 		if dsum == nil {
 			return nil, errors.New("Daily summary settings not found")
 		}
