@@ -101,3 +101,4 @@ Copy the `Client ID` and `Tenant ID` from the Azure portal
 - `tenantID` - copy from Azure App
 - `clientID` - copy from Azure App
 - `Client Secret` - copy from Azure App (Generated in `Certificates & secrets`, earlier in these instructions)
+- `At Rest Token Encryption Key` - press the `Regenerate` button

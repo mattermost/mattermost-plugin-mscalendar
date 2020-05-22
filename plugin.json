@@ -92,6 +92,13 @@
                 "type": "bool",
                 "help_text": "When enabled, Mattermost users will a receive a daily summary of their scheduled events in Microsoft Calendar. Users can choose when the summary will be sent to them.",
                 "default": false
+            },
+            {
+                "key": "TokenEncryptionKey",
+                "display_name": "At Rest Token Encryption Key",
+                "type": "generated",
+                "help_text": "The AES encryption key used to encrypt stored access tokens.",
+                "regenerate_help_text": "Regenerates the encryption key for Microsoft Calendar OAuth Token. Regenerating the key invalidates your existing Microsoft Calendar OAuth."
             }
         ]
     }

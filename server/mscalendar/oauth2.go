@@ -15,6 +15,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
@@ -91,11 +92,16 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		}
 	}
 
+	encryptedToken, err := encryptToken(tok, app.Config.TokenEncryptionKey)
+	if err != nil {
+		return err
+	}
+
 	u := &store.User{
 		PluginVersion:    app.Config.PluginVersion,
 		MattermostUserID: mattermostUserID,
 		Remote:           me,
-		OAuth2Token:      tok,
+		OAuth2Token:      encryptedToken,
 	}
 
 	err = app.Store.StoreUser(u)
@@ -111,4 +117,32 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
 
 	return nil
+}
+
+func decryptToken(tok *oauth2.Token, encryptionKey string) (*oauth2.Token, error) {
+	unencryptedToken, err := utils.Decrypt([]byte(encryptionKey), tok.AccessToken)
+	if err != nil {
+		return nil, errors.New("cannot decrypt token")
+	}
+
+	newToken := &oauth2.Token{
+		AccessToken:  unencryptedToken,
+		TokenType:    tok.TokenType,
+		RefreshToken: tok.RefreshToken,
+	}
+	return newToken, nil
+}
+
+func encryptToken(tok *oauth2.Token, encryptionKey string) (*oauth2.Token, error) {
+	encryptedToken, err := utils.Encrypt([]byte(encryptionKey), tok.AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	newToken := &oauth2.Token{
+		AccessToken:  encryptedToken,
+		TokenType:    tok.TokenType,
+		RefreshToken: tok.RefreshToken,
+	}
+	return newToken, nil
 }
