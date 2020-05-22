@@ -54,7 +54,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, fmt.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
 	}
 
-	err := m.Filter(
+	err = m.Filter(
 		withRemoteUser(user),
 	)
 	if err != nil {
