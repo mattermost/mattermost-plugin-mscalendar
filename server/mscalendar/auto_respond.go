@@ -8,7 +8,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 )
 
-const defaultMessage = "This user is currently in a meeting."
+const DefaultAutoRespondMessage = "This user is currently in a meeting."
 
 type AutoRespond interface {
 	HandleBusyDM(post *model.Post) error
@@ -54,7 +54,7 @@ func (m *mscalendar) HandleBusyDM(post *model.Post) error {
 
 	message := storedRecipient.Settings.AutoRespondMessage
 	if message == "" {
-		message = defaultMessage
+		message = DefaultAutoRespondMessage
 	}
 
 	m.Poster.Ephemeral(post.UserId, post.ChannelId, message)

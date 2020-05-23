@@ -7,6 +7,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
@@ -22,7 +23,7 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 						DisplayName: "Auto-Respond Message",
 						Name:        "auto_respond_message",
 						Type:        "text",
-						Placeholder: "Enter an auto-respond message.",
+						Placeholder: mscalendar.DefaultAutoRespondMessage,
 					},
 				},
 				SubmitLabel:    "Submit",
