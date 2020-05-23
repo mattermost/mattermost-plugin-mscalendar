@@ -78,7 +78,7 @@ func TestHandleBusyDM(t *testing.T) {
 			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 			expectedDMMessage:          "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
 		},{
-			name:                       "Autorespond message not set, fall back to default",
+			name:                       "Auto-respond message not set, fall back to default",
 			expectedError:              "",
 			recipientActiveEvents:      []string{"active_event_hash"},
 			recipientStatusString:      model.STATUS_DND,
@@ -152,7 +152,7 @@ func TestHandleBusyDM(t *testing.T) {
 				mockPluginAPI.EXPECT().GetMattermostUserStatus("mattermost_user_recipient_id").Return(recipientStatus, nil)
 			}
 
-			if tc.recipientStatusString != model.STATUS_ONLINE && tc.expectedDMMessage != "" {
+			if tc.expectedDMMessage != "" {
 				mockPoster.EXPECT().Ephemeral("mattermost_user_sender_id", "mattermost_post_channel_id", tc.expectedDMMessage)
 			}
 

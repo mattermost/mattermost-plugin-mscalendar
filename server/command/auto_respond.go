@@ -13,16 +13,16 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
 		request := model.OpenDialogRequest{
 			TriggerId: c.Args.TriggerId,
-			URL:       c.Config.PluginURL + config.PathDialog + config.PathAutoRespond,
+			URL:       c.Config.PluginURL + config.PathDialogs + config.PathAutoRespondMessage,
 			Dialog: model.Dialog{
 				CallbackId: "",
-				Title:      "Auto Respond Message",
+				Title:      "Auto-Respond Message",
 				Elements: []model.DialogElement{
 					{
-						DisplayName: "Autorespond Message",
-						Name:        "auto_respond",
+						DisplayName: "Auto-Respond Message",
+						Name:        "auto_respond_message",
 						Type:        "text",
-						Placeholder: "Enter an autorespond message.",
+						Placeholder: "Enter an auto-respond message.",
 					},
 				},
 				SubmitLabel:    "Submit",
@@ -38,8 +38,8 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 	autoRespondMessage := strings.Join(parameters, " ")
 	err := c.MSCalendar.SetUserAutoRespondMessage(c.Args.UserId, autoRespondMessage)
 	if err != nil {
-		return fmt.Sprintf("Failed to set autorespond message. err=%v", err), false, nil
+		return fmt.Sprintf("Failed to set auto-respond message. err=%v", err), false, nil
 	}
 
-	return fmt.Sprintf("Autorespond message changed to: '%s'", autoRespondMessage), false, nil
+	return fmt.Sprintf("Auto-respond message changed to: '%s'", autoRespondMessage), false, nil
 }

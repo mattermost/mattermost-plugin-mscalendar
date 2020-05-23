@@ -90,7 +90,7 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseSkip:            1,
 	}, &flow.EmptyStep{
 		Title:   "Set Bot Response Message",
-		Message: "Remember that you can set your autorespond message by typing `/mscalendar autorespond <message>`.",
+		Message: "Remember that you can set your auto-respond message by typing `/mscalendar autorespond <message>`.",
 	})
 
 	wf.steps = steps

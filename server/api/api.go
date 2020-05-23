@@ -23,8 +23,8 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", api.getAuthorized).Methods("GET")
 
-	dialogRouter := h.Router.PathPrefix(config.PathDialog).Subrouter()
-	dialogRouter.HandleFunc(config.PathAutoRespond, api.autoRespond).Methods("POST")
+	dialogRouter := h.Router.PathPrefix(config.PathDialogs).Subrouter()
+	dialogRouter.HandleFunc(config.PathAutoRespondMessage, api.setAutoRespondMessage).Methods("POST")
 
 	notificationRouter := h.Router.PathPrefix(config.PathNotification).Subrouter()
 	notificationRouter.HandleFunc(config.PathEvent, api.notification).Methods("POST")
