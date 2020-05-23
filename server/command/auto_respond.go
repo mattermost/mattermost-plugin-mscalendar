@@ -13,7 +13,7 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
 		request := model.OpenDialogRequest{
 			TriggerId: c.Args.TriggerId,
-			URL:       c.Config.PluginURL + config.PathDialogs + config.PathAutoRespondMessage,
+			URL:       c.Config.PluginURL + config.PathDialogs + config.PathSetAutoRespondMessage,
 			Dialog: model.Dialog{
 				CallbackId: "",
 				Title:      "Auto-Respond Message",
