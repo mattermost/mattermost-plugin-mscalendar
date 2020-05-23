@@ -44,20 +44,18 @@ type User struct {
 }
 
 type Settings struct {
-	EventSubscriptionID string
-	UpdateStatus        bool
-	GetConfirmation     bool
-	ReceiveReminders    bool
-	AutoRespond         bool
-	AutoRespondMessage  string
+	EventSubscriptionID               string
+	UpdateStatus                      bool
+	GetConfirmation                   bool
+	ReceiveReminders                  bool
+	AutoRespond                       bool
+	AutoRespondMessage                string
+	ReceiveNotificationsDuringMeeting bool
 }
 
 type WelcomeFlowStatus struct {
-	UpdateStatusPostID    string
-	GetConfirmationPostID string
-	SubscribePostID       string
-	AutoRespondPostID     string
-	Step                  int
+	PostIDs map[string]string
+	Step    int
 }
 
 func (settings Settings) String() string {

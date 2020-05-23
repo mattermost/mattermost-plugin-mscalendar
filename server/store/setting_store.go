@@ -6,12 +6,13 @@ import (
 )
 
 const (
-	UpdateStatusSettingID       = "update_status"
-	GetConfirmationSettingID    = "get_confirmation"
-	ReceiveRemindersSettingID   = "get_reminders"
-	DailySummarySettingID       = "summary_setting"
-	AutoRespondSettingID        = "auto_respond"
-	AutoRespondMessageSettingID = "auto_respond_message"
+	UpdateStatusSettingID               = "update_status"
+	GetConfirmationSettingID            = "get_confirmation"
+	ReceiveRemindersSettingID           = "get_reminders"
+	DailySummarySettingID               = "summary_setting"
+	ReceiveNotificationsDuringMeetingID = "receive_notification"
+	AutoRespondSettingID                = "auto_respond"
+	AutoRespondMessageSettingID         = "auto_respond_message"
 )
 
 func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) error {
@@ -33,6 +34,12 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
 		user.Settings.GetConfirmation = storableValue
+	case ReceiveNotificationsDuringMeetingID:
+		storableValue, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
+		}
+		user.Settings.ReceiveNotificationsDuringMeeting = storableValue
 	case ReceiveRemindersSettingID:
 		storableValue, ok := value.(bool)
 		if !ok {
@@ -76,6 +83,8 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 		return user.Settings.UpdateStatus, nil
 	case GetConfirmationSettingID:
 		return user.Settings.GetConfirmation, nil
+	case ReceiveNotificationsDuringMeetingID:
+		return user.Settings.ReceiveNotificationsDuringMeeting, nil
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
 	case AutoRespondSettingID:
