@@ -286,8 +286,8 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 }
 
 // setStatusOrAskUser to which status change, and whether it should update the status automatically or ask the user.
-// - user: the user to change the status
-// - currentStatus: currentStatus, to decide whether to store this status when the user is free
+// - user: the user to change the status. We use user.LastStatus to determine the status the user had before the beginning of the meeting.
+// - currentStatus: currentStatus, to decide whether to store this status when the user is free. This gets assigned to user.LastStatus at the beginning of the meeting.
 // - events: the list of events that are triggering this status change
 // - isFree: whether the user is free or busy, to decide to which status to change
 func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.Status, events []*remote.Event, isFree bool) error {
