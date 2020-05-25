@@ -130,7 +130,7 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
 		}
 
-		err := m.Filter(
+		err = m.Filter(
 			withClient,
 		)
 		if err == nil {
