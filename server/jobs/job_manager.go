@@ -23,10 +23,9 @@ type JobManager struct {
 }
 
 type RegisteredJob struct {
-	id                string
-	interval          time.Duration
-	work              func(env mscalendar.Env)
-	isEnabledByConfig func(env mscalendar.Env) bool
+	id       string
+	interval time.Duration
+	work     func(env mscalendar.Env)
 }
 
 var scheduleFunc = func(api cluster.JobPluginAPI, id string, wait cluster.NextWaitInterval, cb func()) (io.Closer, error) {
@@ -58,38 +57,7 @@ func NewJobManager(papi cluster.JobPluginAPI, env mscalendar.Env) *JobManager {
 // AddJob accepts a RegisteredJob, stores it, and activates it if enabled.
 func (jm *JobManager) AddJob(job RegisteredJob) {
 	jm.registeredJobs.Store(job.id, job)
-}
-
-// OnConfigurationChange activates/deactivates jobs based on their current state, and the current plugin config.
-func (jm *JobManager) OnConfigurationChange(env mscalendar.Env) error {
-	jm.mux.Lock()
-	defer jm.mux.Unlock()
-	jm.env = env
-
-	jm.registeredJobs.Range(func(k interface{}, v interface{}) bool {
-		job := v.(RegisteredJob)
-		enabled := (job.isEnabledByConfig == nil) || job.isEnabledByConfig(env)
-		_, active := jm.activeJobs.Load(job.id)
-
-		// Config is set to enable. Job is inactive, so activate the job.
-		if enabled && !active {
-			err := jm.activateJob(job)
-			if err != nil {
-				jm.env.Logger.Warnf("Error activating %s job. err=%v", job.id, err)
-			}
-		}
-
-		// Config is set to disable. Job is active, so deactivate the job.
-		if !enabled && active {
-			err := jm.deactivateJob(job)
-			if err != nil {
-				jm.env.Logger.Warnf("Error deactivating %s job. err=%v", job.id, err)
-			}
-		}
-
-		return true
-	})
-	return nil
+	jm.activateJob(job)
 }
 
 // Close deactivates all active jobs. It is called in the plugin hook OnDeactivate.
@@ -134,12 +102,6 @@ func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	jm.activeJobs.Delete(job.id)
 
 	return nil
-}
-
-// isJobActive checks if a job is currently active, which includes enabled jobs that are waiting to run for their first time.
-func (jm *JobManager) isJobActive(id string) bool {
-	_, ok := jm.activeJobs.Load(id)
-	return ok
 }
 
 // getEnv returns the mscalendar.Env stored on the job manager
