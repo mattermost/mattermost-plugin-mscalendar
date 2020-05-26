@@ -21,7 +21,6 @@ type Users interface {
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetUserSettings(user *User) (*store.Settings, error)
-	InitUser(mattermostUserID string) error
 }
 
 type User struct {
@@ -189,24 +188,4 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 	}
 
 	return &user.Settings, nil
-}
-
-func (m *mscalendar) InitUser(mattermostUserID string) error {
-	user, err := m.Store.LoadUser(mattermostUserID)
-	if err != nil {
-		return err
-	}
-
-	timezone, err := m.GetTimezoneByID(mattermostUserID)
-	if err != nil {
-		return err
-	}
-
-	user.Settings.DailySummary = &store.DailySummaryUserSettings{
-		PostTime: "8:00AM",
-		Timezone: timezone,
-		Enable:   false,
-	}
-
-	return m.Store.StoreUser(user)
 }
