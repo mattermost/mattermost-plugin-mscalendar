@@ -35,11 +35,7 @@ func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySum
 		return nil, err
 	}
 
-	dsum := user.Settings.DailySummary
-	if dsum == nil {
-		return nil, errors.New("No daily summary settings found")
-	}
-	return dsum, nil
+	return user.Settings.DailySummary, nil
 }
 
 func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error) {
@@ -63,11 +59,6 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 	}
 
 	dsum := user.Settings.DailySummary
-	if dsum == nil {
-		dsum = &store.DailySummaryUserSettings{}
-		user.Settings.DailySummary = dsum
-	}
-
 	dsum.PostTime = timeStr
 	dsum.Timezone = timezone
 
@@ -85,10 +76,6 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	}
 
 	dsum := user.Settings.DailySummary
-	if dsum == nil {
-		dsum = &store.DailySummaryUserSettings{}
-		user.Settings.DailySummary = dsum
-	}
 	dsum.Enable = enable
 
 	err = m.Store.StoreUser(user.User)

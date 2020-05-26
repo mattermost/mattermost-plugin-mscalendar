@@ -108,6 +108,12 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
+	mscal := New(app.Env, mattermostUserID)
+	err = mscal.InitUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
 	app.Welcomer.AfterSuccessfullyConnect(mattermostUserID, me.Mail)
 
 	return nil

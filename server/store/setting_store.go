@@ -1,7 +1,6 @@
 package store
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -46,7 +45,7 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 		}
 		user.Settings.ReceiveReminders = storableValue
 	case DailySummarySettingID:
-		s.updateDailySummarySettingForUser(userID, value)
+		s.updateDailySummarySettingForUser(user, value)
 	default:
 		return fmt.Errorf("setting %s not found", settingID)
 	}
@@ -76,52 +75,27 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 		return user.Settings.ReceiveReminders, nil
 	case DailySummarySettingID:
 		dsum := user.Settings.DailySummary
-		if dsum == nil {
-			return nil, errors.New("Daily summary settings not found")
-		}
 		return dsum, nil
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}
 }
 
-func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
-	user, err := s.LoadUser(userID)
-	if err != nil {
-		return err
-	}
+func (s *pluginStore) updateDailySummarySettingForUser(user *User, value interface{}) error {
 	dsum := user.Settings.DailySummary
 
 	stringValue := value.(string)
 	splittedValue := strings.Split(stringValue, " ")
 	timezone := strings.Join(splittedValue[1:], " ")
 
-	if dsum == nil {
-		timeStr := splittedValue[0]
-		if splittedValue[0] == "true" || splittedValue[0] == "false" {
-			timeStr = "8:00AM"
-		}
-
-		dsum = &DailySummaryUserSettings{
-			PostTime: timeStr,
-			Timezone: timezone,
-			Enable:   splittedValue[0] == "true",
-		}
-	} else {
-		switch splittedValue[0] {
-		case "true":
-			dsum.Enable = true
-		case "false":
-			dsum.Enable = false
-		default:
-			dsum.PostTime = splittedValue[0]
-			dsum.Timezone = timezone
-		}
-	}
-
-	err = s.StoreUser(user)
-	if err != nil {
-		return err
+	switch splittedValue[0] {
+	case "true":
+		dsum.Enable = true
+	case "false":
+		dsum.Enable = false
+	default:
+		dsum.PostTime = splittedValue[0]
+		dsum.Timezone = timezone
 	}
 
 	return nil
