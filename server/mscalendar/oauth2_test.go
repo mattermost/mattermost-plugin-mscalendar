@@ -337,8 +337,15 @@ func statusOKGraphAPIResponder() {
 }`
 
 	meResponder := httpmock.NewStringResponder(http.StatusOK, meResponse)
-
 	httpmock.RegisterResponder("GET", meRequestURL, meResponder)
+
+	mailSettingsURL := "https://graph.microsoft.com/v1.0/users/user-remote-id/mailboxSettings"
+	mailSettingsResponse := `{
+		"timeZone": "Pacific Standard Time"
+	}`
+	mailSettingsResponder := httpmock.NewStringResponder(http.StatusOK, mailSettingsResponse)
+
+	httpmock.RegisterResponder("GET", mailSettingsURL, mailSettingsResponder)
 }
 
 func newHTTPRequest(mattermostUserID, rawQuery string) *http.Request {
