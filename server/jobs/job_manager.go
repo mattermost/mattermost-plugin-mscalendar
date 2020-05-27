@@ -57,16 +57,20 @@ func NewJobManager(papi cluster.JobPluginAPI, env mscalendar.Env) *JobManager {
 // AddJob accepts a RegisteredJob, stores it, and activates it if enabled.
 func (jm *JobManager) AddJob(job RegisteredJob) {
 	jm.registeredJobs.Store(job.id, job)
-	jm.activateJob(job)
+	err := jm.activateJob(job)
+	if err != nil {
+		jm.env.Logger.Warnf("Error activating %s job. %v", job.id, err)
+	}
 }
 
 // Close deactivates all active jobs. It is called in the plugin hook OnDeactivate.
 func (jm *JobManager) Close() error {
+	jm.env.Logger.Debugf("Deactivating all jobs due to plugin deactivation.")
 	jm.activeJobs.Range(func(k interface{}, v interface{}) bool {
 		job := v.(*activeJob)
 		err := jm.deactivateJob(job.RegisteredJob)
 		if err != nil {
-			jm.env.Logger.Debugf("Failed to deactivate job: %v", err)
+			jm.env.Logger.Warnf("Failed to deactivate %s job: %v", job.id, err)
 		}
 
 		return true
@@ -84,6 +88,7 @@ func (jm *JobManager) activateJob(job RegisteredJob) error {
 	actJob := newActiveJob(job, scheduled, context.Background())
 
 	jm.activeJobs.Store(job.id, actJob)
+	jm.env.Logger.Debugf("Activated %s job", job.id)
 	return nil
 }
 
@@ -99,8 +104,9 @@ func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	if err != nil {
 		return err
 	}
-	jm.activeJobs.Delete(job.id)
 
+	jm.activeJobs.Delete(job.id)
+	jm.env.Logger.Debugf("Deactivated %s job", job.id)
 	return nil
 }
 
