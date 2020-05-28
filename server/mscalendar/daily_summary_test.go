@@ -27,7 +27,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 			err:  "index store error",
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				s := deps.Store.(*mock_store.MockStore)
-				s.EXPECT().LoadDailySummaryIndex().Return(store.DailySummaryIndex{}, errors.New("index store error"))
+				s.EXPECT().LoadUserIndex().Return(nil, errors.New("index store error"))
 			},
 		},
 		{
@@ -35,7 +35,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 			err:  "",
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				s := deps.Store.(*mock_store.MockStore)
-				s.EXPECT().LoadDailySummaryIndex().Return(store.DailySummaryIndex{}, nil)
+				s.EXPECT().LoadUserIndex().Return(store.UserIndex{}, nil)
 			},
 		},
 		{
@@ -43,16 +43,23 @@ func TestProcessAllDailySummary(t *testing.T) {
 			err:  "error fetching events",
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				s := deps.Store.(*mock_store.MockStore)
-				s.EXPECT().LoadDailySummaryIndex().Return(store.DailySummaryIndex{
-					&store.DailySummaryUserSettings{
-						MattermostUserID: "user1_mm_id",
-						RemoteID:         "user1_remote_id",
-						Enable:           true,
-						PostTime:         "9:00AM",
-						Timezone:         "Eastern Standard Time",
-						LastPostTime:     "",
+				s.EXPECT().LoadUserIndex().Return(store.UserIndex{{
+					MattermostUserID: "user1_mm_id",
+					RemoteID:         "user1_remote_id",
+				}}, nil)
+
+				s.EXPECT().LoadUser("user1_mm_id").Return(&store.User{
+					MattermostUserID: "user1_mm_id",
+					Remote:           &remote.User{ID: "user1_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "9:00AM",
+							Timezone:     "Eastern Standard Time",
+							LastPostTime: "",
+						},
 					},
-				}, nil).Times(1)
+				}, nil)
 
 				mockClient := client.(*mock_remote.MockClient)
 				mockRemote := deps.Remote.(*mock_remote.MockRemote)
@@ -66,32 +73,55 @@ func TestProcessAllDailySummary(t *testing.T) {
 			err:  "",
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				s := deps.Store.(*mock_store.MockStore)
-				s.EXPECT().LoadDailySummaryIndex().Return(store.DailySummaryIndex{
-					&store.DailySummaryUserSettings{
-						MattermostUserID: "user1_mm_id",
-						RemoteID:         "user1_remote_id",
-						Enable:           true,
-						PostTime:         "9:00AM",
-						Timezone:         "Eastern Standard Time",
-						LastPostTime:     "",
+				s.EXPECT().LoadUserIndex().Return(store.UserIndex{{
+					MattermostUserID: "user1_mm_id",
+					RemoteID:         "user1_remote_id",
+				}, {
+					MattermostUserID: "user2_mm_id",
+					RemoteID:         "user2_remote_id",
+				}, {
+					MattermostUserID: "user3_mm_id",
+					RemoteID:         "user3_remote_id",
+				}}, nil)
+
+				s.EXPECT().LoadUser("user1_mm_id").Return(&store.User{
+					MattermostUserID: "user1_mm_id",
+					Remote:           &remote.User{ID: "user1_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "9:00AM",
+							Timezone:     "Eastern Standard Time",
+							LastPostTime: "",
+						},
 					},
-					&store.DailySummaryUserSettings{
-						MattermostUserID: "user2_mm_id",
-						RemoteID:         "user2_remote_id",
-						Enable:           true,
-						PostTime:         "6:00AM",
-						Timezone:         "Pacific Standard Time",
-						LastPostTime:     "",
+				}, nil)
+
+				s.EXPECT().LoadUser("user2_mm_id").Return(&store.User{
+					MattermostUserID: "user2_mm_id",
+					Remote:           &remote.User{ID: "user2_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "6:00AM",
+							Timezone:     "Pacific Standard Time",
+							LastPostTime: "",
+						},
 					},
-					&store.DailySummaryUserSettings{
-						MattermostUserID: "user3_mm_id",
-						RemoteID:         "user3_remote_id",
-						Enable:           true,
-						PostTime:         "10:00AM", // should not receive summary
-						Timezone:         "Pacific Standard Time",
-						LastPostTime:     "",
+				}, nil)
+
+				s.EXPECT().LoadUser("user3_mm_id").Return(&store.User{
+					MattermostUserID: "user3_mm_id",
+					Remote:           &remote.User{ID: "user3_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "10:00AM", // should not receive summary
+							Timezone:     "Pacific Standard Time",
+							LastPostTime: "",
+						},
 					},
-				}, nil).Times(1)
+				}, nil)
 
 				mockClient := client.(*mock_remote.MockClient)
 				loc, err := time.LoadLocation("MST")
@@ -122,7 +152,10 @@ Wednesday February 12
 | 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
 				)
 
-				s.EXPECT().ModifyDailySummaryIndex(gomock.Any()).Return(nil)
+				s.EXPECT().StoreUser(gomock.Any()).Times(2).DoAndReturn(func(u *store.User) error {
+					require.NotEmpty(t, u.Settings.DailySummary.LastPostTime)
+					return nil
+				})
 
 				mockLogger := deps.Logger.(*mock_bot.MockLogger)
 				mockLogger.EXPECT().Infof("Processed daily summary for %d users", 2)
