@@ -84,6 +84,14 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseButtonMessage:   "No - Do not notify me of new events",
 		TrueResponseMessage:  "Great, you will receive a message any time you receive a new event.",
 		FalseResponseMessage: "Great, you will not receive any notification on new events.",
+	}, &flow.SimpleStep{
+		Title:                "Receive reminder",
+		Message:              "Do you want to receive a reminder for upcoming events?",
+		PropertyName:         store.ReceiveUpcomingEventReminderName,
+		TrueButtonMessage:    "Yes - I would like to receive reminders for upcoming events",
+		FalseButtonMessage:   "No - Do not notify me of upcoming events",
+		TrueResponseMessage:  "Great, you will receive a message before your meetings.",
+		FalseResponseMessage: "Great, you will not receive any notification for upcoming events.",
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
 		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",

@@ -7,6 +7,7 @@ const (
 	GetConfirmationPropertyName           = "get_confirmation"
 	ReceiveNotificationsDuringMeetingName = "receive_notifications_during_meetings"
 	SubscribePropertyName                 = "subscribe"
+	ReceiveUpcomingEventReminderName      = "receive_reminder"
 )
 
 func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
@@ -20,6 +21,8 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 		user.Settings.UpdateStatus = value
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = value
+	case ReceiveUpcomingEventReminderName:
+		user.Settings.ReceiveReminders = value
 	case ReceiveNotificationsDuringMeetingName:
 		user.Settings.ReceiveNotificationsDuringMeeting = value
 	default:
