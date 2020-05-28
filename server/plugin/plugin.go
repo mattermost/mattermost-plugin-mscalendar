@@ -160,8 +160,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.notificationProcessor.Configure(e.Env)
 		}
 
+		tempMSCal := mscalendar.New(e.Env, "")
 		e.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		e.Dependencies.OAuther = oauth2connect.NewOAuther(e.httpHandler, p.API, e.PluginURL, "/oauth2", "oauth_", e.TokenEncryptionKey, "You are now connected to Microsoft Calendar. Please close this window.", tempMSCal.OnCompleteOAuth2, tempMSCal.NewOAuth2Config())
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)

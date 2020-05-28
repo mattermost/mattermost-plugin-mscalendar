@@ -9,7 +9,6 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"golang.org/x/oauth2"
 )
 
 type UserStore interface {
@@ -37,7 +36,6 @@ type User struct {
 	PluginVersion     string
 	Remote            *remote.User
 	MattermostUserID  string
-	OAuth2Token       *oauth2.Token
 	Settings          Settings          `json:"mattermostSettings,omitempty"`
 	ActiveEvents      []string          `json:"events"`
 	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`

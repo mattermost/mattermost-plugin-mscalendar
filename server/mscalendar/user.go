@@ -143,6 +143,11 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		}
 	}
 
+	err = m.OAuther.Deauth(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
 	err = m.Store.DeleteUser(mattermostUserID)
 	if err != nil {
 		return err

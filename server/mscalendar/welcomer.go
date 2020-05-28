@@ -31,7 +31,7 @@ type mscBot struct {
 
 const (
 	WelcomeMessage = `Welcome to the Microsoft Calendar plugin.
-	[Click here to link your account.](%s/oauth2/connect)`
+	[Click here to link your account.](%s)`
 )
 
 func (m *mscalendar) Welcome(userID string) error {
@@ -107,7 +107,7 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
 	sa := model.SlackAttachment{
 		Title: "Connect",
-		Text:  fmt.Sprintf(WelcomeMessage, bot.pluginURL),
+		Text:  fmt.Sprintf(WelcomeMessage, bot.Dependencies.OAuther.GetURL()),
 	}
 
 	return &sa

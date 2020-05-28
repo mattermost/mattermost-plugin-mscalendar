@@ -140,7 +140,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	token, err := decryptToken(creator.OAuth2Token, processor.Config.TokenEncryptionKey)
+	token, err := processor.OAuther.GetToken(creator.MattermostUserID)
 	if err != nil {
 		return err
 	}

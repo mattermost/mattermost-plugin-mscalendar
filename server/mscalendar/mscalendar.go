@@ -5,11 +5,13 @@ package mscalendar
 
 import (
 	"github.com/mattermost/mattermost-server/v5/model"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
@@ -22,6 +24,8 @@ type MSCalendar interface {
 	Welcomer
 	Settings
 	DailySummary
+	OnCompleteOAuth2(mattermostUserID string, tok *oauth2.Token)
+	NewOAuth2Config() *oauth2.Config
 }
 
 // Dependencies contains all API dependencies
@@ -34,6 +38,7 @@ type Dependencies struct {
 	SettingsPanel     settingspanel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
 	Welcomer          Welcomer
+	OAuther           oauth2connect.OAuther
 }
 
 type PluginAPI interface {

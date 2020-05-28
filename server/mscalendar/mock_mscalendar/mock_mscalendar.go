@@ -9,6 +9,7 @@ import (
 	mscalendar "github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	oauth2 "golang.org/x/oauth2"
 	reflect "reflect"
 	time "time"
 )
@@ -382,6 +383,32 @@ func (m *MockMSCalendar) LoadMyEventSubscription() (*store.Subscription, error) 
 func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
+}
+
+// NewOAuth2Config mocks base method
+func (m *MockMSCalendar) NewOAuth2Config() *oauth2.Config {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewOAuth2Config")
+	ret0, _ := ret[0].(*oauth2.Config)
+	return ret0
+}
+
+// NewOAuth2Config indicates an expected call of NewOAuth2Config
+func (mr *MockMSCalendarMockRecorder) NewOAuth2Config() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewOAuth2Config", reflect.TypeOf((*MockMSCalendar)(nil).NewOAuth2Config))
+}
+
+// OnCompleteOAuth2 mocks base method
+func (m *MockMSCalendar) OnCompleteOAuth2(arg0 string, arg1 *oauth2.Token) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnCompleteOAuth2", arg0, arg1)
+}
+
+// OnCompleteOAuth2 indicates an expected call of OnCompleteOAuth2
+func (mr *MockMSCalendarMockRecorder) OnCompleteOAuth2(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnCompleteOAuth2", reflect.TypeOf((*MockMSCalendar)(nil).OnCompleteOAuth2), arg0, arg1)
 }
 
 // PrintSettings mocks base method
