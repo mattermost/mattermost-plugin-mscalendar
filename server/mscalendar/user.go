@@ -158,11 +158,6 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		return err
 	}
 
-	err = m.Store.DeleteDailySummaryUserSettings(mattermostUserID)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

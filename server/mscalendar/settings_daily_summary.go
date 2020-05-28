@@ -31,8 +31,8 @@ func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func
 		store:       inStore,
 		getTimezone: getTimezone,
 	}
-	os.optionsH = []string{}
-	for i := 0; i < 12; i++ {
+	os.optionsH = []string{"12"}
+	for i := 1; i < 12; i++ {
 		os.optionsH = append(os.optionsH, fmt.Sprintf("%d", i))
 	}
 
@@ -215,10 +215,7 @@ func (s *dailySummarySetting) IsDisabled(foreignValue interface{}) bool {
 
 func (s *dailySummarySetting) makeHOptions(minute, apm, timezone string) []*model.PostActionOptions {
 	out := []*model.PostActionOptions{}
-	for i, o := range s.optionsH {
-		if i == 0 && apm == "PM" {
-			o = "12"
-		}
+	for _, o := range s.optionsH {
 		out = append(out, &model.PostActionOptions{
 			Text:  o,
 			Value: fmt.Sprintf("%s:%s%s %s", o, minute, apm, timezone),
@@ -241,24 +238,12 @@ func (s *dailySummarySetting) makeMOptions(hour, apm, timezone string) []*model.
 func (s *dailySummarySetting) makeAPMOptions(hour, minute, timezone string) []*model.PostActionOptions {
 	out := []*model.PostActionOptions{}
 
-	storeHour := hour
-	if hour == "12" {
-		storeHour = "0"
+	for _, o := range s.optionsAPM {
+		out = append(out, &model.PostActionOptions{
+			Text:  o,
+			Value: fmt.Sprintf("%s:%s%s %s", hour, minute, o, timezone),
+		})
 	}
-	o := s.optionsAPM[0]
-	out = append(out, &model.PostActionOptions{
-		Text:  o,
-		Value: fmt.Sprintf("%s:%s%s %s", storeHour, minute, o, timezone),
-	})
 
-	storeHour = hour
-	if hour == "0" {
-		storeHour = "12"
-	}
-	o = s.optionsAPM[1]
-	out = append(out, &model.PostActionOptions{
-		Text:  o,
-		Value: fmt.Sprintf("%s:%s%s %s", storeHour, minute, o, timezone),
-	})
 	return out
 }

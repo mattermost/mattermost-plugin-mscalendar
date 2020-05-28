@@ -49,6 +49,18 @@ func (mscal *mscalendar) OnCompleteOAuth2(mattermostUserID string, tok *oauth2.T
 		Remote:           me,
 	}
 
+	mailboxSettings, err := client.GetMailboxSettings(me.ID)
+	if err != nil {
+		mscal.Logger.Errorf("Cannot get mailbox settings.")
+		return
+	}
+
+	u.Settings.DailySummary = &store.DailySummaryUserSettings{
+		PostTime: "8:00AM",
+		Timezone: mailboxSettings.TimeZone,
+		Enable:   false,
+	}
+
 	err = mscal.Store.StoreUser(u)
 	if err != nil {
 		mscal.Logger.Errorf(err.Error())
