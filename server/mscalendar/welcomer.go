@@ -47,6 +47,7 @@ func (m *mscalendar) AfterDisconnect(userID string) error {
 }
 
 func (m *mscalendar) WelcomeFlowEnd(userID string) {
+	m.TrackWelcomeFlowCompletion()
 	m.Welcomer.WelcomeFlowEnd(userID)
 }
 

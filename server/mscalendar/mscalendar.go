@@ -11,6 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 )
 
 type MSCalendar interface {
@@ -34,6 +35,7 @@ type Dependencies struct {
 	SettingsPanel     settingspanel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
 	Welcomer          Welcomer
+	Tracker           telemetry.Tracker
 }
 
 type PluginAPI interface {

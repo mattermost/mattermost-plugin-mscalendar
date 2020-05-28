@@ -32,6 +32,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 )
 
 type Env struct {
@@ -173,6 +174,12 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		if err != nil {
 			e.Logger.Errorf("Error updating job manager with config. err=%v", err)
 		}
+
+		telemetryClient, err := telemetry.NewRudderClient()
+		if err != nil {
+			e.Logger.Errorf("Cannot create telemetry client. err=%v", err)
+		}
+		e.Tracker = telemetry.NewTracker(telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, *p.API.GetConfig().LogSettings.EnableDiagnostics)
 	})
 
 	return nil
