@@ -104,6 +104,17 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		OAuth2Token:      encryptedToken,
 	}
 
+	mailboxSettings, err := client.GetMailboxSettings(me.ID)
+	if err != nil {
+		return err
+	}
+
+	u.Settings.DailySummary = &store.DailySummaryUserSettings{
+		PostTime: "8:00AM",
+		Timezone: mailboxSettings.TimeZone,
+		Enable:   false,
+	}
+
 	err = app.Store.StoreUser(u)
 	if err != nil {
 		return err
