@@ -26,11 +26,12 @@ import (
 )
 
 const (
-	fakeID          = "fake@mattermost.com"
-	fakeRemoteID    = "user-remote-id"
-	fakeBotID       = "bot-user-id"
-	fakeBotRemoteID = "bot-remote-id"
-	fakeCode        = "fakecode"
+	fakeID            = "fake@mattermost.com"
+	fakeRemoteID      = "user-remote-id"
+	fakeBotID         = "bot-user-id"
+	fakeBotRemoteID   = "bot-remote-id"
+	fakeCode          = "fakecode"
+	fakeEncryptionKey = "00000000000000000000000000000000"
 )
 
 func TestCompleteOAuth2Happy(t *testing.T) {
@@ -337,8 +338,15 @@ func statusOKGraphAPIResponder() {
 }`
 
 	meResponder := httpmock.NewStringResponder(http.StatusOK, meResponse)
-
 	httpmock.RegisterResponder("GET", meRequestURL, meResponder)
+
+	mailSettingsURL := "https://graph.microsoft.com/v1.0/users/user-remote-id/mailboxSettings"
+	mailSettingsResponse := `{
+		"timeZone": "Pacific Standard Time"
+	}`
+	mailSettingsResponder := httpmock.NewStringResponder(http.StatusOK, mailSettingsResponse)
+
+	httpmock.RegisterResponder("GET", mailSettingsURL, mailSettingsResponder)
 }
 
 func newHTTPRequest(mattermostUserID, rawQuery string) *http.Request {
@@ -358,6 +366,7 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 			OAuth2Authority:    "common",
 			OAuth2ClientID:     "fakeclientid",
 			OAuth2ClientSecret: "fakeclientsecret",
+			TokenEncryptionKey: fakeEncryptionKey,
 		},
 		PluginURL: "http://localhost",
 	}

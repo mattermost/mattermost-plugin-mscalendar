@@ -5,9 +5,10 @@ import "fmt"
 const (
 	UpdateStatusPropertyName              = "update_status"
 	GetConfirmationPropertyName           = "get_confirmation"
-	SubscribePropertyName                 = "subscribe"
 	ReceiveNotificationsDuringMeetingName = "receive_notifications_during_meetings"
+	SubscribePropertyName                 = "subscribe"
 	AutoRespondPropertyName               = "auto_respond"
+	ReceiveUpcomingEventReminderName      = "receive_reminder"
 )
 
 func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
@@ -23,6 +24,8 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 		user.Settings.GetConfirmation = value
 	case AutoRespondPropertyName:
 		user.Settings.AutoRespond = value
+	case ReceiveUpcomingEventReminderName:
+		user.Settings.ReceiveReminders = value
 	case ReceiveNotificationsDuringMeetingName:
 		user.Settings.ReceiveNotificationsDuringMeeting = value
 	default:

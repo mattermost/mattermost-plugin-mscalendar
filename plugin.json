@@ -80,18 +80,11 @@
                 "default": ""
             },
             {
-                "key": "EnableStatusSync",
-                "display_name": "Enable User Status Sync Job",
-                "type": "bool",
-                "help_text": "When enabled, a Mattermost user's status will automatically update based on their Microsoft Calendar availability. This runs every 5 minutes.",
-                "default": false
-            },
-            {
-                "key": "EnableDailySummary",
-                "display_name": "Enable Daily Summary",
-                "type": "bool",
-                "help_text": "When enabled, Mattermost users will a receive a daily summary of their scheduled events in Microsoft Calendar. Users can choose when the summary will be sent to them.",
-                "default": false
+                "key": "TokenEncryptionKey",
+                "display_name": "At Rest Token Encryption Key",
+                "type": "generated",
+                "help_text": "The AES encryption key used to encrypt stored access tokens.",
+                "regenerate_help_text": "Regenerates the encryption key for Microsoft Calendar OAuth Token. Regenerating the key invalidates your existing Microsoft Calendar OAuth."
             }
         ]
     }

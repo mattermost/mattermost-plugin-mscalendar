@@ -59,7 +59,7 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 		}
 		user.Settings.AutoRespondMessage = storableValue
 	case DailySummarySettingID:
-		s.updateDailySummarySettingForUser(userID, value)
+		s.updateDailySummarySettingForUser(user, value)
 	default:
 		return fmt.Errorf("setting %s not found", settingID)
 	}
@@ -92,49 +92,28 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	case AutoRespondMessageSettingID:
 		return user.Settings.AutoRespondMessage, nil
 	case DailySummarySettingID:
-		return s.LoadDailySummaryUserSettings(userID)
+		dsum := user.Settings.DailySummary
+		return dsum, nil
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}
 }
 
-func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
-	dsum, err := s.LoadDailySummaryUserSettings(userID)
-	if err != nil {
-		return err
-	}
+func (s *pluginStore) updateDailySummarySettingForUser(user *User, value interface{}) error {
+	dsum := user.Settings.DailySummary
 
 	stringValue := value.(string)
 	splittedValue := strings.Split(stringValue, " ")
 	timezone := strings.Join(splittedValue[1:], " ")
 
-	if dsum == nil {
-		timeStr := splittedValue[0]
-		if splittedValue[0] == "true" || splittedValue[0] == "false" {
-			timeStr = "8:00AM"
-		}
-
-		dsum = &DailySummaryUserSettings{
-			MattermostUserID: userID,
-			PostTime:         timeStr,
-			Timezone:         timezone,
-			Enable:           splittedValue[0] == "true",
-		}
-	} else {
-		switch splittedValue[0] {
-		case "true":
-			dsum.Enable = true
-		case "false":
-			dsum.Enable = false
-		default:
-			dsum.PostTime = splittedValue[0]
-			dsum.Timezone = timezone
-		}
-	}
-
-	err = s.StoreDailySummaryUserSettings(dsum)
-	if err != nil {
-		return err
+	switch splittedValue[0] {
+	case "true":
+		dsum.Enable = true
+	case "false":
+		dsum.Enable = false
+	default:
+		dsum.PostTime = splittedValue[0]
+		dsum.Timezone = timezone
 	}
 
 	return nil
