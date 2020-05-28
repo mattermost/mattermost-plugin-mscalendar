@@ -140,7 +140,12 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	client := processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
+	token, err := decryptToken(creator.OAuth2Token, processor.Config.TokenEncryptionKey)
+	if err != nil {
+		return err
+	}
+
+	client := processor.Remote.MakeClient(context.Background(), token)
 
 	if n.RecommendRenew {
 		var renewed *remote.Subscription

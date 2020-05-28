@@ -2,6 +2,8 @@
 
 [![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-mscalendar/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-mscalendar)
 [![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-mscalendar/master.svg)](https://codecov.io/gh/mattermost/mattermost-plugin-mscalendar)
+[![Release](https://img.shields.io/github/v/release/mattermost/mattermost-plugin-mscalendar)](https://github.com/mattermost/mattermost-plugin-mscalendar/releases/latest)
+[![HW](https://img.shields.io/github/issues/mattermost/mattermost-plugin-mscalendar/Up%20For%20Grabs?color=dark%20green&label=Help%20Wanted)](https://github.com/mattermost/mattermost-plugin-mscalendar/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22Up+For+Grabs%22+label%3A%22Help+Wanted%22)
 
 **Maintainer:** [@mickmister](https://github.com/mickmister)
 **Co-Maintainer:** [@larkox](https://github.com/larkox)
@@ -101,3 +103,4 @@ Copy the `Client ID` and `Tenant ID` from the Azure portal
 - `tenantID` - copy from Azure App
 - `clientID` - copy from Azure App
 - `Client Secret` - copy from Azure App (Generated in `Certificates & secrets`, earlier in these instructions)
+- `At Rest Token Encryption Key` - press the `Regenerate` button
