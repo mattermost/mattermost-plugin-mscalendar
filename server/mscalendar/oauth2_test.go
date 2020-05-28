@@ -26,11 +26,12 @@ import (
 )
 
 const (
-	fakeID          = "fake@mattermost.com"
-	fakeRemoteID    = "user-remote-id"
-	fakeBotID       = "bot-user-id"
-	fakeBotRemoteID = "bot-remote-id"
-	fakeCode        = "fakecode"
+	fakeID            = "fake@mattermost.com"
+	fakeRemoteID      = "user-remote-id"
+	fakeBotID         = "bot-user-id"
+	fakeBotRemoteID   = "bot-remote-id"
+	fakeCode          = "fakecode"
+	fakeEncryptionKey = "00000000000000000000000000000000"
 )
 
 func TestCompleteOAuth2Happy(t *testing.T) {
@@ -365,6 +366,7 @@ func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
 			OAuth2Authority:    "common",
 			OAuth2ClientID:     "fakeclientid",
 			OAuth2ClientSecret: "fakeclientsecret",
+			TokenEncryptionKey: fakeEncryptionKey,
 		},
 		PluginURL: "http://localhost",
 	}
