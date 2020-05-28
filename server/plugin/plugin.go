@@ -172,11 +172,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.jobManager.AddJob(jobs.NewDailySummaryJob())
 			e.jobManager.AddJob(jobs.NewRenewJob())
 		}
-
-		err := e.jobManager.OnConfigurationChange(e.Env)
-		if err != nil {
-			e.Logger.Errorf("Error updating job manager with config. err=%v", err)
-		}
 	})
 
 	return nil
