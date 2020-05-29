@@ -79,6 +79,7 @@ func (p *Plugin) OnActivate() error {
 	if err != nil {
 		p.env.bot.Errorf("Cannot create telemetry client. err=%v", err)
 	}
+
 	return nil
 }
 
