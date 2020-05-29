@@ -86,8 +86,13 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	err := calendar.RespondToEvent(user, eventID, option)
-	if err != nil && !isAcceptedError(err) && !isNotFoundError(err) {
+	if err != nil && !isAcceptedError(err) && !isNotFoundError(err) && !isCanceledError(err) {
 		utils.SlackAttachmentError(w, "Error: Failed to respond to event: "+err.Error())
+		return
+	}
+
+	if err != nil && isCanceledError(err) {
+		utils.SlackAttachmentError(w, "Error: Cannot respond to the event because it is already canceled.")
 		return
 	}
 
@@ -236,4 +241,8 @@ func isAcceptedError(err error) bool {
 
 func isNotFoundError(err error) bool {
 	return strings.Contains(err.Error(), "404 Not Found")
+}
+
+func isCanceledError(err error) bool {
+	return strings.Contains(err.Error(), "You can't respond to an event that has been canceled.")
 }
