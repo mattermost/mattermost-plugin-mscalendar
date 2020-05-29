@@ -1,11 +1,14 @@
 package telemetry
 
+import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+
 type Tracker interface {
 	Track(event string, properties map[string]interface{})
 }
 
 type Client interface {
-	Enqueue(t Track)
+	Enqueue(t Track) error
+	Close() error
 }
 
 type Track struct {
@@ -21,9 +24,10 @@ type tracker struct {
 	pluginID      string
 	pluginVersion string
 	enabled       bool
+	logger        bot.Logger
 }
 
-func NewTracker(c Client, diagnosticID, serverVersion, pluginID, pluginVersion string, enableDiagnostics bool) Tracker {
+func NewTracker(c Client, diagnosticID, serverVersion, pluginID, pluginVersion string, enableDiagnostics bool, logger bot.Logger) Tracker {
 	return &tracker{
 		client:        c,
 		diagnosticID:  diagnosticID,
@@ -31,6 +35,7 @@ func NewTracker(c Client, diagnosticID, serverVersion, pluginID, pluginVersion s
 		pluginID:      pluginID,
 		pluginVersion: pluginVersion,
 		enabled:       enableDiagnostics,
+		logger:        logger,
 	}
 }
 
@@ -43,9 +48,13 @@ func (t *tracker) Track(event string, properties map[string]interface{}) {
 	properties["PluginVersion"] = t.pluginVersion
 	properties["ServerVersion"] = t.serverVersion
 
-	t.client.Enqueue(Track{
+	err := t.client.Enqueue(Track{
 		UserID:     t.diagnosticID,
 		Event:      event,
 		Properties: properties,
 	})
+
+	if err != nil {
+		t.logger.Warnf("cannot enqueue telemetry event, err=%s", err.Error())
+	}
 }
