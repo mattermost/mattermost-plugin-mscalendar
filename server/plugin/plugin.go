@@ -121,6 +121,10 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
+	if stored.TokenEncryptionKey == "" {
+		return errors.New("token encryption key not generated")
+	}
+
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
 	if mattermostSiteURL == nil {
 		return errors.New("plugin requires Mattermost Site URL to be set")
@@ -156,8 +160,8 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.Dependencies.Store,
 			"/settings",
 			pluginURL,
-			func(userID string) (string, error) {
-				return mscalendar.New(e.Env, userID).GetTimezone(mscalendar.NewUser(userID))
+			func(userID string) mscalendar.MSCalendar {
+				return mscalendar.New(e.Env, userID)
 			},
 		)
 
@@ -181,11 +185,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.jobManager.AddJob(jobs.NewStatusSyncJob())
 			e.jobManager.AddJob(jobs.NewDailySummaryJob())
 			e.jobManager.AddJob(jobs.NewRenewJob())
-		}
-
-		err := e.jobManager.OnConfigurationChange(e.Env)
-		if err != nil {
-			e.Logger.Errorf("Error updating job manager with config. err=%v", err)
 		}
 
 		e.Tracker = telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, *p.API.GetConfig().LogSettings.EnableDiagnostics, e.Logger)

@@ -12,6 +12,8 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
+	TokenEncryptionKey string
+
 	bot.BotConfig
 }
 

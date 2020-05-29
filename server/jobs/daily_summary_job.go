@@ -17,10 +17,9 @@ const dailySummaryJobInterval = mscalendar.DailySummaryJobInterval
 // NewDailySummaryJob creates a RegisteredJob with the parameters specific to the DailySummaryJob
 func NewDailySummaryJob() RegisteredJob {
 	return RegisteredJob{
-		id:                dailySummaryJobID,
-		interval:          dailySummaryJobInterval,
-		work:              runDailySummaryJob,
-		isEnabledByConfig: isDailySummaryJobEnabled,
+		id:       dailySummaryJobID,
+		interval: dailySummaryJobInterval,
+		work:     runDailySummaryJob,
 	}
 }
 
@@ -34,9 +33,4 @@ func runDailySummaryJob(env mscalendar.Env) {
 	}
 
 	env.Logger.Debugf("Daily summary job finished")
-}
-
-// isDailySummaryJobEnabled uses current config to determine whether the job is enabled.
-func isDailySummaryJobEnabled(env mscalendar.Env) bool {
-	return env.EnableDailySummary
 }
