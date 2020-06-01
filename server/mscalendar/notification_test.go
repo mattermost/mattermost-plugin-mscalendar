@@ -18,7 +18,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
@@ -66,14 +65,13 @@ func newTestSubscription() *store.Subscription {
 }
 
 func newTestUser() *store.User {
-	accessToken, _ := utils.Encrypt([]byte(fakeEncryptionKey), "creator_oauth_token")
 	return &store.User{
 		Settings: store.Settings{
 			EventSubscriptionID: "remote_subscription_id",
 		},
 		Remote: &remote.User{ID: "remote_user_id"},
 		OAuth2Token: &oauth2.Token{
-			AccessToken: accessToken,
+			AccessToken: "creator_oauth_token",
 		},
 		MattermostUserID: "creator_mm_id",
 	}
@@ -133,12 +131,7 @@ func TestProcessNotification(t *testing.T) {
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 			mockClient := mock_remote.NewMockClient(ctrl)
 
-			conf := &config.Config{
-				PluginVersion: "x.x.x",
-				StoredConfig: config.StoredConfig{
-					TokenEncryptionKey: fakeEncryptionKey,
-				},
-			}
+			conf := &config.Config{PluginVersion: "x.x.x"}
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
