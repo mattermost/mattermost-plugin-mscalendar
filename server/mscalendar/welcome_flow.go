@@ -69,13 +69,13 @@ func (wf *welcomeFlow) makeSteps() {
 		TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
 		FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
 	}, &flow.SimpleStep{
-		Title:                "Receive notifications while on meetings",
-		Message:              "Do you want to receive notifications while you are on a meeting?",
+		Title:                "Status during meetings",
+		Message:              "Do you want to set your status to `Away` or to `Do not Disturb` while you are on a meeting?",
 		PropertyName:         store.ReceiveNotificationsDuringMeetingName,
-		TrueButtonMessage:    "Yes - I would like to set my status to Away during meetings to continue receiving notifications.",
-		FalseButtonMessage:   "No - I would like to set my status to Do Not Disturb during meetings to not receive notifications.",
+		TrueButtonMessage:    "Away",
+		FalseButtonMessage:   "Do not Disturb",
 		TrueResponseMessage:  "Great, your status will be set to Away.",
-		FalseResponseMessage: "Great, your status will be set to DnD.",
+		FalseResponseMessage: "Great, your status will be set to Do not Disturb.",
 	}, &flow.SimpleStep{
 		Title:                "Subscribe to events",
 		Message:              "Do you want to receive notifications when you receive a new event?",
