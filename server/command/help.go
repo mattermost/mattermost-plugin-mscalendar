@@ -25,8 +25,8 @@ func (c *Command) help(parameters ...string) (string, bool, error) {
 	resp += getCommandText("settings - Edit your user personal settings.")
 	resp += getCommandText("summary - View your events for today, or edit the settings for your daily summary.")
 	resp += getCommandText("viewcal - View your events for the upcoming week.")
-	resp += getCommandText("subscribe")
-	resp += getCommandText("unsubscribe")
+	resp += getCommandText("subscribe - Enable notifications for event invitations and updates.")
+	resp += getCommandText("unsubscribe - Disable notifications for event invitations and updates.")
 	return resp, false, nil
 }
 
