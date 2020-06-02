@@ -20,18 +20,13 @@ func (c *Command) help(parameters ...string) (string, bool, error) {
 	resp += "\n"
 	resp += getCommandText("")
 	resp += getCommandText("help")
-	resp += getCommandText("info")
 	resp += getCommandText("connect")
+	resp += getCommandText("disconnect")
 	resp += getCommandText("viewcal")
-	resp += getCommandText("showcals")
 	resp += getCommandText("subscribe")
 	resp += getCommandText("unsubscribe")
-	resp += getCommandText("createcal <name>")
-	resp += getCommandText("deletecal <id>")
-	resp += getCommandText("createevent")
-	resp += getCommandText("findmeetings (Optional: <attendees>)")
-	resp += "  * <attendees> - space delimited <type>:<email> combinations \n"
-	resp += "  * <type> options - required, optional \n"
+	resp += getCommandText("settings")
+	resp += getCommandText("summary")
 	return resp, false, nil
 }
 
