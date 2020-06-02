@@ -10,16 +10,7 @@ import (
 )
 
 func (c *Command) help(parameters ...string) (string, bool, error) {
-	resp := fmt.Sprintf("Mattermost Microsoft Calendar plugin version: %s, "+
-		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
-		c.Config.PluginVersion,
-		c.Config.BuildHashShort,
-		config.Repository,
-		c.Config.BuildHash,
-		c.Config.BuildDate)
-	resp += "\n"
-	resp += getCommandText("")
-	resp += getCommandText("help")
+	resp := getCommandText("help")
 	resp += getCommandText("connect")
 	resp += getCommandText("disconnect")
 	resp += getCommandText("settings - Edit your user personal settings.")
@@ -27,6 +18,7 @@ func (c *Command) help(parameters ...string) (string, bool, error) {
 	resp += getCommandText("viewcal - View your events for the upcoming week.")
 	resp += getCommandText("subscribe - Enable notifications for event invitations and updates.")
 	resp += getCommandText("unsubscribe - Disable notifications for event invitations and updates.")
+	resp += getCommandText("info - Read information about this version of the plugin.")
 	return resp, false, nil
 }
 
