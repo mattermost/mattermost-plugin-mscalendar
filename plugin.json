@@ -78,13 +78,6 @@
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "default": ""
-            },
-            {
-                "key": "TokenEncryptionKey",
-                "display_name": "At Rest Token Encryption Key",
-                "type": "generated",
-                "help_text": "The AES encryption key used to encrypt stored access tokens.",
-                "regenerate_help_text": "Regenerates the encryption key for Microsoft Calendar OAuth Token. Regenerating the key invalidates your existing Microsoft Calendar OAuth."
             }
         ]
     }
