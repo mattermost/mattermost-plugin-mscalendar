@@ -3,7 +3,7 @@
     "name": "Microsoft Calendar",
     "description": "Microsoft Calendar Integration",
     "version": "0.1.0-beta",
-    "min_server_version": "5.24.0",
+    "min_server_version": "5.19.1",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
