@@ -8,9 +8,9 @@ import (
 const (
 	UpdateStatusSettingID               = "update_status"
 	GetConfirmationSettingID            = "get_confirmation"
+	ReceiveNotificationsDuringMeetingID = "receive_notification"
 	ReceiveRemindersSettingID           = "get_reminders"
 	DailySummarySettingID               = "summary_setting"
-	ReceiveNotificationsDuringMeetingID = "receive_notification"
 	AutoRespondSettingID                = "auto_respond"
 	AutoRespondMessageSettingID         = "auto_respond_message"
 )
