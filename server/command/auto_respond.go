@@ -17,7 +17,7 @@ func (c *Command) autoRespond(parameters ...string) (string, bool, error) {
 			URL:       c.Config.PluginURL + config.PathDialogs + config.PathSetAutoRespondMessage,
 			Dialog: model.Dialog{
 				CallbackId: "",
-				Title:      "Auto-Respond Message",
+				Title:      "Microsoft Calendar",
 				Elements: []model.DialogElement{
 					{
 						DisplayName: "Auto-Respond Message",
