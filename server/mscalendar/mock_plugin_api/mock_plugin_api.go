@@ -63,6 +63,21 @@ func (mr *MockPluginAPIMockRecorder) GetMattermostUserByUsername(arg0 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserByUsername", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserByUsername), arg0)
 }
 
+// GetMattermostUserStatus mocks base method
+func (m *MockPluginAPI) GetMattermostUserStatus(arg0 string) (*model.Status, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMattermostUserStatus", arg0)
+	ret0, _ := ret[0].(*model.Status)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMattermostUserStatus indicates an expected call of GetMattermostUserStatus
+func (mr *MockPluginAPIMockRecorder) GetMattermostUserStatus(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserStatus", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserStatus), arg0)
+}
+
 // GetMattermostUserStatusesByIds mocks base method
 func (m *MockPluginAPI) GetMattermostUserStatusesByIds(arg0 []string) ([]*model.Status, error) {
 	m.ctrl.T.Helper()
