@@ -29,7 +29,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauther"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
@@ -158,7 +158,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		tempMSCal := mscalendar.New(e.Env, "")
 		e.httpHandler = httputils.NewHandler()
-		e.Dependencies.OAuther = oauth2connect.NewOAuther(e.httpHandler, p.API, e.PluginURL, "/oauth2", "oauth_", "You are now connected to Microsoft Calendar. Please close this window.", tempMSCal.OnCompleteOAuth2, tempMSCal.NewOAuth2Config())
+		e.Dependencies.OAuther = oauther.NewOAuther(e.httpHandler, p.API, e.PluginURL, "/oauth2", "oauth_", "You are now connected to Microsoft Calendar. Please close this window.", tempMSCal.OnCompleteOAuth2, tempMSCal.NewOAuth2Config())
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)

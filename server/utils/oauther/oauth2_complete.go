@@ -1,7 +1,7 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-package oauth2connect
+package oauther
 
 import (
 	"context"

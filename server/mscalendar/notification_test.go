@@ -20,6 +20,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauther/mock_oauther"
 )
 
 func newTestNotificationProcessor(env Env) NotificationProcessor {
@@ -127,6 +128,7 @@ func TestProcessNotification(t *testing.T) {
 			mockRemote := mock_remote.NewMockRemote(ctrl)
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 			mockClient := mock_remote.NewMockClient(ctrl)
+			mockOAuther := mock_oauther.NewMockOAuther(ctrl)
 
 			conf := &config.Config{PluginVersion: "x.x.x"}
 			env := Env{
@@ -137,19 +139,22 @@ func TestProcessNotification(t *testing.T) {
 					Poster:    mockPoster,
 					Remote:    mockRemote,
 					PluginAPI: mockPluginAPI,
+					OAuther:   mockOAuther,
 				},
 			}
 
 			subscription := newTestSubscription()
 			user := newTestUser()
+			token := oauth2.Token{
+				AccessToken: "creator_oauth_token",
+			}
 
 			mockStore.EXPECT().LoadSubscription("remote_subscription_id").Return(subscription, nil).Times(1)
 			mockStore.EXPECT().LoadUser("creator_mm_id").Return(user, nil).Times(1)
 
 			if tc.notification.ClientState == subscription.Remote.ClientState {
-				mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
-					AccessToken: "creator_oauth_token",
-				}).Return(mockClient).Times(1)
+				mockOAuther.EXPECT().GetToken(user.MattermostUserID).Return(&token, nil).Times(1)
+				mockRemote.EXPECT().MakeClient(context.Background(), &token).Return(mockClient).Times(1)
 				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 
 				if tc.notification.RecommendRenew {

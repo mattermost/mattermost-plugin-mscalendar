@@ -11,7 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauther"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
@@ -38,7 +38,7 @@ type Dependencies struct {
 	SettingsPanel     settingspanel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
 	Welcomer          Welcomer
-	OAuther           oauth2connect.OAuther
+	OAuther           oauther.OAuther
 }
 
 type PluginAPI interface {

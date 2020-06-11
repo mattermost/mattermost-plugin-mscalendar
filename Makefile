@@ -107,6 +107,7 @@ ifneq ($(HAS_SERVER),)
 	mockgen -destination server/utils/bot/mock_bot/mock_admin.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Admin
 	mockgen -destination server/utils/bot/mock_bot/mock_logger.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot Logger
 	mockgen -destination server/store/mock_store/mock_store.go github.com/mattermost/mattermost-plugin-mscalendar/server/store Store
+	mockgen -destination server/utils/oauther/mock_oauther/mock_oauther.go github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauther OAuther
 endif
 
 clean_mock:
