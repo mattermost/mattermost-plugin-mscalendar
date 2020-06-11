@@ -4,6 +4,7 @@ import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 
 type Tracker interface {
 	Track(event string, properties map[string]interface{})
+	TrackUserEvent(event string, userID string, properties map[string]interface{})
 }
 
 type Client interface {
@@ -44,6 +45,7 @@ func (t *tracker) Track(event string, properties map[string]interface{}) {
 		return
 	}
 
+	event = t.pluginID + "-" + event
 	properties["PluginID"] = t.pluginID
 	properties["PluginVersion"] = t.pluginVersion
 	properties["ServerVersion"] = t.serverVersion
@@ -57,4 +59,9 @@ func (t *tracker) Track(event string, properties map[string]interface{}) {
 	if err != nil {
 		t.logger.Warnf("cannot enqueue telemetry event, err=%s", err.Error())
 	}
+}
+
+func (t *tracker) TrackUserEvent(event string, userID string, properties map[string]interface{}) {
+	properties["UserID"] = userID
+	t.Track(event, properties)
 }

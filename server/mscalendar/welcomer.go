@@ -39,15 +39,17 @@ func (m *mscalendar) Welcome(userID string) error {
 }
 
 func (m *mscalendar) AfterSuccessfullyConnect(userID, userLogin string) error {
+	m.Tracker.TrackUserAuthenticated(userID)
 	return m.Welcomer.AfterSuccessfullyConnect(userID, userLogin)
 }
 
 func (m *mscalendar) AfterDisconnect(userID string) error {
+	m.Tracker.TrackUserDeauthenticated(userID)
 	return m.Welcomer.AfterDisconnect(userID)
 }
 
 func (m *mscalendar) WelcomeFlowEnd(userID string) {
-	m.TrackWelcomeFlowCompletion()
+	m.Tracker.TrackWelcomeFlowCompletion(userID)
 	m.Welcomer.WelcomeFlowEnd(userID)
 }
 

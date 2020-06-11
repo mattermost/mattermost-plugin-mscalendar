@@ -23,6 +23,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendarTracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -148,9 +149,12 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		e.Dependencies.Logger = e.bot
+
+		e.Dependencies.Tracker = mscalendarTracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, *p.API.GetConfig().LogSettings.EnableDiagnostics, e.Logger))
+
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -183,8 +187,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.jobManager.AddJob(jobs.NewDailySummaryJob())
 			e.jobManager.AddJob(jobs.NewRenewJob())
 		}
-
-		e.Tracker = telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, *p.API.GetConfig().LogSettings.EnableDiagnostics, e.Logger)
 	})
 
 	return nil
