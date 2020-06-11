@@ -107,10 +107,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
-	if stored.TokenEncryptionKey == "" {
-		return errors.New("token encryption key not generated")
-	}
-
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
 	if mattermostSiteURL == nil {
 		return errors.New("plugin requires Mattermost Site URL to be set")
@@ -162,7 +158,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		tempMSCal := mscalendar.New(e.Env, "")
 		e.httpHandler = httputils.NewHandler()
-		e.Dependencies.OAuther = oauth2connect.NewOAuther(e.httpHandler, p.API, e.PluginURL, "/oauth2", "oauth_", e.TokenEncryptionKey, "You are now connected to Microsoft Calendar. Please close this window.", tempMSCal.OnCompleteOAuth2, tempMSCal.NewOAuth2Config())
+		e.Dependencies.OAuther = oauth2connect.NewOAuther(e.httpHandler, p.API, e.PluginURL, "/oauth2", "oauth_", "You are now connected to Microsoft Calendar. Please close this window.", tempMSCal.OnCompleteOAuth2, tempMSCal.NewOAuth2Config())
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)

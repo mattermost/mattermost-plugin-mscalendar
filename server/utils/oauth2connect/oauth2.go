@@ -5,9 +5,7 @@ package oauth2connect
 
 import (
 	"encoding/json"
-	"errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"golang.org/x/oauth2"
@@ -26,7 +24,6 @@ type OAuther interface {
 type oAuther struct {
 	api             plugin.API
 	onConnect       func(userID string, token *oauth2.Token)
-	encryptionKey   string
 	storePrefix     string
 	pluginURL       string
 	oAuthURL        string
@@ -34,12 +31,11 @@ type oAuther struct {
 	config          *oauth2.Config
 }
 
-func NewOAuther(h *httputils.Handler, api plugin.API, pluginURL, oAuthURL, storePrefix, encryptionKey, connectedString string, onConnect func(userID string, token *oauth2.Token), oAuthConfig *oauth2.Config) OAuther {
+func NewOAuther(h *httputils.Handler, api plugin.API, pluginURL, oAuthURL, storePrefix, connectedString string, onConnect func(userID string, token *oauth2.Token), oAuthConfig *oauth2.Config) OAuther {
 	o := &oAuther{
 		api:             api,
 		onConnect:       onConnect,
 		storePrefix:     storePrefix,
-		encryptionKey:   encryptionKey,
 		pluginURL:       pluginURL,
 		oAuthURL:        oAuthURL,
 		config:          oAuthConfig,
@@ -65,46 +61,13 @@ func (o *oAuther) GetToken(userID string) (*oauth2.Token, error) {
 		return nil, appErr
 	}
 
-	var encryptedToken oauth2.Token
-	err := json.Unmarshal(rawToken, &encryptedToken)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := o.decryptToken(&encryptedToken)
+	var token *oauth2.Token
+	err := json.Unmarshal(rawToken, token)
 	if err != nil {
 		return nil, err
 	}
 
 	return token, nil
-}
-
-func (o *oAuther) decryptToken(tok *oauth2.Token) (*oauth2.Token, error) {
-	unencryptedToken, err := utils.Decrypt([]byte(o.encryptionKey), tok.AccessToken)
-	if err != nil {
-		return nil, errors.New("cannot decrypt token")
-	}
-
-	newToken := &oauth2.Token{
-		AccessToken:  unencryptedToken,
-		TokenType:    tok.TokenType,
-		RefreshToken: tok.RefreshToken,
-	}
-	return newToken, nil
-}
-
-func (o *oAuther) encryptToken(tok *oauth2.Token) (*oauth2.Token, error) {
-	encryptedToken, err := utils.Encrypt([]byte(o.encryptionKey), tok.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	newToken := &oauth2.Token{
-		AccessToken:  encryptedToken,
-		TokenType:    tok.TokenType,
-		RefreshToken: tok.RefreshToken,
-	}
-	return newToken, nil
 }
 
 func (o *oAuther) getTokenKey(userID string) string {

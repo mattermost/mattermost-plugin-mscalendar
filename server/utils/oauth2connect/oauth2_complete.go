@@ -51,13 +51,7 @@ func (o *oAuther) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encryptedToken, err := o.encryptToken(tok)
-	if err != nil {
-		httputils.WriteUnauthorizedError(w, err)
-		return
-	}
-
-	rawToken, err := json.Marshal(encryptedToken)
+	rawToken, err := json.Marshal(tok)
 	if err != nil {
 		httputils.WriteUnauthorizedError(w, err)
 		return

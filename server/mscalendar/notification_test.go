@@ -65,7 +65,6 @@ func newTestSubscription() *store.Subscription {
 }
 
 func newTestUser() *store.User {
-	//accessToken, _ := utils.Encrypt([]byte(fakeEncryptionKey), "creator_oauth_token")
 	return &store.User{
 		Settings: store.Settings{
 			EventSubscriptionID: "remote_subscription_id",
@@ -129,12 +128,7 @@ func TestProcessNotification(t *testing.T) {
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
 			mockClient := mock_remote.NewMockClient(ctrl)
 
-			conf := &config.Config{
-				PluginVersion: "x.x.x",
-				StoredConfig: config.StoredConfig{
-					TokenEncryptionKey: fakeEncryptionKey,
-				},
-			}
+			conf := &config.Config{PluginVersion: "x.x.x"}
 			env := Env{
 				Config: conf,
 				Dependencies: &Dependencies{
