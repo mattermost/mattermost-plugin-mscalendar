@@ -244,5 +244,5 @@ func isNotFoundError(err error) bool {
 }
 
 func isCanceledError(err error) bool {
-	return strings.Contains(err.Error(), "You can't respond to an event that has been canceled.")
+	return strings.Contains(err.Error(), "You can't respond to a meeting that's been canceled.")
 }

@@ -126,9 +126,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.MattermostSiteHostname = mattermostURL.Hostname()
 		e.Config.PluginURL = pluginURL
 		e.Config.PluginURLPath = pluginURLPath
-		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.Logger)
 
 		e.bot = e.bot.WithConfig(stored.BotConfig)
+		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.bot)
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
