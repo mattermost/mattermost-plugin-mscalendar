@@ -138,7 +138,7 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 
 		err = m.client.DeleteSubscription(eventSubscriptionID)
 		if err != nil {
-			m.Logger.Errorf("failed to delete remote subscription %s: %v", eventSubscriptionID, err)
+			m.Logger.Warnf("failed to delete remote subscription %s. err=%v", eventSubscriptionID, err)
 		}
 	}
 
@@ -148,11 +148,6 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	}
 
 	err = m.Store.DeleteUserFromIndex(mattermostUserID)
-	if err != nil {
-		return err
-	}
-
-	err = m.Store.DeleteDailySummaryUserSettings(mattermostUserID)
 	if err != nil {
 		return err
 	}

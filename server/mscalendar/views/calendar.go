@@ -26,7 +26,7 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 		resp += "\n" + group[0].Start.Time().Format("Monday January 02") + "\n\n"
 		resp += renderTableHeader()
 		for _, e := range group {
-			eventString, err := renderEvent(e, true)
+			eventString, err := renderEvent(e, true, timeZone)
 			if err != nil {
 				return "", err
 			}
@@ -42,9 +42,9 @@ func renderTableHeader() string {
 | :--: | :-- |`
 }
 
-func renderEvent(event *remote.Event, asRow bool) (string, error) {
-	start := event.Start.Time().Format(time.Kitchen)
-	end := event.End.Time().Format(time.Kitchen)
+func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
+	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
+	end := event.End.In(timeZone).Time().Format(time.Kitchen)
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
@@ -88,9 +88,9 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	return result
 }
 
-func RenderUpcomingEvent(event *remote.Event, timezone string) (string, error) {
+func RenderUpcomingEvent(event *remote.Event, timeZone string) (string, error) {
 	message := "You have an upcoming event:\n"
-	eventString, err := renderEvent(event, false)
+	eventString, err := renderEvent(event, false, timeZone)
 	if err != nil {
 		return "", err
 	}

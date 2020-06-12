@@ -44,17 +44,24 @@ type User struct {
 }
 
 type Settings struct {
-	EventSubscriptionID string
-	UpdateStatus        bool
-	GetConfirmation     bool
-	ReceiveReminders    bool
+	EventSubscriptionID               string
+	UpdateStatus                      bool
+	GetConfirmation                   bool
+	ReceiveReminders                  bool
+	ReceiveNotificationsDuringMeeting bool
+	DailySummary                      *DailySummaryUserSettings
+}
+
+type DailySummaryUserSettings struct {
+	Enable       bool   `json:"enable"`
+	PostTime     string `json:"post_time"` // Kitchen format, i.e. 8:30AM
+	Timezone     string `json:"tz"`        // Timezone in MSCal when PostTime is set/updated
+	LastPostTime string `json:"last_post_time"`
 }
 
 type WelcomeFlowStatus struct {
-	UpdateStatusPostID    string
-	GetConfirmationPostID string
-	SubscribePostID       string
-	Step                  int
+	PostIDs map[string]string
+	Step    int
 }
 
 func (settings Settings) String() string {

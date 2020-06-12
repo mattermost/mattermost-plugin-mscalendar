@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	UpdateStatusSettingID     = "update_status"
-	GetConfirmationSettingID  = "get_confirmation"
-	ReceiveRemindersSettingID = "get_reminders"
-	DailySummarySettingID     = "summary_setting"
+	UpdateStatusSettingID               = "update_status"
+	GetConfirmationSettingID            = "get_confirmation"
+	ReceiveNotificationsDuringMeetingID = "receive_notification"
+	ReceiveRemindersSettingID           = "get_reminders"
+	DailySummarySettingID               = "summary_setting"
 )
 
 func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) error {
@@ -31,6 +32,12 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
 		user.Settings.GetConfirmation = storableValue
+	case ReceiveNotificationsDuringMeetingID:
+		storableValue, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
+		}
+		user.Settings.ReceiveNotificationsDuringMeeting = storableValue
 	case ReceiveRemindersSettingID:
 		storableValue, ok := value.(bool)
 		if !ok {
@@ -38,7 +45,7 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 		}
 		user.Settings.ReceiveReminders = storableValue
 	case DailySummarySettingID:
-		s.updateDailySummarySettingForUser(userID, value)
+		s.updateDailySummarySettingForUser(user, value)
 	default:
 		return fmt.Errorf("setting %s not found", settingID)
 	}
@@ -62,52 +69,33 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 		return user.Settings.UpdateStatus, nil
 	case GetConfirmationSettingID:
 		return user.Settings.GetConfirmation, nil
+	case ReceiveNotificationsDuringMeetingID:
+		return user.Settings.ReceiveNotificationsDuringMeeting, nil
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
 	case DailySummarySettingID:
-		return s.LoadDailySummaryUserSettings(userID)
+		dsum := user.Settings.DailySummary
+		return dsum, nil
 	default:
 		return nil, fmt.Errorf("setting %s not found", settingID)
 	}
 }
 
-func (s *pluginStore) updateDailySummarySettingForUser(userID string, value interface{}) error {
-	dsum, err := s.LoadDailySummaryUserSettings(userID)
-	if err != nil {
-		return err
-	}
+func (s *pluginStore) updateDailySummarySettingForUser(user *User, value interface{}) error {
+	dsum := user.Settings.DailySummary
 
 	stringValue := value.(string)
 	splittedValue := strings.Split(stringValue, " ")
 	timezone := strings.Join(splittedValue[1:], " ")
 
-	if dsum == nil {
-		timeStr := splittedValue[0]
-		if splittedValue[0] == "true" || splittedValue[0] == "false" {
-			timeStr = "8:00AM"
-		}
-
-		dsum = &DailySummaryUserSettings{
-			MattermostUserID: userID,
-			PostTime:         timeStr,
-			Timezone:         timezone,
-			Enable:           splittedValue[0] == "true",
-		}
-	} else {
-		switch splittedValue[0] {
-		case "true":
-			dsum.Enable = true
-		case "false":
-			dsum.Enable = false
-		default:
-			dsum.PostTime = splittedValue[0]
-			dsum.Timezone = timezone
-		}
-	}
-
-	err = s.StoreDailySummaryUserSettings(dsum)
-	if err != nil {
-		return err
+	switch splittedValue[0] {
+	case "true":
+		dsum.Enable = true
+	case "false":
+		dsum.Enable = false
+	default:
+		dsum.PostTime = splittedValue[0]
+		dsum.Timezone = timezone
 	}
 
 	return nil

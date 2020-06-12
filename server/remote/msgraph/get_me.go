@@ -4,7 +4,7 @@
 package msgraph
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
@@ -12,7 +12,7 @@ import (
 func (c *client) GetMe() (*remote.User, error) {
 	graphUser, err := c.rbuilder.Me().Request().Get(c.ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph GetMe")
 	}
 
 	if graphUser.ID == nil {

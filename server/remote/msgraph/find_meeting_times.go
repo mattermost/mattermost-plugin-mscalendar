@@ -6,6 +6,8 @@ package msgraph
 import (
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -15,7 +17,7 @@ func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetin
 	req := c.rbuilder.Users().ID(remoteUserID).FindMeetingTimes(nil).Request()
 	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "msgraph FindMeetingTimes")
 	}
 	return meetingsOut, nil
 }

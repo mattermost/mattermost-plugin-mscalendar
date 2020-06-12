@@ -2,8 +2,8 @@
     "id": "com.mattermost.mscalendar",
     "name": "Microsoft Calendar",
     "description": "Microsoft Calendar Integration",
-    "version": "0.1.0",
-    "min_server_version": "5.16.0",
+    "version": "0.1.0-beta",
+    "min_server_version": "5.19.1",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
@@ -61,10 +61,9 @@
             },
             {
                 "key": "OAuth2Authority",
-                "display_name": "Azure Directory (tenant) ID, or \"common\"",
+                "display_name": "Azure Directory (tenant) ID",
                 "type": "text",
-                "help_text": "\"common\", or Directory (tenant) ID.",
-                "default": "common"
+                "help_text": "Directory (tenant) ID"
             },
             {
                 "key": "OAuth2ClientId",
@@ -79,20 +78,6 @@
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "default": ""
-            },
-            {
-                "key": "EnableStatusSync",
-                "display_name": "Enable User Status Sync Job",
-                "type": "bool",
-                "help_text": "When enabled, a Mattermost user's status will automatically update based on their Microsoft Calendar availability. This runs every 5 minutes.",
-                "default": false
-            },
-            {
-                "key": "EnableDailySummary",
-                "display_name": "Enable Daily Summary",
-                "type": "bool",
-                "help_text": "When enabled, Mattermost users will a receive a daily summary of their scheduled events in Microsoft Calendar. Users can choose when the summary will be sent to them.",
-                "default": false
             }
         ]
     }
