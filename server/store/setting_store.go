@@ -26,11 +26,7 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
 		user.Settings.UpdateStatus = storableValue
-		if storableValue {
-			s.Tracker.TrackAutomaticStatusUpdateOn(userID)
-		} else {
-			s.Tracker.TrackAutomaticStatusUpdateOff(userID)
-		}
+		s.Tracker.TrackAutomaticStatusUpdate(userID, storableValue, "settings")
 	case GetConfirmationSettingID:
 		storableValue, ok := value.(bool)
 		if !ok {

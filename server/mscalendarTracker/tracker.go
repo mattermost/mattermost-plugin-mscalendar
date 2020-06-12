@@ -3,12 +3,11 @@ package mscalendarTracker
 import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 
 const (
-	welcomeFlowCompletionEvent    = "welcomeFlowCompletion"
-	userAuthenticatedEvent        = "userAuthenticated"
-	userDeauthenticatedEvent      = "userDeauthenticated"
-	automaticStatusUpdateOnEvent  = "automaticStatusUpdateOn"
-	automaticStatusUpdateOffEvent = "automaticStatusUpdateOff"
-	dailySummarySentEvent         = "dailySummarySent"
+	welcomeFlowCompletionEvent = "welcomeFlowCompletion"
+	userAuthenticatedEvent     = "userAuthenticated"
+	userDeauthenticatedEvent   = "userDeauthenticated"
+	automaticStatusUpdateEvent = "automaticStatusUpdate"
+	dailySummarySentEvent      = "dailySummarySent"
 )
 
 type Tracker interface {
@@ -16,8 +15,7 @@ type Tracker interface {
 	TrackUserAuthenticated(userID string)
 	TrackUserDeauthenticated(userID string)
 	TrackDailySummarySent(userID string)
-	TrackAutomaticStatusUpdateOn(userID string)
-	TrackAutomaticStatusUpdateOff(userID string)
+	TrackAutomaticStatusUpdate(userID string, value bool, location string)
 }
 
 func New(t telemetry.Tracker) Tracker {
@@ -46,10 +44,10 @@ func (t *tracker) TrackDailySummarySent(userID string) {
 	t.tracker.TrackUserEvent(dailySummarySentEvent, userID, map[string]interface{}{})
 }
 
-func (t *tracker) TrackAutomaticStatusUpdateOn(userID string) {
-	t.tracker.TrackUserEvent(automaticStatusUpdateOnEvent, userID, map[string]interface{}{})
-}
-
-func (t *tracker) TrackAutomaticStatusUpdateOff(userID string) {
-	t.tracker.TrackUserEvent(automaticStatusUpdateOffEvent, userID, map[string]interface{}{})
+func (t *tracker) TrackAutomaticStatusUpdate(userID string, value bool, location string) {
+	properties := map[string]interface{}{
+		"value":    value,
+		"location": location,
+	}
+	t.tracker.TrackUserEvent(automaticStatusUpdateEvent, userID, properties)
 }

@@ -19,11 +19,7 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 	switch propertyName {
 	case UpdateStatusPropertyName:
 		user.Settings.UpdateStatus = value
-		if value {
-			s.Tracker.TrackAutomaticStatusUpdateOn(userID)
-		} else {
-			s.Tracker.TrackAutomaticStatusUpdateOff(userID)
-		}
+		s.Tracker.TrackAutomaticStatusUpdate(userID, value, "flow")
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = value
 	case ReceiveUpcomingEventReminderName:
