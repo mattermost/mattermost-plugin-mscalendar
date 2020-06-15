@@ -2,7 +2,7 @@
     "id": "com.mattermost.mscalendar",
     "name": "Microsoft Calendar",
     "description": "Microsoft Calendar Integration",
-    "version": "0.1.0-beta",
+    "version": "0.1.0",
     "min_server_version": "5.24.0",
     "server": {
         "executables": {
