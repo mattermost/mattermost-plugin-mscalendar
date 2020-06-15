@@ -61,6 +61,11 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
+	license := p.API.GetLicense()
+	if license == nil || license.Features.EnterprisePlugins == nil || !*license.Features.EnterprisePlugins {
+		return errors.New("You need a Enterprise License (E20) to activate this plugin.")
+	}
+
 	p.initEnv(&p.env, "")
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
