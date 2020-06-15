@@ -20,11 +20,7 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 		return nil, err
 	}
 
-	token, err := decryptToken(m.actingUser.OAuth2Token, m.Config.TokenEncryptionKey)
-	if err != nil {
-		return nil, err
-	}
-	return m.Remote.MakeClient(context.Background(), token), nil
+	return m.Remote.MakeClient(context.Background(), m.actingUser.OAuth2Token), nil
 }
 
 func (m *mscalendar) MakeSuperuserClient() (remote.Client, error) {

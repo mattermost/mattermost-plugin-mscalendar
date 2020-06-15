@@ -2,8 +2,8 @@
     "id": "com.mattermost.mscalendar",
     "name": "Microsoft Calendar",
     "description": "Microsoft Calendar Integration",
-    "version": "0.1.0",
-    "min_server_version": "5.16.0",
+    "version": "0.1.0-beta",
+    "min_server_version": "5.24.0",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
@@ -78,13 +78,6 @@
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "default": ""
-            },
-            {
-                "key": "TokenEncryptionKey",
-                "display_name": "At Rest Token Encryption Key",
-                "type": "generated",
-                "help_text": "The AES encryption key used to encrypt stored access tokens.",
-                "regenerate_help_text": "Regenerates the encryption key for Microsoft Calendar OAuth Token. Regenerating the key invalidates your existing Microsoft Calendar OAuth."
             }
         ]
     }

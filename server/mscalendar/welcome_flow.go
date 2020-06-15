@@ -53,7 +53,7 @@ func (wf *welcomeFlow) makeSteps() {
 	steps := []flow.Step{}
 	steps = append(steps, &flow.SimpleStep{
 		Title:                "Update Status",
-		Message:              "Do you wish your Mattermost status to be automatically updated to be *Do not disturb* at the time of your Microsoft Calendar events?",
+		Message:              "Would you like your Mattermost status to be automatically updated at the time of your Microsoft Calendar events?",
 		PropertyName:         store.UpdateStatusPropertyName,
 		TrueButtonMessage:    "Yes - Update my status",
 		FalseButtonMessage:   "No - Don't update my status",
@@ -78,7 +78,7 @@ func (wf *welcomeFlow) makeSteps() {
 		FalseResponseMessage: "Great, your status will be set to DnD.",
 	}, &flow.SimpleStep{
 		Title:                "Subscribe to events",
-		Message:              "Do you want to receive notifications when you receive a new event?",
+		Message:              "Do you want to receive notifications when you are invited to an event?",
 		PropertyName:         store.SubscribePropertyName,
 		TrueButtonMessage:    "Yes - I would like to receive notifications for new events",
 		FalseButtonMessage:   "No - Do not notify me of new events",
