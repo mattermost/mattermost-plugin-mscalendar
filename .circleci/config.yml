@@ -19,8 +19,6 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          environment:
-            MM_RUDDER_WRITE_KEY: 1dP7Oi78p0PK1brYLsfslgnbD1I
       - plugin-ci/deploy-ci:
           filters:
             branches:

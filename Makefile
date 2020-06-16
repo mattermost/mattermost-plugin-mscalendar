@@ -18,7 +18,6 @@ BUILD_HASH_SHORT = $(shell git rev-parse --short HEAD)
 LDFLAGS += -X "main.BuildDate=$(BUILD_DATE)"
 LDFLAGS += -X "main.BuildHash=$(BUILD_HASH)"
 LDFLAGS += -X "main.BuildHashShort=$(BUILD_HASH_SHORT)"
-LDFLAGS += -X "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry.rudderWriteKey=$(MM_RUDDER_WRITE_KEY)"
 GO_TEST_FLAGS ?= -race
 GO_BUILD_FLAGS ?=
 GOBUILD = $(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)'
