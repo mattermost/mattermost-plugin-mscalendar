@@ -150,7 +150,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Logger = e.bot
 
-		e.Dependencies.Tracker = mscalendarTracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, *p.API.GetConfig().LogSettings.EnableDiagnostics, e.Logger))
+		e.Dependencies.Tracker = mscalendarTracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, config.TelemetryShortName, *p.API.GetConfig().LogSettings.EnableDiagnostics, e.Logger))
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot

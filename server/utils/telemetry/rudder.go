@@ -2,10 +2,9 @@ package telemetry
 
 import rudder "github.com/rudderlabs/analytics-go"
 
-const (
-	rudderDataPlaneURL = "https://pdat.matterlytics.com"
-	rudderWriteKey     = "1d5bMvdrfWClLxgK1FvV3s4U1tg"
-)
+const rudderDataPlaneURL = "https://pdat.matterlytics.com"
+
+var rudderWriteKey string
 
 func NewRudderClient() (Client, error) {
 	return NewRudderClientWithCredentials(rudderWriteKey, rudderDataPlaneURL)

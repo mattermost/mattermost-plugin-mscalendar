@@ -19,24 +19,26 @@ type Track struct {
 }
 
 type tracker struct {
-	client        Client
-	diagnosticID  string
-	serverVersion string
-	pluginID      string
-	pluginVersion string
-	enabled       bool
-	logger        bot.Logger
+	client             Client
+	diagnosticID       string
+	serverVersion      string
+	pluginID           string
+	pluginVersion      string
+	telemetryShortName string
+	enabled            bool
+	logger             bot.Logger
 }
 
-func NewTracker(c Client, diagnosticID, serverVersion, pluginID, pluginVersion string, enableDiagnostics bool, logger bot.Logger) Tracker {
+func NewTracker(c Client, diagnosticID, serverVersion, pluginID, pluginVersion, telemetryShortName string, enableDiagnostics bool, logger bot.Logger) Tracker {
 	return &tracker{
-		client:        c,
-		diagnosticID:  diagnosticID,
-		serverVersion: serverVersion,
-		pluginID:      pluginID,
-		pluginVersion: pluginVersion,
-		enabled:       enableDiagnostics,
-		logger:        logger,
+		telemetryShortName: telemetryShortName,
+		client:             c,
+		diagnosticID:       diagnosticID,
+		serverVersion:      serverVersion,
+		pluginID:           pluginID,
+		pluginVersion:      pluginVersion,
+		enabled:            enableDiagnostics,
+		logger:             logger,
 	}
 }
 
@@ -45,7 +47,7 @@ func (t *tracker) Track(event string, properties map[string]interface{}) {
 		return
 	}
 
-	event = t.pluginID + "-" + event
+	event = t.telemetryShortName + "_" + event
 	properties["PluginID"] = t.pluginID
 	properties["PluginVersion"] = t.pluginVersion
 	properties["ServerVersion"] = t.serverVersion
