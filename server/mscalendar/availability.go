@@ -19,7 +19,7 @@ const (
 	calendarViewTimeWindowSize      = 10 * time.Minute
 	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
-	upcomingEventNotificationWindow = (StatusSyncJobInterval * 9) / 10 //90% of the interval
+	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 //110% of the interval
 )
 
 type Availability interface {
