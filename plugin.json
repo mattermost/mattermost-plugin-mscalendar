@@ -1,8 +1,9 @@
 {
     "id": "com.mattermost.mscalendar",
-    "name": "Microsoft Calendar",
+    "name": "Microsoft Calendar (E20 only)",
     "description": "Microsoft Calendar Integration",
-    "version": "0.1.0",
+    "homepage_url": "https://mattermost.gitbook.io/plugin-mscalendar",
+    "version": "1.0.0",
     "min_server_version": "5.24.0",
     "server": {
         "executables": {
