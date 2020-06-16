@@ -3,6 +3,7 @@
     "name": "Microsoft Calendar (E20 only)",
     "description": "Microsoft Calendar Integration",
     "homepage_url": "https://mattermost.gitbook.io/plugin-mscalendar",
+    "icon_path": "assets/profile.svg",
     "version": "1.0.0",
     "min_server_version": "5.24.0",
     "server": {
