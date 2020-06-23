@@ -61,6 +61,11 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
+	license := p.API.GetLicense()
+	if license == nil || license.Features.EnterprisePlugins == nil || !*license.Features.EnterprisePlugins {
+		return errors.New("You need a Enterprise License (E20) to activate this plugin.")
+	}
+
 	p.initEnv(&p.env, "")
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
@@ -126,9 +131,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.MattermostSiteHostname = mattermostURL.Hostname()
 		e.Config.PluginURL = pluginURL
 		e.Config.PluginURLPath = pluginURLPath
-		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.Logger)
 
 		e.bot = e.bot.WithConfig(stored.BotConfig)
+		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.bot)
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 

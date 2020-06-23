@@ -244,7 +244,7 @@ func TestReminders(t *testing.T) {
 		},
 		"One remote event, but it is too far in the future.": {
 			remoteEvents: []*remote.Event{
-				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(15*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(20*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			numReminders:   0,
 			shouldLogError: false,

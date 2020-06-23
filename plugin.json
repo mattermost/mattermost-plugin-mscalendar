@@ -1,9 +1,11 @@
 {
     "id": "com.mattermost.mscalendar",
-    "name": "Microsoft Calendar",
+    "name": "Microsoft Calendar (E20 only)",
     "description": "Microsoft Calendar Integration",
-    "version": "0.1.0-beta",
-    "min_server_version": "5.19.1",
+    "homepage_url": "https://mattermost.gitbook.io/plugin-mscalendar",
+    "icon_path": "assets/profile.svg",
+    "version": "1.0.0",
+    "min_server_version": "5.24.0",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
