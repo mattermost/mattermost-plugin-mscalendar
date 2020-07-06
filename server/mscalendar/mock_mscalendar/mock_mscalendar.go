@@ -135,6 +135,21 @@ func (mr *MockMSCalendarMockRecorder) CreateMyEventSubscription() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).CreateMyEventSubscription))
 }
 
+// CreateNewAdminConsentToken mocks base method
+func (m *MockMSCalendar) CreateNewAdminConsentToken(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateNewAdminConsentToken", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateNewAdminConsentToken indicates an expected call of CreateNewAdminConsentToken
+func (mr *MockMSCalendarMockRecorder) CreateNewAdminConsentToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewAdminConsentToken", reflect.TypeOf((*MockMSCalendar)(nil).CreateNewAdminConsentToken), arg0)
+}
+
 // DeclineEvent mocks base method
 func (m *MockMSCalendar) DeclineEvent(arg0 *mscalendar.User, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -511,6 +526,20 @@ func (m *MockMSCalendar) TentativelyAcceptEvent(arg0 *mscalendar.User, arg1 stri
 func (mr *MockMSCalendarMockRecorder) TentativelyAcceptEvent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TentativelyAcceptEvent", reflect.TypeOf((*MockMSCalendar)(nil).TentativelyAcceptEvent), arg0, arg1)
+}
+
+// VerifyAdminConsentToken mocks base method
+func (m *MockMSCalendar) VerifyAdminConsentToken(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyAdminConsentToken", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// VerifyAdminConsentToken indicates an expected call of VerifyAdminConsentToken
+func (mr *MockMSCalendarMockRecorder) VerifyAdminConsentToken(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAdminConsentToken", reflect.TypeOf((*MockMSCalendar)(nil).VerifyAdminConsentToken), arg0, arg1)
 }
 
 // ViewCalendar mocks base method

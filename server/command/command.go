@@ -84,6 +84,8 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
+	case "adminconsent":
+		handler = c.requireConnectedUser(c.adminConsent)
 	}
 	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {

@@ -22,6 +22,7 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	}
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", api.getAuthorized).Methods("GET")
+	apiRouter.HandleFunc("/adminconsent", api.handleAdminConsent).Methods("GET")
 
 	notificationRouter := h.Router.PathPrefix(config.PathNotification).Subrouter()
 	notificationRouter.HandleFunc(config.PathEvent, api.notification).Methods("POST")

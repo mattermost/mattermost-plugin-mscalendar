@@ -22,6 +22,7 @@ type MSCalendar interface {
 	Welcomer
 	Settings
 	DailySummary
+	AdminConsentChecker
 }
 
 // Dependencies contains all API dependencies

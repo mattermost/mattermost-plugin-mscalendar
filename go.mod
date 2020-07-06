@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/golang/mock v1.2.0
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/mattermost/mattermost-plugin-api v0.0.9
