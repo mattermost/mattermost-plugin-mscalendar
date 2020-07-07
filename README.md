@@ -91,7 +91,7 @@ Submit the form by clicking `Add permissions` at the bottom.
 
 Click `Grant admin consent for...` to grant the permissions for the application. You're all set for configuration inside of Azure.
 
-Alternatively, a Mattermost admin cannot approve these permissions by running `/mscalendar adminconsent`.
+Alternatively, a Mattermost admin can approve these permissions by running `/mscalendar adminconsent`.
 
 ### Step 2: Configure Plugin Settings
 
