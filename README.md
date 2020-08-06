@@ -11,6 +11,7 @@
 ## Help Wanted tickets can be found [here](https://github.com/mattermost/mattermost-plugin-mscalendar/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22up+for+grabs%22+label%3A%22help+wanted%22+sort%3Aupdated-desc)
 
 ## Table of Contents
+
 1. [License](#license)
 2. [Overview](#overview)
 3. [Features](#features)
