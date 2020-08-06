@@ -22,7 +22,12 @@ func New(api plugin.API) *API {
 }
 
 func (a *API) GetMattermostUserStatus(mattermostUserID string) (*model.Status, error) {
-	return a.api.GetUserStatus(mattermostUserID)
+	st, err := a.api.GetUserStatus(mattermostUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return st, nil
 }
 
 func (a *API) GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error) {
