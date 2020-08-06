@@ -21,6 +21,10 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 		}
 	}
 
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Start.Time().Before(events[j].Start.Time())
+	})
+
 	resp := "Times are shown in " + events[0].Start.TimeZone
 	for _, group := range groupEventsByDate(events) {
 		resp += "\n" + group[0].Start.Time().Format("Monday January 02") + "\n\n"
