@@ -39,17 +39,14 @@ func (m *mscalendar) Welcome(userID string) error {
 }
 
 func (m *mscalendar) AfterSuccessfullyConnect(userID, userLogin string) error {
-	m.Tracker.TrackUserAuthenticated(userID)
 	return m.Welcomer.AfterSuccessfullyConnect(userID, userLogin)
 }
 
 func (m *mscalendar) AfterDisconnect(userID string) error {
-	m.Tracker.TrackUserDeauthenticated(userID)
 	return m.Welcomer.AfterDisconnect(userID)
 }
 
 func (m *mscalendar) WelcomeFlowEnd(userID string) {
-	m.Tracker.TrackWelcomeFlowCompletion(userID)
 	m.Welcomer.WelcomeFlowEnd(userID)
 }
 
@@ -75,6 +72,7 @@ func (bot *mscBot) Welcome(userID string) error {
 }
 
 func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
+	bot.Tracker.TrackUserAuthenticated(userID)
 	postID, err := bot.Store.DeleteUserWelcomePost(userID)
 	if err != nil {
 		bot.Errorf("error deleting user's welcome post id, err=%v", err)
@@ -91,6 +89,7 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 }
 
 func (bot *mscBot) AfterDisconnect(userID string) error {
+	bot.Tracker.TrackUserDeauthenticated(userID)
 	errCancel := bot.Cancel(userID)
 	errClean := bot.cleanWelcomePost(userID)
 	if errCancel != nil {
@@ -104,6 +103,7 @@ func (bot *mscBot) AfterDisconnect(userID string) error {
 }
 
 func (bot *mscBot) WelcomeFlowEnd(userID string) {
+	bot.Tracker.TrackWelcomeFlowCompletion(userID)
 	bot.notifySettings(userID)
 }
 
