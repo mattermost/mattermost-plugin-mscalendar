@@ -8,9 +8,10 @@ const (
 	BotDisplayName = "Microsoft Calendar"
 	BotDescription = "Created by the Microsoft Calendar Plugin."
 
-	ApplicationName = "Microsoft Calendar"
-	Repository      = "mattermost-plugin-mscalendar"
-	CommandTrigger  = "mscalendar"
+	ApplicationName    = "Microsoft Calendar"
+	Repository         = "mattermost-plugin-mscalendar"
+	CommandTrigger     = "mscalendar"
+	TelemetryShortName = "mscalendar"
 
 	PathOAuth2              = "/oauth2"
 	PathComplete            = "/complete"

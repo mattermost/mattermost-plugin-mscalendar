@@ -7,11 +7,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendarTracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -180,6 +182,7 @@ Wednesday February 12
 					Poster:    poster,
 					Remote:    mockRemote,
 					PluginAPI: mockPluginAPI,
+					Tracker:   mscalendarTracker.New(telemetry.NewTracker(nil, "", "", "", "", "", true, logger)),
 				},
 			}
 
