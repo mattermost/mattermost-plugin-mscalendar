@@ -91,5 +91,6 @@ func getQueryParamStringForCalendarView(start, end time.Time) string {
 	q := url.Values{}
 	q.Add("startDateTime", start.Format(time.RFC3339))
 	q.Add("endDateTime", end.Format(time.RFC3339))
+	q.Add("$top", "20")
 	return "?" + q.Encode()
 }
