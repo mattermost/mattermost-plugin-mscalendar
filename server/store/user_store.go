@@ -48,6 +48,8 @@ type Settings struct {
 	UpdateStatus                      bool
 	GetConfirmation                   bool
 	ReceiveReminders                  bool
+	AutoRespond                       bool
+	AutoRespondMessage                string
 	ReceiveNotificationsDuringMeeting bool
 	DailySummary                      *DailySummaryUserSettings
 }
