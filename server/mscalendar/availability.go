@@ -227,10 +227,11 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	if len(user.ActiveEvents) == 0 {
 		var err error
 		if currentStatus == busyStatus {
+			user.LastStatus = ""
 			if status.Manual {
 				user.LastStatus = currentStatus
-				m.Store.StoreUser(user)
 			}
+			m.Store.StoreUser(user)
 			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 			if err != nil {
 				return "", err
@@ -300,8 +301,11 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 		if user.Settings.ReceiveNotificationsDuringMeeting {
 			toSet = model.STATUS_AWAY
 		}
-		if !user.Settings.GetConfirmation && currentStatus.Manual {
-			user.LastStatus = currentStatus.Status
+		if !user.Settings.GetConfirmation {
+			user.LastStatus = ""
+			if currentStatus.Manual {
+				user.LastStatus = currentStatus.Status
+			}
 		}
 	}
 
