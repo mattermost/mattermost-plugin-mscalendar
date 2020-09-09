@@ -52,6 +52,20 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		"",
 		settingStore,
 	))
+	settings = append(settings, settingspanel.NewBoolSetting(
+		store.AutoRespondSettingID,
+		"Auto Respond",
+		"Do you want to enable an automatic bot response to DMs when you are in a meeting?",
+		"",
+		settingStore,
+	))
+	settings = append(settings, settingspanel.NewReadOnlySetting(
+		store.AutoRespondMessageSettingID,
+		"Auto-Respond Message",
+		"You can set your auto-respond message by typing `/mscalendar autorespond <message>`.",
+		"",
+		settingStore,
+	))
 	settings = append(settings, NewNotificationsSetting(getCal))
 	settings = append(settings, NewDailySummarySetting(
 		settingStore,

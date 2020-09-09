@@ -95,6 +95,18 @@ func (wf *welcomeFlow) makeSteps() {
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
 		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",
+	}, &flow.SimpleStep{
+		Title:                "Auto Respond",
+		Message:              "Do you want to enable an automatic bot response to DMs when you are in a meeting?",
+		PropertyName:         store.AutoRespondPropertyName,
+		TrueButtonMessage:    "Yes - I would like to enable an automatic response",
+		FalseButtonMessage:   "No - Do not enable",
+		TrueResponseMessage:  "Great, the bot will automatically respond to DMs when you are in a meeting.",
+		FalseResponseMessage: "Great, automatic response will not be enabled.",
+		FalseSkip:            1,
+	}, &flow.EmptyStep{
+		Title:   "Set Bot Response Message",
+		Message: "Remember that you can set your auto-respond message by typing `/mscalendar autorespond <message>`.",
 	})
 
 	wf.steps = steps
