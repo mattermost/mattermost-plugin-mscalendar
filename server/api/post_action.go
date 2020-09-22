@@ -86,8 +86,13 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	err := calendar.RespondToEvent(user, eventID, option)
-	if err != nil && !strings.HasPrefix(err.Error(), "202") && !strings.HasPrefix(err.Error(), "404") {
+	if err != nil && !isAcceptedError(err) && !isNotFoundError(err) && !isCanceledError(err) {
 		utils.SlackAttachmentError(w, "Error: Failed to respond to event: "+err.Error())
+		return
+	}
+
+	if err != nil && isCanceledError(err) {
+		utils.SlackAttachmentError(w, "Error: Cannot respond to the event because it is already canceled.")
 		return
 	}
 
@@ -105,7 +110,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	sa := sas[0]
 
-	if err == nil || strings.HasPrefix(err.Error(), "202") {
+	if err == nil || isAcceptedError(err) {
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: "Response",
 			Value: fmt.Sprintf("You have %s this event", prettyOption(option)),
@@ -119,7 +124,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	postResponse.Update = p
 
-	if err != nil && strings.HasPrefix(err.Error(), "404") {
+	if err != nil && isNotFoundError(err) {
 		postResponse.EphemeralText = "Event has changed since this message. Please change your status directly on MS Calendar."
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -175,6 +180,28 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 		}
 		stringPrettyChangeTo := prettyChangeTo.(string)
 
+		status, err := api.PluginAPI.GetMattermostUserStatus(mattermostUserID)
+		if err != nil {
+			utils.SlackAttachmentError(w, "Cannot get current status.")
+			api.Logger.Debugf("cannot get user status, err=%s", err)
+			return
+		}
+
+		user, err := api.Store.LoadUser(mattermostUserID)
+		if err != nil {
+			utils.SlackAttachmentError(w, "Cannot load user")
+			return
+		}
+
+		user.LastStatus = ""
+		if status.Manual {
+			user.LastStatus = status.Status
+		}
+
+		err = api.Store.StoreUser(user)
+		if err != nil {
+			utils.SlackAttachmentError(w, "Cannot update user")
+		}
 		api.PluginAPI.UpdateMattermostUserStatus(mattermostUserID, stringChangeTo)
 		returnText = fmt.Sprintf("The status has been changed to %s.", stringPrettyChangeTo)
 	}
@@ -228,4 +255,16 @@ func getEventInfo(ctx map[string]interface{}) (string, error) {
 	json.Unmarshal([]byte(marshalledStartTime), &startTime)
 
 	return views.RenderEventWillStartLine(subject, weblink, startTime), nil
+}
+
+func isAcceptedError(err error) bool {
+	return strings.Contains(err.Error(), "202 Accepted")
+}
+
+func isNotFoundError(err error) bool {
+	return strings.Contains(err.Error(), "404 Not Found")
+}
+
+func isCanceledError(err error) bool {
+	return strings.Contains(err.Error(), "You can't respond to a meeting that's been canceled.")
 }

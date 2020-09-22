@@ -21,12 +21,16 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 		}
 	}
 
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Start.Time().Before(events[j].Start.Time())
+	})
+
 	resp := "Times are shown in " + events[0].Start.TimeZone
 	for _, group := range groupEventsByDate(events) {
 		resp += "\n" + group[0].Start.Time().Format("Monday January 02") + "\n\n"
 		resp += renderTableHeader()
 		for _, e := range group {
-			eventString, err := renderEvent(e, true)
+			eventString, err := renderEvent(e, true, timeZone)
 			if err != nil {
 				return "", err
 			}
@@ -42,9 +46,9 @@ func renderTableHeader() string {
 | :--: | :-- |`
 }
 
-func renderEvent(event *remote.Event, asRow bool) (string, error) {
-	start := event.Start.Time().Format(time.Kitchen)
-	end := event.End.Time().Format(time.Kitchen)
+func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
+	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
+	end := event.End.In(timeZone).Time().Format(time.Kitchen)
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
@@ -56,7 +60,9 @@ func renderEvent(event *remote.Event, asRow bool) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf(format, start, end, event.Subject, link), nil
+	subject := EnsureSubject(event.Subject)
+
+	return fmt.Sprintf(format, start, end, subject, link), nil
 }
 
 func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
@@ -86,12 +92,20 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	return result
 }
 
-func RenderUpcomingEvent(event *remote.Event, timezone string) (string, error) {
+func RenderUpcomingEvent(event *remote.Event, timeZone string) (string, error) {
 	message := "You have an upcoming event:\n"
-	eventString, err := renderEvent(event, false)
+	eventString, err := renderEvent(event, false, timeZone)
 	if err != nil {
 		return "", err
 	}
 
 	return message + eventString, nil
+}
+
+func EnsureSubject(s string) string {
+	if s == "" {
+		return "(No subject)"
+	}
+
+	return s
 }

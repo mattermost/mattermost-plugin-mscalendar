@@ -14,6 +14,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -140,10 +141,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	var client remote.Client
-	if n.RecommendRenew || n.IsBare {
-		client = processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
-	}
+	client := processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
 
 	if n.RecommendRenew {
 		var renewed *remote.Subscription
@@ -179,9 +177,16 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	if err != nil && err != store.ErrNotFound {
 		return err
 	}
+
+	mailSettings, err := client.GetMailboxSettings(sub.Remote.CreatorID)
+	if err != nil {
+		return err
+	}
+	timezone := mailSettings.TimeZone
+
 	if prior != nil {
 		var changed bool
-		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote)
+		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote, timezone)
 		if !changed {
 			processor.Logger.With(bot.LogContext{
 				"MattermostUserID": creator.MattermostUserID,
@@ -193,7 +198,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 			return nil
 		}
 	} else {
-		sa = processor.newEventSlackAttachment(n)
+		sa = processor.newEventSlackAttachment(n, timezone)
 		prior = &store.Event{}
 	}
 
@@ -221,16 +226,16 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 		AuthorName: n.Event.Organizer.EmailAddress.Name,
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
 		TitleLink:  n.Event.Weblink,
-		Title:      n.Event.Subject,
+		Title:      views.EnsureSubject(n.Event.Subject),
 		Text:       n.Event.BodyPreview,
 	}
 }
 
-func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification, timezone string) *model.SlackAttachment {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(new) " + sa.Title
 
-	fields := eventToFields(n.Event)
+	fields := eventToFields(n.Event, timezone)
 	for _, k := range notificationFieldOrder {
 		v := fields[k]
 
@@ -247,12 +252,12 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	return sa
 }
 
-func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event) (bool, *model.SlackAttachment) {
+func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event, timezone string) (bool, *model.SlackAttachment) {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(updated) " + sa.Title
 
-	newFields := eventToFields(n.Event)
-	priorFields := eventToFields(prior)
+	newFields := eventToFields(n.Event, timezone)
+	priorFields := eventToFields(prior, timezone)
 	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
 	if !changed {
 		return false, nil
@@ -388,11 +393,14 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 	return []*model.PostAction{pa}
 }
 
-func eventToFields(e *remote.Event) fields.Fields {
+func eventToFields(e *remote.Event, timezone string) fields.Fields {
 	date := func(dtStart, dtEnd *remote.DateTime) (time.Time, time.Time, string) {
 		if dtStart == nil || dtEnd == nil {
 			return time.Time{}, time.Time{}, "n/a"
 		}
+
+		dtStart = dtStart.In(timezone)
+		dtEnd = dtEnd.In(timezone)
 		tStart := dtStart.Time()
 		tEnd := dtEnd.Time()
 		startFormat := "Monday, January 02"
@@ -449,7 +457,7 @@ func eventToFields(e *remote.Event) fields.Fields {
 	}
 
 	ff := fields.Fields{
-		FieldSubject:     fields.NewStringValue(valueOrNotDefined(e.Subject)),
+		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
 		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
 		FieldWhen:        fields.NewStringValue(valueOrNotDefined(formattedDate)),

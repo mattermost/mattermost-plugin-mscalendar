@@ -58,6 +58,7 @@ func newTestSubscription() *store.Subscription {
 		Remote: &remote.Subscription{
 			ID:          "remote_subscription_id",
 			ClientState: "stored_client_state",
+			CreatorID:   "remote_user_id",
 		},
 		MattermostCreatorID: "creator_mm_id",
 	}
@@ -68,7 +69,7 @@ func newTestUser() *store.User {
 		Settings: store.Settings{
 			EventSubscriptionID: "remote_subscription_id",
 		},
-		Remote: &remote.User{},
+		Remote: &remote.User{ID: "remote_user_id"},
 		OAuth2Token: &oauth2.Token{
 			AccessToken: "creator_oauth_token",
 		},
@@ -152,6 +153,7 @@ func TestProcessNotification(t *testing.T) {
 				mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
 					AccessToken: "creator_oauth_token",
 				}).Return(mockClient).Times(1)
+				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 
 				if tc.notification.RecommendRenew {
 					mockClient.EXPECT().RenewSubscription("remote_subscription_id").Return(&remote.Subscription{}, nil).Times(1)

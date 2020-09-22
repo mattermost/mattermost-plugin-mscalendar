@@ -72,6 +72,7 @@ func (bot *mscBot) Welcome(userID string) error {
 }
 
 func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
+	bot.Tracker.TrackUserAuthenticated(userID)
 	postID, err := bot.Store.DeleteUserWelcomePost(userID)
 	if err != nil {
 		bot.Errorf("error deleting user's welcome post id, err=%v", err)
@@ -88,6 +89,7 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 }
 
 func (bot *mscBot) AfterDisconnect(userID string) error {
+	bot.Tracker.TrackUserDeauthenticated(userID)
 	errCancel := bot.Cancel(userID)
 	errClean := bot.cleanWelcomePost(userID)
 	if errCancel != nil {
@@ -101,6 +103,7 @@ func (bot *mscBot) AfterDisconnect(userID string) error {
 }
 
 func (bot *mscBot) WelcomeFlowEnd(userID string) {
+	bot.Tracker.TrackWelcomeFlowCompletion(userID)
 	bot.notifySettings(userID)
 }
 
@@ -147,11 +150,8 @@ func (bot *mscBot) SetProperty(userID, propertyName string, value bool) error {
 	if propertyName == store.SubscribePropertyName {
 		if value {
 			m := New(bot.Env, userID)
-			l, err := m.ListRemoteSubscriptions()
-			if err != nil {
-				return err
-			}
-			if len(l) >= 1 {
+			_, err := m.LoadMyEventSubscription()
+			if err == nil { // Subscription found
 				return nil
 			}
 

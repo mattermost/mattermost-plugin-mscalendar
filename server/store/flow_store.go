@@ -3,9 +3,12 @@ package store
 import "fmt"
 
 const (
-	UpdateStatusPropertyName    = "update_status"
-	GetConfirmationPropertyName = "get_confirmation"
-	SubscribePropertyName       = "subscribe"
+	UpdateStatusPropertyName              = "update_status"
+	GetConfirmationPropertyName           = "get_confirmation"
+	ReceiveNotificationsDuringMeetingName = "receive_notifications_during_meetings"
+	SubscribePropertyName                 = "subscribe"
+	AutoRespondPropertyName               = "auto_respond"
+	ReceiveUpcomingEventReminderName      = "receive_reminder"
 )
 
 func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
@@ -17,8 +20,15 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 	switch propertyName {
 	case UpdateStatusPropertyName:
 		user.Settings.UpdateStatus = value
+		s.Tracker.TrackAutomaticStatusUpdate(userID, value, "flow")
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = value
+	case AutoRespondPropertyName:
+		user.Settings.AutoRespond = value
+	case ReceiveUpcomingEventReminderName:
+		user.Settings.ReceiveReminders = value
+	case ReceiveNotificationsDuringMeetingName:
+		user.Settings.ReceiveNotificationsDuringMeeting = value
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}
@@ -37,16 +47,11 @@ func (s *pluginStore) SetPostID(userID, propertyName, postID string) error {
 		return err
 	}
 
-	switch propertyName {
-	case UpdateStatusPropertyName:
-		user.WelcomeFlowStatus.UpdateStatusPostID = postID
-	case GetConfirmationPropertyName:
-		user.WelcomeFlowStatus.GetConfirmationPostID = postID
-	case SubscribePropertyName:
-		user.WelcomeFlowStatus.SubscribePostID = postID
-	default:
-		return fmt.Errorf("property %s not found", propertyName)
+	if user.WelcomeFlowStatus.PostIDs == nil {
+		user.WelcomeFlowStatus.PostIDs = make(map[string]string)
 	}
+
+	user.WelcomeFlowStatus.PostIDs[propertyName] = postID
 
 	err = s.StoreUser(user)
 	if err != nil {
@@ -62,16 +67,7 @@ func (s *pluginStore) GetPostID(userID, propertyName string) (string, error) {
 		return "", err
 	}
 
-	switch propertyName {
-	case UpdateStatusPropertyName:
-		return user.WelcomeFlowStatus.UpdateStatusPostID, nil
-	case GetConfirmationPropertyName:
-		return user.WelcomeFlowStatus.GetConfirmationPostID, nil
-	case SubscribePropertyName:
-		return user.WelcomeFlowStatus.SubscribePostID, nil
-	default:
-		return "", fmt.Errorf("property %s not found", propertyName)
-	}
+	return user.WelcomeFlowStatus.PostIDs[propertyName], nil
 }
 
 func (s *pluginStore) RemovePostID(userID, propertyName string) error {
@@ -80,16 +76,7 @@ func (s *pluginStore) RemovePostID(userID, propertyName string) error {
 		return err
 	}
 
-	switch propertyName {
-	case UpdateStatusPropertyName:
-		user.WelcomeFlowStatus.UpdateStatusPostID = ""
-	case GetConfirmationPropertyName:
-		user.WelcomeFlowStatus.GetConfirmationPostID = ""
-	case SubscribePropertyName:
-		user.WelcomeFlowStatus.SubscribePostID = ""
-	default:
-		return fmt.Errorf("property %s not found", propertyName)
-	}
+	delete(user.WelcomeFlowStatus.PostIDs, propertyName)
 
 	err = s.StoreUser(user)
 	if err != nil {

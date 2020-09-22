@@ -7,6 +7,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendarTracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -17,6 +18,7 @@ type MSCalendar interface {
 	Availability
 	Calendar
 	EventResponder
+	AutoRespond
 	Subscriptions
 	Users
 	Welcomer
@@ -34,11 +36,16 @@ type Dependencies struct {
 	SettingsPanel     settingspanel.Panel
 	IsAuthorizedAdmin func(string) (bool, error)
 	Welcomer          Welcomer
+	Tracker           mscalendarTracker.Tracker
 }
 
 type PluginAPI interface {
+	OpenInteractiveDialog(dialog model.OpenDialogRequest) error
+	GetMattermostChannel(mattermostChannelID string) (*model.Channel, error)
+	GetMattermostUsersInChannel(mattermostChannelID string, sortBy string, page int, perPage int) ([]*model.User, error)
 	GetMattermostUser(mattermostUserID string) (*model.User, error)
 	GetMattermostUserByUsername(mattermostUsername string) (*model.User, error)
+	GetMattermostUserStatus(mattermostUserID string) (*model.Status, error)
 	GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error)
 	IsSysAdmin(mattermostUserID string) (bool, error)
 	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)
