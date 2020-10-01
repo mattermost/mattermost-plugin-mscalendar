@@ -38,8 +38,9 @@ type User struct {
 	Remote            *remote.User
 	MattermostUserID  string
 	OAuth2Token       *oauth2.Token
-	Settings          Settings          `json:"mattermostSettings,omitempty"`
-	ActiveEvents      []string          `json:"events"`
+	Settings          Settings `json:"mattermostSettings,omitempty"`
+	ActiveEvents      []string `json:"events"`
+	LastStatus        string
 	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 }
 
@@ -48,6 +49,8 @@ type Settings struct {
 	UpdateStatus                      bool
 	GetConfirmation                   bool
 	ReceiveReminders                  bool
+	AutoRespond                       bool
+	AutoRespondMessage                string
 	ReceiveNotificationsDuringMeeting bool
 	DailySummary                      *DailySummaryUserSettings
 }

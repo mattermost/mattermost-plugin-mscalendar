@@ -144,9 +144,9 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	if appErr != nil {
 		return "", appErr
 	}
-	statusMap := map[string]string{}
+	statusMap := map[string]*model.Status{}
 	for _, s := range statuses {
-		statusMap[s.UserId] = s.Status
+		statusMap[s.UserId] = s
 	}
 
 	var res string
@@ -179,7 +179,8 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	return utils.JSONBlock(calendarViews), nil
 }
 
-func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus string, res *remote.ViewCalendarResponse) (string, error) {
+func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse) (string, error) {
+	currentStatus := status.Status
 	if currentStatus == model.STATUS_OFFLINE && !user.Settings.GetConfirmation {
 		return "User offline and does not want status change confirmations. No status change", nil
 	}
@@ -194,17 +195,19 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		return "No events in local or remote. No status change.", nil
 	}
 
-	var message string
 	if len(user.ActiveEvents) > 0 && len(events) == 0 {
+		message := fmt.Sprintf("User is no longer busy in calendar, but is not set to busy (%s). No status change.", busyStatus)
 		if currentStatus == busyStatus {
-			err := m.setStatusOrAskUser(user, model.STATUS_ONLINE, events)
+			message = "User is no longer busy in calendar. Set status to online."
+			if user.LastStatus != "" {
+				message = fmt.Sprintf("User is no longer busy in calendar. Set status to previous status (%s)", user.LastStatus)
+			}
+			err := m.setStatusOrAskUser(user, status, events, true)
 			if err != nil {
 				return "", err
 			}
-			message = "User is no longer busy in calendar. Set status to online."
-		} else {
-			message = fmt.Sprintf("User is no longer busy in calendar, but is not set to busy (%s). No status change.", busyStatus)
 		}
+
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
 			return "", err
@@ -224,13 +227,18 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 	if len(user.ActiveEvents) == 0 {
 		var err error
 		if currentStatus == busyStatus {
+			user.LastStatus = ""
+			if status.Manual {
+				user.LastStatus = currentStatus
+			}
+			m.Store.StoreUser(user)
 			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 			if err != nil {
 				return "", err
 			}
 			return "User was already marked as busy. No status change.", nil
 		}
-		err = m.setStatusOrAskUser(user, busyStatus, events)
+		err = m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
 			return "", err
 		}
@@ -260,15 +268,15 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 		return fmt.Sprintf("No change in active events. Total number of events: %d", len(events)), nil
 	}
 
+	message := "User is already busy. No status change."
 	if currentStatus != busyStatus {
-		err := m.setStatusOrAskUser(user, busyStatus, events)
+		err := m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
 			return "", err
 		}
 		message = fmt.Sprintf("User was free, but is now busy. Set status to busy (%s).", busyStatus)
-	} else {
-		message = "User is already busy. No status change."
 	}
+
 	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 	if err != nil {
 		return "", err
@@ -276,19 +284,48 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, currentStatus s
 	return message, nil
 }
 
-func (m *mscalendar) setStatusOrAskUser(user *store.User, status string, events []*remote.Event) error {
-	if user.Settings.GetConfirmation {
-		url := fmt.Sprintf("%s%s%s", m.Config.PluginURLPath, config.PathPostAction, config.PathConfirmStatusChange)
-		_, err := m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(events, status, url))
-		if err != nil {
-			return err
+// setStatusOrAskUser to which status change, and whether it should update the status automatically or ask the user.
+// - user: the user to change the status. We use user.LastStatus to determine the status the user had before the beginning of the meeting.
+// - currentStatus: currentStatus, to decide whether to store this status when the user is free. This gets assigned to user.LastStatus at the beginning of the meeting.
+// - events: the list of events that are triggering this status change
+// - isFree: whether the user is free or busy, to decide to which status to change
+func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.Status, events []*remote.Event, isFree bool) error {
+	toSet := model.STATUS_ONLINE
+	if isFree && user.LastStatus != "" {
+		toSet = user.LastStatus
+		user.LastStatus = ""
+	}
+
+	if !isFree {
+		toSet = model.STATUS_DND
+		if user.Settings.ReceiveNotificationsDuringMeeting {
+			toSet = model.STATUS_AWAY
+		}
+		if !user.Settings.GetConfirmation {
+			user.LastStatus = ""
+			if currentStatus.Manual {
+				user.LastStatus = currentStatus.Status
+			}
+		}
+	}
+
+	err := m.Store.StoreUser(user)
+	if err != nil {
+		return err
+	}
+
+	if !user.Settings.GetConfirmation {
+		_, appErr := m.PluginAPI.UpdateMattermostUserStatus(user.MattermostUserID, toSet)
+		if appErr != nil {
+			return appErr
 		}
 		return nil
 	}
 
-	_, appErr := m.PluginAPI.UpdateMattermostUserStatus(user.MattermostUserID, status)
-	if appErr != nil {
-		return appErr
+	url := fmt.Sprintf("%s%s%s", m.Config.PluginURLPath, config.PathPostAction, config.PathConfirmStatusChange)
+	_, err = m.Poster.DMWithAttachments(user.MattermostUserID, views.RenderStatusChangeNotificationView(events, toSet, url))
+	if err != nil {
+		return err
 	}
 	return nil
 }

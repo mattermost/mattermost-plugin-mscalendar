@@ -11,9 +11,15 @@
 ## Help Wanted tickets can be found [here](https://github.com/mattermost/mattermost-plugin-mscalendar/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22up+for+grabs%22+label%3A%22help+wanted%22+sort%3Aupdated-desc)
 
 ## Table of Contents
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Configuration](#configuration)
+
+1. [License](#license)
+2. [Overview](#overview)
+3. [Features](#features)
+4. [Configuration](#configuration)
+
+## License
+
+This repository is licensed under the [Mattermost Source Available License](LICENSE) and requires a valid Enterprise E20 license. See [Mattermost Source Available License](https://docs.mattermost.com/overview/faq.html#mattermost-source-available-license) to learn more.
 
 ## Overview
 

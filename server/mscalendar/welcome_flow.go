@@ -69,13 +69,13 @@ func (wf *welcomeFlow) makeSteps() {
 		TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
 		FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
 	}, &flow.SimpleStep{
-		Title:                "Receive notifications while on meetings",
-		Message:              "Do you want to receive notifications while you are on a meeting?",
+		Title:                "Status during meetings",
+		Message:              "Do you want to set your status to `Away` or to `Do not Disturb` while you are on a meeting? Setting to `Do Not Disturb` will silence notifications.",
 		PropertyName:         store.ReceiveNotificationsDuringMeetingName,
-		TrueButtonMessage:    "Yes - I would like to set my status to Away during meetings to continue receiving notifications.",
-		FalseButtonMessage:   "No - I would like to set my status to Do Not Disturb during meetings to not receive notifications.",
+		TrueButtonMessage:    "Away",
+		FalseButtonMessage:   "Do not Disturb",
 		TrueResponseMessage:  "Great, your status will be set to Away.",
-		FalseResponseMessage: "Great, your status will be set to DnD.",
+		FalseResponseMessage: "Great, your status will be set to Do not Disturb.",
 	}, &flow.SimpleStep{
 		Title:                "Subscribe to events",
 		Message:              "Do you want to receive notifications when you are invited to an event?",
@@ -95,6 +95,18 @@ func (wf *welcomeFlow) makeSteps() {
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
 		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",
+	}, &flow.SimpleStep{
+		Title:                "Auto Respond",
+		Message:              "Do you want to enable an automatic bot response to DMs when you are in a meeting?",
+		PropertyName:         store.AutoRespondPropertyName,
+		TrueButtonMessage:    "Yes - I would like to enable an automatic response",
+		FalseButtonMessage:   "No - Do not enable",
+		TrueResponseMessage:  "Great, the bot will automatically respond to DMs when you are in a meeting.",
+		FalseResponseMessage: "Great, automatic response will not be enabled.",
+		FalseSkip:            1,
+	}, &flow.EmptyStep{
+		Title:   "Set Bot Response Message",
+		Message: "Remember that you can set your auto-respond message by typing `/mscalendar autorespond <message>`.",
 	})
 
 	wf.steps = steps
