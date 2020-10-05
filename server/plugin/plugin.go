@@ -34,6 +34,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
+
+	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
 )
 
 type Env struct {
@@ -64,9 +66,10 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	license := p.API.GetLicense()
-	if license == nil || license.Features.EnterprisePlugins == nil || !*license.Features.EnterprisePlugins {
-		return errors.New("You need a Enterprise License (E20) to activate this plugin.")
+	pluginAPIClient := pluginapilicense.NewClient(p.API)
+
+	if !pluginapilicense.IsE20LicensedOrDevelopment(pluginAPIClient.Configuration.GetConfig(), pluginAPIClient.System.GetLicense()) {
+		return errors.New("a valid Mattermost Enterprise E20 license is required to use this plugin")
 	}
 
 	p.initEnv(&p.env, "")
