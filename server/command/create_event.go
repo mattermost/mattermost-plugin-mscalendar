@@ -29,7 +29,6 @@ func getCreateEventFlagSet() *flag.FlagSet {
 }
 
 func (c *Command) createEvent(parameters ...string) (string, bool, error) {
-
 	if len(parameters) == 0 {
 		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), false, nil
 	}
@@ -65,7 +64,6 @@ func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 }
 
 func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
-
 	event := &remote.Event{}
 
 	createFlagSet := getCreateEventFlagSet()

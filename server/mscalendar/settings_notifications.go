@@ -117,7 +117,6 @@ func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string,
 			},
 		}
 		actions = []*model.PostAction{&actionTrue, &actionFalse}
-
 	}
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
