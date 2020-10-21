@@ -41,7 +41,7 @@ linters:
     # - stylecheck
     - typecheck
     # - unconvert
-    - unused
+    # - unused
     # - varcheck
     - whitespace
 
