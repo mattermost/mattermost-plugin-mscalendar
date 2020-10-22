@@ -30,7 +30,7 @@ func getCreateEventFlagSet() *flag.FlagSet {
 
 func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
-		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), false, nil
+		return getCreateEventFlagSet().FlagUsages(), false, nil
 	}
 
 	tz, err := c.MSCalendar.GetTimezone(c.user())
@@ -86,6 +86,10 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	}
 
 	help, err := createFlagSet.GetBool("help")
+	if err != nil {
+		return nil, err
+	}
+
 	if help {
 		return nil, errors.New(getCreateEventFlagSet().FlagUsages())
 	}

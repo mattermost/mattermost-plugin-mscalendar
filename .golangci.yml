@@ -36,7 +36,7 @@ linters:
     - interfacer
     # - misspell
     - nakedret
-    # - staticcheck
+    - staticcheck
     # - structcheck
     # - stylecheck
     - typecheck

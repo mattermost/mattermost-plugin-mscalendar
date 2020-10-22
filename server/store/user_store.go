@@ -77,7 +77,8 @@ func (settings Settings) String() string {
 
 func (user *User) Clone() *User {
 	newUser := *user
-	newUser.Remote = &(*user.Remote)
+	newRemoteUser := *user.Remote
+	newUser.Remote = &newRemoteUser
 	return &newUser
 }
 
