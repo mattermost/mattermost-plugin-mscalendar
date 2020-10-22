@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -21,7 +22,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 const (

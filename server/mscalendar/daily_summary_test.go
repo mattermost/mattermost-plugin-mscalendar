@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
@@ -14,8 +17,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
 )
 
 func TestProcessAllDailySummary(t *testing.T) {

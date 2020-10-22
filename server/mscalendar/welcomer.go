@@ -3,11 +3,12 @@ package mscalendar
 import (
 	"fmt"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type Welcomer interface {

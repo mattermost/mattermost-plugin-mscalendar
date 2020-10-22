@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"golang.org/x/oauth2"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"golang.org/x/oauth2"
 )
 
 type UserStore interface {

@@ -13,10 +13,10 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/pkg/errors"
-
+	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
@@ -34,8 +34,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
-
-	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
 )
 
 type Env struct {

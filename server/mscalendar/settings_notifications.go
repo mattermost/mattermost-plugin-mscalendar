@@ -3,8 +3,9 @@ package mscalendar
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 	"github.com/mattermost/mattermost-server/v5/model"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type notificationSetting struct {
