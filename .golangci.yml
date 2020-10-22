@@ -32,7 +32,7 @@ linters:
     # - gosec
     - gosimple
     - govet
-    # - ineffassign
+    - ineffassign
     - interfacer
     # - misspell
     - nakedret
