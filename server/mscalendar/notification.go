@@ -328,41 +328,6 @@ func (processor *notificationProcessor) actionURL(action string) string {
 	return fmt.Sprintf("%s%s%s", processor.Config.PluginURLPath, config.PathPostAction, action)
 }
 
-func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
-	if !event.ResponseRequested {
-		return
-	}
-	context := map[string]interface{}{
-		config.EventIDKey: event.ID,
-	}
-	sa.Actions = []*model.PostAction{
-		{
-			Name: "Accept",
-			Type: model.POST_ACTION_TYPE_BUTTON,
-			Integration: &model.PostActionIntegration{
-				URL:     processor.actionURL(config.PathAccept),
-				Context: context,
-			},
-		},
-		{
-			Name: "Tentatively Accept",
-			Type: model.POST_ACTION_TYPE_BUTTON,
-			Integration: &model.PostActionIntegration{
-				URL:     processor.actionURL(config.PathTentative),
-				Context: context,
-			},
-		},
-		{
-			Name: "Decline",
-			Type: model.POST_ACTION_TYPE_BUTTON,
-			Integration: &model.PostActionIntegration{
-				URL:     processor.actionURL(config.PathDecline),
-				Context: context,
-			},
-		},
-	}
-}
-
 func NewPostActionForEventResponse(eventID, response, url string) []*model.PostAction {
 	context := map[string]interface{}{
 		config.EventIDKey: eventID,
