@@ -23,10 +23,10 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendarTracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
@@ -151,7 +151,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURL = pluginURL
 		e.Config.PluginURLPath = pluginURLPath
 
-		e.bot = e.bot.WithConfig(stored.BotConfig)
+		e.bot = e.bot.WithConfig(stored.Config)
 		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.bot)
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
@@ -162,7 +162,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		if p.API.GetConfig() != nil && p.API.GetConfig().LogSettings.EnableDiagnostics != nil {
 			diagnostics = *p.API.GetConfig().LogSettings.EnableDiagnostics
 		}
-		e.Dependencies.Tracker = mscalendarTracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, config.TelemetryShortName, diagnostics, e.Logger))
+		e.Dependencies.Tracker = tracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, config.TelemetryShortName, diagnostics, e.Logger))
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot

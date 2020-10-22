@@ -36,7 +36,7 @@ func NewOAuth2App(env Env) oauth2connect.App {
 func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error) {
 	user, err := app.Store.LoadUser(mattermostUserID)
 	if err == nil {
-		return "", fmt.Errorf("User is already connected to %s", user.Remote.Mail)
+		return "", fmt.Errorf("user is already connected to %s", user.Remote.Mail)
 	}
 
 	conf := app.Remote.NewOAuth2Config()
@@ -84,11 +84,11 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		if userErr == nil {
 			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, config.ApplicationName, me.Mail, config.CommandTrigger, user.Username)
 			return fmt.Errorf(RemoteUserAlreadyConnected, config.ApplicationName, me.Mail, config.CommandTrigger, user.Username)
-		} else {
-			// Couldn't fetch connected MM account. Reject connect attempt.
-			app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
-			return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 		}
+
+		// Couldn't fetch connected MM account. Reject connect attempt.
+		app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
+		return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 	}
 
 	u := &store.User{

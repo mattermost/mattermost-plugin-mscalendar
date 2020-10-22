@@ -81,7 +81,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		})
 	for _, req := range requiredFlags {
 		if !flags[req] {
-			return nil, fmt.Errorf("Missing required flag: `--%s` ", req)
+			return nil, fmt.Errorf("missing required flag: `--%s` ", req)
 		}
 	}
 

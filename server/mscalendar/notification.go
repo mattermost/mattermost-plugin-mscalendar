@@ -132,10 +132,10 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return err
 	}
 	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
-		return errors.New("Subscription is orphaned")
+		return errors.New("subscription is orphaned")
 	}
 	if sub.Remote.ClientState != "" && sub.Remote.ClientState != n.ClientState {
-		return errors.New("Unauthorized webhook")
+		return errors.New("unauthorized webhook")
 	}
 
 	n.Subscription = sub.Remote

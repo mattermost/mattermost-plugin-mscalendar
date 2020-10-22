@@ -1,4 +1,4 @@
-package mscalendarTracker
+package tracker
 
 import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 

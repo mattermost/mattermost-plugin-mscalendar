@@ -38,10 +38,10 @@ func TestDisconnect(t *testing.T) {
 			command: "disconnect",
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
-				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, errors.New("Some error")).Times(1)
+				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
-			expectedError:  "Command /mscalendar disconnect failed: Some error",
+			expectedError:  "Command /mscalendar disconnect failed: some error",
 		},
 		{
 			name:    "disconnect failed",
@@ -49,10 +49,10 @@ func TestDisconnect(t *testing.T) {
 			setup: func(m mscalendar.MSCalendar) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, nil).Times(1)
-				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("Some error")).Times(1)
+				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
-			expectedError:  "Command /mscalendar disconnect failed: Some error",
+			expectedError:  "Command /mscalendar disconnect failed: some error",
 		},
 		{
 			name:    "disconnect successful",

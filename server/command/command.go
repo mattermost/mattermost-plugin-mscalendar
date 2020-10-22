@@ -97,12 +97,12 @@ func (c *Command) Handle() (string, bool, error) {
 
 func (c *Command) isValid() (subcommand string, parameters []string, err error) {
 	if c.Context == nil || c.Args == nil {
-		return "", nil, errors.New("Invalid arguments to command.Handler")
+		return "", nil, errors.New("invalid arguments to command.Handler")
 	}
 	split := strings.Fields(c.Args.Command)
 	command := split[0]
 	if command != "/"+config.CommandTrigger {
-		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator.", command)
+		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator", command)
 	}
 
 	parameters = []string{}

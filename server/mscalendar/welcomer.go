@@ -20,7 +20,7 @@ type Welcomer interface {
 type Bot interface {
 	bot.Bot
 	Welcomer
-	flow.FlowStore
+	flow.Store
 }
 
 type mscBot struct {

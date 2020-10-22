@@ -102,17 +102,17 @@ func (m *mscalendar) GetTimezoneByID(mattermostUserID string) (string, error) {
 func (user *User) String() string {
 	if user.MattermostUser != nil {
 		return fmt.Sprintf("@%s", user.MattermostUser.Username)
-	} else {
-		return fmt.Sprintf("%s", user.MattermostUserID)
 	}
+
+	return fmt.Sprintf("%s", user.MattermostUserID)
 }
 
 func (user *User) Markdown() string {
 	if user.MattermostUser != nil {
 		return fmt.Sprintf("@%s", user.MattermostUser.Username)
-	} else {
-		return fmt.Sprintf("UserID: `%s`", user.MattermostUserID)
 	}
+
+	return fmt.Sprintf("UserID: `%s`", user.MattermostUserID)
 }
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {

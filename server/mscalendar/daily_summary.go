@@ -48,7 +48,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 	}
 
 	if t.Minute()%int(DailySummaryJobInterval/time.Minute) != 0 {
-		return nil, fmt.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
+		return nil, fmt.Errorf("time must be a multiple of %d minutes", DailySummaryJobInterval/time.Minute)
 	}
 
 	timezone, err := m.GetTimezone(user)
@@ -188,7 +188,7 @@ func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time)
 
 	timezone := tz.Go(dsum.Timezone)
 	if timezone == "" {
-		return false, errors.New("Invalid timezone")
+		return false, errors.New("invalid timezone")
 	}
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
