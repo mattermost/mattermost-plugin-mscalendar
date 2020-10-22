@@ -20,7 +20,6 @@ type JobManager struct {
 	activeJobs     sync.Map
 	env            mscalendar.Env
 	papi           cluster.JobPluginAPI
-	mux            sync.Mutex
 }
 
 type RegisteredJob struct {

@@ -37,7 +37,7 @@ linters:
     # - misspell
     - nakedret
     - staticcheck
-    # - structcheck
+    - structcheck
     # - stylecheck
     - typecheck
     # - unconvert
