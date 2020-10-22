@@ -416,7 +416,7 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 
 	minutes := int(end.Sub(start).Round(time.Minute).Minutes())
 	hours := int(end.Sub(start).Hours())
-	minutes -= int(hours * 60)
+	minutes -= hours * 60
 	days := int(end.Sub(start).Hours()) / 24
 	hours -= days * 24
 

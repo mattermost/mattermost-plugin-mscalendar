@@ -40,7 +40,7 @@ linters:
     - structcheck
     - stylecheck
     - typecheck
-    # - unconvert
+    - unconvert
     # - unused
     # - varcheck
     - whitespace

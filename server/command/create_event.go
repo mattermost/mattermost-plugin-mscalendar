@@ -150,7 +150,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	if strings.HasPrefix(strconv.Itoa(int(reminder)), "--") {
+	if strings.HasPrefix(strconv.Itoa(reminder), "--") {
 		return nil, errors.New("reminder flag requires an argument")
 	}
 	event.ReminderMinutesBeforeStart = reminder
