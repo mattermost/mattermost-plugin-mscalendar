@@ -241,7 +241,7 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: fmt.Sprintf("%s", strings.Join(v.Strings(), ", ")),
+			Value: strings.Join(v.Strings(), ", "),
 			Short: true,
 		})
 	}

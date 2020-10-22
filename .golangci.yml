@@ -30,7 +30,7 @@ linters:
     # - goimports
     - golint
     # - gosec
-    # - gosimple
+    - gosimple
     # - govet
     # - ineffassign
     - interfacer

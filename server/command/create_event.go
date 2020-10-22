@@ -86,7 +86,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	}
 
 	help, err := createFlagSet.GetBool("help")
-	if help == true {
+	if help {
 		return nil, errors.New(getCreateEventFlagSet().FlagUsages())
 	}
 

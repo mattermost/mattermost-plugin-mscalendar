@@ -104,7 +104,7 @@ func (user *User) String() string {
 		return fmt.Sprintf("@%s", user.MattermostUser.Username)
 	}
 
-	return fmt.Sprintf("%s", user.MattermostUserID)
+	return user.MattermostUserID
 }
 
 func (user *User) Markdown() string {
