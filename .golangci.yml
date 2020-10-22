@@ -42,7 +42,7 @@ linters:
     - typecheck
     - unconvert
     - unused
-    # - varcheck
+    - varcheck
     - whitespace
 
 issues:
