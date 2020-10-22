@@ -96,15 +96,15 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := api.PluginAPI.GetPost(postID)
-	if err != nil {
-		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+err.Error())
+	p, appErr := api.PluginAPI.GetPost(postID)
+	if appErr != nil {
+		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+appErr.Error())
 		return
 	}
 
 	sas := p.Attachments()
 	if len(sas) == 0 {
-		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+err.Error())
+		utils.SlackAttachmentError(w, "Error: Failed to update the post: No attachments found")
 		return
 	}
 
