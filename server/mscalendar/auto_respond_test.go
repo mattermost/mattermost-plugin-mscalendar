@@ -46,9 +46,9 @@ func newTestMattermostStatus(status string) *model.Status {
 	}
 }
 
-func newTestMattermostUser(UserID string) *model.User {
+func newTestMattermostUser(userID string) *model.User {
 	return &model.User{
-		Id: UserID,
+		Id: userID,
 	}
 }
 
