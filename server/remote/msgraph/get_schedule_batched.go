@@ -8,8 +8,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-const maxNumUsersPerRequest = 20
-
 type getScheduleResponse struct {
 	Value []*remote.ScheduleInformation `json:"value,omitempty"`
 	Error *remote.ApiError              `json:"error,omitempty"`

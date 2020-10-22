@@ -19,8 +19,6 @@ const dailySummaryTimeWindow = time.Minute * 2
 // Run daily summary job every 15 minutes
 const DailySummaryJobInterval = 15 * time.Minute
 
-var timeNowFunc = time.Now
-
 type DailySummary interface {
 	GetDailySummaryForUser(user *User) (string, error)
 	GetDailySummarySettingsForUser(user *User) (*store.DailySummaryUserSettings, error)

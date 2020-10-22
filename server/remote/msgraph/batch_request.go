@@ -17,17 +17,6 @@ type singleRequest struct {
 	Headers map[string]string `json:"headers"`
 }
 
-type singleResponse struct {
-	ID      string            `json:"id"`
-	Status  int               `json:"status"`
-	Body    interface{}       `json:"body"`
-	Headers map[string]string `json:"headers"`
-}
-
-type fullBatchResponse struct {
-	Responses []interface{} `json:"responses"`
-}
-
 type fullBatchRequest struct {
 	Requests []*singleRequest `json:"requests"`
 }

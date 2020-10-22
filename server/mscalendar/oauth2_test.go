@@ -3,7 +3,6 @@ package mscalendar
 import (
 	"errors"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"testing"
@@ -26,11 +25,9 @@ import (
 )
 
 const (
-	fakeID          = "fake@mattermost.com"
-	fakeRemoteID    = "user-remote-id"
-	fakeBotID       = "bot-user-id"
-	fakeBotRemoteID = "bot-remote-id"
-	fakeCode        = "fakecode"
+	fakeID       = "fake@mattermost.com"
+	fakeRemoteID = "user-remote-id"
+	fakeCode     = "fakecode"
 )
 
 func TestCompleteOAuth2Happy(t *testing.T) {
@@ -346,17 +343,6 @@ func statusOKGraphAPIResponder() {
 	mailSettingsResponder := httpmock.NewStringResponder(http.StatusOK, mailSettingsResponse)
 
 	httpmock.RegisterResponder("GET", mailSettingsURL, mailSettingsResponder)
-}
-
-func newHTTPRequest(mattermostUserID, rawQuery string) *http.Request {
-	r := &http.Request{
-		Header: make(http.Header),
-		URL: &url.URL{
-			RawQuery: rawQuery,
-		},
-	}
-	r.Header.Add("Mattermost-User-ID", mattermostUserID)
-	return r
 }
 
 func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {
