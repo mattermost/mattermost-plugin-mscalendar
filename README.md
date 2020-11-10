@@ -23,7 +23,7 @@ This repository is licensed under the [Mattermost Source Available License](LICE
 
 ## Overview
 
-This plugin supports a two-way integration between Mattermost and Microsoft Outlook Calendar. For a stable production release, please download the latest version [in the Releases tab](https://github.com/mattermost/mattermost-plugin-mscalendar/releases) and follow [these instructions](#configuration) for install and configuration.
+This plugin supports a two-way integration between Mattermost and Microsoft Outlook Calendar. For a stable production release, please download the latest version from the Plugin Marketplace and follow [these instructions](#configuration) to install and configure the plugin.
 
 ## Features
 
@@ -99,7 +99,7 @@ You're all set for configuration inside of Azure.
 
 <img width="500" src="https://user-images.githubusercontent.com/6913320/76779336-9109c480-6781-11ea-8cde-4b79e5b2f3cd.png"/>
 
-2. Navigate to **System Console > PLUGINS > Microsoft Calendar**. Fill in the following fields:
+2. Navigate to **System Console > PLUGINS (Beta > Microsoft Calendar**. Fill in the following fields:
 
 - `Admin User IDs` - List of user IDs to manage the plugin.
 - `tenantID` - Copy from Azure App.
