@@ -6,9 +6,10 @@ package bot
 import (
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 )
 
 type Bot interface {
@@ -18,13 +19,13 @@ type Bot interface {
 	FlowController
 
 	Ensure(stored *model.Bot, iconPath string) error
-	WithConfig(BotConfig) Bot
+	WithConfig(Config) Bot
 	MattermostUserID() string
-	RegisterFlow(flow.Flow, flow.FlowStore)
+	RegisterFlow(flow.Flow, flow.Store)
 }
 
 type bot struct {
-	BotConfig
+	Config
 	pluginAPI        plugin.API
 	pluginHelpers    plugin.Helpers
 	mattermostUserID string
@@ -33,7 +34,7 @@ type bot struct {
 	pluginURL        string
 
 	flow      flow.Flow
-	flowStore flow.FlowStore
+	flowStore flow.Store
 }
 
 func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
@@ -44,7 +45,7 @@ func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
 	}
 }
 
-func (bot *bot) RegisterFlow(flow flow.Flow, flowStore flow.FlowStore) {
+func (bot *bot) RegisterFlow(flow flow.Flow, flowStore flow.Store) {
 	bot.flow = flow
 	bot.flowStore = flowStore
 }
@@ -64,9 +65,9 @@ func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
 	return nil
 }
 
-func (bot *bot) WithConfig(conf BotConfig) Bot {
+func (bot *bot) WithConfig(conf Config) Bot {
 	newbot := *bot
-	newbot.BotConfig = conf
+	newbot.Config = conf
 	return &newbot
 }
 

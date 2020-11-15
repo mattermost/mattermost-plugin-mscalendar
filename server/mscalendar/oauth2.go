@@ -8,10 +8,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-
-	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -20,8 +19,8 @@ import (
 
 const BotWelcomeMessage = "Bot user connected to account %s."
 
-const RemoteUserAlreadyConnected = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account."
-const RemoteUserAlreadyConnectedNotFound = "%s account `%s` is already mapped to a Mattermost account, but the Mattermost user could not be found."
+const RemoteUserAlreadyConnected = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account"
+const RemoteUserAlreadyConnectedNotFound = "%s account `%s` is already mapped to a Mattermost account, but the Mattermost user could not be found"
 
 type oauth2App struct {
 	Env
@@ -36,7 +35,7 @@ func NewOAuth2App(env Env) oauth2connect.App {
 func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error) {
 	user, err := app.Store.LoadUser(mattermostUserID)
 	if err == nil {
-		return "", fmt.Errorf("User is already connected to %s", user.Remote.Mail)
+		return "", fmt.Errorf("user is already connected to %s", user.Remote.Mail)
 	}
 
 	conf := app.Remote.NewOAuth2Config()
@@ -84,11 +83,11 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		if userErr == nil {
 			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, config.ApplicationName, me.Mail, config.CommandTrigger, user.Username)
 			return fmt.Errorf(RemoteUserAlreadyConnected, config.ApplicationName, me.Mail, config.CommandTrigger, user.Username)
-		} else {
-			// Couldn't fetch connected MM account. Reject connect attempt.
-			app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
-			return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 		}
+
+		// Couldn't fetch connected MM account. Reject connect attempt.
+		app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
+		return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 	}
 
 	u := &store.User{

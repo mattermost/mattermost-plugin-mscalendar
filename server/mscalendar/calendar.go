@@ -73,6 +73,10 @@ func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUser
 		if err != nil {
 			if err.Error() == "not found" {
 				_, err = m.Poster.DM(mattermostUserID, "You have been invited to an Microsoft Outlook calendar event but have not linked your account.  Feel free to join us by connecting your Microsoft Outlook account using `/mscalendar connect`")
+				if err != nil {
+					m.Logger.Warnf("CreateEvent error creating DM. err=%v", err)
+					continue
+				}
 			}
 		}
 	}

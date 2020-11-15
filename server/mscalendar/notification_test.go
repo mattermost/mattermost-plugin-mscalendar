@@ -104,7 +104,7 @@ func TestProcessNotification(t *testing.T) {
 			priorEvent:    nil,
 		}, {
 			name:          "incoming ClientState doesn't match stored ClientState",
-			expectedError: "Unauthorized webhook",
+			expectedError: "unauthorized webhook",
 			notification:  newTestNotification("wrong_client_state", false),
 			priorEvent:    nil,
 		}, {

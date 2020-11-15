@@ -3,9 +3,10 @@ package settingspanel
 import (
 	"errors"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type Setting interface {

@@ -79,13 +79,13 @@ func (bot *bot) dmAdmins(format string, args ...interface{}) error {
 }
 
 // Ephemeral sends an ephemeral message to a user
-func (bot *bot) Ephemeral(userId, channelId, format string, args ...interface{}) {
+func (bot *bot) Ephemeral(userID, channelID, format string, args ...interface{}) {
 	post := &model.Post{
 		UserId:    bot.mattermostUserID,
-		ChannelId: channelId,
+		ChannelId: channelID,
 		Message:   fmt.Sprintf(format, args...),
 	}
-	_ = bot.pluginAPI.SendEphemeralPost(userId, post)
+	_ = bot.pluginAPI.SendEphemeralPost(userID, post)
 }
 
 func (bot *bot) DMUpdate(postID, format string, args ...interface{}) error {

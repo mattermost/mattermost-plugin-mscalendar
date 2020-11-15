@@ -7,19 +7,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
-	"github.com/pkg/errors"
 )
 
 const dailySummaryTimeWindow = time.Minute * 2
 
 // Run daily summary job every 15 minutes
 const DailySummaryJobInterval = 15 * time.Minute
-
-var timeNowFunc = time.Now
 
 type DailySummary interface {
 	GetDailySummaryForUser(user *User) (string, error)
@@ -50,7 +49,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 	}
 
 	if t.Minute()%int(DailySummaryJobInterval/time.Minute) != 0 {
-		return nil, fmt.Errorf("Time must be a multiple of %d minutes.", DailySummaryJobInterval/time.Minute)
+		return nil, fmt.Errorf("time must be a multiple of %d minutes", DailySummaryJobInterval/time.Minute)
 	}
 
 	timezone, err := m.GetTimezone(user)
@@ -190,7 +189,7 @@ func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time)
 
 	timezone := tz.Go(dsum.Timezone)
 	if timezone == "" {
-		return false, errors.New("Invalid timezone")
+		return false, errors.New("invalid timezone")
 	}
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {

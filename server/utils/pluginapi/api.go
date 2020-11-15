@@ -6,9 +6,10 @@ package pluginapi
 import (
 	"strings"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 type API struct {
@@ -76,7 +77,7 @@ func (a *API) IsSysAdmin(mattermostUserID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return strings.Contains(user.Roles, "system_admin"), nil
+	return user.IsSystemAdmin(), nil
 }
 
 func (a *API) GetMattermostUserByUsername(mattermostUsername string) (*model.User, error) {

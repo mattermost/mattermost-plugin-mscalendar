@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
-
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
@@ -29,7 +28,7 @@ func TestSyncStatusAll(t *testing.T) {
 
 	for name, tc := range map[string]struct {
 		remoteEvents        []*remote.Event
-		apiError            *remote.ApiError
+		apiError            *remote.APIError
 		activeEvents        []string
 		currentStatus       string
 		currentStatusManual bool
@@ -105,7 +104,7 @@ func TestSyncStatusAll(t *testing.T) {
 			currentStatusManual: true,
 			newStatus:           "",
 			eventsToStore:       nil,
-			apiError:            &remote.ApiError{Code: "403", Message: "Forbidden"},
+			apiError:            &remote.APIError{Code: "403", Message: "Forbidden"},
 			shouldLogError:      true,
 			getConfirmation:     false,
 		},
@@ -234,7 +233,7 @@ func TestReminders(t *testing.T) {
 	for name, tc := range map[string]struct {
 		remoteEvents   []*remote.Event
 		numReminders   int
-		apiError       *remote.ApiError
+		apiError       *remote.APIError
 		shouldLogError bool
 	}{
 		"Most common case, no remote events. No reminder.": {
@@ -281,7 +280,7 @@ func TestReminders(t *testing.T) {
 		"Remote API Error. Error should be logged.": {
 			remoteEvents:   []*remote.Event{},
 			numReminders:   0,
-			apiError:       &remote.ApiError{Code: "403", Message: "Forbidden"},
+			apiError:       &remote.APIError{Code: "403", Message: "Forbidden"},
 			shouldLogError: true,
 		},
 	} {

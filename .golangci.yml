@@ -22,27 +22,27 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    # - deadcode
+    - deadcode
     # - errcheck
     # - goconst
-    # - gocritic
-    # - gofmt
-    # - goimports
-    # - golint
+    - gocritic
+    - gofmt
+    - goimports
+    - golint
     # - gosec
-    # - gosimple
-    # - govet
-    # - ineffassign
+    - gosimple
+    - govet
+    - ineffassign
     - interfacer
     # - misspell
     - nakedret
-    # - staticcheck
-    # - structcheck
-    # - stylecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
     - typecheck
-    # - unconvert
-    # - unused
-    # - varcheck
+    - unconvert
+    - unused
+    - varcheck
     - whitespace
 
 issues:

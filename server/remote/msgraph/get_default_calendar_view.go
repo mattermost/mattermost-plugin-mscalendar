@@ -15,7 +15,7 @@ import (
 
 type calendarViewResponse struct {
 	Value []*remote.Event  `json:"value,omitempty"`
-	Error *remote.ApiError `json:"error,omitempty"`
+	Error *remote.APIError `json:"error,omitempty"`
 }
 
 type calendarViewSingleResponse struct {
