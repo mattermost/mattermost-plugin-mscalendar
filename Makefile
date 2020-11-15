@@ -82,6 +82,43 @@ ifneq ($(HAS_WEBAPP),)
 	$(NPM) run debug;
 endif
 
+# server-debug builds and deploys a debug version of the plugin for your architecture.
+# Then resets the plugin to pick up the changes.
+.PHONY: server-debug
+server-debug: server-debug-deploy reset
+
+.PHONY: server-debug-deploy
+server-debug-deploy: validate-go-version
+	./build/bin/manifest apply
+	mkdir -p server/dist
+ifeq ($(OS),Darwin)
+	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-darwin-amd64;
+else ifeq ($(OS),Linux)
+	cd server && env GOOS=linux GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-linux-amd64;
+else ifeq ($(OS),Windows_NT)
+	cd server && env GOOS=windows GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-windows-amd64.exe;
+else
+	$(error make debug depends on uname to return your OS. If it does not return 'Darwin' (meaning OSX), 'Linux', or 'Windows_NT' (all recent versions of Windows), you will need to edit the Makefile for your own OS.)
+endif
+	rm -rf dist/
+	mkdir -p dist/$(PLUGIN_ID)/server/dist
+	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/
+	cp -r server/dist/* dist/$(PLUGIN_ID)/server/dist/
+	mkdir -p ../mattermost-server/plugins
+	cp -r dist/* ../mattermost-server/plugins/
+
+.PHONY: validate-go-version
+validate-go-version: ## Validates the installed version of go against Mattermost's minimum requirement.
+	@if [ $(GO_MAJOR_VERSION) -gt $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION) ]; then \
+		exit 0 ;\
+	elif [ $(GO_MAJOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION) ]; then \
+		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+		exit 1; \
+	elif [ $(GO_MINOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MINOR_VERSION) ] ; then \
+		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+		exit 1; \
+	fi
+	
 ## Generates a tar bundle of the plugin for install.
 .PHONY: bundle
 bundle:
