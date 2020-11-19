@@ -4,6 +4,8 @@
 package mscalendar
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -81,6 +83,15 @@ func (m *mscalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	}
 	renewed, err := m.client.RenewSubscription(subscriptionID)
 	if err != nil {
+		if strings.Contains(err.Error(), "The object was not found") {
+			err = m.Store.DeleteUserSubscription(m.actingUser.User, subscriptionID)
+			if err != nil {
+				return nil, err
+			}
+
+			m.Logger.Infof("Subscription %s for Mattermost user %s has expired. Creating a new subscription now.", subscriptionID, m.actingUser.MattermostUserID)
+			return m.CreateMyEventSubscription()
+		}
 		return nil, err
 	}
 
