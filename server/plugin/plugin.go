@@ -23,6 +23,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendarTracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -32,6 +33,9 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
+
+	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
 )
 
 type Env struct {
@@ -46,9 +50,10 @@ type Env struct {
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	envLock   *sync.RWMutex
-	env       Env
-	Templates map[string]*template.Template
+	envLock         *sync.RWMutex
+	env             Env
+	Templates       map[string]*template.Template
+	telemetryClient telemetry.Client
 }
 
 func NewWithEnv(env mscalendar.Env) *Plugin {
@@ -61,9 +66,10 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	license := p.API.GetLicense()
-	if license == nil || license.Features.EnterprisePlugins == nil || !*license.Features.EnterprisePlugins {
-		return errors.New("You need a Enterprise License (E20) to activate this plugin.")
+	pluginAPIClient := pluginapilicense.NewClient(p.API)
+
+	if !pluginapilicense.IsE20LicensedOrDevelopment(pluginAPIClient.Configuration.GetConfig(), pluginAPIClient.System.GetLicense()) {
+		return errors.New("a valid Mattermost Enterprise E20 license is required to use this plugin")
 	}
 
 	p.initEnv(&p.env, "")
@@ -77,10 +83,23 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	command.Register(p.API.RegisterCommand)
+
+	p.telemetryClient, err = telemetry.NewRudderClient()
+	if err != nil {
+		p.env.bot.Errorf("Cannot create telemetry client. err=%v", err)
+	}
+
 	return nil
 }
 
 func (p *Plugin) OnDeactivate() error {
+	if p.telemetryClient != nil {
+		err := p.telemetryClient.Close()
+		if err != nil {
+			p.env.Logger.Warnf("OnDeactivate: Failed to close telemetryClient. err=%v", err)
+		}
+	}
+
 	e := p.getEnv()
 	if e.jobManager != nil {
 		if err := e.jobManager.Close(); err != nil {
@@ -138,9 +157,16 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		e.Dependencies.Logger = e.bot
+
+		diagnostics := false
+		if p.API.GetConfig() != nil && p.API.GetConfig().LogSettings.EnableDiagnostics != nil {
+			diagnostics = *p.API.GetConfig().LogSettings.EnableDiagnostics
+		}
+		e.Dependencies.Tracker = mscalendarTracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, config.TelemetryShortName, diagnostics, e.Logger))
+
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -287,4 +313,14 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 	}
 
 	return nil
+}
+
+func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
+	env := p.getEnv()
+	m := mscalendar.New(env.Env, post.UserId)
+
+	err := m.HandleBusyDM(post)
+	if err != nil {
+		p.API.LogError(err.Error())
+	}
 }

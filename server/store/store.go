@@ -8,6 +8,7 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/plugin"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendarTracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
@@ -51,9 +52,10 @@ type pluginStore struct {
 	welcomeIndexKV     kvstore.KVStore
 	settingsPanelKV    kvstore.KVStore
 	Logger             bot.Logger
+	Tracker            mscalendarTracker.Tracker
 }
 
-func NewPluginStore(api plugin.API, logger bot.Logger) Store {
+func NewPluginStore(api plugin.API, logger bot.Logger, tracker mscalendarTracker.Tracker) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	return &pluginStore{
 		basicKV:            basicKV,
@@ -66,5 +68,6 @@ func NewPluginStore(api plugin.API, logger bot.Logger) Store {
 		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
 		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
 		Logger:             logger,
+		Tracker:            tracker,
 	}
 }
