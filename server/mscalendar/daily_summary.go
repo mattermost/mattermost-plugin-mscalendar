@@ -59,11 +59,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 	}
 
 	if user.Settings.DailySummary == nil {
-		user.Settings.DailySummary = &store.DailySummaryUserSettings{
-			PostTime: "8:00AM",
-			Timezone: "Eastern Standard Time",
-			Enable:   false,
-		}
+		user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
 	}
 
 	dsum := user.Settings.DailySummary
@@ -84,11 +80,7 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	}
 
 	if user.Settings.DailySummary == nil {
-		user.Settings.DailySummary = &store.DailySummaryUserSettings{
-			PostTime: "8:00AM",
-			Timezone: "Eastern Standard Time",
-			Enable:   false,
-		}
+		user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
 	}
 
 	dsum := user.Settings.DailySummary
