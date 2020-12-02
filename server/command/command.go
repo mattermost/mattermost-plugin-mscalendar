@@ -37,9 +37,9 @@ type handleFunc func(parameters ...string) (string, bool, error)
 
 var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
-	model.NewAutocompleteData("connect", "", ""),
-	model.NewAutocompleteData("disconnect", "", ""),
-	model.NewAutocompleteData("help", "", ""),
+	model.NewAutocompleteData("connect", "", "Connect to your Microsoft account"),
+	model.NewAutocompleteData("disconnect", "", "Disconnect from your Microsoft Account"),
+	model.NewAutocompleteData("help", "", "Read help text for the commands"),
 	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
 	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
