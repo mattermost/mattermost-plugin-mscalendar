@@ -58,6 +58,10 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, err
 	}
 
+	if user.Settings.DailySummary == nil {
+		user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
+	}
+
 	dsum := user.Settings.DailySummary
 	dsum.PostTime = timeStr
 	dsum.Timezone = timezone
@@ -73,6 +77,10 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	err := m.Filter(withUserExpanded(user))
 	if err != nil {
 		return nil, err
+	}
+
+	if user.Settings.DailySummary == nil {
+		user.Settings.DailySummary = store.DefaultDailySummaryUserSettings()
 	}
 
 	dsum := user.Settings.DailySummary
@@ -110,6 +118,10 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 		byRemoteID[storeUser.Remote.ID] = storeUser
 
 		dsum := storeUser.Settings.DailySummary
+		if dsum == nil {
+			continue
+		}
+
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
 			m.Logger.Warnf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
@@ -139,6 +151,10 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			m.Logger.Warnf("Error rendering user %s calendar. err=%s %s", user.MattermostUserID, res.Error.Code, res.Error.Message)
 		}
 		dsum := user.Settings.DailySummary
+		if dsum == nil {
+			// Should never reach this point
+			continue
+		}
 		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone)
 		if err != nil {
 			m.Logger.Warnf("Error rendering user %s calendar. err=%v", user.MattermostUserID, err)
@@ -172,7 +188,7 @@ func (m *mscalendar) GetDailySummaryForUser(user *User) (string, error) {
 }
 
 func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time) (bool, error) {
-	if !dsum.Enable {
+	if dsum == nil || !dsum.Enable {
 		return false, nil
 	}
 
