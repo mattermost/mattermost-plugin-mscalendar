@@ -52,7 +52,7 @@ func (m *mscalendar) TentativelyAcceptEvent(user *User, eventID string) error {
 
 func (m *mscalendar) RespondToEvent(user *User, eventID, response string) error {
 	if response == OptionNotResponded {
-		return errors.New("Not responded is not a valid response")
+		return errors.New("not responded is not a valid response")
 	}
 
 	err := m.Filter(

@@ -29,9 +29,8 @@ func getCreateEventFlagSet() *flag.FlagSet {
 }
 
 func (c *Command) createEvent(parameters ...string) (string, bool, error) {
-
 	if len(parameters) == 0 {
-		return fmt.Sprintf(getCreateEventFlagSet().FlagUsages()), false, nil
+		return getCreateEventFlagSet().FlagUsages(), false, nil
 	}
 
 	tz, err := c.MSCalendar.GetTimezone(c.user())
@@ -65,7 +64,6 @@ func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 }
 
 func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
-
 	event := &remote.Event{}
 
 	createFlagSet := getCreateEventFlagSet()
@@ -83,12 +81,16 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 		})
 	for _, req := range requiredFlags {
 		if !flags[req] {
-			return nil, fmt.Errorf("Missing required flag: `--%s` ", req)
+			return nil, fmt.Errorf("missing required flag: `--%s` ", req)
 		}
 	}
 
 	help, err := createFlagSet.GetBool("help")
-	if help == true {
+	if err != nil {
+		return nil, err
+	}
+
+	if help {
 		return nil, errors.New(getCreateEventFlagSet().FlagUsages())
 	}
 
@@ -148,7 +150,7 @@ func parseCreateArgs(args []string, timeZone string) (*remote.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	if strings.HasPrefix(strconv.Itoa(int(reminder)), "--") {
+	if strings.HasPrefix(strconv.Itoa(reminder), "--") {
 		return nil, errors.New("reminder flag requires an argument")
 	}
 	event.ReminderMinutesBeforeStart = reminder

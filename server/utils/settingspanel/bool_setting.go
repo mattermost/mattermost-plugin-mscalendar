@@ -112,7 +112,6 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 			},
 		}
 		actions = []*model.PostAction{&actionTrue, &actionFalse}
-
 	}
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)

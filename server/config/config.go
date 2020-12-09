@@ -12,7 +12,7 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
-	bot.BotConfig
+	bot.Config
 }
 
 // Config represents the the metadata handed to all request runners (command,

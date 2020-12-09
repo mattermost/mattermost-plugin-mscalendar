@@ -22,7 +22,7 @@ type Remote interface {
 
 var Makers = map[string]func(*config.Config, bot.Logger) Remote{}
 
-type ApiError struct {
+type APIError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }

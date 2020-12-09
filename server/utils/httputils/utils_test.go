@@ -30,15 +30,15 @@ func TestNormalizeRemoteBaseURL(t *testing.T) {
 		{"[jdsh", "", "",
 			`parse "//[jdsh": missing ']' in host`},
 		{"/mmtest", "", "",
-			`Invalid URL, no hostname: "/mmtest"`},
+			`invalid URL, no hostname: "/mmtest"`},
 		{"/mmtest/", "", "",
-			`Invalid URL, no hostname: "/mmtest/"`},
+			`invalid URL, no hostname: "/mmtest/"`},
 		{"http:/mmtest/", "", "",
-			`Invalid URL, no hostname: "http:/mmtest/"`},
+			`invalid URL, no hostname: "http:/mmtest/"`},
 		{"hƒƒp://xyz.com", "", "",
 			`parse "hƒƒp://xyz.com": first path segment in URL cannot contain colon`},
 		{"https://mattermost.site.url", "https://mattermost.site.url/", "",
-			"https://mattermost.site.url is the Mattermost site URL. Please use the remote application's URL."},
+			"https://mattermost.site.url is the Mattermost site URL. Please use the remote application's URL"},
 	} {
 		t.Run(tc.in, func(t *testing.T) {
 			out, err := NormalizeRemoteBaseURL(tc.siteURL, tc.in)
