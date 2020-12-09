@@ -4,8 +4,9 @@
 package oauth2connect
 
 import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 	"net/http"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
 func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request) {

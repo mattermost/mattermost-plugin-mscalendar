@@ -29,7 +29,7 @@ func NormalizeRemoteBaseURL(mattermostSiteURL, remoteURL string) (string, error)
 		}
 	}
 	if u.Host == "" {
-		return "", fmt.Errorf("Invalid URL, no hostname: %q", remoteURL)
+		return "", fmt.Errorf("invalid URL, no hostname: %q", remoteURL)
 	}
 	if u.Scheme == "" {
 		u.Scheme = "https"
@@ -37,7 +37,7 @@ func NormalizeRemoteBaseURL(mattermostSiteURL, remoteURL string) (string, error)
 
 	remoteURL = strings.TrimSuffix(u.String(), "/")
 	if remoteURL == strings.TrimSuffix(mattermostSiteURL, "/") {
-		return "", fmt.Errorf("%s is the Mattermost site URL. Please use the remote application's URL.", remoteURL)
+		return "", fmt.Errorf("%s is the Mattermost site URL. Please use the remote application's URL", remoteURL)
 	}
 
 	return remoteURL, nil

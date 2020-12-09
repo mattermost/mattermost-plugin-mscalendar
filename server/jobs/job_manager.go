@@ -5,12 +5,13 @@ package jobs
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-api/cluster"
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
@@ -19,7 +20,6 @@ type JobManager struct {
 	activeJobs     sync.Map
 	env            mscalendar.Env
 	papi           cluster.JobPluginAPI
-	mux            sync.Mutex
 }
 
 type RegisteredJob struct {
@@ -38,7 +38,7 @@ type activeJob struct {
 	Context      context.Context
 }
 
-func newActiveJob(rj RegisteredJob, sched io.Closer, ctx context.Context) *activeJob {
+func newActiveJob(ctx context.Context, rj RegisteredJob, sched io.Closer) *activeJob {
 	return &activeJob{
 		RegisteredJob: rj,
 		ScheduledJob:  sched,
@@ -85,7 +85,7 @@ func (jm *JobManager) activateJob(job RegisteredJob) error {
 		return err
 	}
 
-	actJob := newActiveJob(job, scheduled, context.Background())
+	actJob := newActiveJob(context.Background(), job, scheduled)
 
 	jm.activeJobs.Store(job.id, actJob)
 	jm.env.Logger.Debugf("Activated %s job", job.id)
@@ -96,7 +96,7 @@ func (jm *JobManager) activateJob(job RegisteredJob) error {
 func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	v, ok := jm.activeJobs.Load(job.id)
 	if !ok {
-		return fmt.Errorf("Attempted to deactivate a non-active job %s", job.id)
+		return errors.Errorf("attempted to deactivate a non-active job %s", job.id)
 	}
 
 	scheduledJob := v.(*activeJob)
