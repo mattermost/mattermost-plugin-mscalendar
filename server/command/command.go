@@ -34,15 +34,39 @@ type RegisterFunc func(*model.Command) error
 
 type handleFunc func(parameters ...string) (string, bool, error)
 
+var cmds = []*model.AutocompleteData{
+	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
+	model.NewAutocompleteData("connect", "", "Connect to your Microsoft account"),
+	model.NewAutocompleteData("disconnect", "", "Disconnect from your Microsoft Account"),
+	model.NewAutocompleteData("help", "", "Read help text for the commands"),
+	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
+	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
+	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
+	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
+	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
+	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+}
+
 // Register should be called by the plugin to register all necessary commands
 func Register(registerFunc RegisterFunc) {
+	names := []string{}
+	for _, subCommand := range cmds {
+		names = append(names, subCommand.Trigger)
+	}
+
+	hint := "[" + strings.Join(names[:4], "|") + "...]"
+
+	cmd := model.NewAutocompleteData(config.CommandTrigger, hint, "Interact with your Outlook calendar.")
+	cmd.SubCommands = cmds
+
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
 		DisplayName:      config.ApplicationName,
-		Description:      "Interact with your Google calendar.",
+		Description:      "Interact with your Outlook calendar.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "help, info, connect, disconnect, connect_bot, disconnect_bot, subscribe, showcals, viewcal, createcal, deletecal, createevent, findmeetings, availability, autorespond, summary",
+		AutoCompleteDesc: strings.Join(names, ", "),
 		AutoCompleteHint: "(subcommand)",
+		AutocompleteData: cmd,
 	})
 }
 
