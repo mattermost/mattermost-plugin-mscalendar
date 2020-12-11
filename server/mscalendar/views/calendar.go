@@ -27,7 +27,7 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 
 	resp := "Times are shown in " + events[0].Start.TimeZone
 	for _, group := range groupEventsByDate(events) {
-		resp += "\n" + group[0].Start.Time().Format("Monday January 02") + "\n\n"
+		resp += "\n" + group[0].Start.Time().Format("Monday January 02, 2006") + "\n\n"
 		resp += renderTableHeader()
 		for _, e := range group {
 			eventString, err := renderEvent(e, true, timeZone)

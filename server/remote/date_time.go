@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
+	"google.golang.org/api/calendar/v3"
 )
 
 type EmailAddress struct {
@@ -27,6 +28,15 @@ func NewDateTime(t time.Time, timeZone string) *DateTime {
 	return &DateTime{
 		DateTime: t.Format(RFC3339NanoNoTimezone),
 		TimeZone: timeZone,
+	}
+}
+
+// NewGoogleDateTime creates a DateTime that is compatible with Google's API.
+func NewGoogleDateTime(dateTime *calendar.EventDateTime) *DateTime {
+	t, _ := time.Parse(time.RFC3339, dateTime.DateTime)
+	return &DateTime{
+		DateTime: t.Format(RFC3339NanoNoTimezone),
+		TimeZone: dateTime.TimeZone,
 	}
 }
 
