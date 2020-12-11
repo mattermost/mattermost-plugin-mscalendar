@@ -4,14 +4,14 @@
 package config
 
 const (
-	BotUserName    = "mscalendar"
-	BotDisplayName = "Microsoft Calendar"
-	BotDescription = "Created by the Microsoft Calendar Plugin."
+	BotUserName    = "gcal"
+	BotDisplayName = "Google Calendar"
+	BotDescription = "Created by the Google Calendar Plugin."
 
-	ApplicationName    = "Microsoft Calendar"
-	Repository         = "mattermost-plugin-mscalendar"
-	CommandTrigger     = "mscalendar"
-	TelemetryShortName = "mscalendar"
+	ApplicationName    = "Google Calendar"
+	Repository         = "mattermost-plugin-gcal"
+	CommandTrigger     = "gcal"
+	TelemetryShortName = "gcal"
 
 	PathOAuth2                = "/oauth2"
 	PathComplete              = "/complete"

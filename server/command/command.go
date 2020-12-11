@@ -38,8 +38,8 @@ type handleFunc func(parameters ...string) (string, bool, error)
 func Register(registerFunc RegisterFunc) {
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
-		DisplayName:      "Microsoft Calendar",
-		Description:      "Interact with your outlook calendar.",
+		DisplayName:      config.ApplicationName,
+		Description:      "Interact with your Google calendar.",
 		AutoComplete:     true,
 		AutoCompleteDesc: "help, info, connect, disconnect, connect_bot, disconnect_bot, subscribe, showcals, viewcal, createcal, deletecal, createevent, findmeetings, availability, autorespond, summary",
 		AutoCompleteHint: "(subcommand)",

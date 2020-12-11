@@ -24,7 +24,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/gcal"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -150,7 +150,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURLPath = pluginURLPath
 
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.bot)
+		e.Dependencies.Remote = remote.Makers[gcal.Kind](e.Config, e.bot)
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
