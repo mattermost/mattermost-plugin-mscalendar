@@ -34,7 +34,7 @@ func (s *pluginStore) LoadSubscription(subscriptionID string) (*Subscription, er
 
 func (s *pluginStore) StoreUserSubscription(user *User, subscription *Subscription) error {
 	if user.Remote.ID != subscription.Remote.CreatorID {
-		return fmt.Errorf("User %q does not match the subscription creator %q",
+		return fmt.Errorf("user %q does not match the subscription creator %q",
 			user.Remote.ID, subscription.Remote.CreatorID)
 	}
 	err := kvstore.StoreJSON(s.subscriptionKV, subscription.Remote.ID, subscription)

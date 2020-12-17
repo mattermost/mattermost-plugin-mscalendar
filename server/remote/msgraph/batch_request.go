@@ -17,17 +17,6 @@ type singleRequest struct {
 	Headers map[string]string `json:"headers"`
 }
 
-type singleResponse struct {
-	ID      string            `json:"id"`
-	Status  int               `json:"status"`
-	Body    interface{}       `json:"body"`
-	Headers map[string]string `json:"headers"`
-}
-
-type fullBatchResponse struct {
-	Responses []interface{} `json:"responses"`
-}
-
 type fullBatchRequest struct {
 	Requests []*singleRequest `json:"requests"`
 }
@@ -42,7 +31,7 @@ func (c *client) batchRequest(req fullBatchRequest, out interface{}) error {
 func prepareBatchRequests(requests []*singleRequest) []fullBatchRequest {
 	numFullRequests := len(requests) / maxNumRequestsPerBatch
 	if len(requests)%maxNumRequestsPerBatch != 0 {
-		numFullRequests += 1
+		numFullRequests++
 	}
 
 	result := []fullBatchRequest{}

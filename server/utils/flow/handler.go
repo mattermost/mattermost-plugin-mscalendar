@@ -16,10 +16,10 @@ import (
 
 type fh struct {
 	flow  Flow
-	store FlowStore
+	store Store
 }
 
-func Init(h *httputils.Handler, flow Flow, store FlowStore) {
+func Init(h *httputils.Handler, flow Flow, store Store) {
 	fh := &fh{
 		flow:  flow,
 		store: store,

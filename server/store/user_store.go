@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"golang.org/x/oauth2"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"golang.org/x/oauth2"
 )
 
 type UserStore interface {
@@ -77,7 +78,8 @@ func (settings Settings) String() string {
 
 func (user *User) Clone() *User {
 	newUser := *user
-	newUser.Remote = &(*user.Remote)
+	newRemoteUser := *user.Remote
+	newUser.Remote = &newRemoteUser
 	return &newUser
 }
 

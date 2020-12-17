@@ -11,14 +11,14 @@ type Settings interface {
 	ClearSettingsPosts(userID string)
 }
 
-func (c *mscalendar) PrintSettings(userID string) {
-	c.SettingsPanel.Print(userID)
+func (m *mscalendar) PrintSettings(userID string) {
+	m.SettingsPanel.Print(userID)
 }
 
-func (c *mscalendar) ClearSettingsPosts(userID string) {
-	err := c.SettingsPanel.Clear(userID)
+func (m *mscalendar) ClearSettingsPosts(userID string) {
+	err := m.SettingsPanel.Clear(userID)
 	if err != nil {
-		c.Logger.Warnf("Error clearing settings posts. err=%v", err)
+		m.Logger.Warnf("Error clearing settings posts. err=%v", err)
 	}
 }
 

@@ -4,14 +4,12 @@
 package mscalendar
 
 import (
-	"testing"
 	"errors"
-
-	"github.com/stretchr/testify/require"
+	"testing"
 
 	"github.com/golang/mock/gomock"
-
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
@@ -23,39 +21,39 @@ import (
 )
 
 func newTestMattermostChannel() *model.Channel {
-	return &model.Channel {
-		Id: "mattermost_channel_id",
+	return &model.Channel{
+		Id:   "mattermost_channel_id",
 		Type: model.CHANNEL_DIRECT,
 	}
 }
 
 func newTestStoreUser(activeEvents []string, mattermostUserID string, autoRespond bool, autoRespondMessage string) *store.User {
-	return &store.User {
-		ActiveEvents: activeEvents,
+	return &store.User{
+		ActiveEvents:     activeEvents,
 		MattermostUserID: mattermostUserID,
-		Settings: store.Settings {
-			AutoRespond: autoRespond,
+		Settings: store.Settings{
+			AutoRespond:        autoRespond,
 			AutoRespondMessage: autoRespondMessage,
 		},
 	}
 }
 
 func newTestMattermostStatus(status string) *model.Status {
-	return &model.Status {
+	return &model.Status{
 		Status: status,
 	}
 }
 
-func newTestMattermostUser(UserID string) *model.User {
-	return &model.User {
-		Id: UserID,
+func newTestMattermostUser(userID string) *model.User {
+	return &model.User{
+		Id: userID,
 	}
 }
 
 func newTestMattermostPost() *model.Post {
-	return &model.Post {
+	return &model.Post{
 		ChannelId: "mattermost_post_channel_id",
-		UserId: "mattermost_user_sender_id",
+		UserId:    "mattermost_user_sender_id",
 	}
 }
 
@@ -70,45 +68,45 @@ func TestHandleBusyDM(t *testing.T) {
 		expectedDMMessage         string
 	}{
 		{
-			name:                       "Happy path, bot responds to DM",
-			expectedError:              "",
-			recipientActiveEvents:      []string{"active_event_hash"},
-			recipientStatusString:      model.STATUS_DND,
-			autoRespondSetting:         true,
-			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
-			expectedDMMessage:          "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
-		},{
-			name:                       "Auto-respond message not set, fall back to default",
-			expectedError:              "",
-			recipientActiveEvents:      []string{"active_event_hash"},
-			recipientStatusString:      model.STATUS_DND,
-			autoRespondSetting:         true,
-			autoRespondMessageSetting:  "",
-			expectedDMMessage:          "This user is currently in a meeting.",
-		},{
-			name:                       "Recipient has no active events",
-			expectedError:              "",
-			recipientActiveEvents:      []string{},
-			recipientStatusString:      model.STATUS_DND,
-			autoRespondSetting:         true,
-			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
-			expectedDMMessage:          "",
-		},{
-			name:                       "Recipient autorespond Setting turned off",
-			expectedError:              "",
-			recipientActiveEvents:      []string{"active_event_hash"},
-			recipientStatusString:      model.STATUS_DND,
-			autoRespondSetting:         false,
-			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
-			expectedDMMessage:          "",
-		},{
-			name:                       "Recipient user status is set to online",
-			expectedError:              "",
-			recipientActiveEvents:      []string{"active_event_hash"},
-			recipientStatusString:      model.STATUS_ONLINE,
-			autoRespondSetting:         true,
-			autoRespondMessageSetting:  "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
-			expectedDMMessage:          "",
+			name:                      "Happy path, bot responds to DM",
+			expectedError:             "",
+			recipientActiveEvents:     []string{"active_event_hash"},
+			recipientStatusString:     model.STATUS_DND,
+			autoRespondSetting:        true,
+			autoRespondMessageSetting: "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:         "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+		}, {
+			name:                      "Auto-respond message not set, fall back to default",
+			expectedError:             "",
+			recipientActiveEvents:     []string{"active_event_hash"},
+			recipientStatusString:     model.STATUS_DND,
+			autoRespondSetting:        true,
+			autoRespondMessageSetting: "",
+			expectedDMMessage:         "This user is currently in a meeting.",
+		}, {
+			name:                      "Recipient has no active events",
+			expectedError:             "",
+			recipientActiveEvents:     []string{},
+			recipientStatusString:     model.STATUS_DND,
+			autoRespondSetting:        true,
+			autoRespondMessageSetting: "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:         "",
+		}, {
+			name:                      "Recipient autorespond Setting turned off",
+			expectedError:             "",
+			recipientActiveEvents:     []string{"active_event_hash"},
+			recipientStatusString:     model.STATUS_DND,
+			autoRespondSetting:        false,
+			autoRespondMessageSetting: "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:         "",
+		}, {
+			name:                      "Recipient user status is set to online",
+			expectedError:             "",
+			recipientActiveEvents:     []string{"active_event_hash"},
+			recipientStatusString:     model.STATUS_ONLINE,
+			autoRespondSetting:        true,
+			autoRespondMessageSetting: "Hello, I'm in a meeting and will respond to your message as soon as I'm free.",
+			expectedDMMessage:         "",
 		},
 	}
 

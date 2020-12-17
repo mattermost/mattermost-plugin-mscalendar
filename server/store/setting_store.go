@@ -100,7 +100,18 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	}
 }
 
+func DefaultDailySummaryUserSettings() *DailySummaryUserSettings {
+	return &DailySummaryUserSettings{
+		PostTime: "8:00AM",
+		Timezone: "Eastern Standard Time",
+		Enable:   false,
+	}
+}
 func (s *pluginStore) updateDailySummarySettingForUser(user *User, value interface{}) error {
+	if user.Settings.DailySummary == nil {
+		user.Settings.DailySummary = DefaultDailySummaryUserSettings()
+	}
+
 	dsum := user.Settings.DailySummary
 
 	stringValue := value.(string)
