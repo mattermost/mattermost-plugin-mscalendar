@@ -3,10 +3,6 @@
 
 package command
 
-import (
-	"fmt"
-)
-
 func (c *Command) unsubscribe(parameters ...string) (string, bool, error) {
 	_, err := c.MSCalendar.LoadMyEventSubscription()
 	if err != nil {
@@ -17,5 +13,6 @@ func (c *Command) unsubscribe(parameters ...string) (string, bool, error) {
 	if err != nil {
 		return "", false, err
 	}
-	return fmt.Sprintf("You have unsubscribed from events."), false, nil
+
+	return "You have unsubscribed from events.", false, nil
 }

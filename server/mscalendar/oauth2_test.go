@@ -3,13 +3,13 @@ package mscalendar
 import (
 	"errors"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -22,15 +22,12 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 const (
-	fakeID          = "fake@mattermost.com"
-	fakeRemoteID    = "user-remote-id"
-	fakeBotID       = "bot-user-id"
-	fakeBotRemoteID = "bot-remote-id"
-	fakeCode        = "fakecode"
+	fakeID       = "fake@mattermost.com"
+	fakeRemoteID = "user-remote-id"
+	fakeCode     = "fakecode"
 )
 
 func TestCompleteOAuth2Happy(t *testing.T) {
@@ -47,7 +44,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	state := ""
 	gomock.InOrder(
-		ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("Connected user not found")).Times(1),
+		ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("connected user not found")).Times(1),
 		ss.EXPECT().StoreOAuth2State(gomock.Any()).DoAndReturn(
 			func(s string) error {
 				if !strings.HasSuffix(s, "_"+fakeID) {
@@ -66,7 +63,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	gomock.InOrder(
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
-		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("Connected user not found")).Times(1),
+		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("connected user not found")).Times(1),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		ss.EXPECT().StoreUserInIndex(gomock.Any()).Return(nil).Times(1),
 		welcomer.EXPECT().AfterSuccessfullyConnect(fakeID, "mail-value").Return(nil).Times(1),
@@ -102,7 +99,7 @@ func TestInitOAuth2(t *testing.T) {
 			mattermostUserID: fakeID,
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
-				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("Remote user not found")).Times(1)
+				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(errors.New("unable to store state")).Times(1)
 			},
 			expectError: true,
@@ -112,7 +109,7 @@ func TestInitOAuth2(t *testing.T) {
 			mattermostUserID: fakeID,
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
-				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("Remote user not found")).Times(1)
+				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
 			},
 			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+Mail.Read+Mail.Send&state=kbb9cs43z3fxxpc_fake%40mattermost.com",
@@ -237,7 +234,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
-				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("", errors.New("Connected user not found")).Times(1)
+				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("", errors.New("connected user not found")).Times(1)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "forced kvstore error",
@@ -346,17 +343,6 @@ func statusOKGraphAPIResponder() {
 	mailSettingsResponder := httpmock.NewStringResponder(http.StatusOK, mailSettingsResponse)
 
 	httpmock.RegisterResponder("GET", mailSettingsURL, mailSettingsResponder)
-}
-
-func newHTTPRequest(mattermostUserID, rawQuery string) *http.Request {
-	r := &http.Request{
-		Header: make(http.Header),
-		URL: &url.URL{
-			RawQuery: rawQuery,
-		},
-	}
-	r.Header.Add("Mattermost-User-ID", mattermostUserID)
-	return r
 }
 
 func newOAuth2TestApp(ctrl *gomock.Controller) (oauth2connect.App, Env) {

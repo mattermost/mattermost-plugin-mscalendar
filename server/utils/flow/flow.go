@@ -15,7 +15,7 @@ type Flow interface {
 	FlowDone(userID string)
 }
 
-type FlowStore interface {
+type Store interface {
 	SetProperty(userID, propertyName string, value bool) error
 	SetPostID(userID, propertyName, postID string) error
 	GetPostID(userID, propertyName string) (string, error)

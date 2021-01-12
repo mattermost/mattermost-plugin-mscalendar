@@ -8,6 +8,7 @@ require (
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/mattermost/mattermost-plugin-api v0.0.12
 	github.com/mattermost/mattermost-server/v5 v5.3.2-0.20200731154015-c5c6a5ce5399
+	github.com/mholt/archiver/v3 v3.3.2
 	github.com/pkg/errors v0.9.1
 	github.com/rudderlabs/analytics-go v3.2.1+incompatible
 	github.com/spf13/pflag v1.0.5

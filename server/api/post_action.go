@@ -96,15 +96,15 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := api.PluginAPI.GetPost(postID)
-	if err != nil {
-		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+err.Error())
+	p, appErr := api.PluginAPI.GetPost(postID)
+	if appErr != nil {
+		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+appErr.Error())
 		return
 	}
 
 	sas := p.Attachments()
 	if len(sas) == 0 {
-		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+err.Error())
+		utils.SlackAttachmentError(w, "Error: Failed to update the post: No attachments found")
 		return
 	}
 
@@ -232,7 +232,7 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 func getEventInfo(ctx map[string]interface{}) (string, error) {
 	hasEvent, ok := ctx["hasEvent"].(bool)
 	if !ok {
-		return "", errors.New("Cannot check whether there is an event attached.")
+		return "", errors.New("cannot check whether there is an event attached")
 	}
 	if !hasEvent {
 		return "", nil
@@ -240,17 +240,17 @@ func getEventInfo(ctx map[string]interface{}) (string, error) {
 
 	subject, ok := ctx["subject"].(string)
 	if !ok {
-		return "", errors.New("Cannot find the event subject.")
+		return "", errors.New("cannot find the event subject")
 	}
 
 	weblink, ok := ctx["weblink"].(string)
 	if !ok {
-		return "", errors.New("Cannot find the event weblink.")
+		return "", errors.New("cannot find the event weblink")
 	}
 
 	marshalledStartTime, ok := ctx["startTime"].(string)
 	if !ok {
-		return "", errors.New("Cannot find the event start time.")
+		return "", errors.New("cannot find the event start time")
 	}
 	var startTime time.Time
 	json.Unmarshal([]byte(marshalledStartTime), &startTime)

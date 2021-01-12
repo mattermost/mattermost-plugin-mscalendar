@@ -6,15 +6,15 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 )
 
-type welcomeFlow struct {
+type WelcomeFlow struct {
 	steps      []flow.Step
 	url        string
 	controller bot.FlowController
 	onFlowDone func(userID string)
 }
 
-func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer) *welcomeFlow {
-	wf := welcomeFlow{
+func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer) *WelcomeFlow {
+	wf := WelcomeFlow{
 		url:        "/welcome",
 		controller: bot,
 		onFlowDone: welcomer.WelcomeFlowEnd,
@@ -23,7 +23,7 @@ func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer) *welcomeFlow {
 	return &wf
 }
 
-func (wf *welcomeFlow) Step(i int) flow.Step {
+func (wf *WelcomeFlow) Step(i int) flow.Step {
 	if i < 0 {
 		return nil
 	}
@@ -33,23 +33,23 @@ func (wf *welcomeFlow) Step(i int) flow.Step {
 	return wf.steps[i]
 }
 
-func (wf *welcomeFlow) URL() string {
+func (wf *WelcomeFlow) URL() string {
 	return wf.url
 }
 
-func (wf *welcomeFlow) Length() int {
+func (wf *WelcomeFlow) Length() int {
 	return len(wf.steps)
 }
 
-func (wf *welcomeFlow) StepDone(userID string, step int, value bool) {
+func (wf *WelcomeFlow) StepDone(userID string, step int, value bool) {
 	wf.controller.NextStep(userID, step, value)
 }
 
-func (wf *welcomeFlow) FlowDone(userID string) {
+func (wf *WelcomeFlow) FlowDone(userID string) {
 	wf.onFlowDone(userID)
 }
 
-func (wf *welcomeFlow) makeSteps() {
+func (wf *WelcomeFlow) makeSteps() {
 	steps := []flow.Step{}
 	steps = append(steps, &flow.SimpleStep{
 		Title:                "Update Status",
