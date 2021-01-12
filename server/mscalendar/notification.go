@@ -221,12 +221,16 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 }
 
 func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	title := views.EnsureSubject(n.Event.Subject)
+	titleLink := n.Event.Weblink
+	text := n.Event.BodyPreview
 	return &model.SlackAttachment{
 		AuthorName: n.Event.Organizer.EmailAddress.Name,
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
-		TitleLink:  n.Event.Weblink,
-		Title:      views.EnsureSubject(n.Event.Subject),
-		Text:       n.Event.BodyPreview,
+		TitleLink:  titleLink,
+		Title:      title,
+		Text:       text,
+		Fallback:   fmt.Sprintf("[%s](%s): %s", title, titleLink, text),
 	}
 }
 

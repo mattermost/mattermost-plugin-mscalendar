@@ -99,9 +99,10 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 	if disabled {
 		text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 		sa := model.SlackAttachment{
-			Title:   title,
-			Text:    text,
-			Actions: actions,
+			Title:    title,
+			Text:     text,
+			Actions:  actions,
+			Fallback: fmt.Sprintf("%s: %s", title, text),
 		}
 		return &sa, nil
 	}
@@ -203,9 +204,10 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
-		Title:   title,
-		Text:    text,
-		Actions: actions,
+		Title:    title,
+		Text:     text,
+		Actions:  actions,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 	return &sa, nil
 }
