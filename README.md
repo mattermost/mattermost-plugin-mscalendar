@@ -99,7 +99,7 @@ You're all set for configuration inside of Azure.
 
 <img width="500" src="https://user-images.githubusercontent.com/6913320/76779336-9109c480-6781-11ea-8cde-4b79e5b2f3cd.png"/>
 
-2. Navigate to **System Console > PLUGINS (Beta > Microsoft Calendar**. Fill in the following fields:
+2. Navigate to **System Console > PLUGINS (BETA) > Microsoft Calendar**. Fill in the following fields:
 
 - `Admin User IDs` - List of user IDs to manage the plugin.
 - `tenantID` - Copy from Azure App.
