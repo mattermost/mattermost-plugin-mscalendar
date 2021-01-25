@@ -109,18 +109,24 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 }
 
 func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
+	title := "Connect"
+	text := fmt.Sprintf(WelcomeMessage, bot.pluginURL)
 	sa := model.SlackAttachment{
-		Title: "Connect",
-		Text:  fmt.Sprintf(WelcomeMessage, bot.pluginURL),
+		Title:    title,
+		Text:     text,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 
 	return &sa
 }
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachment {
+	title := "Connect"
+	text := ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost."
 	return &model.SlackAttachment{
-		Title: "Connect",
-		Text:  ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost.",
+		Title:    title,
+		Text:     text,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 }
 
