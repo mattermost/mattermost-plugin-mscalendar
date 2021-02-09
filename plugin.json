@@ -25,13 +25,13 @@
                 "key": "AdminUserIDs",
                 "display_name": "Admin User IDs:",
                 "type": "text",
-                "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \nUser IDs can be found by navigating to **System Console** > **User Management**. After clicking into a user's name, their ID is on the right-hand side of the blue header."
+                "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \n User IDs can be found in **System Console > User Management > Users**. Select the user's name, and the ID is displayed in the top-right corner of the banner."
             },
             {
                 "key": "AdminLogLevel",
-                "display_name": "Copy plugin logs to admins, as bot messages",
+                "display_name": "Copy plugin logs to admins, as bot messages:",
                 "type": "dropdown",
-                "help_text": "Select the log level",
+                "help_text": "Select the log level.",
                 "default": "none",
                 "options": [
                     {
@@ -58,27 +58,27 @@
             },
             {
                 "key": "AdminLogVerbose",
-                "display_name": "Display full context for each admin log message",
+                "display_name": "Display full context for each admin log message:",
                 "type": "bool",
                 "help_text": "",
                 "default": false
             },
             {
                 "key": "OAuth2Authority",
-                "display_name": "Azure Directory (tenant) ID",
+                "display_name": "Azure Directory (tenant) ID:",
                 "type": "text",
-                "help_text": "Directory (tenant) ID"
+                "help_text": "Directory (tenant) ID."
             },
             {
                 "key": "OAuth2ClientId",
-                "display_name": "Azure Application (client) ID",
+                "display_name": "Azure Application (client) ID:",
                 "type": "text",
                 "help_text": "Microsoft Office Client ID.",
                 "default": ""
             },
             {
                 "key": "OAuth2ClientSecret",
-                "display_name": "Microsoft Office Client Secret",
+                "display_name": "Microsoft Office Client Secret:",
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "default": ""
