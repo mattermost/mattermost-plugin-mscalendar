@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
@@ -132,10 +131,10 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return err
 	}
 	if sub.Remote.ID != creator.Settings.EventSubscriptionID {
-		return errors.New("Subscription is orphaned")
+		return errors.New("subscription is orphaned")
 	}
 	if sub.Remote.ClientState != "" && sub.Remote.ClientState != n.ClientState {
-		return errors.New("Unauthorized webhook")
+		return errors.New("unauthorized webhook")
 	}
 
 	n.Subscription = sub.Remote
@@ -222,12 +221,16 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 }
 
 func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+	title := views.EnsureSubject(n.Event.Subject)
+	titleLink := n.Event.Weblink
+	text := n.Event.BodyPreview
 	return &model.SlackAttachment{
 		AuthorName: n.Event.Organizer.EmailAddress.Name,
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
-		TitleLink:  n.Event.Weblink,
-		Title:      views.EnsureSubject(n.Event.Subject),
-		Text:       n.Event.BodyPreview,
+		TitleLink:  titleLink,
+		Title:      title,
+		Text:       text,
+		Fallback:   fmt.Sprintf("[%s](%s): %s", title, titleLink, text),
 	}
 }
 
@@ -241,7 +244,7 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: fmt.Sprintf("%s", strings.Join(v.Strings(), ", ")),
+			Value: strings.Join(v.Strings(), ", "),
 			Short: true,
 		})
 	}
@@ -328,41 +331,6 @@ func (processor *notificationProcessor) actionURL(action string) string {
 	return fmt.Sprintf("%s%s%s", processor.Config.PluginURLPath, config.PathPostAction, action)
 }
 
-func (processor *notificationProcessor) addPostActions(sa *model.SlackAttachment, event *remote.Event) {
-	if !event.ResponseRequested {
-		return
-	}
-	context := map[string]interface{}{
-		config.EventIDKey: event.ID,
-	}
-	sa.Actions = []*model.PostAction{
-		{
-			Name: "Accept",
-			Type: model.POST_ACTION_TYPE_BUTTON,
-			Integration: &model.PostActionIntegration{
-				URL:     processor.actionURL(config.PathAccept),
-				Context: context,
-			},
-		},
-		{
-			Name: "Tentatively Accept",
-			Type: model.POST_ACTION_TYPE_BUTTON,
-			Integration: &model.PostActionIntegration{
-				URL:     processor.actionURL(config.PathTentative),
-				Context: context,
-			},
-		},
-		{
-			Name: "Decline",
-			Type: model.POST_ACTION_TYPE_BUTTON,
-			Integration: &model.PostActionIntegration{
-				URL:     processor.actionURL(config.PathDecline),
-				Context: context,
-			},
-		},
-	}
-}
-
 func NewPostActionForEventResponse(eventID, response, url string) []*model.PostAction {
 	context := map[string]interface{}{
 		config.EventIDKey: eventID,
@@ -416,7 +384,7 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 
 	minutes := int(end.Sub(start).Round(time.Minute).Minutes())
 	hours := int(end.Sub(start).Hours())
-	minutes -= int(hours * 60)
+	minutes -= hours * 60
 	days := int(end.Sub(start).Hours()) / 24
 	hours -= days * 24
 

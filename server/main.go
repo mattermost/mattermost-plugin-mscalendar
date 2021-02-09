@@ -21,7 +21,7 @@ func main() {
 					PluginVersion:  manifest.Version,
 					BuildHash:      BuildHash,
 					BuildHashShort: BuildHashShort,
-					BuildDate:      BuildHash,
+					BuildDate:      BuildDate,
 				},
 				Dependencies: &mscalendar.Dependencies{},
 			}))

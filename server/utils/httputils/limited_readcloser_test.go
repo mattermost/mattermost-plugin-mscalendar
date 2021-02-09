@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 func TestLimitReadCloser(t *testing.T) {

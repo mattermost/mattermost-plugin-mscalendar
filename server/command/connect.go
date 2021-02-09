@@ -22,7 +22,7 @@ func (c *Command) connect(parameters ...string) (string, bool, error) {
 		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), false, nil
 	}
 
-	out := "" //fmt.Sprintf(mscalendar.WelcomeMessage, c.Config.PluginURL)
+	out := ""
 
 	err = c.MSCalendar.Welcome(c.Args.UserId)
 	if err != nil {

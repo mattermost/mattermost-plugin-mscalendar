@@ -24,5 +24,5 @@ type ViewCalendarParams struct {
 type ViewCalendarResponse struct {
 	RemoteUserID string
 	Events       []*Event
-	Error        *ApiError
+	Error        *APIError
 }

@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
@@ -35,15 +34,39 @@ type RegisterFunc func(*model.Command) error
 
 type handleFunc func(parameters ...string) (string, bool, error)
 
+var cmds = []*model.AutocompleteData{
+	model.NewAutocompleteData("connect", "", "Connect to your Microsoft account"),
+	model.NewAutocompleteData("disconnect", "", "Disconnect from your Microsoft Account"),
+	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
+	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
+	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
+	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
+	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
+	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
+	model.NewAutocompleteData("help", "", "Read help text for the commands"),
+}
+
 // Register should be called by the plugin to register all necessary commands
 func Register(registerFunc RegisterFunc) {
+	names := []string{}
+	for _, subCommand := range cmds {
+		names = append(names, subCommand.Trigger)
+	}
+
+	hint := "[" + strings.Join(names[:4], "|") + "...]"
+
+	cmd := model.NewAutocompleteData(config.CommandTrigger, hint, "Interact with your Outlook calendar.")
+	cmd.SubCommands = cmds
+
 	_ = registerFunc(&model.Command{
 		Trigger:          config.CommandTrigger,
 		DisplayName:      "Microsoft Calendar",
-		Description:      "Interact with your outlook calendar.",
+		Description:      "Interact with your Outlook calendar.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "help, info, connect, disconnect, connect_bot, disconnect_bot, subscribe, showcals, viewcal, createcal, deletecal, createevent, findmeetings, availability, autorespond, summary",
+		AutoCompleteDesc: strings.Join(names, ", "),
 		AutoCompleteHint: "(subcommand)",
+		AutocompleteData: cmd,
 	})
 }
 
@@ -97,12 +120,12 @@ func (c *Command) Handle() (string, bool, error) {
 
 func (c *Command) isValid() (subcommand string, parameters []string, err error) {
 	if c.Context == nil || c.Args == nil {
-		return "", nil, errors.New("Invalid arguments to command.Handler")
+		return "", nil, errors.New("invalid arguments to command.Handler")
 	}
 	split := strings.Fields(c.Args.Command)
 	command := split[0]
 	if command != "/"+config.CommandTrigger {
-		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator.", command)
+		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator", command)
 	}
 
 	parameters = []string{}

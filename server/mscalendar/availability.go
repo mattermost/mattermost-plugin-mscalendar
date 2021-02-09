@@ -7,19 +7,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 const (
 	calendarViewTimeWindowSize      = 10 * time.Minute
 	StatusSyncJobInterval           = 5 * time.Minute
 	upcomingEventNotificationTime   = 10 * time.Minute
-	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 //110% of the interval
+	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 // 110% of the interval
 )
 
 type Availability interface {

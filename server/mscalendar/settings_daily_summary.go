@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type dailySummarySetting struct {
@@ -98,9 +99,10 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 	if disabled {
 		text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 		sa := model.SlackAttachment{
-			Title:   title,
-			Text:    text,
-			Actions: actions,
+			Title:    title,
+			Text:     text,
+			Actions:  actions,
+			Fallback: fmt.Sprintf("%s: %s", title, text),
 		}
 		return &sa, nil
 	}
@@ -202,9 +204,10 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
-		Title:   title,
-		Text:    text,
-		Actions: actions,
+		Title:    title,
+		Text:     text,
+		Actions:  actions,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 	return &sa, nil
 }

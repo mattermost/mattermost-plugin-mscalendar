@@ -16,16 +16,16 @@ func (c *client) GetMe() (*remote.User, error) {
 	}
 
 	if graphUser.ID == nil {
-		return nil, errors.New("User has no ID")
+		return nil, errors.New("user has no ID")
 	}
 	if graphUser.DisplayName == nil {
-		return nil, errors.New("User has no Display Name")
+		return nil, errors.New("user has no Display Name")
 	}
 	if graphUser.UserPrincipalName == nil {
-		return nil, errors.New("User has no Principal Name")
+		return nil, errors.New("user has no Principal Name")
 	}
 	if graphUser.Mail == nil {
-		return nil, errors.New("User has no email address. Make sure the Microsoft account is associated to an Outlook product.")
+		return nil, errors.New("user has no email address. Make sure the Microsoft account is associated to an Outlook product")
 	}
 
 	user := &remote.User{

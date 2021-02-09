@@ -3,11 +3,12 @@ package mscalendar
 import (
 	"fmt"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type Welcomer interface {
@@ -20,7 +21,7 @@ type Welcomer interface {
 type Bot interface {
 	bot.Bot
 	Welcomer
-	flow.FlowStore
+	flow.Store
 }
 
 type mscBot struct {
@@ -108,18 +109,24 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 }
 
 func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
+	title := "Connect"
+	text := fmt.Sprintf(WelcomeMessage, bot.pluginURL)
 	sa := model.SlackAttachment{
-		Title: "Connect",
-		Text:  fmt.Sprintf(WelcomeMessage, bot.pluginURL),
+		Title:    title,
+		Text:     text,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 
 	return &sa
 }
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachment {
+	title := "Connect"
+	text := ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost."
 	return &model.SlackAttachment{
-		Title: "Connect",
-		Text:  ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost.",
+		Title:    title,
+		Text:     text,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 }
 

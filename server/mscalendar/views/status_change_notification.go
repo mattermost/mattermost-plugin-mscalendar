@@ -6,8 +6,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-server/v5/model"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 var prettyStatuses = map[string]string{
@@ -96,10 +97,13 @@ func statusChangeAttachments(event *remote.Event, status, url string) *model.Sla
 		actionNo.Integration.Context["startTime"] = string(marshalledStart)
 	}
 
+	title := "Status change"
+	text := renderScheduleItem(event, status)
 	sa := &model.SlackAttachment{
-		Title:   "Status change",
-		Text:    renderScheduleItem(event, status),
-		Actions: []*model.PostAction{actionYes, actionNo},
+		Title:    title,
+		Text:     text,
+		Actions:  []*model.PostAction{actionYes, actionNo},
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 
 	return sa

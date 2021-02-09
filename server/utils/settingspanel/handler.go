@@ -3,9 +3,10 @@ package settingspanel
 import (
 	"net/http"
 
+	"github.com/mattermost/mattermost-server/v5/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
-	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 const (

@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -14,7 +15,7 @@ type Flow interface {
 	FlowDone(userID string)
 }
 
-type FlowStore interface {
+type Store interface {
 	SetProperty(userID, propertyName string, value bool) error
 	SetPostID(userID, propertyName, postID string) error
 	GetPostID(userID, propertyName string) (string, error)
@@ -60,9 +61,10 @@ func (s *SimpleStep) PostSlackAttachment(flowHandler string, i int) *model.Slack
 	}
 
 	sa := model.SlackAttachment{
-		Title:   s.Title,
-		Text:    s.Message,
-		Actions: []*model.PostAction{&actionTrue, &actionFalse},
+		Title:    s.Title,
+		Text:     s.Message,
+		Actions:  []*model.PostAction{&actionTrue, &actionFalse},
+		Fallback: fmt.Sprintf("%s: %s", s.Title, s.Message),
 	}
 
 	return &sa
@@ -75,9 +77,10 @@ func (s *SimpleStep) ResponseSlackAttachment(value bool) *model.SlackAttachment 
 	}
 
 	sa := model.SlackAttachment{
-		Title:   s.Title,
-		Text:    message,
-		Actions: []*model.PostAction{},
+		Title:    s.Title,
+		Text:     message,
+		Actions:  []*model.PostAction{},
+		Fallback: fmt.Sprintf("%s: %s", s.Title, message),
 	}
 
 	return &sa

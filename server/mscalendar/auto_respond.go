@@ -4,8 +4,9 @@
 package mscalendar
 
 import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-server/v5/model"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 const DefaultAutoRespondMessage = "This user is currently in a meeting."

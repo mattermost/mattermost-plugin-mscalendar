@@ -3,7 +3,7 @@
 
 package bot
 
-type BotConfig struct {
+type Config struct {
 	// AdminUserIDs contains a comma-separated list of user IDs that are allowed
 	// to administer plugin functions, even if not Mattermost sysadmins.
 	AdminUserIDs string
@@ -15,7 +15,7 @@ type BotConfig struct {
 	AdminLogVerbose bool
 }
 
-func (c BotConfig) ToStorableConfig(configMap map[string]interface{}) map[string]interface{} {
+func (c Config) ToStorableConfig(configMap map[string]interface{}) map[string]interface{} {
 	if configMap == nil {
 		configMap = map[string]interface{}{}
 	}
