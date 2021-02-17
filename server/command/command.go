@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
+	"github.com/mattermost/mattermost-plugin-api/experimental/command"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
@@ -29,9 +31,6 @@ func getNotConnectedText() string {
 	return fmt.Sprintf("It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/%s connect`.", config.CommandTrigger)
 }
 
-// RegisterFunc is a function that allows the runner to register commands with the mattermost server.
-type RegisterFunc func(*model.Command) error
-
 type handleFunc func(parameters ...string) (string, bool, error)
 
 var cmds = []*model.AutocompleteData{
@@ -48,7 +47,7 @@ var cmds = []*model.AutocompleteData{
 }
 
 // Register should be called by the plugin to register all necessary commands
-func Register(registerFunc RegisterFunc) {
+func Register(client *pluginapilicense.Client) error {
 	names := []string{}
 	for _, subCommand := range cmds {
 		names = append(names, subCommand.Trigger)
@@ -59,14 +58,20 @@ func Register(registerFunc RegisterFunc) {
 	cmd := model.NewAutocompleteData(config.CommandTrigger, hint, "Interact with your Outlook calendar.")
 	cmd.SubCommands = cmds
 
-	_ = registerFunc(&model.Command{
-		Trigger:          config.CommandTrigger,
-		DisplayName:      "Microsoft Calendar",
-		Description:      "Interact with your Outlook calendar.",
-		AutoComplete:     true,
-		AutoCompleteDesc: strings.Join(names, ", "),
-		AutoCompleteHint: "(subcommand)",
-		AutocompleteData: cmd,
+	iconData, err := command.GetIconData(&client.System, "assets/profile.svg")
+	if err != nil {
+		return errors.Wrap(err, "failed to get icon data")
+	}
+
+	return client.SlashCommand.Register(&model.Command{
+		Trigger:              config.CommandTrigger,
+		DisplayName:          "Microsoft Calendar",
+		Description:          "Interact with your Outlook calendar.",
+		AutoComplete:         true,
+		AutoCompleteDesc:     strings.Join(names, ", "),
+		AutoCompleteHint:     "(subcommand)",
+		AutocompleteData:     cmd,
+		AutocompleteIconData: iconData,
 	})
 }
 
