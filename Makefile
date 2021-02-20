@@ -118,7 +118,7 @@ validate-go-version: ## Validates the installed version of go against Mattermost
 		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
 		exit 1; \
 	fi
-	
+
 ## Generates a tar bundle of the plugin for install.
 .PHONY: bundle
 bundle:

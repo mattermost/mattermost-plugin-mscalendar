@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
+	"github.com/mattermost/mattermost-plugin-api/experimental/command"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
@@ -29,26 +31,23 @@ func getNotConnectedText() string {
 	return fmt.Sprintf("It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/%s connect`.", config.CommandTrigger)
 }
 
-// RegisterFunc is a function that allows the runner to register commands with the mattermost server.
-type RegisterFunc func(*model.Command) error
-
 type handleFunc func(parameters ...string) (string, bool, error)
 
 var cmds = []*model.AutocompleteData{
-	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
 	model.NewAutocompleteData("connect", "", "Connect to your Microsoft account"),
 	model.NewAutocompleteData("disconnect", "", "Disconnect from your Microsoft Account"),
-	model.NewAutocompleteData("help", "", "Read help text for the commands"),
-	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
+	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
+	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
 	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
-	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
 	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
-	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
+	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
+	model.NewAutocompleteData("help", "", "Read help text for the commands"),
 }
 
 // Register should be called by the plugin to register all necessary commands
-func Register(registerFunc RegisterFunc) {
+func Register(client *pluginapilicense.Client) error {
 	names := []string{}
 	for _, subCommand := range cmds {
 		names = append(names, subCommand.Trigger)
@@ -59,14 +58,20 @@ func Register(registerFunc RegisterFunc) {
 	cmd := model.NewAutocompleteData(config.CommandTrigger, hint, "Interact with your Outlook calendar.")
 	cmd.SubCommands = cmds
 
-	_ = registerFunc(&model.Command{
-		Trigger:          config.CommandTrigger,
-		DisplayName:      config.ApplicationName,
-		Description:      "Interact with your Outlook calendar.",
-		AutoComplete:     true,
-		AutoCompleteDesc: strings.Join(names, ", "),
-		AutoCompleteHint: "(subcommand)",
-		AutocompleteData: cmd,
+	iconData, err := command.GetIconData(&client.System, "assets/profile.svg")
+	if err != nil {
+		return errors.Wrap(err, "failed to get icon data")
+	}
+
+	return client.SlashCommand.Register(&model.Command{
+		Trigger:              config.CommandTrigger,
+		DisplayName:          "Microsoft Calendar",
+		Description:          "Interact with your Outlook calendar.",
+		AutoComplete:         true,
+		AutoCompleteDesc:     strings.Join(names, ", "),
+		AutoCompleteHint:     "(subcommand)",
+		AutocompleteData:     cmd,
+		AutocompleteIconData: iconData,
 	})
 }
 

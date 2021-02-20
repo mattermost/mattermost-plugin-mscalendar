@@ -217,8 +217,9 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 	}
 
 	sa := &model.SlackAttachment{
-		Title: "Status Change",
-		Text:  returnText,
+		Title:    "Status Change",
+		Text:     returnText,
+		Fallback: "Status Change: " + returnText,
 	}
 
 	model.ParseSlackAttachment(post, []*model.SlackAttachment{sa})

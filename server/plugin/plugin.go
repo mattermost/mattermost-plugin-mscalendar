@@ -80,7 +80,10 @@ func (p *Plugin) OnActivate() error {
 		return err
 	}
 
-	command.Register(p.API.RegisterCommand)
+	err = command.Register(pluginAPIClient)
+	if err != nil {
+		return errors.Wrap(err, "failed to register command")
+	}
 
 	p.telemetryClient, err = telemetry.NewRudderClient()
 	if err != nil {

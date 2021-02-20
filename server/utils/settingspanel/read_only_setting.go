@@ -72,8 +72,9 @@ func (s *readOnlySetting) GetSlackAttachments(userID, settingHandler string, dis
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
-		Title: title,
-		Text:  text,
+		Title:    title,
+		Text:     text,
+		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 
 	return &sa, nil
