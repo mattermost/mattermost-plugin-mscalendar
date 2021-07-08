@@ -112,7 +112,7 @@ func TestInitOAuth2(t *testing.T) {
 				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
 			},
-			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+Mail.Read+Mail.Send&state=kbb9cs43z3fxxpc_fake%40mattermost.com",
+			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
 		},
 	}
 
