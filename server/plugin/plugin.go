@@ -13,7 +13,7 @@ import (
 	"sync"
 	"text/template"
 
-	pluginapi "github.com/mattermost/mattermost-plugin-api"
+	pluginapiclient "github.com/mattermost/mattermost-plugin-api"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
@@ -69,7 +69,25 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	pluginAPIClient := pluginapi.NewClient(p.API)
+	pluginAPIClient := pluginapiclient.NewClient(p.API, p.Driver)
+	conf := pluginAPIClient.Configuration.GetConfig()
+	license := pluginAPIClient.System.GetLicense()
+	if !enterprise.HasEnterpriseFeatures(conf, license) {
+		msg := fmt.Sprintf(licenseErrorMessage, config.ApplicationName)
+		return errors.New(msg)
+	}
+
+	stored := config.StoredConfig{}
+	err := p.API.LoadPluginConfiguration(&stored)
+	if err != nil {
+		return errors.WithMessage(err, "failed to load plugin configuration")
+	}
+
+	if stored.OAuth2Authority == "" ||
+		stored.OAuth2ClientID == "" ||
+		stored.OAuth2ClientSecret == "" {
+		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
+	}
 
 	p.initEnv(&p.env, "")
 	bundlePath, err := p.API.GetBundlePath()
@@ -121,16 +139,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 	env := p.getEnv()
 	stored := config.StoredConfig{}
-
 	err = p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
 		return errors.WithMessage(err, "failed to load plugin configuration")
-	}
-
-	if stored.OAuth2Authority == "" ||
-		stored.OAuth2ClientID == "" ||
-		stored.OAuth2ClientSecret == "" {
-		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
@@ -211,15 +222,6 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	if env.configError != nil {
 		p.API.LogError(env.configError.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, env.configError.Error(), http.StatusInternalServerError)
-	}
-
-	mmClient := pluginapi.NewClient(p.API, p.Driver)
-	conf := mmClient.Configuration.GetConfig()
-	license := mmClient.System.GetLicense()
-	if !enterprise.HasEnterpriseFeatures(conf, license) {
-		msg := fmt.Sprintf(licenseErrorMessage, config.ApplicationName)
-		p.API.LogError(msg)
-		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "errors.require_enterprise_license", nil, msg, http.StatusInternalServerError)
 	}
 
 	command := command.Command{
