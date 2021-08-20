@@ -11,12 +11,13 @@ import (
 )
 
 type AuthResponse struct {
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	AccessToken string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
-func (c *client) GetSuperuserToken() (string, error) {
+func (c *client) GetSuperuserToken() (string, string, error) {
 	params := map[string]string{
 		"client_id":     c.conf.OAuth2ClientID,
 		"scope":         "https://graph.microsoft.com/.default",
@@ -35,8 +36,8 @@ func (c *client) GetSuperuserToken() (string, error) {
 
 	_, err := c.CallFormPost(http.MethodPost, u, data, &res)
 	if err != nil {
-		return "", errors.Wrap(err, "msgraph GetSuperuserToken")
+		return "", "", errors.Wrap(err, "msgraph GetSuperuserToken")
 	}
 
-	return res.AccessToken, nil
+	return res.AccessToken, res.RefreshToken, nil
 }

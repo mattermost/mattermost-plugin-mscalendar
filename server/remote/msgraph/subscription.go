@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -69,6 +70,9 @@ func (c *client) RenewSubscription(subscriptionID string) (*remote.Subscription,
 	sub := remote.Subscription{}
 	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
 	if err != nil {
+		if strings.Contains(err.Error(), "refresh token has expired") {
+
+		}
 		return nil, errors.Wrap(err, "msgraph RenewSubscription")
 	}
 

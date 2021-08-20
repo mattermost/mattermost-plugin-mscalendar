@@ -117,7 +117,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.configError = err
 		})
 	}()
-
+	p.API.LogWarn("on config change", "onConfig", "true")
 	env := p.getEnv()
 	stored := config.StoredConfig{}
 

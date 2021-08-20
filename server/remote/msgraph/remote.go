@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -58,14 +59,16 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		Logger:     r.logger,
 		rbuilder:   msgraph.NewClient(httpClient),
 	}
-	token, err := c.GetSuperuserToken()
+	token, refreshToken, err := c.GetSuperuserToken()
 	if err != nil {
 		return nil, err
 	}
-
+	r.logger.Warnf("token ====", "             ", refreshToken)
+	fmt.Println("token ====", token, refreshToken)
 	o := &oauth2.Token{
-		AccessToken: token,
-		TokenType:   "Bearer",
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
 	}
 	return r.MakeClient(ctx, o), nil
 }
