@@ -73,8 +73,7 @@ func (p *Plugin) OnActivate() error {
 	conf := pluginAPIClient.Configuration.GetConfig()
 	license := pluginAPIClient.System.GetLicense()
 	if !enterprise.HasEnterpriseFeatures(conf, license) {
-		msg := fmt.Sprintf(licenseErrorMessage, config.ApplicationName)
-		return errors.New(msg)
+		return errors.Errorf(licenseErrorMessage, config.ApplicationName)
 	}
 
 	stored := config.StoredConfig{}
