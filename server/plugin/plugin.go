@@ -13,7 +13,7 @@ import (
 	"sync"
 	"text/template"
 
-	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
+	pluginapiclient "github.com/mattermost/mattermost-plugin-api"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
@@ -21,6 +21,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/enterprise"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -34,6 +35,10 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
+)
+
+const (
+	licenseErrorMessage = "The %s plugin requires an E20, Professional, or Enterprise license."
 )
 
 type Env struct {
@@ -64,10 +69,23 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	pluginAPIClient := pluginapilicense.NewClient(p.API)
+	pluginAPIClient := pluginapiclient.NewClient(p.API, p.Driver)
+	conf := pluginAPIClient.Configuration.GetConfig()
+	license := pluginAPIClient.System.GetLicense()
+	if !enterprise.HasEnterpriseFeatures(conf, license) {
+		return errors.Errorf(licenseErrorMessage, config.ApplicationName)
+	}
 
-	if !pluginapilicense.IsE20LicensedOrDevelopment(pluginAPIClient.Configuration.GetConfig(), pluginAPIClient.System.GetLicense()) {
-		return errors.New("a valid Mattermost Enterprise E20 license is required to use this plugin")
+	stored := config.StoredConfig{}
+	err := p.API.LoadPluginConfiguration(&stored)
+	if err != nil {
+		return errors.WithMessage(err, "failed to load plugin configuration")
+	}
+
+	if stored.OAuth2Authority == "" ||
+		stored.OAuth2ClientID == "" ||
+		stored.OAuth2ClientSecret == "" {
+		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
 	p.initEnv(&p.env, "")
@@ -120,16 +138,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 	env := p.getEnv()
 	stored := config.StoredConfig{}
-
 	err = p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
 		return errors.WithMessage(err, "failed to load plugin configuration")
-	}
-
-	if stored.OAuth2Authority == "" ||
-		stored.OAuth2ClientID == "" ||
-		stored.OAuth2ClientSecret == "" {
-		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL

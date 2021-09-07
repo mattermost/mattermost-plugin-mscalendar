@@ -19,7 +19,7 @@
 
 ## License
 
-This repository is licensed under the [Mattermost Source Available License](LICENSE) and requires a valid Enterprise E20 license. See [Mattermost Source Available License](https://docs.mattermost.com/overview/faq.html#mattermost-source-available-license) to learn more.
+This repository is licensed under the [Mattermost Source Available License](LICENSE), and requires a valid Mattermost E20, Professional, or Enterprise license. See our [documentation](https://docs.mattermost.com/about/frequently-asked-questions.html#mattermost-source-available-license) to learn more. If you are contributing to the project, please enable [ServiceSettings.EnableDeveloper](https://docs.mattermost.com/configure/configuration-settings.html#enable-developer-mode) in your server's config. The plugin will not start and show an error message in your server logs, if you are the missing the Enterprise License.
 
 ## Overview
 
@@ -77,7 +77,7 @@ Replace `(MM_SITE_URL)` with your Mattermost server's Site URL. Select **Registe
 
 10. Click **Add permissions** to submit the form.
 
-11. Next, add application permissions via **Add a permission > Microsoft Graph > Application permissions**. 
+11. Next, add application permissions via **Add a permission > Microsoft Graph > Application permissions**.
 
 12. Select the following permissions:
 
@@ -89,7 +89,7 @@ Replace `(MM_SITE_URL)` with your Mattermost server's Site URL. Select **Registe
 
 <img width="500" src="https://user-images.githubusercontent.com/6913320/80412303-abb07c80-889b-11ea-9640-7c2f264c790f.png"/>
 
-14. Click **Grant admin consent for...** to grant the permissions for the application. 
+14. Click **Grant admin consent for...** to grant the permissions for the application.
 
 You're all set for configuration inside of Azure.
 
