@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -42,7 +43,7 @@ func TestDisconnect(t *testing.T) {
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
-			expectedError:  "Command /mscalendar disconnect failed: some error",
+			expectedError:  fmt.Sprintf("Command /%s disconnect failed: some error", config.CommandTrigger),
 		},
 		{
 			name:    "disconnect failed",
@@ -53,7 +54,7 @@ func TestDisconnect(t *testing.T) {
 				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
-			expectedError:  "Command /mscalendar disconnect failed: some error",
+			expectedError:  fmt.Sprintf("Command /%s disconnect failed: some error", config.CommandTrigger),
 		},
 		{
 			name:    "disconnect successful",
@@ -82,7 +83,7 @@ func TestDisconnect(t *testing.T) {
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
-					Command: "/mscalendar " + tc.command,
+					Command: fmt.Sprintf("/%s %s", config.CommandTrigger, tc.command),
 					UserId:  "user_id",
 				},
 				ChannelID:  "channel_id",

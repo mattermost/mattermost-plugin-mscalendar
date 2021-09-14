@@ -4,12 +4,14 @@
 package gcal
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
@@ -40,7 +42,7 @@ var responseStatusConversion = map[string]string{
 }
 
 func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Time) ([]*remote.Event, error) {
-	service, err := calendar.New(c.httpClient)
+	service, err := calendar.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal GetDefaultCalendarView, error creating service")
 	}

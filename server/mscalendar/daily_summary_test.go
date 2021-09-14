@@ -2,11 +2,11 @@ package mscalendar
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
@@ -148,7 +148,7 @@ func TestProcessAllDailySummary(t *testing.T) {
 				gomock.InOrder(
 					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return("postID1", nil).Times(1),
 					mockPoster.EXPECT().DM("user2_mm_id", `Times are shown in Pacific Standard Time
-Wednesday February 12
+Wednesday February 12, 2020
 
 | Time | Subject |
 | :--: | :-- |

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -30,8 +31,11 @@ func TestConnect(t *testing.T) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{Mail: "user@email.com"}, nil).Times(1)
 			},
-			expectedOutput: "Your Mattermost account is already connected to Microsoft Calendar account `user@email.com`. To connect to a different account, first run `/mscalendar disconnect`.",
-			expectedError:  "",
+			expectedOutput: fmt.Sprintf(
+				"Your Mattermost account is already connected to %s account `user@email.com`. To connect to a different account, first run `/%s disconnect`.",
+				config.ApplicationName, config.CommandTrigger,
+			),
+			expectedError: "",
 		},
 		{
 			name:    "user not connected",
@@ -59,7 +63,7 @@ func TestConnect(t *testing.T) {
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
-					Command: "/mscalendar " + tc.command,
+					Command: fmt.Sprintf("/%s %s", config.CommandTrigger, tc.command),
 					UserId:  "user_id",
 				},
 				ChannelID:  "channel_id",

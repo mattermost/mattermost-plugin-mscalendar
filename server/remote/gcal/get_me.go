@@ -4,16 +4,20 @@
 package gcal
 
 import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"context"
+
 	"github.com/pkg/errors"
 
+	"google.golang.org/api/option"
 	"google.golang.org/api/people/v1"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 const personFields = "names,emailAddresses"
 
 func (c *client) GetMe() (*remote.User, error) {
-	service, err := people.New(c.httpClient)
+	service, err := people.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal GetMe, error creating service")
 	}

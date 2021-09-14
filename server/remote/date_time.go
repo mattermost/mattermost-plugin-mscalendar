@@ -6,8 +6,9 @@ package remote
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 	"google.golang.org/api/calendar/v3"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
 
 type EmailAddress struct {
