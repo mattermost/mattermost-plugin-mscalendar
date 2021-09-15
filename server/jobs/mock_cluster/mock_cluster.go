@@ -33,6 +33,20 @@ func (m *MockJobPluginAPI) EXPECT() *MockJobPluginAPIMockRecorder {
 	return m.recorder
 }
 
+// KVDelete mocks base method
+func (m *MockJobPluginAPI) KVDelete(arg0 string) *model.AppError {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVDelete", arg0)
+	ret0, _ := ret[0].(*model.AppError)
+	return ret0
+}
+
+// KVDelete indicates an expected call of KVDelete
+func (mr *MockJobPluginAPIMockRecorder) KVDelete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVDelete", reflect.TypeOf((*MockJobPluginAPI)(nil).KVDelete), arg0)
+}
+
 // KVGet mocks base method
 func (m *MockJobPluginAPI) KVGet(arg0 string) ([]byte, *model.AppError) {
 	m.ctrl.T.Helper()
@@ -46,6 +60,21 @@ func (m *MockJobPluginAPI) KVGet(arg0 string) ([]byte, *model.AppError) {
 func (mr *MockJobPluginAPIMockRecorder) KVGet(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVGet", reflect.TypeOf((*MockJobPluginAPI)(nil).KVGet), arg0)
+}
+
+// KVList mocks base method
+func (m *MockJobPluginAPI) KVList(arg0, arg1 int) ([]string, *model.AppError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KVList", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(*model.AppError)
+	return ret0, ret1
+}
+
+// KVList indicates an expected call of KVList
+func (mr *MockJobPluginAPIMockRecorder) KVList(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KVList", reflect.TypeOf((*MockJobPluginAPI)(nil).KVList), arg0, arg1)
 }
 
 // KVSetWithOptions mocks base method

@@ -41,7 +41,6 @@ var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
 	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
 	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
-	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
 	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
 	model.NewAutocompleteData("help", "", "Read help text for the commands"),
 }
@@ -110,8 +109,6 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "availability":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
-	case "autorespond":
-		handler = c.requireConnectedUser(c.autoRespond)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	}
