@@ -9,7 +9,6 @@ import (
 	mscalendar "github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	model "github.com/mattermost/mattermost-server/v5/model"
 	reflect "reflect"
 	time "time"
 )
@@ -340,20 +339,6 @@ func (mr *MockMSCalendarMockRecorder) GetUserSettings(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSettings", reflect.TypeOf((*MockMSCalendar)(nil).GetUserSettings), arg0)
 }
 
-// HandleBusyDM mocks base method
-func (m *MockMSCalendar) HandleBusyDM(arg0 *model.Post) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleBusyDM", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// HandleBusyDM indicates an expected call of HandleBusyDM
-func (mr *MockMSCalendarMockRecorder) HandleBusyDM(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleBusyDM", reflect.TypeOf((*MockMSCalendar)(nil).HandleBusyDM), arg0)
-}
-
 // IsAuthorizedAdmin mocks base method
 func (m *MockMSCalendar) IsAuthorizedAdmin(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -397,20 +382,6 @@ func (m *MockMSCalendar) LoadMyEventSubscription() (*store.Subscription, error) 
 func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
-}
-
-// OpenAutoRespondDialog mocks base method
-func (m *MockMSCalendar) OpenAutoRespondDialog(arg0 model.OpenDialogRequest) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OpenAutoRespondDialog", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// OpenAutoRespondDialog indicates an expected call of OpenAutoRespondDialog
-func (mr *MockMSCalendarMockRecorder) OpenAutoRespondDialog(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenAutoRespondDialog", reflect.TypeOf((*MockMSCalendar)(nil).OpenAutoRespondDialog), arg0)
 }
 
 // PrintSettings mocks base method
@@ -496,20 +467,6 @@ func (m *MockMSCalendar) SetDailySummaryPostTime(arg0 *mscalendar.User, arg1 str
 func (mr *MockMSCalendarMockRecorder) SetDailySummaryPostTime(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDailySummaryPostTime", reflect.TypeOf((*MockMSCalendar)(nil).SetDailySummaryPostTime), arg0, arg1)
-}
-
-// SetUserAutoRespondMessage mocks base method
-func (m *MockMSCalendar) SetUserAutoRespondMessage(arg0, arg1 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetUserAutoRespondMessage", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetUserAutoRespondMessage indicates an expected call of SetUserAutoRespondMessage
-func (mr *MockMSCalendarMockRecorder) SetUserAutoRespondMessage(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserAutoRespondMessage", reflect.TypeOf((*MockMSCalendar)(nil).SetUserAutoRespondMessage), arg0, arg1)
 }
 
 // Sync mocks base method
