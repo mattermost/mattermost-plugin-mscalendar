@@ -26,6 +26,7 @@ const (
 	PathConfirmStatusChange   = "/confirm"
 	PathNotification          = "/notification/v1"
 	PathEvent                 = "/event"
+	PathVerifyDomain          = "/verify"
 
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete

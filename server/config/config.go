@@ -12,6 +12,8 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
+	GoogleDomainVerifyKey string
+
 	bot.Config
 }
 
@@ -29,4 +31,8 @@ type Config struct {
 	PluginURL              string
 	PluginURLPath          string
 	PluginVersion          string
+}
+
+func (c *Config) GetNotificationURL() string {
+	return c.PluginURL + FullPathEventNotification
 }

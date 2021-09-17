@@ -38,6 +38,7 @@ func (c *client) GetMe() (*remote.User, error) {
 	}
 
 	if len(user.EmailAddresses) > 0 {
+		// for some reason this is always blank
 		email = user.EmailAddresses[0].Value
 	}
 

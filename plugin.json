@@ -82,6 +82,13 @@
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "default": ""
+            },
+            {
+                "key": "GoogleDomainVerifyKey",
+                "display_name": "Google domain verify key",
+                "type": "text",
+                "help_text": "This should look something like \"googlebd09b1075898e210.html\"",
+                "default": ""
             }
         ]
     }

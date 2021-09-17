@@ -144,7 +144,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 
 	if n.RecommendRenew {
 		var renewed *remote.Subscription
-		renewed, err = client.RenewSubscription(n.SubscriptionID)
+		renewed, err = client.RenewSubscription(processor.Config.GetNotificationURL(), sub.Remote.CreatorID, n.SubscriptionID)
 		if err != nil {
 			return err
 		}

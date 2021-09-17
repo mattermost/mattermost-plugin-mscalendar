@@ -37,11 +37,11 @@ type EventInteraction interface {
 }
 
 type Subscriptions interface {
-	CreateMySubscription(notificationURL string) (*Subscription, error)
+	CreateMySubscription(notificationURL, remoteUserID string) (*Subscription, error)
 	DeleteSubscription(subscriptionID string) error
 	GetNotificationData(*Notification) (*Notification, error)
 	ListSubscriptions() ([]*Subscription, error)
-	RenewSubscription(subscriptionID string) (*Subscription, error)
+	RenewSubscription(notificationURL, remoteUserID, subscriptionID string) (*Subscription, error)
 }
 
 type Utils interface {

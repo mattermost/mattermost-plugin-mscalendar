@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
@@ -28,8 +27,7 @@ func (m *mscalendar) CreateMyEventSubscription() (*store.Subscription, error) {
 		return nil, err
 	}
 
-	sub, err := m.client.CreateMySubscription(
-		m.Config.PluginURL + config.FullPathEventNotification)
+	sub, err := m.client.CreateMySubscription(m.Config.GetNotificationURL(), m.actingUser.Remote.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +79,7 @@ func (m *mscalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	if subscriptionID == "" {
 		return nil, nil
 	}
-	renewed, err := m.client.RenewSubscription(subscriptionID)
+	renewed, err := m.client.RenewSubscription(m.Config.GetNotificationURL(), m.actingUser.Remote.ID, subscriptionID)
 	if err != nil {
 		if strings.Contains(err.Error(), "The object was not found") {
 			err = m.Store.DeleteUserSubscription(m.actingUser.User, subscriptionID)
