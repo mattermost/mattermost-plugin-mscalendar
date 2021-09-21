@@ -22,7 +22,7 @@ const subscribeTTL = 48 * time.Hour
 
 const defaultCalendarName = "primary"
 const googleSubscriptionType = "webhook"
-const subscriptionSuffix = "_calendar_event_notifications"
+const subscriptionSuffix = "_calendar_event_notifications_"
 
 func newRandomString() string {
 	b := make([]byte, 96)
@@ -37,8 +37,8 @@ func (c *client) CreateMySubscription(notificationURL, remoteUserID string) (*re
 	}
 
 	reqBody := &calendar.Channel{
-		Id:      remoteUserID + subscriptionSuffix,
-		Token:   "should_be_secret",
+		Id:      remoteUserID + subscriptionSuffix + newRandomString(),
+		Token:   newRandomString(),
 		Type:    googleSubscriptionType,
 		Address: notificationURL,
 		Params: map[string]string{
@@ -58,8 +58,8 @@ func (c *client) CreateMySubscription(notificationURL, remoteUserID string) (*re
 		// ChangeType:         "created,updated,deleted",
 		NotificationURL:    notificationURL,
 		ExpirationDateTime: time.Now().Add(time.Second * time.Duration(googleSubscription.Expiration)).Format(time.RFC3339),
-		// ClientState:        newRandomString(),
-		CreatorID: remoteUserID,
+		ClientState:        reqBody.Token,
+		CreatorID:          remoteUserID,
 	}
 
 	c.Logger.With(bot.LogContext{

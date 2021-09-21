@@ -11,7 +11,7 @@ import (
 type Client interface {
 	Core
 	Calendars
-	EventInteraction
+	Events
 	Subscriptions
 	Utils
 	Unsupported
@@ -29,7 +29,7 @@ type Calendars interface {
 	GetMailboxSettings(remoteUserID string) (*MailboxSettings, error)
 }
 
-type EventInteraction interface {
+type Events interface {
 	CreateEvent(remoteUserID string, calendarEvent *Event) (*Event, error)
 	AcceptEvent(remoteUserID, eventID string) error
 	DeclineEvent(remoteUserID, eventID string) error

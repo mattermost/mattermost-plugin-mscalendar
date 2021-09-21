@@ -4,42 +4,38 @@
 package gcal
 
 import (
-	"net/http"
-
-	"github.com/pkg/errors"
+	"context"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/pkg/errors"
+	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 )
 
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
-	if true {
-		return nil, errors.New("gcal GetNotificationData not implemented")
+	service, err := calendar.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
+	if err != nil {
+		return nil, errors.Wrap(err, "gcal GetNotificationData, error creating service")
 	}
 
 	n := *orig
 	wh := n.Webhook.(*webhook)
-	switch wh.ResourceData.DataType {
-	case "#Microsoft.Graph.Event":
-		event := remote.Event{}
-		_, err := c.CallJSON(http.MethodGet, wh.Resource, nil, &event)
-		if err != nil {
-			c.Logger.With(bot.LogContext{
-				"Resource":       wh.Resource,
-				"subscriptionID": wh.SubscriptionID,
-			}).Infof("msgraph: failed to fetch notification data resource: `%v`.", err)
-			return nil, errors.Wrap(err, "msgraph GetNotificationData")
-		}
-		n.Event = &event
-		n.ChangeType = wh.ChangeType
-		n.IsBare = false
 
-	default:
-		c.Logger.With(bot.LogContext{
-			"subscriptionID": wh.SubscriptionID,
-		}).Infof("msgraph: unknown resource type: `%s`.", wh.ResourceData.DataType)
-		return nil, errors.New("unknown resource type: " + wh.ResourceData.DataType)
+	cal, err := c.GetDefaultCalendar()
+	if err != nil {
+		return nil, errors.Wrap(err, "gcal GetNotificationData, error getting default calendar")
 	}
+
+	reqBody := service.Events.Get(cal.ID, wh.Resource)
+	googleEvent, err := reqBody.Do()
+	if err != nil {
+		return nil, errors.Wrap(err, "gcal GetNotificationData, error fetching event data")
+	}
+
+	event := convertGCalEventToRemoteEvent(googleEvent)
+
+	n.Event = event
+	n.IsBare = false
 
 	return &n, nil
 }

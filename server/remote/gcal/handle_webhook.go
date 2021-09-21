@@ -4,13 +4,10 @@
 package gcal
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const renewSubscriptionBeforeExpiration = 12 * time.Hour
@@ -26,62 +23,40 @@ type webhook struct {
 	} `json:"resourceData"`
 }
 
+const (
+	resourceStateSync      = "sync"
+	resourceStateExists    = "exists"
+	resourceStateNotExists = "not_exists"
+)
+
 func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote.Notification {
-	// Microsoft graph requires webhook endpoint validation, see
-	// https://docs.microsoft.com/en-us/graph/webhooks#notification-endpoint-validation
-	vtok := req.FormValue("validationToken")
-	if vtok != "" {
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(vtok))
-		r.logger.Debugf("msgraph: validated event webhook endpoint.")
-		return nil
+	resourceState := req.Header.Get("X-Goog-Resource-State")
+	if resourceState == resourceStateSync {
+		w.WriteHeader(http.StatusAccepted)
+		return []*remote.Notification{}
 	}
 
-	rawData, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		r.logger.Infof("msgraph: failed to process webhook: `%v`.", err)
-		return nil
+	notificationChannelID := req.Header.Get("X-Goog-Channel-Id")
+	resourceID := req.Header.Get("X-Goog-Resource-Id")
+	token := req.Header.Get("X-Goog-Channel-Token")
+
+	wh := &webhook{
+		SubscriptionID: notificationChannelID,
+		ClientState:    token,
+		Resource:       resourceID,
 	}
 
-	// Get the list of webhooks
-	var v struct {
-		Value []*webhook `json:"value"`
-	}
-	err = json.Unmarshal(rawData, &v)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		r.logger.Infof("msgraph: failed to process webhook: `%v`.", err)
-		return nil
-	}
-
-	notifications := []*remote.Notification{}
-	for _, wh := range v.Value {
-		n := &remote.Notification{
-			SubscriptionID: wh.SubscriptionID,
-			ChangeType:     wh.ChangeType,
-			ClientState:    wh.ClientState,
-			IsBare:         true,
-			WebhookRawData: rawData,
-			Webhook:        wh,
-		}
-
-		expires, err := time.Parse(time.RFC3339, wh.SubscriptionExpirationDateTime)
-		if err != nil {
-			r.logger.With(bot.LogContext{
-				"SubscriptionID": wh.SubscriptionID,
-			}).Infof("msgraph: invalid subscription expiration in webhook: `%v`.", err)
-			return nil
-		}
-		expires = expires.Add(-renewSubscriptionBeforeExpiration)
-		if time.Now().After(expires) {
-			n.RecommendRenew = true
-		}
-
-		notifications = append(notifications, n)
+	n := &remote.Notification{
+		SubscriptionID: notificationChannelID,
+		// ChangeType:     wh.ChangeType, // not needed
+		ClientState: wh.ClientState,
+		IsBare:      true,
+		// WebhookRawData: rawData,
+		Webhook: wh,
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+
+	notifications := []*remote.Notification{n}
 	return notifications
 }
