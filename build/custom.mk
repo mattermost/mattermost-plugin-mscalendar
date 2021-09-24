@@ -8,7 +8,7 @@ LDFLAGS += -X "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/t
 ## Generates mock golang interfaces for testing
 mock:
 ifneq ($(HAS_SERVER),)
-	go install github.com/golang/mock/mockgen
+	go install github.com/golang/mock/mockgen@v1.6.0
 	mockgen -destination server/jobs/mock_cluster/mock_cluster.go github.com/mattermost/mattermost-plugin-api/cluster JobPluginAPI
 	mockgen -destination server/mscalendar/mock_mscalendar/mock_mscalendar.go github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar MSCalendar
 	mockgen -destination server/mscalendar/mock_welcomer/mock_welcomer.go -package mock_welcomer github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar Welcomer

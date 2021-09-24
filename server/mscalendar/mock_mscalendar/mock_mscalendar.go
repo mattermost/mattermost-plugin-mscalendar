@@ -5,38 +5,39 @@
 package mock_mscalendar
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	mscalendar "github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	reflect "reflect"
-	time "time"
 )
 
-// MockMSCalendar is a mock of MSCalendar interface
+// MockMSCalendar is a mock of MSCalendar interface.
 type MockMSCalendar struct {
 	ctrl     *gomock.Controller
 	recorder *MockMSCalendarMockRecorder
 }
 
-// MockMSCalendarMockRecorder is the mock recorder for MockMSCalendar
+// MockMSCalendarMockRecorder is the mock recorder for MockMSCalendar.
 type MockMSCalendarMockRecorder struct {
 	mock *MockMSCalendar
 }
 
-// NewMockMSCalendar creates a new mock instance
+// NewMockMSCalendar creates a new mock instance.
 func NewMockMSCalendar(ctrl *gomock.Controller) *MockMSCalendar {
 	mock := &MockMSCalendar{ctrl: ctrl}
 	mock.recorder = &MockMSCalendarMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockMSCalendar) EXPECT() *MockMSCalendarMockRecorder {
 	return m.recorder
 }
 
-// AcceptEvent mocks base method
+// AcceptEvent mocks base method.
 func (m *MockMSCalendar) AcceptEvent(arg0 *mscalendar.User, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AcceptEvent", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockMSCalendar) AcceptEvent(arg0 *mscalendar.User, arg1 string) error {
 	return ret0
 }
 
-// AcceptEvent indicates an expected call of AcceptEvent
+// AcceptEvent indicates an expected call of AcceptEvent.
 func (mr *MockMSCalendarMockRecorder) AcceptEvent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptEvent", reflect.TypeOf((*MockMSCalendar)(nil).AcceptEvent), arg0, arg1)
 }
 
-// AfterDisconnect mocks base method
+// AfterDisconnect mocks base method.
 func (m *MockMSCalendar) AfterDisconnect(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AfterDisconnect", arg0)
@@ -58,13 +59,13 @@ func (m *MockMSCalendar) AfterDisconnect(arg0 string) error {
 	return ret0
 }
 
-// AfterDisconnect indicates an expected call of AfterDisconnect
+// AfterDisconnect indicates an expected call of AfterDisconnect.
 func (mr *MockMSCalendarMockRecorder) AfterDisconnect(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDisconnect", reflect.TypeOf((*MockMSCalendar)(nil).AfterDisconnect), arg0)
 }
 
-// AfterSuccessfullyConnect mocks base method
+// AfterSuccessfullyConnect mocks base method.
 func (m *MockMSCalendar) AfterSuccessfullyConnect(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AfterSuccessfullyConnect", arg0, arg1)
@@ -72,25 +73,25 @@ func (m *MockMSCalendar) AfterSuccessfullyConnect(arg0, arg1 string) error {
 	return ret0
 }
 
-// AfterSuccessfullyConnect indicates an expected call of AfterSuccessfullyConnect
+// AfterSuccessfullyConnect indicates an expected call of AfterSuccessfullyConnect.
 func (mr *MockMSCalendarMockRecorder) AfterSuccessfullyConnect(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterSuccessfullyConnect", reflect.TypeOf((*MockMSCalendar)(nil).AfterSuccessfullyConnect), arg0, arg1)
 }
 
-// ClearSettingsPosts mocks base method
+// ClearSettingsPosts mocks base method.
 func (m *MockMSCalendar) ClearSettingsPosts(arg0 string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "ClearSettingsPosts", arg0)
 }
 
-// ClearSettingsPosts indicates an expected call of ClearSettingsPosts
+// ClearSettingsPosts indicates an expected call of ClearSettingsPosts.
 func (mr *MockMSCalendarMockRecorder) ClearSettingsPosts(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSettingsPosts", reflect.TypeOf((*MockMSCalendar)(nil).ClearSettingsPosts), arg0)
 }
 
-// CreateCalendar mocks base method
+// CreateCalendar mocks base method.
 func (m *MockMSCalendar) CreateCalendar(arg0 *mscalendar.User, arg1 *remote.Calendar) (*remote.Calendar, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCalendar", arg0, arg1)
@@ -99,13 +100,13 @@ func (m *MockMSCalendar) CreateCalendar(arg0 *mscalendar.User, arg1 *remote.Cale
 	return ret0, ret1
 }
 
-// CreateCalendar indicates an expected call of CreateCalendar
+// CreateCalendar indicates an expected call of CreateCalendar.
 func (mr *MockMSCalendarMockRecorder) CreateCalendar(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCalendar", reflect.TypeOf((*MockMSCalendar)(nil).CreateCalendar), arg0, arg1)
 }
 
-// CreateEvent mocks base method
+// CreateEvent mocks base method.
 func (m *MockMSCalendar) CreateEvent(arg0 *mscalendar.User, arg1 *remote.Event, arg2 []string) (*remote.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateEvent", arg0, arg1, arg2)
@@ -114,13 +115,13 @@ func (m *MockMSCalendar) CreateEvent(arg0 *mscalendar.User, arg1 *remote.Event, 
 	return ret0, ret1
 }
 
-// CreateEvent indicates an expected call of CreateEvent
+// CreateEvent indicates an expected call of CreateEvent.
 func (mr *MockMSCalendarMockRecorder) CreateEvent(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEvent", reflect.TypeOf((*MockMSCalendar)(nil).CreateEvent), arg0, arg1, arg2)
 }
 
-// CreateMyEventSubscription mocks base method
+// CreateMyEventSubscription mocks base method.
 func (m *MockMSCalendar) CreateMyEventSubscription() (*store.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMyEventSubscription")
@@ -129,13 +130,13 @@ func (m *MockMSCalendar) CreateMyEventSubscription() (*store.Subscription, error
 	return ret0, ret1
 }
 
-// CreateMyEventSubscription indicates an expected call of CreateMyEventSubscription
+// CreateMyEventSubscription indicates an expected call of CreateMyEventSubscription.
 func (mr *MockMSCalendarMockRecorder) CreateMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).CreateMyEventSubscription))
 }
 
-// DeclineEvent mocks base method
+// DeclineEvent mocks base method.
 func (m *MockMSCalendar) DeclineEvent(arg0 *mscalendar.User, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeclineEvent", arg0, arg1)
@@ -143,13 +144,13 @@ func (m *MockMSCalendar) DeclineEvent(arg0 *mscalendar.User, arg1 string) error 
 	return ret0
 }
 
-// DeclineEvent indicates an expected call of DeclineEvent
+// DeclineEvent indicates an expected call of DeclineEvent.
 func (mr *MockMSCalendarMockRecorder) DeclineEvent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeclineEvent", reflect.TypeOf((*MockMSCalendar)(nil).DeclineEvent), arg0, arg1)
 }
 
-// DeleteCalendar mocks base method
+// DeleteCalendar mocks base method.
 func (m *MockMSCalendar) DeleteCalendar(arg0 *mscalendar.User, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteCalendar", arg0, arg1)
@@ -157,13 +158,13 @@ func (m *MockMSCalendar) DeleteCalendar(arg0 *mscalendar.User, arg1 string) erro
 	return ret0
 }
 
-// DeleteCalendar indicates an expected call of DeleteCalendar
+// DeleteCalendar indicates an expected call of DeleteCalendar.
 func (mr *MockMSCalendarMockRecorder) DeleteCalendar(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCalendar", reflect.TypeOf((*MockMSCalendar)(nil).DeleteCalendar), arg0, arg1)
 }
 
-// DeleteMyEventSubscription mocks base method
+// DeleteMyEventSubscription mocks base method.
 func (m *MockMSCalendar) DeleteMyEventSubscription() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteMyEventSubscription")
@@ -171,13 +172,13 @@ func (m *MockMSCalendar) DeleteMyEventSubscription() error {
 	return ret0
 }
 
-// DeleteMyEventSubscription indicates an expected call of DeleteMyEventSubscription
+// DeleteMyEventSubscription indicates an expected call of DeleteMyEventSubscription.
 func (mr *MockMSCalendarMockRecorder) DeleteMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).DeleteMyEventSubscription))
 }
 
-// DeleteOrphanedSubscription mocks base method
+// DeleteOrphanedSubscription mocks base method.
 func (m *MockMSCalendar) DeleteOrphanedSubscription(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteOrphanedSubscription", arg0)
@@ -185,13 +186,13 @@ func (m *MockMSCalendar) DeleteOrphanedSubscription(arg0 string) error {
 	return ret0
 }
 
-// DeleteOrphanedSubscription indicates an expected call of DeleteOrphanedSubscription
+// DeleteOrphanedSubscription indicates an expected call of DeleteOrphanedSubscription.
 func (mr *MockMSCalendarMockRecorder) DeleteOrphanedSubscription(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrphanedSubscription", reflect.TypeOf((*MockMSCalendar)(nil).DeleteOrphanedSubscription), arg0)
 }
 
-// DisconnectUser mocks base method
+// DisconnectUser mocks base method.
 func (m *MockMSCalendar) DisconnectUser(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DisconnectUser", arg0)
@@ -199,13 +200,13 @@ func (m *MockMSCalendar) DisconnectUser(arg0 string) error {
 	return ret0
 }
 
-// DisconnectUser indicates an expected call of DisconnectUser
+// DisconnectUser indicates an expected call of DisconnectUser.
 func (mr *MockMSCalendarMockRecorder) DisconnectUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisconnectUser", reflect.TypeOf((*MockMSCalendar)(nil).DisconnectUser), arg0)
 }
 
-// FindMeetingTimes mocks base method
+// FindMeetingTimes mocks base method.
 func (m *MockMSCalendar) FindMeetingTimes(arg0 *mscalendar.User, arg1 *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindMeetingTimes", arg0, arg1)
@@ -214,13 +215,13 @@ func (m *MockMSCalendar) FindMeetingTimes(arg0 *mscalendar.User, arg1 *remote.Fi
 	return ret0, ret1
 }
 
-// FindMeetingTimes indicates an expected call of FindMeetingTimes
+// FindMeetingTimes indicates an expected call of FindMeetingTimes.
 func (mr *MockMSCalendarMockRecorder) FindMeetingTimes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMeetingTimes", reflect.TypeOf((*MockMSCalendar)(nil).FindMeetingTimes), arg0, arg1)
 }
 
-// GetActingUser mocks base method
+// GetActingUser mocks base method.
 func (m *MockMSCalendar) GetActingUser() *mscalendar.User {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetActingUser")
@@ -228,13 +229,13 @@ func (m *MockMSCalendar) GetActingUser() *mscalendar.User {
 	return ret0
 }
 
-// GetActingUser indicates an expected call of GetActingUser
+// GetActingUser indicates an expected call of GetActingUser.
 func (mr *MockMSCalendarMockRecorder) GetActingUser() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActingUser", reflect.TypeOf((*MockMSCalendar)(nil).GetActingUser))
 }
 
-// GetCalendarViews mocks base method
+// GetCalendarViews mocks base method.
 func (m *MockMSCalendar) GetCalendarViews(arg0 []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCalendarViews", arg0)
@@ -243,13 +244,13 @@ func (m *MockMSCalendar) GetCalendarViews(arg0 []*store.User) ([]*remote.ViewCal
 	return ret0, ret1
 }
 
-// GetCalendarViews indicates an expected call of GetCalendarViews
+// GetCalendarViews indicates an expected call of GetCalendarViews.
 func (mr *MockMSCalendarMockRecorder) GetCalendarViews(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendarViews", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendarViews), arg0)
 }
 
-// GetCalendars mocks base method
+// GetCalendars mocks base method.
 func (m *MockMSCalendar) GetCalendars(arg0 *mscalendar.User) ([]*remote.Calendar, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCalendars", arg0)
@@ -258,13 +259,13 @@ func (m *MockMSCalendar) GetCalendars(arg0 *mscalendar.User) ([]*remote.Calendar
 	return ret0, ret1
 }
 
-// GetCalendars indicates an expected call of GetCalendars
+// GetCalendars indicates an expected call of GetCalendars.
 func (mr *MockMSCalendarMockRecorder) GetCalendars(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendars", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendars), arg0)
 }
 
-// GetDailySummaryForUser mocks base method
+// GetDailySummaryForUser mocks base method.
 func (m *MockMSCalendar) GetDailySummaryForUser(arg0 *mscalendar.User) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDailySummaryForUser", arg0)
@@ -273,13 +274,13 @@ func (m *MockMSCalendar) GetDailySummaryForUser(arg0 *mscalendar.User) (string, 
 	return ret0, ret1
 }
 
-// GetDailySummaryForUser indicates an expected call of GetDailySummaryForUser
+// GetDailySummaryForUser indicates an expected call of GetDailySummaryForUser.
 func (mr *MockMSCalendarMockRecorder) GetDailySummaryForUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailySummaryForUser", reflect.TypeOf((*MockMSCalendar)(nil).GetDailySummaryForUser), arg0)
 }
 
-// GetDailySummarySettingsForUser mocks base method
+// GetDailySummarySettingsForUser mocks base method.
 func (m *MockMSCalendar) GetDailySummarySettingsForUser(arg0 *mscalendar.User) (*store.DailySummaryUserSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDailySummarySettingsForUser", arg0)
@@ -288,13 +289,13 @@ func (m *MockMSCalendar) GetDailySummarySettingsForUser(arg0 *mscalendar.User) (
 	return ret0, ret1
 }
 
-// GetDailySummarySettingsForUser indicates an expected call of GetDailySummarySettingsForUser
+// GetDailySummarySettingsForUser indicates an expected call of GetDailySummarySettingsForUser.
 func (mr *MockMSCalendarMockRecorder) GetDailySummarySettingsForUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailySummarySettingsForUser", reflect.TypeOf((*MockMSCalendar)(nil).GetDailySummarySettingsForUser), arg0)
 }
 
-// GetRemoteUser mocks base method
+// GetRemoteUser mocks base method.
 func (m *MockMSCalendar) GetRemoteUser(arg0 string) (*remote.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRemoteUser", arg0)
@@ -303,13 +304,13 @@ func (m *MockMSCalendar) GetRemoteUser(arg0 string) (*remote.User, error) {
 	return ret0, ret1
 }
 
-// GetRemoteUser indicates an expected call of GetRemoteUser
+// GetRemoteUser indicates an expected call of GetRemoteUser.
 func (mr *MockMSCalendarMockRecorder) GetRemoteUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteUser", reflect.TypeOf((*MockMSCalendar)(nil).GetRemoteUser), arg0)
 }
 
-// GetTimezone mocks base method
+// GetTimezone mocks base method.
 func (m *MockMSCalendar) GetTimezone(arg0 *mscalendar.User) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTimezone", arg0)
@@ -318,13 +319,13 @@ func (m *MockMSCalendar) GetTimezone(arg0 *mscalendar.User) (string, error) {
 	return ret0, ret1
 }
 
-// GetTimezone indicates an expected call of GetTimezone
+// GetTimezone indicates an expected call of GetTimezone.
 func (mr *MockMSCalendarMockRecorder) GetTimezone(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimezone", reflect.TypeOf((*MockMSCalendar)(nil).GetTimezone), arg0)
 }
 
-// GetUserSettings mocks base method
+// GetUserSettings mocks base method.
 func (m *MockMSCalendar) GetUserSettings(arg0 *mscalendar.User) (*store.Settings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserSettings", arg0)
@@ -333,13 +334,13 @@ func (m *MockMSCalendar) GetUserSettings(arg0 *mscalendar.User) (*store.Settings
 	return ret0, ret1
 }
 
-// GetUserSettings indicates an expected call of GetUserSettings
+// GetUserSettings indicates an expected call of GetUserSettings.
 func (mr *MockMSCalendarMockRecorder) GetUserSettings(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSettings", reflect.TypeOf((*MockMSCalendar)(nil).GetUserSettings), arg0)
 }
 
-// IsAuthorizedAdmin mocks base method
+// IsAuthorizedAdmin mocks base method.
 func (m *MockMSCalendar) IsAuthorizedAdmin(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsAuthorizedAdmin", arg0)
@@ -348,13 +349,13 @@ func (m *MockMSCalendar) IsAuthorizedAdmin(arg0 string) (bool, error) {
 	return ret0, ret1
 }
 
-// IsAuthorizedAdmin indicates an expected call of IsAuthorizedAdmin
+// IsAuthorizedAdmin indicates an expected call of IsAuthorizedAdmin.
 func (mr *MockMSCalendarMockRecorder) IsAuthorizedAdmin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAuthorizedAdmin", reflect.TypeOf((*MockMSCalendar)(nil).IsAuthorizedAdmin), arg0)
 }
 
-// ListRemoteSubscriptions mocks base method
+// ListRemoteSubscriptions mocks base method.
 func (m *MockMSCalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListRemoteSubscriptions")
@@ -363,13 +364,13 @@ func (m *MockMSCalendar) ListRemoteSubscriptions() ([]*remote.Subscription, erro
 	return ret0, ret1
 }
 
-// ListRemoteSubscriptions indicates an expected call of ListRemoteSubscriptions
+// ListRemoteSubscriptions indicates an expected call of ListRemoteSubscriptions.
 func (mr *MockMSCalendarMockRecorder) ListRemoteSubscriptions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRemoteSubscriptions", reflect.TypeOf((*MockMSCalendar)(nil).ListRemoteSubscriptions))
 }
 
-// LoadMyEventSubscription mocks base method
+// LoadMyEventSubscription mocks base method.
 func (m *MockMSCalendar) LoadMyEventSubscription() (*store.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadMyEventSubscription")
@@ -378,25 +379,25 @@ func (m *MockMSCalendar) LoadMyEventSubscription() (*store.Subscription, error) 
 	return ret0, ret1
 }
 
-// LoadMyEventSubscription indicates an expected call of LoadMyEventSubscription
+// LoadMyEventSubscription indicates an expected call of LoadMyEventSubscription.
 func (mr *MockMSCalendarMockRecorder) LoadMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).LoadMyEventSubscription))
 }
 
-// PrintSettings mocks base method
+// PrintSettings mocks base method.
 func (m *MockMSCalendar) PrintSettings(arg0 string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "PrintSettings", arg0)
 }
 
-// PrintSettings indicates an expected call of PrintSettings
+// PrintSettings indicates an expected call of PrintSettings.
 func (mr *MockMSCalendarMockRecorder) PrintSettings(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrintSettings", reflect.TypeOf((*MockMSCalendar)(nil).PrintSettings), arg0)
 }
 
-// ProcessAllDailySummary mocks base method
+// ProcessAllDailySummary mocks base method.
 func (m *MockMSCalendar) ProcessAllDailySummary(arg0 time.Time) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessAllDailySummary", arg0)
@@ -404,13 +405,13 @@ func (m *MockMSCalendar) ProcessAllDailySummary(arg0 time.Time) error {
 	return ret0
 }
 
-// ProcessAllDailySummary indicates an expected call of ProcessAllDailySummary
+// ProcessAllDailySummary indicates an expected call of ProcessAllDailySummary.
 func (mr *MockMSCalendarMockRecorder) ProcessAllDailySummary(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessAllDailySummary", reflect.TypeOf((*MockMSCalendar)(nil).ProcessAllDailySummary), arg0)
 }
 
-// RenewMyEventSubscription mocks base method
+// RenewMyEventSubscription mocks base method.
 func (m *MockMSCalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RenewMyEventSubscription")
@@ -419,13 +420,13 @@ func (m *MockMSCalendar) RenewMyEventSubscription() (*store.Subscription, error)
 	return ret0, ret1
 }
 
-// RenewMyEventSubscription indicates an expected call of RenewMyEventSubscription
+// RenewMyEventSubscription indicates an expected call of RenewMyEventSubscription.
 func (mr *MockMSCalendarMockRecorder) RenewMyEventSubscription() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewMyEventSubscription", reflect.TypeOf((*MockMSCalendar)(nil).RenewMyEventSubscription))
 }
 
-// RespondToEvent mocks base method
+// RespondToEvent mocks base method.
 func (m *MockMSCalendar) RespondToEvent(arg0 *mscalendar.User, arg1, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RespondToEvent", arg0, arg1, arg2)
@@ -433,13 +434,13 @@ func (m *MockMSCalendar) RespondToEvent(arg0 *mscalendar.User, arg1, arg2 string
 	return ret0
 }
 
-// RespondToEvent indicates an expected call of RespondToEvent
+// RespondToEvent indicates an expected call of RespondToEvent.
 func (mr *MockMSCalendarMockRecorder) RespondToEvent(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RespondToEvent", reflect.TypeOf((*MockMSCalendar)(nil).RespondToEvent), arg0, arg1, arg2)
 }
 
-// SetDailySummaryEnabled mocks base method
+// SetDailySummaryEnabled mocks base method.
 func (m *MockMSCalendar) SetDailySummaryEnabled(arg0 *mscalendar.User, arg1 bool) (*store.DailySummaryUserSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetDailySummaryEnabled", arg0, arg1)
@@ -448,13 +449,13 @@ func (m *MockMSCalendar) SetDailySummaryEnabled(arg0 *mscalendar.User, arg1 bool
 	return ret0, ret1
 }
 
-// SetDailySummaryEnabled indicates an expected call of SetDailySummaryEnabled
+// SetDailySummaryEnabled indicates an expected call of SetDailySummaryEnabled.
 func (mr *MockMSCalendarMockRecorder) SetDailySummaryEnabled(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDailySummaryEnabled", reflect.TypeOf((*MockMSCalendar)(nil).SetDailySummaryEnabled), arg0, arg1)
 }
 
-// SetDailySummaryPostTime mocks base method
+// SetDailySummaryPostTime mocks base method.
 func (m *MockMSCalendar) SetDailySummaryPostTime(arg0 *mscalendar.User, arg1 string) (*store.DailySummaryUserSettings, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetDailySummaryPostTime", arg0, arg1)
@@ -463,13 +464,13 @@ func (m *MockMSCalendar) SetDailySummaryPostTime(arg0 *mscalendar.User, arg1 str
 	return ret0, ret1
 }
 
-// SetDailySummaryPostTime indicates an expected call of SetDailySummaryPostTime
+// SetDailySummaryPostTime indicates an expected call of SetDailySummaryPostTime.
 func (mr *MockMSCalendarMockRecorder) SetDailySummaryPostTime(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDailySummaryPostTime", reflect.TypeOf((*MockMSCalendar)(nil).SetDailySummaryPostTime), arg0, arg1)
 }
 
-// Sync mocks base method
+// Sync mocks base method.
 func (m *MockMSCalendar) Sync(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Sync", arg0)
@@ -478,13 +479,13 @@ func (m *MockMSCalendar) Sync(arg0 string) (string, error) {
 	return ret0, ret1
 }
 
-// Sync indicates an expected call of Sync
+// Sync indicates an expected call of Sync.
 func (mr *MockMSCalendarMockRecorder) Sync(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sync", reflect.TypeOf((*MockMSCalendar)(nil).Sync), arg0)
 }
 
-// SyncAll mocks base method
+// SyncAll mocks base method.
 func (m *MockMSCalendar) SyncAll() (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SyncAll")
@@ -493,13 +494,13 @@ func (m *MockMSCalendar) SyncAll() (string, error) {
 	return ret0, ret1
 }
 
-// SyncAll indicates an expected call of SyncAll
+// SyncAll indicates an expected call of SyncAll.
 func (mr *MockMSCalendarMockRecorder) SyncAll() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncAll", reflect.TypeOf((*MockMSCalendar)(nil).SyncAll))
 }
 
-// TentativelyAcceptEvent mocks base method
+// TentativelyAcceptEvent mocks base method.
 func (m *MockMSCalendar) TentativelyAcceptEvent(arg0 *mscalendar.User, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TentativelyAcceptEvent", arg0, arg1)
@@ -507,13 +508,13 @@ func (m *MockMSCalendar) TentativelyAcceptEvent(arg0 *mscalendar.User, arg1 stri
 	return ret0
 }
 
-// TentativelyAcceptEvent indicates an expected call of TentativelyAcceptEvent
+// TentativelyAcceptEvent indicates an expected call of TentativelyAcceptEvent.
 func (mr *MockMSCalendarMockRecorder) TentativelyAcceptEvent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TentativelyAcceptEvent", reflect.TypeOf((*MockMSCalendar)(nil).TentativelyAcceptEvent), arg0, arg1)
 }
 
-// ViewCalendar mocks base method
+// ViewCalendar mocks base method.
 func (m *MockMSCalendar) ViewCalendar(arg0 *mscalendar.User, arg1, arg2 time.Time) ([]*remote.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ViewCalendar", arg0, arg1, arg2)
@@ -522,13 +523,13 @@ func (m *MockMSCalendar) ViewCalendar(arg0 *mscalendar.User, arg1, arg2 time.Tim
 	return ret0, ret1
 }
 
-// ViewCalendar indicates an expected call of ViewCalendar
+// ViewCalendar indicates an expected call of ViewCalendar.
 func (mr *MockMSCalendarMockRecorder) ViewCalendar(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ViewCalendar", reflect.TypeOf((*MockMSCalendar)(nil).ViewCalendar), arg0, arg1, arg2)
 }
 
-// Welcome mocks base method
+// Welcome mocks base method.
 func (m *MockMSCalendar) Welcome(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Welcome", arg0)
@@ -536,19 +537,19 @@ func (m *MockMSCalendar) Welcome(arg0 string) error {
 	return ret0
 }
 
-// Welcome indicates an expected call of Welcome
+// Welcome indicates an expected call of Welcome.
 func (mr *MockMSCalendarMockRecorder) Welcome(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Welcome", reflect.TypeOf((*MockMSCalendar)(nil).Welcome), arg0)
 }
 
-// WelcomeFlowEnd mocks base method
+// WelcomeFlowEnd mocks base method.
 func (m *MockMSCalendar) WelcomeFlowEnd(arg0 string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "WelcomeFlowEnd", arg0)
 }
 
-// WelcomeFlowEnd indicates an expected call of WelcomeFlowEnd
+// WelcomeFlowEnd indicates an expected call of WelcomeFlowEnd.
 func (mr *MockMSCalendarMockRecorder) WelcomeFlowEnd(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WelcomeFlowEnd", reflect.TypeOf((*MockMSCalendar)(nil).WelcomeFlowEnd), arg0)
