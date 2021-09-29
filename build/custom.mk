@@ -5,7 +5,17 @@ endif
 
 LDFLAGS += -X "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry.rudderWriteKey=$(MM_RUDDER_WRITE_KEY)"
 
-## Generates mock golang interfaces for testing
+# Build info
+BUILD_DATE = $(shell date -u)
+BUILD_HASH = $(shell git rev-parse HEAD)
+BUILD_HASH_SHORT = $(shell git rev-parse --short HEAD)
+LDFLAGS += -X "main.BuildDate=$(BUILD_DATE)"
+LDFLAGS += -X "main.BuildHash=$(BUILD_HASH)"
+LDFLAGS += -X "main.BuildHashShort=$(BUILD_HASH_SHORT)"
+
+GO_BUILD_FLAGS = -ldflags '$(LDFLAGS)'
+
+# Generates mock golang interfaces for testing
 mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen@v1.6.0
