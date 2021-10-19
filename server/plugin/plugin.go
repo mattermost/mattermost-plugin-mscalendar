@@ -69,7 +69,7 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	pluginAPIClient := pluginapiclient.NewClient(p.API)
+	pluginAPIClient := pluginapiclient.NewClient(p.API, p.Driver)
 	conf := pluginAPIClient.Configuration.GetConfig()
 	license := pluginAPIClient.System.GetLicense()
 	if !enterprise.HasEnterpriseFeatures(conf, license) {
