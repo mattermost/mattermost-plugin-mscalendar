@@ -5,34 +5,35 @@
 package mock_bot
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockAdmin is a mock of Admin interface
+// MockAdmin is a mock of Admin interface.
 type MockAdmin struct {
 	ctrl     *gomock.Controller
 	recorder *MockAdminMockRecorder
 }
 
-// MockAdminMockRecorder is the mock recorder for MockAdmin
+// MockAdminMockRecorder is the mock recorder for MockAdmin.
 type MockAdminMockRecorder struct {
 	mock *MockAdmin
 }
 
-// NewMockAdmin creates a new mock instance
+// NewMockAdmin creates a new mock instance.
 func NewMockAdmin(ctrl *gomock.Controller) *MockAdmin {
 	mock := &MockAdmin{ctrl: ctrl}
 	mock.recorder = &MockAdminMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAdmin) EXPECT() *MockAdminMockRecorder {
 	return m.recorder
 }
 
-// IsUserAdmin mocks base method
+// IsUserAdmin mocks base method.
 func (m *MockAdmin) IsUserAdmin(arg0 string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsUserAdmin", arg0)
@@ -40,7 +41,7 @@ func (m *MockAdmin) IsUserAdmin(arg0 string) bool {
 	return ret0
 }
 
-// IsUserAdmin indicates an expected call of IsUserAdmin
+// IsUserAdmin indicates an expected call of IsUserAdmin.
 func (mr *MockAdminMockRecorder) IsUserAdmin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUserAdmin", reflect.TypeOf((*MockAdmin)(nil).IsUserAdmin), arg0)
