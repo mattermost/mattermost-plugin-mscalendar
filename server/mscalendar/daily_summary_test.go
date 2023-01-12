@@ -21,9 +21,9 @@ import (
 
 func TestProcessAllDailySummary(t *testing.T) {
 	for _, tc := range []struct {
+		runAssertions func(deps *Dependencies, client remote.Client)
 		name          string
 		err           string
-		runAssertions func(deps *Dependencies, client remote.Client)
 	}{
 		{
 			name: "Error fetching index",
@@ -210,9 +210,9 @@ Wednesday February 12
 func TestShouldPostDailySummary(t *testing.T) {
 	tests := []struct {
 		name        string
-		enabled     bool
 		postTime    string
 		timeZone    string
+		enabled     bool
 		shouldRun   bool
 		shouldError bool
 	}{

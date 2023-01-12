@@ -11,12 +11,12 @@ type User struct {
 }
 
 type WorkingHours struct {
-	DaysOfWeek []string `json:"daysOfWeek"`
-	StartTime  string   `json:"startTime"`
-	EndTime    string   `json:"endTime"`
-	TimeZone   struct {
+	StartTime string `json:"startTime"`
+	EndTime   string `json:"endTime"`
+	TimeZone  struct {
 		Name string `json:"name"`
 	}
+	DaysOfWeek []string `json:"daysOfWeek"`
 }
 
 type MailboxSettings struct {

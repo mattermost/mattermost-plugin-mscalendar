@@ -16,16 +16,16 @@ import (
 )
 
 type JobManager struct {
+	env            *mscalendar.Env
+	papi           cluster.JobPluginAPI
 	registeredJobs sync.Map
 	activeJobs     sync.Map
-	env            mscalendar.Env
-	papi           cluster.JobPluginAPI
 }
 
 type RegisteredJob struct {
+	work     func(env mscalendar.Env)
 	id       string
 	interval time.Duration
-	work     func(env mscalendar.Env)
 }
 
 var scheduleFunc = func(api cluster.JobPluginAPI, id string, wait cluster.NextWaitInterval, cb func()) (io.Closer, error) {
@@ -33,9 +33,9 @@ var scheduleFunc = func(api cluster.JobPluginAPI, id string, wait cluster.NextWa
 }
 
 type activeJob struct {
-	RegisteredJob
 	ScheduledJob io.Closer
 	Context      context.Context
+	RegisteredJob
 }
 
 func newActiveJob(ctx context.Context, rj RegisteredJob, sched io.Closer) *activeJob {
@@ -50,7 +50,7 @@ func newActiveJob(ctx context.Context, rj RegisteredJob, sched io.Closer) *activ
 func NewJobManager(papi cluster.JobPluginAPI, env mscalendar.Env) *JobManager {
 	return &JobManager{
 		papi: papi,
-		env:  env,
+		env:  &env,
 	}
 }
 
@@ -112,5 +112,5 @@ func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 
 // getEnv returns the mscalendar.Env stored on the job manager
 func (jm *JobManager) getEnv() mscalendar.Env {
-	return jm.env
+	return *jm.env
 }

@@ -12,15 +12,15 @@ import (
 )
 
 type dailySummarySetting struct {
+	store       settingspanel.SettingStore
+	getTimezone func(userID string) (string, error)
 	title       string
+	dependsOn   string
 	description string
 	id          string
-	dependsOn   string
 	optionsH    []string
 	optionsM    []string
 	optionsAPM  []string
-	store       settingspanel.SettingStore
-	getTimezone func(userID string) (string, error)
 }
 
 func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) (string, error)) settingspanel.Setting {

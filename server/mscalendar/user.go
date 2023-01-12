@@ -24,9 +24,9 @@ type Users interface {
 }
 
 type User struct {
-	MattermostUserID string
 	*store.User
-	MattermostUser *model.User
+	MattermostUser   *model.User
+	MattermostUserID string
 }
 
 func NewUser(mattermostUserID string) *User {

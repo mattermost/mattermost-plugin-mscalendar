@@ -92,10 +92,10 @@ func newTestNotification(clientState string, recommendRenew bool) *remote.Notifi
 
 func TestProcessNotification(t *testing.T) {
 	tcs := []struct {
-		name          string
-		expectedError string
 		notification  *remote.Notification
 		priorEvent    *remote.Event
+		name          string
+		expectedError string
 	}{
 		{
 			name:          "incoming ClientState matches stored ClientState",

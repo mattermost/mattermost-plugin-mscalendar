@@ -9,11 +9,11 @@ import (
 )
 
 type notificationSetting struct {
+	getCal      func(string) MSCalendar
 	title       string
 	description string
 	id          string
 	dependsOn   string
-	getCal      func(string) MSCalendar
 }
 
 func NewNotificationsSetting(getCal func(string) MSCalendar) settingspanel.Setting {

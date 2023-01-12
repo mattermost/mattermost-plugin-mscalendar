@@ -8,11 +8,11 @@ import (
 )
 
 type boolSetting struct {
+	store       SettingStore
 	title       string
 	description string
 	id          string
 	dependsOn   string
-	store       SettingStore
 }
 
 func NewBoolSetting(id string, title string, description string, dependsOn string, store SettingStore) Setting {

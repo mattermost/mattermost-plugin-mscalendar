@@ -266,7 +266,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		return false, nil
 	}
 
-	allChanges := append(added, updated...)
+	var allChanges []string
+	allChanges = append(allChanges, added...)
+	allChanges = append(allChanges, updated...)
 	allChanges = append(allChanges, deleted...)
 
 	hasImportantChanges := false

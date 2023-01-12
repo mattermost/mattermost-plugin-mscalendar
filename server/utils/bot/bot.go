@@ -25,16 +25,15 @@ type Bot interface {
 }
 
 type bot struct {
-	Config
 	pluginAPI        plugin.API
 	pluginHelpers    plugin.Helpers
-	mattermostUserID string
-	displayName      string
+	flow             flow.Flow
+	flowStore        flow.Store
 	logContext       LogContext
 	pluginURL        string
-
-	flow      flow.Flow
-	flowStore flow.Store
+	mattermostUserID string
+	displayName      string
+	Config
 }
 
 func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
