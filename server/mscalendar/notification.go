@@ -48,9 +48,9 @@ const (
 	ResponseNone  = "notResponded"
 )
 
-var importantNotificationChanges []string = []string{FieldSubject, FieldWhen}
+var importantNotificationChanges = []string{FieldSubject, FieldWhen}
 
-var notificationFieldOrder []string = []string{
+var notificationFieldOrder = []string{
 	FieldWhen,
 	FieldLocation,
 	FieldAttendees,
