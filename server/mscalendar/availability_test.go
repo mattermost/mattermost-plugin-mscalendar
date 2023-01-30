@@ -118,6 +118,7 @@ func TestSyncStatusAll(t *testing.T) {
 
 			c, papi, s, logger := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Store.(*mock_store.MockStore), deps.Logger.(*mock_bot.MockLogger)
 
+			logger.EXPECT().Debugf("Users loaded successfully from user index")
 			mockUser := &store.User{
 				MattermostUserID: "user_mm_id",
 				Remote: &remote.User{
@@ -179,6 +180,8 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c := client.(*mock_remote.MockClient)
+				mockLogger := deps.Logger.(*mock_bot.MockLogger)
+				mockLogger.EXPECT().Debugf("Users loaded successfully from user index")
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(0)
 			},
 		},
@@ -191,6 +194,9 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				c, papi, poster, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
 				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+
+				mockLogger := deps.Logger.(*mock_bot.MockLogger)
+				mockLogger.EXPECT().Debugf("Users loaded successfully from user index")
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
@@ -293,6 +299,7 @@ func TestReminders(t *testing.T) {
 
 			c, s, poster, logger := client.(*mock_remote.MockClient), deps.Store.(*mock_store.MockStore), deps.Poster.(*mock_bot.MockPoster), deps.Logger.(*mock_bot.MockLogger)
 
+			logger.EXPECT().Debugf("Users loaded successfully from user index")
 			loadUser := s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
 				MattermostUserID: "user_mm_id",
 				Remote: &remote.User{
