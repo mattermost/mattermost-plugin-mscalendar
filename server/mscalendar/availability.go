@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
@@ -43,7 +44,7 @@ func (m *mscalendar) Sync(mattermostUserID string) (string, error) {
 func (m *mscalendar) SyncAll() (string, error) {
 	err := m.Filter(withSuperuserClient)
 	if err != nil {
-		return "", fmt.Errorf("not able to filter the super user client. %w", err)
+		return "", errors.Wrap(err, "not able to filter the super user client.")
 	}
 
 	userIndex, err := m.Store.LoadUserIndex()
@@ -51,9 +52,8 @@ func (m *mscalendar) SyncAll() (string, error) {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil
 		}
-		return "", fmt.Errorf("not able to load users from user index. %w", err)
+		return "", errors.Wrap(err, "not able to load users from user index.")
 	}
-	m.Logger.Debugf("Users loaded successfully from user index")
 
 	return m.syncUsers(userIndex)
 }
@@ -70,7 +70,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 		user, err := m.Store.LoadUser(u.MattermostUserID)
 		if err != nil {
 			if numberOfLogs < logTruncateLimit {
-				m.Logger.Errorf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
+				m.Logger.Warnf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
 			} else if numberOfLogs == logTruncateLimit {
 				m.Logger.Warnf(logTruncateMsg)
 			}
@@ -89,7 +89,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 
 	calendarViews, err := m.GetCalendarViews(users)
 	if err != nil {
-		return "", fmt.Errorf("not able to get calendar views for connected users. %w", err)
+		return "", errors.Wrap(err, "not able to get calendar views for connected users.")
 	}
 	if len(calendarViews) == 0 {
 		return "No calendar views found", nil
@@ -98,7 +98,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, error) {
 	m.deliverReminders(users, calendarViews)
 	out, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
-		return "", fmt.Errorf("error setting the user statuses. %w", err)
+		return "", errors.Wrap(err, "error setting the user statuses.")
 	}
 
 	return out, nil
@@ -128,7 +128,7 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 		}
 		if view.Error != nil {
 			if numberOfLogs < logTruncateLimit {
-				m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
+				m.Logger.Warnf("Error getting availability for %s. err=%s", user.MattermostUserID, view.Error.Message)
 			} else if numberOfLogs == logTruncateLimit {
 				m.Logger.Warnf(logTruncateMsg)
 			}
@@ -162,7 +162,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 
 	statuses, appErr := m.PluginAPI.GetMattermostUserStatusesByIds(mattermostUserIDs)
 	if appErr != nil {
-		return "", fmt.Errorf("error in getting Mattermost user statuses for connected users. %w", appErr)
+		return "", errors.Wrap(appErr, "error in getting Mattermost user statuses for connected users.")
 	}
 	statusMap := map[string]*model.Status{}
 	for _, s := range statuses {
@@ -177,7 +177,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		}
 		if view.Error != nil {
 			if numberOfLogs < logTruncateLimit {
-				m.Logger.Warnf("Error getting availability for %s. err=%s", user.Remote.Mail, view.Error.Message)
+				m.Logger.Warnf("Error getting availability for %s. err=%s", user.MattermostUserID, view.Error.Message)
 			} else if numberOfLogs == logTruncateLimit {
 				m.Logger.Warnf(logTruncateMsg)
 			}
@@ -195,7 +195,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		res, err = m.setStatusFromCalendarView(user, status, view)
 		if err != nil {
 			if numberOfLogs < logTruncateLimit {
-				m.Logger.Warnf("Error setting user %s status. err=%v", user.Remote.Mail, err)
+				m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
 			} else if numberOfLogs == logTruncateLimit {
 				m.Logger.Warnf(logTruncateMsg)
 			}
@@ -234,13 +234,13 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			}
 			err := m.setStatusOrAskUser(user, status, events, true)
 			if err != nil {
-				return "", fmt.Errorf("error in setting user status for user %s. %w", user.MattermostUserID, err)
+				return "", errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 			}
 		}
 
 		err := m.Store.StoreUserActiveEvents(user.MattermostUserID, []string{})
 		if err != nil {
-			return "", fmt.Errorf("error in storing active events for user %s. %w", user.MattermostUserID, err)
+			return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
 		return message, nil
 	}
@@ -264,17 +264,17 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			m.Store.StoreUser(user)
 			err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 			if err != nil {
-				return "", fmt.Errorf("error in storing active events for user %s. %w", user.MattermostUserID, err)
+				return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 			}
 			return "User was already marked as busy. No status change.", nil
 		}
 		err = m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
-			return "", fmt.Errorf("error in setting user status for user %s. %w", user.MattermostUserID, err)
+			return "", errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 		}
 		err = m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 		if err != nil {
-			return "", fmt.Errorf("error in storing active events for user %s. %w", user.MattermostUserID, err)
+			return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
 		return fmt.Sprintf("User was free, but is now busy (%s). Set status to busy.", busyStatus), nil
 	}
@@ -302,14 +302,14 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	if currentStatus != busyStatus {
 		err := m.setStatusOrAskUser(user, status, events, false)
 		if err != nil {
-			return "", fmt.Errorf("error in setting user status for user %s. %w", user.MattermostUserID, err)
+			return "", errors.Wrapf(err, "error in setting user status for user %s", user.MattermostUserID)
 		}
 		message = fmt.Sprintf("User was free, but is now busy. Set status to busy (%s).", busyStatus)
 	}
 
 	err := m.Store.StoreUserActiveEvents(user.MattermostUserID, remoteHashes)
 	if err != nil {
-		return "", fmt.Errorf("error in storing active events for user %s. %w", user.MattermostUserID, err)
+		return "", errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 	}
 
 	return message, nil
