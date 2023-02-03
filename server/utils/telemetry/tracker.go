@@ -13,20 +13,20 @@ type Client interface {
 }
 
 type Track struct {
+	Properties map[string]interface{}
 	UserID     string
 	Event      string
-	Properties map[string]interface{}
 }
 
 type tracker struct {
 	client             Client
-	diagnosticID       string
+	logger             bot.Logger
 	serverVersion      string
 	pluginID           string
 	pluginVersion      string
 	telemetryShortName string
+	diagnosticID       string
 	enabled            bool
-	logger             bot.Logger
 }
 
 func NewTracker(c Client, diagnosticID, serverVersion, pluginID, pluginVersion, telemetryShortName string, enableDiagnostics bool, logger bot.Logger) Tracker {

@@ -48,9 +48,9 @@ const (
 	ResponseNone  = "notResponded"
 )
 
-var importantNotificationChanges []string = []string{FieldSubject, FieldWhen}
+var importantNotificationChanges = []string{FieldSubject, FieldWhen}
 
-var notificationFieldOrder []string = []string{
+var notificationFieldOrder = []string{
 	FieldWhen,
 	FieldLocation,
 	FieldAttendees,
@@ -266,7 +266,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		return false, nil
 	}
 
-	allChanges := append(added, updated...)
+	var allChanges []string
+	allChanges = append(allChanges, added...)
+	allChanges = append(allChanges, updated...)
 	allChanges = append(allChanges, deleted...)
 
 	hasImportantChanges := false

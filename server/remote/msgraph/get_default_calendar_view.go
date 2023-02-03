@@ -14,15 +14,15 @@ import (
 )
 
 type calendarViewResponse struct {
-	Value []*remote.Event  `json:"value,omitempty"`
 	Error *remote.APIError `json:"error,omitempty"`
+	Value []*remote.Event  `json:"value,omitempty"`
 }
 
 type calendarViewSingleResponse struct {
-	ID      string               `json:"id"`
-	Status  int                  `json:"status"`
-	Body    calendarViewResponse `json:"body"`
 	Headers map[string]string    `json:"headers"`
+	ID      string               `json:"id"`
+	Body    calendarViewResponse `json:"body"`
+	Status  int                  `json:"status"`
 }
 
 type calendarViewBatchResponse struct {

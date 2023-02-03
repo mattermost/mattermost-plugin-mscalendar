@@ -24,9 +24,9 @@ type Users interface {
 }
 
 type User struct {
-	MattermostUserID string
 	*store.User
-	MattermostUser *model.User
+	MattermostUser   *model.User
+	MattermostUserID string
 }
 
 func NewUser(mattermostUserID string) *User {
@@ -61,7 +61,7 @@ func (m *mscalendar) ExpandRemoteUser(user *User) error {
 	if user.User == nil {
 		storedUser, err := m.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
-			return errors.Wrap(err, "It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/mscalendar connect`.")
+			return errors.Wrap(err, "It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/mscalendar connect`.") //nolint:revive
 		}
 		user.User = storedUser
 	}

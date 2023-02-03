@@ -20,11 +20,11 @@ import (
 
 // Handler handles commands
 type Command struct {
+	MSCalendar mscalendar.MSCalendar
 	Context    *plugin.Context
 	Args       *model.CommandArgs
-	ChannelID  string
 	Config     *config.Config
-	MSCalendar mscalendar.MSCalendar
+	ChannelID  string
 }
 
 func getNotConnectedText() string {

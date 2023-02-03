@@ -16,16 +16,16 @@ import (
 )
 
 type JobManager struct {
-	registeredJobs sync.Map
-	activeJobs     sync.Map
 	env            mscalendar.Env
 	papi           cluster.JobPluginAPI
+	registeredJobs sync.Map
+	activeJobs     sync.Map
 }
 
 type RegisteredJob struct {
+	work     func(env mscalendar.Env)
 	id       string
 	interval time.Duration
-	work     func(env mscalendar.Env)
 }
 
 var scheduleFunc = func(api cluster.JobPluginAPI, id string, wait cluster.NextWaitInterval, cb func()) (io.Closer, error) {
@@ -33,9 +33,9 @@ var scheduleFunc = func(api cluster.JobPluginAPI, id string, wait cluster.NextWa
 }
 
 type activeJob struct {
-	RegisteredJob
 	ScheduledJob io.Closer
 	Context      context.Context
+	RegisteredJob
 }
 
 func newActiveJob(ctx context.Context, rj RegisteredJob, sched io.Closer) *activeJob {

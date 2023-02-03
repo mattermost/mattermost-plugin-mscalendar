@@ -7,10 +7,10 @@ import (
 )
 
 type WelcomeFlow struct {
-	steps      []flow.Step
-	url        string
 	controller bot.FlowController
 	onFlowDone func(userID string)
+	url        string
+	steps      []flow.Step
 }
 
 func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer) *WelcomeFlow {
