@@ -471,12 +471,13 @@ func (mr *MockMSCalendarMockRecorder) SetDailySummaryPostTime(arg0, arg1 interfa
 }
 
 // Sync mocks base method.
-func (m *MockMSCalendar) Sync(arg0 string) (string, error) {
+func (m *MockMSCalendar) Sync(arg0 string) (string, *mscalendar.StatusSyncJobSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Sync", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(*mscalendar.StatusSyncJobSummary)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Sync indicates an expected call of Sync.
@@ -486,12 +487,13 @@ func (mr *MockMSCalendarMockRecorder) Sync(arg0 interface{}) *gomock.Call {
 }
 
 // SyncAll mocks base method.
-func (m *MockMSCalendar) SyncAll() (string, error) {
+func (m *MockMSCalendar) SyncAll() (string, *mscalendar.StatusSyncJobSummary, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SyncAll")
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(*mscalendar.StatusSyncJobSummary)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // SyncAll indicates an expected call of SyncAll.

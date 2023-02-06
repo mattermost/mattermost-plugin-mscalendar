@@ -10,11 +10,11 @@ import (
 const maxNumRequestsPerBatch = 20
 
 type singleRequest struct {
+	Body    interface{}       `json:"body"`
+	Headers map[string]string `json:"headers"`
 	ID      string            `json:"id"`
 	URL     string            `json:"url"`
 	Method  string            `json:"method"`
-	Body    interface{}       `json:"body"`
-	Headers map[string]string `json:"headers"`
 }
 
 type fullBatchRequest struct {

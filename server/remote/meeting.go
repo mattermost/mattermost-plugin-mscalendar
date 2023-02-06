@@ -6,14 +6,14 @@ package remote
 import "time"
 
 type FindMeetingTimesParameters struct {
-	Attendees                 []Attendee          `json:"attendees,omitempty"`
+	ReturnSuggestionReasons   *bool               `json:"returnSuggestionReasons,omitempty"`
 	LocationConstraint        *LocationConstraint `json:"locationConstraint,omitempty"`
 	TimeConstraint            *TimeConstraint     `json:"timeConstraint,omitempty"`
 	MeetingDuration           *time.Duration      `json:"meetingDuration,omitempty"`
 	MaxCandidates             *int                `json:"maxCandidates,omitempty"`
 	IsOrganizerOptional       *bool               `json:"isOrganizerOptional,omitempty"`
-	ReturnSuggestionReasons   *bool               `json:"returnSuggestionReasons,omitempty"`
 	MinimumAttendeePercentage *float64            `json:"minimumAttendeePercentage,omitempty"`
+	Attendees                 []Attendee          `json:"attendees,omitempty"`
 }
 
 type TimeConstraint struct {
@@ -21,13 +21,13 @@ type TimeConstraint struct {
 	TimeSlots      []TimeSlot `json:"timeSlots,omitempty"`
 }
 type MeetingTimeSuggestion struct {
+	MeetingTimeSlot       *TimeSlot
+	SuggestionReason      string `json:"suggestionReason"`
+	OrganizerAvailability string `json:"organizerAvailability"`
+	Locations             []*Location
 	AttendeeAvailability  []*AttendeeAvailability
 	Confidence            float32 `json:"confidence"`
-	Locations             []*Location
-	MeetingTimeSlot       *TimeSlot
-	Order                 int32  `json:"order"`
-	OrganizerAvailability string `json:"organizerAvailability"`
-	SuggestionReason      string `json:"suggestionReason"`
+	Order                 int32   `json:"order"`
 }
 
 type AttendeeAvailability struct {
@@ -36,8 +36,8 @@ type AttendeeAvailability struct {
 }
 
 type MeetingTimeSuggestionResults struct {
-	MeetingTimeSuggestions []*MeetingTimeSuggestion `json:"meetingTimeSuggestions"`
 	EmptySuggestionReason  string                   `json:"emptySuggestionReason"`
+	MeetingTimeSuggestions []*MeetingTimeSuggestion `json:"meetingTimeSuggestions"`
 }
 
 type TimeSlot struct {
@@ -46,9 +46,9 @@ type TimeSlot struct {
 }
 
 type LocationConstraint struct {
-	Locations       []LocationConstraintItem `json:"locations,omitempty"`
 	IsRequired      *bool                    `json:"isRequired,omitempty"`
 	SuggestLocation *bool                    `json:"suggestLocation,omitempty"`
+	Locations       []LocationConstraintItem `json:"locations,omitempty"`
 }
 
 type LocationConstraintItem struct {

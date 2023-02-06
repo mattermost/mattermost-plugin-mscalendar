@@ -8,21 +8,21 @@ import (
 )
 
 type Calendar struct {
+	Owner        *User   `json:"owner,omitempty"`
 	ID           string  `json:"id"`
 	Name         string  `json:"name,omitempty"`
 	Events       []Event `json:"events,omitempty"`
 	CalendarView []Event `json:"calendarView,omitempty"`
-	Owner        *User   `json:"owner,omitempty"`
 }
 
 type ViewCalendarParams struct {
-	RemoteUserID string
 	StartTime    time.Time
 	EndTime      time.Time
+	RemoteUserID string
 }
 
 type ViewCalendarResponse struct {
+	Error        *APIError
 	RemoteUserID string
 	Events       []*Event
-	Error        *APIError
 }

@@ -19,8 +19,8 @@ const ttlAfterEventEnd = 30 * 24 * time.Hour // 30 days
 const defaultEventTTL = 30 * 24 * time.Hour  // 30 days
 
 type Event struct {
-	PluginVersion string
 	Remote        *remote.Event
+	PluginVersion string
 }
 
 type EventStore interface {

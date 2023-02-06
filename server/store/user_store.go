@@ -35,30 +35,30 @@ type UserShort struct {
 }
 
 type User struct {
-	PluginVersion     string
-	Remote            *remote.User
-	MattermostUserID  string
-	OAuth2Token       *oauth2.Token
 	Settings          Settings `json:"mattermostSettings,omitempty"`
-	ActiveEvents      []string `json:"events"`
+	Remote            *remote.User
+	OAuth2Token       *oauth2.Token
+	PluginVersion     string
+	MattermostUserID  string
 	LastStatus        string
 	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
+	ActiveEvents      []string          `json:"events"`
 }
 
 type Settings struct {
+	DailySummary                      *DailySummaryUserSettings
 	EventSubscriptionID               string
 	UpdateStatus                      bool
 	GetConfirmation                   bool
 	ReceiveReminders                  bool
 	ReceiveNotificationsDuringMeeting bool
-	DailySummary                      *DailySummaryUserSettings
 }
 
 type DailySummaryUserSettings struct {
-	Enable       bool   `json:"enable"`
 	PostTime     string `json:"post_time"` // Kitchen format, i.e. 8:30AM
 	Timezone     string `json:"tz"`        // Timezone in MSCal when PostTime is set/updated
 	LastPostTime string `json:"last_post_time"`
+	Enable       bool   `json:"enable"`
 }
 
 type WelcomeFlowStatus struct {
@@ -207,7 +207,10 @@ func (s *pluginStore) StoreUserInIndex(user *User) error {
 
 		for i, u := range userIndex {
 			if u.MattermostUserID == user.MattermostUserID && u.RemoteID == user.Remote.ID {
-				result := append(userIndex[:i], newUser)
+				var result UserIndex
+				result = append(result, userIndex[:i]...)
+				result = append(result, newUser)
+
 				return append(result, userIndex[i+1:]...), nil
 			}
 		}

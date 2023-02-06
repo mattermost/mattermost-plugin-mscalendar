@@ -41,13 +41,13 @@ type PanelStore interface {
 }
 
 type panel struct {
-	settings       map[string]Setting
-	settingKeys    []string
 	poster         bot.Poster
 	logger         bot.Logger
 	store          PanelStore
+	settings       map[string]Setting
 	settingHandler string
 	pluginURL      string
+	settingKeys    []string
 }
 
 func NewSettingsPanel(settings []Setting, poster bot.Poster, logger bot.Logger, store PanelStore, settingHandler, pluginURL string) Panel {

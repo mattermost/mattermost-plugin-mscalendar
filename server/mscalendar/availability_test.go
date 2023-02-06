@@ -27,13 +27,13 @@ func TestSyncStatusAll(t *testing.T) {
 	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 	for name, tc := range map[string]struct {
-		remoteEvents        []*remote.Event
 		apiError            *remote.APIError
-		activeEvents        []string
 		currentStatus       string
-		currentStatusManual bool
 		newStatus           string
+		remoteEvents        []*remote.Event
+		activeEvents        []string
 		eventsToStore       []string
+		currentStatusManual bool
 		shouldLogError      bool
 		getConfirmation     bool
 	}{
@@ -161,7 +161,7 @@ func TestSyncStatusAll(t *testing.T) {
 			}
 
 			m := New(env, "")
-			res, err := m.SyncAll()
+			res, _, err := m.SyncAll()
 			require.Nil(t, err)
 			require.NotEmpty(t, res)
 		})
@@ -170,8 +170,8 @@ func TestSyncStatusAll(t *testing.T) {
 
 func TestSyncStatusUserConfig(t *testing.T) {
 	for name, tc := range map[string]struct {
-		settings      store.Settings
 		runAssertions func(deps *Dependencies, client remote.Client)
+		settings      store.Settings
 	}{
 		"UpdateStatus disabled": {
 			settings: store.Settings{
@@ -223,7 +223,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			tc.runAssertions(env.Dependencies, client)
 
 			mscalendar := New(env, "")
-			_, err := mscalendar.SyncAll()
+			_, _, err := mscalendar.SyncAll()
 			require.Nil(t, err)
 		})
 	}
@@ -231,9 +231,9 @@ func TestSyncStatusUserConfig(t *testing.T) {
 
 func TestReminders(t *testing.T) {
 	for name, tc := range map[string]struct {
+		apiError       *remote.APIError
 		remoteEvents   []*remote.Event
 		numReminders   int
-		apiError       *remote.APIError
 		shouldLogError bool
 	}{
 		"Most common case, no remote events. No reminder.": {
@@ -321,7 +321,7 @@ func TestReminders(t *testing.T) {
 			}
 
 			m := New(env, "")
-			res, err := m.SyncAll()
+			res, _, err := m.SyncAll()
 			require.Nil(t, err)
 			require.NotEmpty(t, res)
 		})

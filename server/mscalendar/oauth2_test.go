@@ -78,11 +78,11 @@ func TestInitOAuth2(t *testing.T) {
 	defer ctrl.Finish()
 
 	tcs := []struct {
+		setup            func(dependencies *Dependencies)
 		name             string
 		mattermostUserID string
-		setup            func(dependencies *Dependencies)
-		expectError      bool
 		expectURL        string
+		expectError      bool
 	}{
 		{
 			name:             "MM user already connected",

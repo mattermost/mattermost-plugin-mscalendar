@@ -8,12 +8,12 @@ import (
 )
 
 type optionSetting struct {
+	store       SettingStore
 	title       string
 	description string
 	id          string
 	dependsOn   string
 	options     []string
-	store       SettingStore
 }
 
 func NewOptionSetting(id string, title string, description string, dependsOn string, options []string, store SettingStore) Setting {
