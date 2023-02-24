@@ -50,7 +50,7 @@ func (m *mscalendar) Sync(mattermostUserID string) (string, *StatusSyncJobSummar
 func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 	err := m.Filter(withSuperuserClient)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "not able to filter the super user client.")
+		return "", nil, errors.Wrap(err, "not able to filter the super user client")
 	}
 
 	userIndex, err := m.Store.LoadUserIndex()
@@ -58,7 +58,7 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 		if err.Error() == "not found" {
 			return "No users found in user index", nil, nil
 		}
-		return "", nil, errors.Wrap(err, "not able to load the users from user index.")
+		return "", nil, errors.Wrap(err, "not able to load the users from user index")
 	}
 
 	return m.syncUsers(userIndex)
@@ -97,7 +97,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 
 	calendarViews, err := m.GetCalendarViews(users)
 	if err != nil {
-		return "", syncJobSummary, errors.Wrap(err, "not able to get calendar views for connected users.")
+		return "", syncJobSummary, errors.Wrap(err, "not able to get calendar views for connected users")
 	}
 	if len(calendarViews) == 0 {
 		return "No calendar views found", syncJobSummary, nil
@@ -106,7 +106,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 	m.deliverReminders(users, calendarViews)
 	out, numberOfUsersStatusChanged, numberOfUsersFailedStatusChanged, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
-		return "", syncJobSummary, errors.Wrap(err, "error setting the user statuses.")
+		return "", syncJobSummary, errors.Wrap(err, "error setting the user statuses")
 	}
 
 	syncJobSummary.NumberOfUsersFailedStatusChanged = numberOfUsersFailedStatusChanged
@@ -173,7 +173,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 
 	statuses, appErr := m.PluginAPI.GetMattermostUserStatusesByIds(mattermostUserIDs)
 	if appErr != nil {
-		return "", numberOfUserStatusChange, numberOfUserErrorInStatusChange, errors.Wrap(appErr, "error in getting Mattermost user statuses for connected users.")
+		return "", numberOfUserStatusChange, numberOfUserErrorInStatusChange, errors.Wrap(appErr, "error in getting Mattermost user statuses for connected users")
 	}
 	statusMap := map[string]*model.Status{}
 	for _, s := range statuses {
