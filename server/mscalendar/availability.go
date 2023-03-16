@@ -39,33 +39,34 @@ type Availability interface {
 }
 
 func (m *mscalendar) Sync(mattermostUserID string) (string, *StatusSyncJobSummary, error) {
+	syncJobSummary := &StatusSyncJobSummary{}
 	user, err := m.Store.LoadUserFromIndex(mattermostUserID)
 	if err != nil {
 		return "", nil, err
 	}
 
-	return m.syncUsers(store.UserIndex{user})
+	return m.syncUsers(store.UserIndex{user}, syncJobSummary)
 }
 
 func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
+	syncJobSummary := &StatusSyncJobSummary{}
 	err := m.Filter(withSuperuserClient)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "not able to filter the super user client")
+		return "", syncJobSummary, errors.Wrap(err, "not able to filter the super user client")
 	}
 
 	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
-			return "No users found in user index", nil, nil
+			return "No users found in user index", syncJobSummary, nil
 		}
-		return "", nil, errors.Wrap(err, "not able to load the users from user index")
+		return "", syncJobSummary, errors.Wrap(err, "not able to load the users from user index")
 	}
 
-	return m.syncUsers(userIndex)
+	return m.syncUsers(userIndex, syncJobSummary)
 }
 
-func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJobSummary, error) {
-	syncJobSummary := &StatusSyncJobSummary{}
+func (m *mscalendar) syncUsers(userIndex store.UserIndex, syncJobSummary *StatusSyncJobSummary) (string, *StatusSyncJobSummary, error) {
 	if len(userIndex) == 0 {
 		return "No connected users found", syncJobSummary, nil
 	}
