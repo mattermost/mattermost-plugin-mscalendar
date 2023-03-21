@@ -78,6 +78,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, syncJobSummary *Status
 		// TODO fetch users from kvstore in batches, and process in batches instead of all at once
 		user, err := m.Store.LoadUser(u.MattermostUserID)
 		if err != nil {
+			syncJobSummary.NumberOfUsersFailedStatusChanged++
 			if numberOfLogs < logTruncateLimit {
 				m.Logger.Warnf("Not able to load user %s from user index. err=%v", u.MattermostUserID, err)
 			} else if numberOfLogs == logTruncateLimit {
@@ -110,7 +111,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, syncJobSummary *Status
 		return "", syncJobSummary, errors.Wrap(err, "error setting the user statuses")
 	}
 
-	syncJobSummary.NumberOfUsersFailedStatusChanged = numberOfUsersFailedStatusChanged
+	syncJobSummary.NumberOfUsersFailedStatusChanged = syncJobSummary.NumberOfUsersFailedStatusChanged + numberOfUsersFailedStatusChanged
 	syncJobSummary.NumberOfUsersStatusChanged = numberOfUsersStatusChanged
 
 	return out, syncJobSummary, nil
