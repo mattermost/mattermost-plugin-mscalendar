@@ -111,7 +111,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, syncJobSummary *Status
 		return "", syncJobSummary, errors.Wrap(err, "error setting the user statuses")
 	}
 
-	syncJobSummary.NumberOfUsersFailedStatusChanged = syncJobSummary.NumberOfUsersFailedStatusChanged + numberOfUsersFailedStatusChanged
+	syncJobSummary.NumberOfUsersFailedStatusChanged += numberOfUsersFailedStatusChanged
 	syncJobSummary.NumberOfUsersStatusChanged = numberOfUsersStatusChanged
 
 	return out, syncJobSummary, nil
