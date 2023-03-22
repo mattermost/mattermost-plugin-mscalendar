@@ -21,7 +21,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/enterprise"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -35,10 +34,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
-)
-
-const (
-	licenseErrorMessage = "The %s plugin requires an E20, Professional, or Enterprise license."
 )
 
 type Env struct {
@@ -70,12 +65,6 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 
 func (p *Plugin) OnActivate() error {
 	pluginAPIClient := pluginapiclient.NewClient(p.API, p.Driver)
-	conf := pluginAPIClient.Configuration.GetConfig()
-	license := pluginAPIClient.System.GetLicense()
-	if !enterprise.HasEnterpriseFeatures(conf, license) {
-		return errors.Errorf(licenseErrorMessage, config.ApplicationName)
-	}
-
 	stored := config.StoredConfig{}
 	err := p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
