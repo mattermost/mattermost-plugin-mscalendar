@@ -4,11 +4,12 @@
 package flow
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
@@ -68,7 +69,11 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 	response.Update = &post
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(response.ToJson())
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		utils.SlackAttachmentError(w, "Error encoding response, err="+err.Error())
+		return
+	}
 
 	fh.store.RemovePostID(mattermostUserID, property)
 	fh.flow.StepDone(mattermostUserID, stepNumber, value)

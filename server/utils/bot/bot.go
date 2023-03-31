@@ -6,8 +6,9 @@ package bot
 import (
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	pluginapi "github.com/mattermost/mattermost-plugin-api"
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/plugin"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 )
@@ -20,13 +21,14 @@ type Bot interface {
 
 	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(Config) Bot
+	WithDriver(d plugin.Driver) Bot
 	MattermostUserID() string
 	RegisterFlow(flow.Flow, flow.Store)
 }
 
 type bot struct {
 	pluginAPI        plugin.API
-	pluginHelpers    plugin.Helpers
+	driver           plugin.Driver
 	flow             flow.Flow
 	flowStore        flow.Store
 	logContext       LogContext
@@ -36,11 +38,10 @@ type bot struct {
 	Config
 }
 
-func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
+func New(api plugin.API, pluginURL string) Bot {
 	return &bot{
-		pluginAPI:     api,
-		pluginHelpers: helpers,
-		pluginURL:     pluginURL,
+		pluginAPI: api,
+		pluginURL: pluginURL,
 	}
 }
 
@@ -54,8 +55,8 @@ func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
 		// Already done
 		return nil
 	}
-
-	botUserID, err := bot.pluginHelpers.EnsureBot(stored, plugin.ProfileImagePath(iconPath))
+	client := pluginapi.NewClient(bot.pluginAPI, bot.driver)
+	botUserID, err := client.Bot.EnsureBot(stored) //TODO check plugin.ProfileImagePath(iconPath))
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure bot account")
 	}
@@ -67,6 +68,12 @@ func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
 func (bot *bot) WithConfig(conf Config) Bot {
 	newbot := *bot
 	newbot.Config = conf
+	return &newbot
+}
+
+func (bot *bot) WithDriver(driver plugin.Driver) Bot {
+	newbot := *bot
+	newbot.driver = driver
 	return &newbot
 }
 

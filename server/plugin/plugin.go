@@ -14,8 +14,10 @@ import (
 	"text/template"
 
 	pluginapiclient "github.com/mattermost/mattermost-plugin-api"
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/mattermost/mattermost-plugin-api/experimental/bot/logger"
+	"github.com/mattermost/mattermost-plugin-api/experimental/telemetry"
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/plugin"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
@@ -33,7 +35,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 )
 
 type Env struct {
@@ -92,10 +93,27 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(err, "failed to register command")
 	}
 
+	// Telemetry client
 	p.telemetryClient, err = telemetry.NewRudderClient()
 	if err != nil {
-		p.env.bot.Errorf("Cannot create telemetry client. err=%v", err)
+		p.API.LogWarn("Telemetry client not started", "error", err.Error())
 	}
+
+	// Get config values
+	p.updateEnv(func(e *Env) {
+		e.Dependencies.Tracker = tracker.New(
+			telemetry.NewTracker(
+				p.telemetryClient,
+				p.API.GetDiagnosticId(),
+				p.API.GetServerVersion(),
+				e.PluginID,
+				e.PluginVersion,
+				config.TelemetryShortName,
+				telemetry.NewTrackerConfig(p.API.GetConfig()),
+				logger.New(p.API),
+			),
+		)
+	})
 
 	return nil
 }
@@ -152,18 +170,17 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURL = pluginURL
 		e.Config.PluginURLPath = pluginURLPath
 
-		e.bot = e.bot.WithConfig(stored.Config)
+		e.bot = e.bot.WithConfig(stored.Config).WithDriver(p.Driver)
 		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.bot)
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		e.Dependencies.Logger = e.bot
 
-		diagnostics := false
-		if p.API.GetConfig() != nil && p.API.GetConfig().LogSettings.EnableDiagnostics != nil {
-			diagnostics = *p.API.GetConfig().LogSettings.EnableDiagnostics
+		// reload tracker behavior looking to some key config changes
+		if e.Dependencies.Tracker != nil {
+			e.Dependencies.Tracker.ReloadConfig(p.API.GetConfig())
 		}
-		e.Dependencies.Tracker = tracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, config.TelemetryShortName, diagnostics, e.Logger))
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
@@ -300,7 +317,7 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
 	if e.bot == nil {
-		e.bot = bot.New(p.API, p.Helpers, pluginURL)
+		e.bot = bot.New(p.API, pluginURL)
 		err := e.bot.Ensure(
 			&model.Bot{
 				Username:    config.BotUserName,

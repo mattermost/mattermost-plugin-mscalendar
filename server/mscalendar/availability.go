@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -230,14 +230,14 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse) (string, bool, error) {
 	isStatusChanged := false
 	currentStatus := status.Status
-	if currentStatus == model.STATUS_OFFLINE && !user.Settings.GetConfirmation {
+	if currentStatus == model.StatusOffline && !user.Settings.GetConfirmation {
 		return "User offline and does not want status change confirmations. No status change", isStatusChanged, nil
 	}
 
 	events := filterBusyEvents(res.Events)
-	busyStatus := model.STATUS_DND
+	busyStatus := model.StatusDnd
 	if user.Settings.ReceiveNotificationsDuringMeeting {
-		busyStatus = model.STATUS_AWAY
+		busyStatus = model.StatusAway
 	}
 
 	if len(user.ActiveEvents) == 0 && len(events) == 0 {
@@ -343,16 +343,16 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 // - events: the list of events that are triggering this status change
 // - isFree: whether the user is free or busy, to decide to which status to change
 func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.Status, events []*remote.Event, isFree bool) error {
-	toSet := model.STATUS_ONLINE
+	toSet := model.StatusOnline
 	if isFree && user.LastStatus != "" {
 		toSet = user.LastStatus
 		user.LastStatus = ""
 	}
 
 	if !isFree {
-		toSet = model.STATUS_DND
+		toSet = model.StatusDnd
 		if user.Settings.ReceiveNotificationsDuringMeeting {
-			toSet = model.STATUS_AWAY
+			toSet = model.StatusAway
 		}
 		if !user.Settings.GetConfirmation {
 			user.LastStatus = ""
