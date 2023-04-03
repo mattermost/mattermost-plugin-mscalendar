@@ -10,7 +10,6 @@ require (
 	github.com/mattermost/mattermost-server/v6 v6.0.0-20221109191448-21aec2741bfe
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/pkg/errors v0.9.1
-	github.com/rudderlabs/analytics-go v3.3.2+incompatible
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2
