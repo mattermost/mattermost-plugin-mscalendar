@@ -59,7 +59,6 @@ golangci-lint:
 	@echo Running golangci-lint
 	golangci-lint run ./...
 
-## Builds the server, if it exists, including support for multiple architectures.
 ## Builds the server, if it exists, for all supported architectures, unless MM_SERVICESETTINGS_ENABLEDEVELOPER is set
 .PHONY: server
 server:

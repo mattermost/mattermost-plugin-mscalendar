@@ -113,6 +113,8 @@ func (p *Plugin) OnActivate() error {
 				logger.New(p.API),
 			),
 		)
+		e.bot = e.bot.WithConfig(stored.Config)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
 	})
 
 	return nil
