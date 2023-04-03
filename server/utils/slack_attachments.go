@@ -12,6 +12,5 @@ func SlackAttachmentError(w http.ResponseWriter, errorMessage string) {
 		EphemeralText: errorMessage,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	// TODO, log error????
 	_ = json.NewEncoder(w).Encode(response)
 }

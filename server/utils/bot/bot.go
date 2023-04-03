@@ -21,14 +21,12 @@ type Bot interface {
 
 	Ensure(stored *model.Bot, iconPath string) error
 	WithConfig(Config) Bot
-	WithDriver(d plugin.Driver) Bot
 	MattermostUserID() string
 	RegisterFlow(flow.Flow, flow.Store)
 }
 
 type bot struct {
 	pluginAPI        plugin.API
-	driver           plugin.Driver
 	flow             flow.Flow
 	flowStore        flow.Store
 	logContext       LogContext
@@ -55,8 +53,8 @@ func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
 		// Already done
 		return nil
 	}
-	client := pluginapi.NewClient(bot.pluginAPI, bot.driver)
-	botUserID, err := client.Bot.EnsureBot(stored) //TODO check plugin.ProfileImagePath(iconPath))
+	client := pluginapi.NewClient(bot.pluginAPI, nil) // driver passed as nil, as we don't need it
+	botUserID, err := client.Bot.EnsureBot(stored, pluginapi.ProfileImagePath(iconPath))
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure bot account")
 	}
@@ -68,12 +66,6 @@ func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
 func (bot *bot) WithConfig(conf Config) Bot {
 	newbot := *bot
 	newbot.Config = conf
-	return &newbot
-}
-
-func (bot *bot) WithDriver(driver plugin.Driver) Bot {
-	newbot := *bot
-	newbot.driver = driver
 	return &newbot
 }
 

@@ -54,7 +54,7 @@ func deploy() error {
 			log.Printf("Authenticating as %s against %s.", adminUsername, siteURL)
 			_, _, err := client.Login(adminUsername, adminPassword)
 			if err != nil {
-				return fmt.Errorf("failed to login as %s: %w", adminUsername, err)
+				return errors.Wrapf(err, "failed to login as %s", adminUsername)
 			}
 
 			return uploadPlugin(client, pluginID, bundlePath)
@@ -85,13 +85,13 @@ func uploadPlugin(client *model.Client4, pluginID, bundlePath string) error {
 	log.Print("Uploading plugin via API.")
 	_, _, err = client.UploadPluginForced(pluginBundle)
 	if err != nil {
-		return fmt.Errorf("failed to upload plugin bundle: %s", err.Error())
+		return errors.Wrap(err, "failed to upload plugin bundle")
 	}
 
 	log.Print("Enabling plugin.")
 	_, err = client.EnablePlugin(pluginID)
 	if err != nil {
-		return fmt.Errorf("failed to enable plugin: %s", err.Error())
+		return errors.Wrap(err, "failed to enable plugin")
 	}
 
 	return nil

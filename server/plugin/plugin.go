@@ -170,7 +170,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURL = pluginURL
 		e.Config.PluginURLPath = pluginURLPath
 
-		e.bot = e.bot.WithConfig(stored.Config).WithDriver(p.Driver)
+		e.bot = e.bot.WithConfig(stored.Config)
 		e.Dependencies.Remote = remote.Makers[msgraph.Kind](e.Config, e.bot)
 
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
@@ -324,7 +324,8 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 				DisplayName: config.BotDisplayName,
 				Description: config.BotDescription,
 			},
-			"assets/profile.png")
+			filepath.Join("assets", "profile.png"),
+		)
 		if err != nil {
 			return errors.Wrap(err, "failed to ensure bot account")
 		}

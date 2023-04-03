@@ -30,7 +30,6 @@ func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (msca
 	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
 		utils.SlackAttachmentError(w, "Error: invalid request")
 		return nil, nil, "", "", ""
-
 	}
 
 	eventID, ok := request.Context[config.EventIDKey].(string)
