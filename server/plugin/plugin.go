@@ -14,8 +14,7 @@ import (
 	"text/template"
 
 	pluginapiclient "github.com/mattermost/mattermost-plugin-api"
-	"github.com/mattermost/mattermost-plugin-api/experimental/bot/logger"
-	"github.com/mattermost/mattermost-plugin-api/experimental/telemetry"
+
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/plugin"
 	"github.com/pkg/errors"
@@ -28,6 +27,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
@@ -110,7 +110,7 @@ func (p *Plugin) OnActivate() error {
 				e.PluginVersion,
 				config.TelemetryShortName,
 				telemetry.NewTrackerConfig(p.API.GetConfig()),
-				logger.New(p.API),
+				telemetry.NewLogger(p.API),
 			),
 		)
 		e.bot = e.bot.WithConfig(stored.Config)

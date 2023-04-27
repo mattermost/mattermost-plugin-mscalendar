@@ -6,10 +6,11 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jarcoal/httpmock v1.0.4
-	github.com/mattermost/mattermost-plugin-api v0.1.3
-	github.com/mattermost/mattermost-server/v6 v6.0.0-20221109191448-21aec2741bfe
+	github.com/mattermost/mattermost-plugin-api v0.0.27
+	github.com/mattermost/mattermost-server/v6 v6.3.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/pkg/errors v0.9.1
+	github.com/rudderlabs/analytics-go v3.3.1+incompatible
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2

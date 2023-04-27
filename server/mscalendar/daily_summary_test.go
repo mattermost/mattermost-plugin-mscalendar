@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-api/experimental/telemetry"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
