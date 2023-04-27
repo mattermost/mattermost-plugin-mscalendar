@@ -96,10 +96,8 @@ func (c *client) call(method, path, contentType string, inBody io.Reader, out in
 	errResp := msgraph.ErrorResponse{Response: resp}
 	err = json.Unmarshal(responseData, &errResp)
 	if err != nil {
-		return responseData, errors.WithMessagef(err, "status: %s", resp.Status)
+		return responseData, errors.WithMessagef(err, "status: %s. response: %s", resp.Status, string(responseData))
 	}
-	if err != nil {
-		return responseData, err
-	}
+
 	return responseData, &errResp
 }
