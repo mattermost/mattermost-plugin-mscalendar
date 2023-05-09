@@ -5,7 +5,7 @@ package msgraph
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -38,7 +38,7 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 		return nil
 	}
 
-	rawData, err := ioutil.ReadAll(req.Body)
+	rawData, err := io.ReadAll(req.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		r.logger.Infof("msgraph: failed to process webhook: `%v`.", err)

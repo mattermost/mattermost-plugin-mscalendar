@@ -14,9 +14,9 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 )
 
 func TestProcessAllDailySummary(t *testing.T) {
@@ -183,7 +183,7 @@ Wednesday February 12
 					Poster:    poster,
 					Remote:    mockRemote,
 					PluginAPI: mockPluginAPI,
-					Tracker:   tracker.New(telemetry.NewTracker(nil, "", "", "", "", "", true, logger)),
+					Tracker:   tracker.New(telemetry.NewTracker(nil, "", "", "", "", "", telemetry.TrackerConfig{}, nil)),
 				},
 			}
 
