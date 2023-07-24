@@ -5,12 +5,9 @@ package gcal
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
-
-const renewSubscriptionBeforeExpiration = 12 * time.Hour
 
 type webhook struct {
 	ChangeType                     string `json:"changeType"`
