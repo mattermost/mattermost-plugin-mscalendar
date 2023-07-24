@@ -11,9 +11,9 @@ import (
 
 type LimitReadCloser struct {
 	ReadCloser io.ReadCloser
+	OnClose    func(*LimitReadCloser) error
 	TotalRead  utils.ByteSize
 	Limit      utils.ByteSize
-	OnClose    func(*LimitReadCloser) error
 }
 
 func (r *LimitReadCloser) Read(data []byte) (int, error) {

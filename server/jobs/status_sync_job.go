@@ -23,10 +23,10 @@ func NewStatusSyncJob() RegisteredJob {
 func runSyncJob(env mscalendar.Env) {
 	env.Logger.Debugf("User status sync job beginning")
 
-	_, err := mscalendar.New(env, "").SyncAll()
+	_, syncJobSummary, err := mscalendar.New(env, "").SyncAll()
 	if err != nil {
 		env.Logger.Errorf("Error during user status sync job. err=%v", err)
 	}
 
-	env.Logger.Debugf("User status sync job finished")
+	env.Logger.Debugf("User status sync job finished.\nSummary\nNumber of users processed:- %d\nNumber of users had their status changed:- %d\nNumber of users had errors:- %d", syncJobSummary.NumberOfUsersProcessed, syncJobSummary.NumberOfUsersStatusChanged, syncJobSummary.NumberOfUsersFailedStatusChanged)
 }

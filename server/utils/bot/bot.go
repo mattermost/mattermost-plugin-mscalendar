@@ -6,8 +6,9 @@ package bot
 import (
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	pluginapi "github.com/mattermost/mattermost-plugin-api"
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/plugin"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
 )
@@ -25,23 +26,20 @@ type Bot interface {
 }
 
 type bot struct {
-	Config
 	pluginAPI        plugin.API
-	pluginHelpers    plugin.Helpers
-	mattermostUserID string
-	displayName      string
+	flow             flow.Flow
+	flowStore        flow.Store
 	logContext       LogContext
 	pluginURL        string
-
-	flow      flow.Flow
-	flowStore flow.Store
+	mattermostUserID string
+	displayName      string
+	Config
 }
 
-func New(api plugin.API, helpers plugin.Helpers, pluginURL string) Bot {
+func New(api plugin.API, pluginURL string) Bot {
 	return &bot{
-		pluginAPI:     api,
-		pluginHelpers: helpers,
-		pluginURL:     pluginURL,
+		pluginAPI: api,
+		pluginURL: pluginURL,
 	}
 }
 
@@ -55,8 +53,8 @@ func (bot *bot) Ensure(stored *model.Bot, iconPath string) error {
 		// Already done
 		return nil
 	}
-
-	botUserID, err := bot.pluginHelpers.EnsureBot(stored, plugin.ProfileImagePath(iconPath))
+	client := pluginapi.NewClient(bot.pluginAPI, nil) // driver passed as nil, as we don't need it
+	botUserID, err := client.Bot.EnsureBot(stored, pluginapi.ProfileImagePath(iconPath))
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure bot account")
 	}

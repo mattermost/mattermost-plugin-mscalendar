@@ -4,25 +4,25 @@
 package remote
 
 type Event struct {
-	ID                         string               `json:"id,omitempty"`
+	Start                      *DateTime            `json:"start,omitempty"`
+	Location                   *Location            `json:"location,omitempty"`
+	End                        *DateTime            `json:"end,omitempty"`
+	Organizer                  *Attendee            `json:"organizer,omitempty"`
+	Body                       *ItemBody            `json:"Body,omitempty"`
+	ResponseStatus             *EventResponseStatus `json:"responseStatus,omitempty"`
+	Importance                 string               `json:"importance,omitempty"`
 	ICalUID                    string               `json:"iCalUId,omitempty"`
 	Subject                    string               `json:"subject,omitempty"`
 	BodyPreview                string               `json:"bodyPreview,omitempty"`
-	Body                       *ItemBody            `json:"Body,omitempty"`
-	Importance                 string               `json:"importance,omitempty"`
-	IsAllDay                   bool                 `json:"isAllDay,omitempty"`
-	IsCancelled                bool                 `json:"isCancelled,omitempty"`
-	IsOrganizer                bool                 `json:"isOrganizer,omitempty"`
-	ResponseRequested          bool                 `json:"responseRequested,omitempty"`
 	ShowAs                     string               `json:"showAs,omitempty"`
 	Weblink                    string               `json:"weblink,omitempty"`
-	Start                      *DateTime            `json:"start,omitempty"`
-	End                        *DateTime            `json:"end,omitempty"`
-	ReminderMinutesBeforeStart int                  `json:"reminderMinutesBeforeStart,omitempty"`
-	Location                   *Location            `json:"location,omitempty"`
-	ResponseStatus             *EventResponseStatus `json:"responseStatus,omitempty"`
+	ID                         string               `json:"id,omitempty"`
 	Attendees                  []*Attendee          `json:"attendees,omitempty"`
-	Organizer                  *Attendee            `json:"organizer,omitempty"`
+	ReminderMinutesBeforeStart int                  `json:"reminderMinutesBeforeStart,omitempty"`
+	IsOrganizer                bool                 `json:"isOrganizer,omitempty"`
+	IsCancelled                bool                 `json:"isCancelled,omitempty"`
+	IsAllDay                   bool                 `json:"isAllDay,omitempty"`
+	ResponseRequested          bool                 `json:"responseRequested,omitempty"`
 }
 
 type ItemBody struct {
@@ -56,7 +56,7 @@ type Coordinates struct {
 }
 
 type Attendee struct {
-	Type         string               `json:"type,omitempty"`
 	Status       *EventResponseStatus `json:"status,omitempty"`
 	EmailAddress *EmailAddress        `json:"emailAddress,omitempty"`
+	Type         string               `json:"type,omitempty"`
 }

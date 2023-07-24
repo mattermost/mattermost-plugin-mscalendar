@@ -3,17 +3,17 @@ package mscalendar
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type notificationSetting struct {
+	getCal      func(string) MSCalendar
 	title       string
 	description string
 	id          string
 	dependsOn   string
-	getCal      func(string) MSCalendar
 }
 
 func NewNotificationsSetting(getCal func(string) MSCalendar) settingspanel.Setting {

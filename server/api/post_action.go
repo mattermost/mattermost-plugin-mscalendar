@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
@@ -26,8 +26,8 @@ func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (msca
 		return nil, nil, "", "", ""
 	}
 
-	request := model.PostActionIntegrationRequestFromJson(req.Body)
-	if request == nil {
+	var request model.PostActionIntegrationRequest
+	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
 		utils.SlackAttachmentError(w, "Error: invalid request")
 		return nil, nil, "", "", ""
 	}
@@ -128,7 +128,9 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		postResponse.EphemeralText = "Event has changed since this message. Please change your status directly on MS Calendar."
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(postResponse.ToJson())
+	if err := json.NewEncoder(w).Encode(postResponse); err != nil {
+		utils.SlackAttachmentError(w, "Error: unable to write response, "+err.Error())
+	}
 }
 
 func prettyOption(option string) string {
@@ -154,8 +156,8 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 	response := model.PostActionIntegrationResponse{}
 	post := &model.Post{}
 
-	request := model.PostActionIntegrationRequestFromJson(req.Body)
-	if request == nil {
+	var request model.PostActionIntegrationRequest
+	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
 		utils.SlackAttachmentError(w, "Invalid request.")
 		return
 	}
@@ -226,7 +228,9 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 
 	response.Update = post
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(response.ToJson())
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		utils.SlackAttachmentError(w, "Error: unable to write response, "+err.Error())
+	}
 }
 
 func getEventInfo(ctx map[string]interface{}) (string, error) {

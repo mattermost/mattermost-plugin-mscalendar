@@ -14,16 +14,16 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 )
 
 func TestProcessAllDailySummary(t *testing.T) {
 	for _, tc := range []struct {
+		runAssertions func(deps *Dependencies, client remote.Client)
 		name          string
 		err           string
-		runAssertions func(deps *Dependencies, client remote.Client)
 	}{
 		{
 			name: "Error fetching index",
@@ -183,7 +183,7 @@ Wednesday February 12, 2020
 					Poster:    poster,
 					Remote:    mockRemote,
 					PluginAPI: mockPluginAPI,
-					Tracker:   tracker.New(telemetry.NewTracker(nil, "", "", "", "", "", true, logger)),
+					Tracker:   tracker.New(telemetry.NewTracker(nil, "", "", "", "", "", telemetry.TrackerConfig{}, nil)),
 				},
 			}
 
@@ -210,9 +210,9 @@ Wednesday February 12, 2020
 func TestShouldPostDailySummary(t *testing.T) {
 	tests := []struct {
 		name        string
-		enabled     bool
 		postTime    string
 		timeZone    string
+		enabled     bool
 		shouldRun   bool
 		shouldError bool
 	}{

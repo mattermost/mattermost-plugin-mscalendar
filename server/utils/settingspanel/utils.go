@@ -1,6 +1,6 @@
 package settingspanel
 
-import "github.com/mattermost/mattermost-server/v5/model"
+import "github.com/mattermost/mattermost-server/v6/model"
 
 func stringsToOptions(in []string) []*model.PostActionOptions {
 	out := []*model.PostActionOptions{}

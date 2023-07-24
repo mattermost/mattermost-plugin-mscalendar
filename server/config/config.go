@@ -8,29 +8,26 @@ type StoredConfig struct {
 	OAuth2Authority    string
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
-
+	bot.Config
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
 	GoogleDomainVerifyKey string
-
-	bot.Config
 }
 
 // Config represents the the metadata handed to all request runners (command,
 // http).
 type Config struct {
-	StoredConfig
-
+	PluginID               string
 	BuildDate              string
 	BuildHash              string
 	BuildHashShort         string
 	MattermostSiteHostname string
 	MattermostSiteURL      string
-	PluginID               string
 	PluginURL              string
 	PluginURLPath          string
 	PluginVersion          string
+	StoredConfig
 }
 
 func (c *Config) GetNotificationURL() string {

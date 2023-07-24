@@ -4,15 +4,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 type readOnlySetting struct {
+	store       SettingStore
 	title       string
 	description string
 	id          string
 	dependsOn   string
-	store       SettingStore
 }
 
 func NewReadOnlySetting(id string, title string, description string, dependsOn string, store SettingStore) Setting {

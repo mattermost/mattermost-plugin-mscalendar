@@ -80,8 +80,7 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 			"User.Read",
 			"Calendars.ReadWrite",
 			"Calendars.ReadWrite.Shared",
-			"Mail.Read",
-			"Mail.Send",
+			"MailboxSettings.Read",
 		},
 		Endpoint: microsoft.AzureADEndpoint(r.conf.OAuth2Authority),
 	}

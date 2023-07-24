@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -74,7 +73,7 @@ func (c *client) call(method, path, contentType string, inBody io.Reader, out in
 	}
 	defer resp.Body.Close()
 
-	responseData, err = ioutil.ReadAll(resp.Body)
+	responseData, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +95,8 @@ func (c *client) call(method, path, contentType string, inBody io.Reader, out in
 	errResp := msgraph.ErrorResponse{Response: resp}
 	err = json.Unmarshal(responseData, &errResp)
 	if err != nil {
-		return responseData, errors.WithMessagef(err, "status: %s", resp.Status)
+		return responseData, errors.WithMessagef(err, "status: %s. response: %s", resp.Status, string(responseData))
 	}
-	if err != nil {
-		return responseData, err
-	}
+
 	return responseData, &errResp
 }
