@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type dailySummarySetting struct {
+	store       settingspanel.SettingStore
+	getTimezone func(userID string) (string, error)
 	title       string
+	dependsOn   string
 	description string
 	id          string
-	dependsOn   string
 	optionsH    []string
 	optionsM    []string
 	optionsAPM  []string
-	store       settingspanel.SettingStore
-	getTimezone func(userID string) (string, error)
 }
 
 func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) (string, error)) settingspanel.Setting {

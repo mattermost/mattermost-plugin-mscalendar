@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -48,9 +48,9 @@ const (
 	ResponseNone  = "notResponded"
 )
 
-var importantNotificationChanges []string = []string{FieldSubject, FieldWhen}
+var importantNotificationChanges = []string{FieldSubject, FieldWhen}
 
-var notificationFieldOrder []string = []string{
+var notificationFieldOrder = []string{
 	FieldWhen,
 	FieldLocation,
 	FieldAttendees,
@@ -266,7 +266,9 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		return false, nil
 	}
 
-	allChanges := append(added, updated...)
+	var allChanges []string
+	allChanges = append(allChanges, added...)
+	allChanges = append(allChanges, updated...)
 	allChanges = append(allChanges, deleted...)
 
 	hasImportantChanges := false
@@ -338,7 +340,7 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 
 	pa := &model.PostAction{
 		Name: "Response",
-		Type: model.POST_ACTION_TYPE_SELECT,
+		Type: model.PostActionTypeSelect,
 		Integration: &model.PostActionIntegration{
 			URL:     url,
 			Context: context,

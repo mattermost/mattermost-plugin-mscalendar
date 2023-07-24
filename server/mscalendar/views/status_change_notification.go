@@ -6,16 +6,16 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
 var prettyStatuses = map[string]string{
-	model.STATUS_ONLINE:  "Online",
-	model.STATUS_AWAY:    "Away",
-	model.STATUS_DND:     "Do Not Disturb",
-	model.STATUS_OFFLINE: "Offline",
+	model.StatusOnline:  "Online",
+	model.StatusAway:    "Away",
+	model.StatusDnd:     "Do Not Disturb",
+	model.StatusOffline: "Offline",
 }
 
 func RenderStatusChangeNotificationView(events []*remote.Event, status, url string) *model.SlackAttachment {
@@ -26,7 +26,7 @@ func RenderStatusChangeNotificationView(events []*remote.Event, status, url stri
 	}
 
 	nEvents := len(events)
-	if nEvents > 0 && status == model.STATUS_DND {
+	if nEvents > 0 && status == model.StatusDnd {
 		return statusChangeAttachments(events[nEvents-1], status, url)
 	}
 

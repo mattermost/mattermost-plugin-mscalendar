@@ -6,14 +6,14 @@ package command
 func (c *Command) debugAvailability(parameters ...string) (string, bool, error) {
 	switch {
 	case len(parameters) == 0:
-		resString, err := c.MSCalendar.Sync(c.Args.UserId)
+		resString, _, err := c.MSCalendar.Sync(c.Args.UserId)
 		if err != nil {
 			return "", false, err
 		}
 
 		return resString, false, nil
 	case len(parameters) == 1 && parameters[0] == "all":
-		resString, err := c.MSCalendar.SyncAll()
+		resString, _, err := c.MSCalendar.SyncAll()
 		if err != nil {
 			return "", false, err
 		}

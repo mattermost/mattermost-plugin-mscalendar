@@ -9,15 +9,15 @@ import (
 )
 
 type getScheduleResponse struct {
-	Value []*remote.ScheduleInformation `json:"value,omitempty"`
 	Error *remote.APIError              `json:"error,omitempty"`
+	Value []*remote.ScheduleInformation `json:"value,omitempty"`
 }
 
 type getScheduleSingleResponse struct {
-	ID      string              `json:"id"`
-	Status  int                 `json:"status"`
-	Body    getScheduleResponse `json:"body"`
 	Headers map[string]string   `json:"headers"`
+	ID      string              `json:"id"`
+	Body    getScheduleResponse `json:"body"`
+	Status  int                 `json:"status"`
 }
 
 type getScheduleBatchResponse struct {
@@ -25,12 +25,12 @@ type getScheduleBatchResponse struct {
 }
 
 type getScheduleRequestParams struct {
-	// List of emails of users that we want to check
-	Schedules []string `json:"schedules"`
-
 	// Overall start and end of entire search window
 	StartTime *remote.DateTime `json:"startTime"`
 	EndTime   *remote.DateTime `json:"endTime"`
+
+	// List of emails of users that we want to check
+	Schedules []string `json:"schedules"`
 
 	/*
 		Size of each chunk of time we want to check

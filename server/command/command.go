@@ -9,8 +9,8 @@ import (
 
 	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
 	"github.com/mattermost/mattermost-plugin-api/experimental/command"
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/plugin"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -20,11 +20,11 @@ import (
 
 // Handler handles commands
 type Command struct {
+	MSCalendar mscalendar.MSCalendar
 	Context    *plugin.Context
 	Args       *model.CommandArgs
-	ChannelID  string
 	Config     *config.Config
-	MSCalendar mscalendar.MSCalendar
+	ChannelID  string
 }
 
 func getNotConnectedText() string {
@@ -41,7 +41,6 @@ var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
 	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
 	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
-	model.NewAutocompleteData("autorespond", "[message]", "Set your auto-respond message."),
 	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
 	model.NewAutocompleteData("help", "", "Read help text for the commands"),
 }
@@ -110,8 +109,6 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "availability":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
-	case "autorespond":
-		handler = c.requireConnectedUser(c.autoRespond)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	}

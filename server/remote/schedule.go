@@ -47,10 +47,10 @@ type ScheduleUserInfo struct {
 }
 
 type ScheduleItem struct {
-	IsPrivate bool
+	Start     *DateTime
+	End       *DateTime
 	Status    string
 	Subject   string
 	Location  string
-	Start     *DateTime
-	End       *DateTime
+	IsPrivate bool
 }

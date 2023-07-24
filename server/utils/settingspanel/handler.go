@@ -1,9 +1,10 @@
 package settingspanel
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
@@ -34,9 +35,8 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 		utils.SlackAttachmentError(w, "Error: Not authorized")
 		return
 	}
-
-	request := model.PostActionIntegrationRequestFromJson(r.Body)
-	if request == nil {
+	var request model.PostActionIntegrationRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		utils.SlackAttachmentError(w, "Error: invalid request")
 		return
 	}
@@ -69,5 +69,7 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 		response.Update = post
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(response.ToJson())
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		utils.SlackAttachmentError(w, "Error: unable to write response, "+err.Error())
+	}
 }

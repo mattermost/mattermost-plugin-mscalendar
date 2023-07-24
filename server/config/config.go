@@ -20,17 +20,16 @@ type StoredConfig struct {
 // Config represents the the metadata handed to all request runners (command,
 // http).
 type Config struct {
-	StoredConfig
-
+	PluginID               string
 	BuildDate              string
 	BuildHash              string
 	BuildHashShort         string
 	MattermostSiteHostname string
 	MattermostSiteURL      string
-	PluginID               string
 	PluginURL              string
 	PluginURLPath          string
 	PluginVersion          string
+	StoredConfig
 }
 
 func (c *Config) GetNotificationURL() string {

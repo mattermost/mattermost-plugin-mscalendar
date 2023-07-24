@@ -7,7 +7,6 @@ const (
 	GetConfirmationPropertyName           = "get_confirmation"
 	ReceiveNotificationsDuringMeetingName = "receive_notifications_during_meetings"
 	SubscribePropertyName                 = "subscribe"
-	AutoRespondPropertyName               = "auto_respond"
 	ReceiveUpcomingEventReminderName      = "receive_reminder"
 )
 
@@ -23,8 +22,6 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error
 		s.Tracker.TrackAutomaticStatusUpdate(userID, value, "flow")
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = value
-	case AutoRespondPropertyName:
-		user.Settings.AutoRespond = value
 	case ReceiveUpcomingEventReminderName:
 		user.Settings.ReceiveReminders = value
 	case ReceiveNotificationsDuringMeetingName:

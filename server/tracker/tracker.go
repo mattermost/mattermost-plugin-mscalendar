@@ -1,6 +1,10 @@
 package tracker
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
+import (
+	"github.com/mattermost/mattermost-server/v6/model"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
+)
 
 const (
 	welcomeFlowCompletionEvent = "welcomeFlowCompletion"
@@ -16,6 +20,7 @@ type Tracker interface {
 	TrackUserDeauthenticated(userID string)
 	TrackDailySummarySent(userID string)
 	TrackAutomaticStatusUpdate(userID string, value bool, location string)
+	ReloadConfig(config *model.Config)
 }
 
 func New(t telemetry.Tracker) Tracker {
@@ -26,6 +31,12 @@ func New(t telemetry.Tracker) Tracker {
 
 type tracker struct {
 	tracker telemetry.Tracker
+}
+
+func (t *tracker) ReloadConfig(config *model.Config) {
+	if t.tracker != nil {
+		t.tracker.ReloadConfig(telemetry.NewTrackerConfig(config))
+	}
 }
 
 func (t *tracker) TrackWelcomeFlowCompletion(userID string) {

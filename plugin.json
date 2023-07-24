@@ -4,34 +4,38 @@
     "description": "Google Calendar Integration",
     "homepage_url": "https://github.com/mattermost/mattermost-plugin-gcal",
     "support_url": "https://github.com/mattermost/mattermost-plugin-gcal/issues",
-    "release_notes_url": "https://github.com/mattermost/mattermost-plugin-gcal/releases/tag/v1.0.0",
+    "release_notes_url": "https://github.com/mattermost/mattermost-plugin-gcal/releases/tag/v0.1.0",
     "icon_path": "assets/profile.svg",
-    "version": "1.0.0",
-    "min_server_version": "5.24.0",
+    "version": "0.1.0",
+    "min_server_version": "6.3.0",
     "server": {
         "executables": {
-            "linux-amd64": "server/dist/plugin-linux-amd64",
             "darwin-amd64": "server/dist/plugin-darwin-amd64",
+            "darwin-arm64": "server/dist/plugin-darwin-arm64",
+            "linux-amd64": "server/dist/plugin-linux-amd64",
+            "linux-arm64": "server/dist/plugin-linux-arm64",
             "windows-amd64": "server/dist/plugin-windows-amd64.exe"
-        }
-    },
-    "webapp": {
-        "bundle_path": "webapp/dist/main.js"
+        },
+        "executable": ""
     },
     "settings_schema": {
         "header": "",
+        "footer": "",
         "settings": [
             {
                 "key": "AdminUserIDs",
                 "display_name": "Admin User IDs:",
                 "type": "text",
-                "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \n User IDs can be found in **System Console > User Management > Users**. Select the user's name, and the ID is displayed in the top-right corner of the banner."
+                "help_text": "List of users authorized to administer the plugin in addition to the System Admins. Must be a comma-separated list of user IDs.\n \n User IDs can be found in **System Console \u003e User Management \u003e Users**. Select the user's name, and the ID is displayed in the top-right corner of the banner.",
+                "placeholder": "",
+                "default": null
             },
             {
                 "key": "AdminLogLevel",
                 "display_name": "Copy plugin logs to admins, as bot messages:",
                 "type": "dropdown",
                 "help_text": "Select the log level.",
+                "placeholder": "",
                 "default": "none",
                 "options": [
                     {
@@ -61,19 +65,23 @@
                 "display_name": "Display full context for each admin log message:",
                 "type": "bool",
                 "help_text": "",
+                "placeholder": "",
                 "default": false
             },
             {
                 "key": "OAuth2Authority",
                 "display_name": "Azure Directory (tenant) ID:",
                 "type": "text",
-                "help_text": "Directory (tenant) ID."
+                "help_text": "Directory (tenant) ID.",
+                "placeholder": "",
+                "default": null
             },
             {
                 "key": "OAuth2ClientId",
                 "display_name": "Azure Application (client) ID:",
                 "type": "text",
                 "help_text": "Microsoft Office Client ID.",
+                "placeholder": "",
                 "default": ""
             },
             {
@@ -81,6 +89,7 @@
                 "display_name": "Microsoft Office Client Secret:",
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
+                "placeholder": "",
                 "default": ""
             },
             {

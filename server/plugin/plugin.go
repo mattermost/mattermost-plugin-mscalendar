@@ -13,9 +13,10 @@ import (
 	"sync"
 	"text/template"
 
-	pluginapilicense "github.com/mattermost/mattermost-plugin-api"
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	pluginapiclient "github.com/mattermost/mattermost-plugin-api"
+
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/plugin"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
@@ -26,6 +27,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/gcal"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
@@ -33,7 +35,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/telemetry"
 )
 
 type Env struct {
@@ -64,10 +65,17 @@ func NewWithEnv(env mscalendar.Env) *Plugin {
 }
 
 func (p *Plugin) OnActivate() error {
-	pluginAPIClient := pluginapilicense.NewClient(p.API)
+	pluginAPIClient := pluginapiclient.NewClient(p.API, p.Driver)
+	stored := config.StoredConfig{}
+	err := p.API.LoadPluginConfiguration(&stored)
+	if err != nil {
+		return errors.WithMessage(err, "failed to load plugin configuration")
+	}
 
-	if !pluginapilicense.IsE20LicensedOrDevelopment(pluginAPIClient.Configuration.GetConfig(), pluginAPIClient.System.GetLicense()) {
-		return errors.New("a valid Mattermost Enterprise E20 license is required to use this plugin")
+	if stored.OAuth2Authority == "" ||
+		stored.OAuth2ClientID == "" ||
+		stored.OAuth2ClientSecret == "" {
+		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
 	p.initEnv(&p.env, "")
@@ -85,10 +93,29 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(err, "failed to register command")
 	}
 
+	// Telemetry client
 	p.telemetryClient, err = telemetry.NewRudderClient()
 	if err != nil {
-		p.env.bot.Errorf("Cannot create telemetry client. err=%v", err)
+		p.API.LogWarn("Telemetry client not started", "error", err.Error())
 	}
+
+	// Get config values
+	p.updateEnv(func(e *Env) {
+		e.Dependencies.Tracker = tracker.New(
+			telemetry.NewTracker(
+				p.telemetryClient,
+				p.API.GetDiagnosticId(),
+				p.API.GetServerVersion(),
+				e.PluginID,
+				e.PluginVersion,
+				config.TelemetryShortName,
+				telemetry.NewTrackerConfig(p.API.GetConfig()),
+				telemetry.NewLogger(p.API),
+			),
+		)
+		e.bot = e.bot.WithConfig(stored.Config)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
+	})
 
 	return nil
 }
@@ -120,16 +147,9 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 	env := p.getEnv()
 	stored := config.StoredConfig{}
-
 	err = p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
 		return errors.WithMessage(err, "failed to load plugin configuration")
-	}
-
-	if stored.OAuth2Authority == "" ||
-		stored.OAuth2ClientID == "" ||
-		stored.OAuth2ClientSecret == "" {
-		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
 	}
 
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
@@ -159,11 +179,10 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Logger = e.bot
 
-		diagnostics := false
-		if p.API.GetConfig() != nil && p.API.GetConfig().LogSettings.EnableDiagnostics != nil {
-			diagnostics = *p.API.GetConfig().LogSettings.EnableDiagnostics
+		// reload tracker behavior looking to some key config changes
+		if e.Dependencies.Tracker != nil {
+			e.Dependencies.Tracker.ReloadConfig(p.API.GetConfig())
 		}
-		e.Dependencies.Tracker = tracker.New(telemetry.NewTracker(p.telemetryClient, p.API.GetDiagnosticId(), p.API.GetServerVersion(), e.PluginID, e.PluginVersion, config.TelemetryShortName, diagnostics, e.Logger))
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
@@ -300,28 +319,19 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
 	if e.bot == nil {
-		e.bot = bot.New(p.API, p.Helpers, pluginURL)
+		e.bot = bot.New(p.API, pluginURL)
 		err := e.bot.Ensure(
 			&model.Bot{
 				Username:    config.BotUserName,
 				DisplayName: config.BotDisplayName,
 				Description: config.BotDescription,
 			},
-			"assets/profile.png")
+			filepath.Join("assets", "profile.png"),
+		)
 		if err != nil {
 			return errors.Wrap(err, "failed to ensure bot account")
 		}
 	}
 
 	return nil
-}
-
-func (p *Plugin) MessageHasBeenPosted(c *plugin.Context, post *model.Post) {
-	env := p.getEnv()
-	m := mscalendar.New(env.Env, post.UserId)
-
-	err := m.HandleBusyDM(post)
-	if err != nil {
-		p.API.LogError(err.Error())
-	}
 }
