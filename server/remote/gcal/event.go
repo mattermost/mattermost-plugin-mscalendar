@@ -112,8 +112,8 @@ func (c *client) GetEventsBetweenDates(_ string, start, end time.Time) (events [
 	}
 
 	return events, nil
-
 }
+
 func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
 	out := &calendar.Event{}
 	out.Summary = in.Subject
@@ -145,6 +145,7 @@ func convertRemoteDateTimeToGcalEventDateTime(in *remote.DateTime) *calendar.Eve
 	out.TimeZone = in.TimeZone
 
 	return out
+
 }
 
 func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
