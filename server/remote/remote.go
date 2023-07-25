@@ -5,6 +5,7 @@ package remote
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -12,6 +13,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
+
+var ErrSuperUserClientNotSupported = errors.New("superuser client is not supported")
 
 type Remote interface {
 	MakeClient(context.Context, *oauth2.Token) Client
