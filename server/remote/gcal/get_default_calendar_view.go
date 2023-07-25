@@ -41,7 +41,7 @@ var responseStatusConversion = map[string]string{
 	GoogleResponseStatusNone:  ResponseNone,
 }
 
-func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Time) ([]*remote.Event, error) {
+func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remote.Event, error) {
 	service, err := calendar.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal GetDefaultCalendarView, error creating service")
@@ -73,14 +73,28 @@ func (c *client) GetDefaultCalendarView(remoteUserID string, start, end time.Tim
 	return result, nil
 }
 
+func convertGCalEventDateTimeToRemoteDateTime(dt *calendar.EventDateTime) *remote.DateTime {
+	t, _ := time.Parse(time.RFC3339, dt.DateTime)
+
+	location := dt.TimeZone
+	if t.Location() != nil {
+		location = t.Location().String()
+	}
+
+	return &remote.DateTime{
+		DateTime: t.Format(remote.RFC3339NanoNoTimezone),
+		TimeZone: location,
+	}
+}
+
 func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 	showAs := RemoteEventBusy
 	if event.Transparency == GoogleEventFree {
 		showAs = RemoteEventFree
 	}
 
-	start := remote.NewGoogleDateTime(event.Start)
-	end := remote.NewGoogleDateTime(event.End)
+	start := convertGCalEventDateTimeToRemoteDateTime(event.Start)
+	end := convertGCalEventDateTimeToRemoteDateTime(event.End)
 
 	location := &remote.Location{
 		DisplayName: event.Location,
