@@ -18,7 +18,10 @@ type DateTime struct {
 	TimeZone string `json:"timeZone,omitempty"`
 }
 
-const RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
+const (
+	RFC3339NanoNoTimezone = "2006-01-02T15:04:05.999999999"
+	UndefinedDatetime     = "n/a"
+)
 
 // NewDateTime creates a DateTime that is compatible with Microsoft's API.
 func NewDateTime(t time.Time, timeZone string) *DateTime {
@@ -30,10 +33,11 @@ func NewDateTime(t time.Time, timeZone string) *DateTime {
 	}
 }
 
+// String returns the RFC3339 representation of the provided datetime. UndefinedDatetime if not set.
 func (dt DateTime) String() string {
 	t := dt.Time()
 	if t.IsZero() {
-		return "n/a"
+		return UndefinedDatetime
 	}
 	return t.Format(time.RFC3339)
 }
@@ -41,7 +45,7 @@ func (dt DateTime) String() string {
 func (dt DateTime) PrettyString() string {
 	t := dt.Time()
 	if t.IsZero() {
-		return "n/a"
+		return UndefinedDatetime
 	}
 	return t.Format(time.RFC822)
 }
@@ -73,5 +77,6 @@ func (dt DateTime) Time() time.Time {
 	if err != nil {
 		return time.Time{}
 	}
+
 	return t
 }
