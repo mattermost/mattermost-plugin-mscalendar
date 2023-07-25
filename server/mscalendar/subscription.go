@@ -21,6 +21,7 @@ type Subscriptions interface {
 	LoadMyEventSubscription() (*store.Subscription, error)
 }
 
+// REVIEW: depends on the overlap of subscription logic between providers, but lots of logic about supscription lifecycle in this file
 func (m *mscalendar) CreateMyEventSubscription() (*store.Subscription, error) {
 	err := m.Filter(withClient)
 	if err != nil {

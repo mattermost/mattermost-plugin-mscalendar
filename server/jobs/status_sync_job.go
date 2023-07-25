@@ -28,5 +28,6 @@ func runSyncJob(env mscalendar.Env) {
 		env.Logger.Errorf("Error during user status sync job. err=%v", err)
 	}
 
+	// REVIEW: This could be made easier to read
 	env.Logger.Debugf("User status sync job finished.\nSummary\nNumber of users processed:- %d\nNumber of users had their status changed:- %d\nNumber of users had errors:- %d", syncJobSummary.NumberOfUsersProcessed, syncJobSummary.NumberOfUsersStatusChanged, syncJobSummary.NumberOfUsersFailedStatusChanged)
 }

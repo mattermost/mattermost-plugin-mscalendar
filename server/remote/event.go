@@ -3,6 +3,7 @@
 
 package remote
 
+// REVIEW: we should vet exactly what fields are used from the remote package, and get rid of any "dead fields" from these structs
 type Event struct {
 	Start                      *DateTime            `json:"start,omitempty"`
 	Location                   *Location            `json:"location,omitempty"`

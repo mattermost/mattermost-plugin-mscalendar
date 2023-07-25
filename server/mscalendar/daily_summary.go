@@ -160,6 +160,8 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 		}
 
 		m.Poster.DM(user.MattermostUserID, postStr)
+
+		// REVIEW: Seems kind of pointless to track a passive event like this
 		m.Dependencies.Tracker.TrackDailySummarySent(user.MattermostUserID)
 		dsum.LastPostTime = time.Now().Format(time.RFC3339)
 		err = m.Store.StoreUser(user)

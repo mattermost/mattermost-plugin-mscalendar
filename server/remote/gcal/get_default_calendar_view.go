@@ -169,6 +169,7 @@ type calendarViewBatchResponse struct {
 }
 
 func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
+	// REVIEW: we can just not use googles batch api if necessary
 	if true {
 		return nil, errors.New("gcal DoBatchViewCalendarRequests not implemented")
 	}

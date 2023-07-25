@@ -28,6 +28,7 @@ func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// REVIEW "microsoft" is hardcoded
 	html := `
 		<!DOCTYPE html>
 		<html>

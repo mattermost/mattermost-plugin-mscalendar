@@ -30,6 +30,8 @@ func runRenewJob(env mscalendar.Env) {
 
 	for _, u := range uindex {
 		asUser := mscalendar.New(env, u.MattermostUserID)
+
+		// REVIEW: logging here is probably overkill
 		env.Logger.Debugf("Renewing for user: %s", u.MattermostUserID)
 		_, err = asUser.RenewMyEventSubscription()
 		if err != nil {

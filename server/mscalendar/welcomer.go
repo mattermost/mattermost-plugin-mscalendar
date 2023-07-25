@@ -31,6 +31,7 @@ type mscBot struct {
 }
 
 const (
+	// REVIEW: "microsoft" referenced here
 	WelcomeMessage = `Welcome to the Microsoft Calendar plugin.
 	[Click here to link your account.](%s/oauth2/connect)`
 )
@@ -122,6 +123,7 @@ func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachment {
 	title := "Connect"
+	// REVIEW: "microsoft" referenced here
 	text := ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost."
 	return &model.SlackAttachment{
 		Title:    title,

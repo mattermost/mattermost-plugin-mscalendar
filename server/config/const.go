@@ -3,6 +3,8 @@
 
 package config
 
+// REVIEW: need an interface for returning bot info
+// probably good to have a struct to capture the data clump
 const (
 	BotUserName    = "gcal"
 	BotDisplayName = "Google Calendar"

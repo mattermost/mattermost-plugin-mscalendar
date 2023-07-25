@@ -23,6 +23,7 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 	return m.Remote.MakeClient(context.Background(), m.actingUser.OAuth2Token), nil
 }
 
+// REVIEW: google service account? maybe not needed. this is only used for the status sync batch requests
 func (m *mscalendar) MakeSuperuserClient() (remote.Client, error) {
 	return m.Remote.MakeSuperuserClient(context.Background())
 }

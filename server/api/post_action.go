@@ -262,6 +262,7 @@ func getEventInfo(ctx map[string]interface{}) (string, error) {
 	return views.RenderEventWillStartLine(subject, weblink, startTime), nil
 }
 
+// REVIEW: mscalendar http status logic
 func isAcceptedError(err error) bool {
 	return strings.Contains(err.Error(), "202 Accepted")
 }
