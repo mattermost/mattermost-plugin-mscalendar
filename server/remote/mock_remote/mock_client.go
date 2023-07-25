@@ -242,6 +242,21 @@ func (mr *MockClientMockRecorder) GetEvent(arg0, arg1 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockClient)(nil).GetEvent), arg0, arg1)
 }
 
+// GetEventsBetweenDates mocks base method.
+func (m *MockClient) GetEventsBetweenDates(arg0 string, arg1, arg2 time.Time) ([]*remote.Event, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEventsBetweenDates", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*remote.Event)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEventsBetweenDates indicates an expected call of GetEventsBetweenDates.
+func (mr *MockClientMockRecorder) GetEventsBetweenDates(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventsBetweenDates", reflect.TypeOf((*MockClient)(nil).GetEventsBetweenDates), arg0, arg1, arg2)
+}
+
 // GetMailboxSettings mocks base method.
 func (m *MockClient) GetMailboxSettings(arg0 string) (*remote.MailboxSettings, error) {
 	m.ctrl.T.Helper()

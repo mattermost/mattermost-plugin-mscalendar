@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
@@ -48,4 +49,8 @@ func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 		return errors.Wrap(err, "msgraph TentativelyAcceptEvent")
 	}
 	return nil
+}
+
+func (c *client) GetEventsBetweenDates(_ string, start, end time.Time) ([]*remote.Event, error) {
+	return nil, errors.New("not implemented")
 }

@@ -6,6 +6,7 @@ package gcal
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
@@ -84,6 +85,33 @@ func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 		return errors.Wrap(err, "msgraph TentativelyAcceptEvent")
 	}
 	return nil
+}
+
+func (c *client) GetEventsBetweenDates(_ string, start, end time.Time) (events []*remote.Event, err error) {
+	ctx := context.Background()
+	service, err := calendar.NewService(ctx, option.WithHTTPClient(c.httpClient))
+	if err != nil {
+		return nil, errors.Wrap(err, "gcal CreateEvent, error creating service")
+	}
+
+	result, err := service.Events.
+		List(defaultCalendarName).
+		TimeMin(start.Format(time.RFC3339)).
+		TimeMax(end.Format(time.RFC3339)).
+		SingleEvents(true).
+		OrderBy("startTime").
+		ShowHiddenInvitations(false).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting list of events")
+	}
+
+	for _, evt := range result.Items {
+		events = append(events, convertGCalEventToRemoteEvent(evt))
+	}
+
+	return events, nil
 }
 
 func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
