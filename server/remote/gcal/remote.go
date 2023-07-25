@@ -79,6 +79,7 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 		RedirectURL:  r.conf.PluginURL + config.FullPathOAuth2Redirect,
 		Scopes: []string{
 			calendar.CalendarEventsScope,
+			calendar.CalendarSettingsReadonlyScope,
 			people.UserinfoProfileScope,
 		},
 		Endpoint: google.Endpoint,
