@@ -12,7 +12,13 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
+	EncryptionKey         string
 	GoogleDomainVerifyKey string
+}
+
+// ProviderConfig manages the configuration relative to the provider being built
+type ProviderConfig struct {
+	EncryptedStore bool
 }
 
 // Config represents the the metadata handed to all request runners (command,
@@ -28,6 +34,7 @@ type Config struct {
 	PluginURLPath          string
 	PluginVersion          string
 	StoredConfig
+	ProviderConfig
 }
 
 func (c *Config) GetNotificationURL() string {

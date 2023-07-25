@@ -98,6 +98,12 @@
                 "type": "text",
                 "help_text": "This should look something like \"googlebd09b1075898e210.html\"",
                 "default": ""
+            },
+            {
+                "key": "EncryptionKey",
+                "display_name": "Encryption key",
+                "type": "generated",
+                "help_text": "**Required**: The encryption key used to store data in the database"
             }
         ]
     }

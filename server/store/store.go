@@ -55,8 +55,13 @@ type pluginStore struct {
 	Tracker            tracker.Tracker
 }
 
-func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker) Store {
+func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker, enableEncryption bool, encryptionKey []byte) Store {
 	basicKV := kvstore.NewPluginStore(api)
+
+	if enableEncryption {
+		basicKV = kvstore.NewEncryptedKeyStore(basicKV, encryptionKey)
+	}
+
 	return &pluginStore{
 		basicKV:            basicKV,
 		userKV:             kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix),
