@@ -12,6 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
 
@@ -92,6 +93,65 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	return dsum, nil
 }
 
+func (m *mscalendar) processAllDailySummaryByUser(now time.Time, userIndex store.UserIndex) error {
+	for _, user := range userIndex {
+		storeUser, storeErr := m.Store.LoadUser(user.MattermostUserID)
+		if storeErr != nil {
+			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", user.MattermostUserID, storeErr)
+			continue
+		}
+
+		dsum := storeUser.Settings.DailySummary
+		if dsum == nil {
+			continue
+		}
+
+		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
+		if shouldPostErr != nil {
+			m.Logger.Warnf("Error checking should post daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+			continue
+		}
+		if !shouldPost {
+			continue
+		}
+
+		u := NewUser(user.MattermostUserID)
+		if err := m.ExpandUser(u); err != nil {
+			m.Logger.With(bot.LogContext{
+				"mattermost_id": storeUser.MattermostUserID,
+				"remote_id":     storeUser.Remote.ID,
+				"err":           err,
+			}).Errorf("error getting user information")
+			continue
+		}
+
+		m.Filter(withActingUser(u.MattermostUserID))
+
+		postStr, err := m.GetDailySummaryForUser(u)
+		if err != nil {
+			m.Logger.With(bot.LogContext{
+				"mattermost_id": storeUser.MattermostUserID,
+				"remote_id":     storeUser.Remote.ID,
+				"err":           err,
+			}).Errorf("error getting daily summary for user")
+			continue
+		}
+
+		if _, err := m.Poster.DM(user.MattermostUserID, postStr); err != nil {
+			m.Logger.With(bot.LogContext{
+				"user": storeUser.MattermostUserID,
+				"err":  err,
+			}).Errorf("error posting daily summary for user")
+			continue
+		}
+
+		// REVIEW: Seems kind of pointless to track a passive event like this
+		m.Dependencies.Tracker.TrackDailySummarySent(user.MattermostUserID)
+	}
+
+	return nil
+}
+
 func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
@@ -102,6 +162,11 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	}
 
 	err = m.Filter(withSuperuserClient)
+	// Allow processing the daily summary using individual credentials for remotes that doesn't allow
+	// "superuser" access
+	if errors.Is(err, remote.ErrSuperUserClientNotSupported) {
+		return m.processAllDailySummaryByUser(now, userIndex)
+	}
 	if err != nil {
 		return err
 	}
