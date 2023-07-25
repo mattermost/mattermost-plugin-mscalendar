@@ -1,12 +1,12 @@
 {
-    "id": "com.mattermost.mscalendar",
-    "name": "Microsoft Calendar",
-    "description": "Microsoft Calendar Integration",
-    "homepage_url": "https://mattermost.gitbook.io/plugin-mscalendar",
+    "id": "com.mattermost.gcal",
+    "name": "Google Calendar",
+    "description": "Google Calendar Integration",
+    "homepage_url": "https://github.com/mattermost/mattermost-plugin-mscalendar",
     "support_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/issues",
-    "release_notes_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/releases/tag/v1.2.1",
-    "icon_path": "assets/profile.svg",
-    "version": "1.2.1",
+    "release_notes_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/releases/tag/v1.0.0",
+    "icon_path": "assets/profile-gcal.svg",
+    "version": "1.0.0",
     "min_server_version": "6.3.0",
     "server": {
         "executables": {
@@ -69,16 +69,14 @@
                 "default": false
             },
             {
-                "key": "OAuth2Authority",
-                "display_name": "Azure Directory (tenant) ID:",
-                "type": "text",
-                "help_text": "Directory (tenant) ID.",
-                "placeholder": "",
-                "default": null
+                "key": "EncryptionKey",
+                "display_name": "Encryption key",
+                "type": "generated",
+                "help_text": "**Required**: The encryption key used to store data in the database"
             },
             {
                 "key": "OAuth2ClientId",
-                "display_name": "Azure Application (client) ID:",
+                "display_name": "Google Application Client ID:",
                 "type": "text",
                 "help_text": "Microsoft Office Client ID.",
                 "placeholder": "",
@@ -86,10 +84,17 @@
             },
             {
                 "key": "OAuth2ClientSecret",
-                "display_name": "Microsoft Office Client Secret:",
+                "display_name": "Google Client Secret:",
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "placeholder": "",
+                "default": ""
+            },
+            {
+                "key": "GoogleDomainVerifyKey",
+                "display_name": "Google Domain verify key",
+                "type": "text",
+                "help_text": "This should look something like \"googlebd09b1075898e210.html\"",
                 "default": ""
             }
         ]

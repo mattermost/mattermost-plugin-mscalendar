@@ -1,8 +1,9 @@
 GO ?= $(shell command -v go 2> /dev/null)
 NPM ?= $(shell command -v npm 2> /dev/null)
 CURL ?= $(shell command -v curl 2> /dev/null)
-MANIFEST_FILE ?= plugin.json
 GOPATH ?= $(shell go env GOPATH)
+
+PROVIDER ?= mscalendar
 GO_TEST_FLAGS ?= -race
 GO_BUILD_FLAGS ?=
 MM_UTILITIES_DIR ?= ../mattermost-utilities
