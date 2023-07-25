@@ -116,8 +116,7 @@ func (m *mscalendar) syncUsersIndividually(userIndex store.UserIndex) (string, *
 		start := time.Now().UTC()
 		end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
-		calendarUser := NewUser(u.MattermostUserID)
-
+		calendarUser := newUserFromStoredUser(user)
 		calendar, err := m.GetCalendarEvents(calendarUser, start, end)
 		if err != nil {
 			syncJobSummary.NumberOfUsersFailedStatusChanged++
@@ -470,7 +469,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 }
 
 func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
-	err := m.Filter(withRemoteUser(user))
+	err := m.Filter(withActingUser(user.MattermostUserID))
 	if err != nil {
 		return nil, errors.Wrap(err, "error withRemoteUser")
 	}
