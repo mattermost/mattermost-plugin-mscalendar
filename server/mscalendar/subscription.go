@@ -115,15 +115,16 @@ func (m *mscalendar) DeleteMyEventSubscription() error {
 
 	subscriptionID := m.actingUser.Settings.EventSubscriptionID
 
+	err = m.DeleteOrphanedSubscription(subscriptionID)
+	if err != nil {
+		return err
+	}
+
 	err = m.Store.DeleteUserSubscription(m.actingUser.User, subscriptionID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 	}
 
-	err = m.DeleteOrphanedSubscription(subscriptionID)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
