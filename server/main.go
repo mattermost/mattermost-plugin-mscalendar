@@ -11,6 +11,7 @@ import (
 var BuildHash string
 var BuildHashShort string
 var BuildDate string
+var Provider string
 
 func main() {
 	mattermostplugin.ClientMain(
@@ -22,6 +23,7 @@ func main() {
 					BuildHash:      BuildHash,
 					BuildHashShort: BuildHashShort,
 					BuildDate:      BuildDate,
+					Provider:       Provider,
 				},
 				Dependencies: &mscalendar.Dependencies{},
 			}))

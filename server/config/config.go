@@ -18,6 +18,7 @@ type StoredConfig struct {
 // Config represents the the metadata handed to all request runners (command,
 // http).
 type Config struct {
+	Provider               string
 	PluginID               string
 	BuildDate              string
 	BuildHash              string
