@@ -79,20 +79,12 @@ func (dt DateTime) In(timeZone string) *DateTime {
 }
 
 func (dt DateTime) Time() time.Time {
-	var t time.Time
-	var err error
-
-	if dt.TimeZone != "" {
-		loc, errLoadLocation := time.LoadLocation(tz.Go(dt.TimeZone))
-		if errLoadLocation != nil {
-			return time.Time{}
-		}
-
-		t, err = time.ParseInLocation(RFC3339NanoNoTimezone, dt.DateTime, loc)
-	} else {
-		t, err = time.Parse(time.RFC3339, dt.DateTime)
+	loc, err := time.LoadLocation(tz.Go(dt.TimeZone))
+	if err != nil {
+		return time.Time{}
 	}
 
+	t, err := time.ParseInLocation(RFC3339NanoNoTimezone, dt.DateTime, loc)
 	if err != nil {
 		return time.Time{}
 	}
