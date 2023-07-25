@@ -93,7 +93,7 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	return dsum, nil
 }
 
-func (m *mscalendar) processAllDailySummaryByUser(now time.Time, userIndex store.UserIndex) error {
+func (m *mscalendar) processAllDailySummaryWithIndividualCredentials(now time.Time, userIndex store.UserIndex) error {
 	for _, user := range userIndex {
 		storeUser, storeErr := m.Store.LoadUser(user.MattermostUserID)
 		if storeErr != nil {
@@ -165,7 +165,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	// Allow processing the daily summary using individual credentials for remotes that doesn't allow
 	// "superuser" access
 	if errors.Is(err, remote.ErrSuperUserClientNotSupported) {
-		return m.processAllDailySummaryByUser(now, userIndex)
+		return m.processAllDailySummaryWithIndividualCredentials(now, userIndex)
 	}
 	if err != nil {
 		return err
