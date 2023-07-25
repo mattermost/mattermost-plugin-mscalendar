@@ -119,9 +119,7 @@ func (processor *notificationProcessor) work() {
 func (processor *notificationProcessor) processNotification(n *remote.Notification) error {
 	sub, err := processor.Store.LoadSubscription(n.SubscriptionID)
 	if err != nil {
-		// TODO: Only happening when the subs were removed locally but not on remote, I kept getting
-		// notifications even after removing the app manually from my google account page.
-		return nil
+		return err
 	}
 	creator, err := processor.Store.LoadUser(sub.MattermostCreatorID)
 	if err != nil {
