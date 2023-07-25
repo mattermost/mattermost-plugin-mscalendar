@@ -117,7 +117,7 @@ func (m *mscalendar) syncUsersIndividually(userIndex store.UserIndex) (string, *
 		end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
 		calendarUser := newUserFromStoredUser(user)
-		calendar, err := m.GetCalendarEvents(calendarUser, start, end)
+		calendarEvents, err := m.GetCalendarEvents(calendarUser, start, end)
 		if err != nil {
 			syncJobSummary.NumberOfUsersFailedStatusChanged++
 			m.Logger.With(bot.LogContext{
@@ -127,7 +127,7 @@ func (m *mscalendar) syncUsersIndividually(userIndex store.UserIndex) (string, *
 			continue
 		}
 
-		calendarViews = append(calendarViews, calendar)
+		calendarViews = append(calendarViews, calendarEvents)
 	}
 	if len(users) == 0 {
 		return "No users need to be synced", syncJobSummary, nil
