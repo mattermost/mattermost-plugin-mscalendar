@@ -47,7 +47,19 @@ func (m *mscalendar) Sync(mattermostUserID string) (string, *StatusSyncJobSummar
 		return "", nil, err
 	}
 
-	return m.syncUsersIndividually(store.UserIndex{user})
+	userIndex := store.UserIndex{user}
+
+	err = m.Filter(withSuperuserClient)
+	// Allow processing the daily summary using individual credentials for remotes that doesn't allow
+	// "superuser" access
+	if errors.Is(err, remote.ErrSuperUserClientNotSupported) {
+		return m.syncUsersIndividually(userIndex)
+	}
+	if err != nil {
+		return "", &StatusSyncJobSummary{}, errors.Wrap(err, "not able to filter the super user client")
+	}
+
+	return m.syncUsers(userIndex)
 }
 
 func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
@@ -460,12 +472,12 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withRemoteUser(user))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error withRemoteUser")
 	}
 
 	err = m.Filter(withClient)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "errror withClient")
 	}
 
 	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
