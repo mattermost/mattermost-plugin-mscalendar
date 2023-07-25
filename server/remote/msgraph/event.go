@@ -51,6 +51,14 @@ func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 	return nil
 }
 
-func (c *client) GetEventsBetweenDates(_ string, start, end time.Time) ([]*remote.Event, error) {
-	return nil, errors.New("not implemented")
+func (c *client) GetEventsBetweenDates(remoteUserID string, start, end time.Time) ([]*remote.Event, error) {
+	paramStr := getQueryParamStringForCalendarView(start, end)
+	res := &calendarViewResponse{}
+	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
+		c.ctx, http.MethodGet, paramStr, nil, res)
+	if err != nil {
+		return nil, errors.Wrap(err, "msgraph GetEventsBetweenDates")
+	}
+
+	return res.Value, nil
 }
