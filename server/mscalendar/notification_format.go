@@ -9,6 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/fields"
+
 	"github.com/mattermost/mattermost-server/v6/model"
 )
 
