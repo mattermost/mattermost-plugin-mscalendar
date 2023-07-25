@@ -51,6 +51,9 @@ func (m *mscalendar) LoadMyEventSubscription() (*store.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: if m.actingUser.Settings.EventSubscriptionID is empty, there's no sub
+
 	storedSub, err := m.Store.LoadSubscription(m.actingUser.Settings.EventSubscriptionID)
 	if err != nil {
 		return nil, err
