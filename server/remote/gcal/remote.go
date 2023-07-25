@@ -5,7 +5,6 @@ package gcal
 
 import (
 	"context"
-	"net/http"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
