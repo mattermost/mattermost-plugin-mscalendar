@@ -78,9 +78,10 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 		ClientSecret: r.conf.OAuth2ClientSecret,
 		RedirectURL:  r.conf.PluginURL + config.FullPathOAuth2Redirect,
 		Scopes: []string{
-			calendar.CalendarEventsScope,
-			calendar.CalendarSettingsReadonlyScope,
-			people.UserinfoProfileScope,
+			calendar.CalendarEventsScope,           // Read and create events
+			calendar.CalendarSettingsReadonlyScope, // Read the user timezone
+			people.UserinfoEmailScope,              // Get the user email address
+			people.UserinfoProfileScope,            // Get user ID and display name
 		},
 		Endpoint: google.Endpoint,
 	}
