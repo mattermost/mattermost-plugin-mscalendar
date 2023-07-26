@@ -162,7 +162,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	}
 
 	err = m.Filter(withSuperuserClient)
-	// Allow processing the daily summary using individual credentials for remotes that doesn't allow
+	// Allow processing the daily summary using individual credentials for remotes that don't allow
 	// "superuser" access
 	if errors.Is(err, remote.ErrSuperUserClientNotSupported) {
 		return m.processAllDailySummaryWithIndividualCredentials(now, userIndex)
