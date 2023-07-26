@@ -93,68 +93,6 @@ func (m *mscalendar) SetDailySummaryEnabled(user *User, enable bool) (*store.Dai
 	return dsum, nil
 }
 
-func (m *mscalendar) processAllDailySummaryWithIndividualCredentials(now time.Time, userIndex store.UserIndex) error {
-	for _, user := range userIndex {
-		storeUser, storeErr := m.Store.LoadUser(user.MattermostUserID)
-		if storeErr != nil {
-			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", user.MattermostUserID, storeErr)
-			continue
-		}
-
-		dsum := storeUser.Settings.DailySummary
-		if dsum == nil {
-			continue
-		}
-
-		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
-		if shouldPostErr != nil {
-			m.Logger.Warnf("Error checking should post daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
-			continue
-		}
-		if !shouldPost {
-			continue
-		}
-
-		u := NewUser(user.MattermostUserID)
-		if err := m.ExpandUser(u); err != nil {
-			m.Logger.With(bot.LogContext{
-				"mattermost_id": storeUser.MattermostUserID,
-				"remote_id":     storeUser.Remote.ID,
-				"err":           err,
-			}).Errorf("error getting user information")
-			continue
-		}
-
-		m.Filter(withActingUser(u.MattermostUserID))
-
-		postStr, err := m.GetDailySummaryForUser(u)
-		if err != nil {
-			m.Logger.With(bot.LogContext{
-				"mattermost_id": storeUser.MattermostUserID,
-				"remote_id":     storeUser.Remote.ID,
-				"err":           err,
-			}).Errorf("error getting daily summary for user")
-			continue
-		}
-
-		if _, err := m.Poster.DM(user.MattermostUserID, postStr); err != nil {
-			m.Logger.With(bot.LogContext{
-				"user": storeUser.MattermostUserID,
-				"err":  err,
-			}).Errorf("error posting daily summary for user")
-			continue
-		}
-
-		// REVIEW: Seems kind of pointless to track a passive event like this
-		m.Dependencies.Tracker.TrackDailySummarySent(user.MattermostUserID)
-
-		dsum.LastPostTime = time.Now().Format(time.RFC3339)
-		err = m.Store.StoreUser(storeUser)
-	}
-
-	return nil
-}
-
 func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
@@ -165,15 +103,13 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	}
 
 	err = m.Filter(withSuperuserClient)
-	// Allow processing the daily summary using individual credentials for remotes that don't allow
-	// "superuser" access
-	if errors.Is(err, remote.ErrSuperUserClientNotSupported) {
-		return m.processAllDailySummaryWithIndividualCredentials(now, userIndex)
-	}
-	if err != nil {
+	if err != nil && !errors.Is(err, remote.ErrSuperUserClientNotSupported) {
 		return err
 	}
 
+	fetchIndividually := errors.Is(err, remote.ErrSuperUserClientNotSupported)
+
+	calendarViews := []*remote.ViewCalendarResponse{}
 	requests := []*remote.ViewCalendarParams{}
 	byRemoteID := map[string]*store.User{}
 	for _, user := range userIndex {
@@ -198,21 +134,56 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			continue
 		}
 
-		start, end := getTodayHoursForTimezone(now, dsum.Timezone)
-		req := &remote.ViewCalendarParams{
-			RemoteUserID: storeUser.Remote.ID,
-			StartTime:    start,
-			EndTime:      end,
+		if fetchIndividually {
+			u := NewUser(user.MattermostUserID)
+			if err := m.ExpandUser(u); err != nil {
+				m.Logger.With(bot.LogContext{
+					"mattermost_id": storeUser.MattermostUserID,
+					"remote_id":     storeUser.Remote.ID,
+					"err":           err,
+				}).Errorf("error getting user information")
+				continue
+			}
+
+			m.Filter(withActingUser(storeUser.MattermostUserID))
+
+			tz, err := m.GetTimezone(u)
+			if err != nil {
+				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+				continue
+			}
+
+			events, err := m.getTodayCalendarEvents(u, now, tz)
+			if err != nil {
+				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+				continue
+			}
+
+			calendarViews = append(calendarViews, &remote.ViewCalendarResponse{
+				Error:        nil,
+				RemoteUserID: storeUser.Remote.ID,
+				Events:       events,
+			})
+		} else {
+			start, end := getTodayHoursForTimezone(now, dsum.Timezone)
+			req := &remote.ViewCalendarParams{
+				RemoteUserID: storeUser.Remote.ID,
+				StartTime:    start,
+				EndTime:      end,
+			}
+			requests = append(requests, req)
 		}
-		requests = append(requests, req)
 	}
 
-	responses, err := m.client.DoBatchViewCalendarRequests(requests)
-	if err != nil {
-		return err
+	if !fetchIndividually {
+		var err error
+		calendarViews, err = m.client.DoBatchViewCalendarRequests(requests)
+		if err != nil {
+			return err
+		}
 	}
 
-	for _, res := range responses {
+	for _, res := range calendarViews {
 		user := byRemoteID[res.RemoteUserID]
 		if res.Error != nil {
 			m.Logger.Warnf("Error rendering user %s calendar. err=%s %s", user.MattermostUserID, res.Error.Code, res.Error.Message)
@@ -238,7 +209,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 		}
 	}
 
-	m.Logger.Infof("Processed daily summary for %d users", len(responses))
+	m.Logger.Infof("Processed daily summary for %d users", len(calendarViews))
 	return nil
 }
 
