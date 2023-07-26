@@ -135,7 +135,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 		}
 
 		if fetchIndividually {
-			u := NewUser(user.MattermostUserID)
+			u := NewUser(storeUser.MattermostUserID)
 			if err := m.ExpandUser(u); err != nil {
 				m.Logger.With(bot.LogContext{
 					"mattermost_id": storeUser.MattermostUserID,
