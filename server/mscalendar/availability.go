@@ -5,6 +5,7 @@ package mscalendar
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
@@ -75,7 +76,12 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 		return "", &StatusSyncJobSummary{}, errors.Wrap(err, "not able to filter the super user client")
 	}
 
-	return m.syncUsers(userIndex, errors.Is(err, remote.ErrSuperUserClientNotSupported))
+	result, jobSummary, err := m.syncUsers(userIndex, errors.Is(err, remote.ErrSuperUserClientNotSupported))
+	if result != "" && err != nil {
+		return result, jobSummary, nil
+	}
+
+	return result, jobSummary, err
 }
 
 // retrieveUsersToSync retrieves the users and their calendar data to sync up and send notifications
@@ -445,6 +451,10 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remot
 	if err != nil {
 		return nil, errors.Wrap(err, "errror withClient")
 	}
+
+	log.Println(m.client)
+	log.Println(user)
+	log.Println(user.Remote)
 
 	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
 	if err != nil {

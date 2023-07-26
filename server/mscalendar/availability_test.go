@@ -186,8 +186,9 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				UpdateStatus: false,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
-				c := client.(*mock_remote.MockClient)
+				c, r := client.(*mock_remote.MockClient), deps.Remote.(*mock_remote.MockRemote)
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(0)
+				r.EXPECT().MakeSuperuserClient(gomock.Any())
 			},
 		},
 		"UpdateStatus enabled and GetConfirmation enabled": {
@@ -197,17 +198,9 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, r, papi, poster, s := client.(*mock_remote.MockClient), deps.Remote.(*mock_remote.MockRemote), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
-				s.EXPECT().LoadUserIndex().Return(store.UserIndex{
-					&store.UserShort{
-						MattermostUserID: "user_mm_id",
-						RemoteID:         "user_remote_id",
-						Email:            "user_email@example.com",
-					},
-				}, nil).Times(1)
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 				moment := time.Now().UTC()
 				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
-
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
 				}, nil)
@@ -227,6 +220,13 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			env, client := makeStatusSyncTestEnv(ctrl)
 
 			s := env.Dependencies.Store.(*mock_store.MockStore)
+			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
+				&store.UserShort{
+					MattermostUserID: "user_mm_id",
+					RemoteID:         "user_remote_id",
+					Email:            "user_email@example.com",
+				},
+			}, nil).Times(1)
 			s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
 				MattermostUserID: "user_mm_id",
 				Remote: &remote.User{
@@ -384,7 +384,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		e, _ := makeStatusSyncTestEnv(ctrl)
 
-		_, s := e.Remote.(*mock_remote.MockRemote), e.Store.(*mock_store.MockStore)
+		s := e.Store.(*mock_store.MockStore)
 		s.EXPECT().LoadUser(testUser.MattermostUserID).Return(testUser, nil)
 
 		m := New(e, "").(*mscalendar)
@@ -394,8 +394,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		require.Error(t, err, errNoUsersNeedToBeSynced)
 	})
 
-	t.Run("user should be reminded", func(t *testing.T) {
-		t.Skip() // TODO: #gcal got blocked a bit on here, will continue later
+	t.Run("one user should be synced", func(t *testing.T) {
 		testUser := newTestUser()
 		testUser.Settings.UpdateStatus = true
 		testUser.Settings.ReceiveReminders = true
@@ -414,17 +413,22 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		c, r, _, s, papi := client.(*mock_remote.MockClient), e.Remote.(*mock_remote.MockRemote), e.Poster.(*mock_bot.MockPoster), e.Store.(*mock_store.MockStore), e.PluginAPI.(*mock_plugin_api.MockPluginAPI)
 		s.EXPECT().LoadUser(testUser.MattermostUserID).Return(testUser, nil).Times(2)
+
 		events := []*remote.Event{newTestEvent("", "test")}
 		papi.EXPECT().GetMattermostUser(testUser.MattermostUserID)
-		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token)
-
+		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token).Return(client)
 		c.EXPECT().GetEventsBetweenDates(testUser.Remote.ID, gomock.Any(), gomock.Any()).Return(events, nil)
 
 		m := New(e, "").(*mscalendar)
 		jobSummary := &StatusSyncJobSummary{}
 
-		_, _, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
-		require.Error(t, err, errNoUsersNeedToBeSynced)
+		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		require.NoError(t, err)
+		require.Equal(t, users, []*store.User{testUser})
+		require.Equal(t, responses, []*remote.ViewCalendarResponse{{
+			RemoteUserID: testUser.Remote.ID,
+			Events:       events,
+		}})
 	})
 }
 
