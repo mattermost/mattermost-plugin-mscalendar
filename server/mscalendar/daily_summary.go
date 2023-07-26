@@ -147,6 +147,9 @@ func (m *mscalendar) processAllDailySummaryWithIndividualCredentials(now time.Ti
 
 		// REVIEW: Seems kind of pointless to track a passive event like this
 		m.Dependencies.Tracker.TrackDailySummarySent(user.MattermostUserID)
+
+		dsum.LastPostTime = time.Now().Format(time.RFC3339)
+		err = m.Store.StoreUser(storeUser)
 	}
 
 	return nil
