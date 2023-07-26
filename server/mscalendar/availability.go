@@ -29,6 +29,10 @@ const (
 	logTruncateLimit                = 5
 )
 
+var (
+	errNoUsersNeedToBeSynced = errors.New("no users need to be synced")
+)
+
 type StatusSyncJobSummary struct {
 	NumberOfUsersFailedStatusChanged int
 	NumberOfUsersStatusChanged       int
@@ -99,9 +103,13 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 			// In case of error in loading, skip this user and continue with the next user
 			continue
 		}
-		if user.Settings.UpdateStatus || user.Settings.ReceiveReminders {
-			users = append(users, user)
+
+		// If user does not have the proper features enabled, just go to the next one
+		if !(user.Settings.UpdateStatus || user.Settings.ReceiveReminders) {
+			continue
 		}
+
+		users = append(users, user)
 
 		if fetchIndividually {
 			calendarUser := newUserFromStoredUser(user)
@@ -145,7 +153,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool
 
 	users, calendarViews, err := m.retrieveUsersToSync(userIndex, syncJobSummary, fetchIndividually)
 	if err != nil {
-		return err.Error(), syncJobSummary, errors.Wrapf(err, "error retrieving users to sync (individually=%b)", fetchIndividually)
+		return err.Error(), syncJobSummary, errors.Wrapf(err, "error retrieving users to sync (individually=%v)", fetchIndividually)
 	}
 
 	m.deliverReminders(users, calendarViews)

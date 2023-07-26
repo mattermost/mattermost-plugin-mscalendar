@@ -116,7 +116,15 @@ func TestSyncStatusAll(t *testing.T) {
 			env, client := makeStatusSyncTestEnv(ctrl)
 			deps := env.Dependencies
 
-			c, papi, s, logger := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Store.(*mock_store.MockStore), deps.Logger.(*mock_bot.MockLogger)
+			c, r, papi, s, logger := client.(*mock_remote.MockClient), env.Remote.(*mock_remote.MockRemote), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Store.(*mock_store.MockStore), deps.Logger.(*mock_bot.MockLogger)
+			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
+				&store.UserShort{
+					MattermostUserID: "user_mm_id",
+					RemoteID:         "user_remote_id",
+					Email:            "user_email@example.com",
+				},
+			}, nil).Times(1)
+			r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 
 			mockUser := &store.User{
 				MattermostUserID: "user_mm_id",
@@ -188,7 +196,15 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				GetConfirmation: true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
-				c, papi, poster, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				c, r, papi, poster, s := client.(*mock_remote.MockClient), deps.Remote.(*mock_remote.MockRemote), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				s.EXPECT().LoadUserIndex().Return(store.UserIndex{
+					&store.UserShort{
+						MattermostUserID: "user_mm_id",
+						RemoteID:         "user_remote_id",
+						Email:            "user_email@example.com",
+					},
+				}, nil).Times(1)
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 				moment := time.Now().UTC()
 				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
@@ -291,7 +307,15 @@ func TestReminders(t *testing.T) {
 			env, client := makeStatusSyncTestEnv(ctrl)
 			deps := env.Dependencies
 
-			c, s, poster, logger := client.(*mock_remote.MockClient), deps.Store.(*mock_store.MockStore), deps.Poster.(*mock_bot.MockPoster), deps.Logger.(*mock_bot.MockLogger)
+			c, r, poster, s, logger := client.(*mock_remote.MockClient), env.Remote.(*mock_remote.MockRemote), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Logger.(*mock_bot.MockLogger)
+			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
+				&store.UserShort{
+					MattermostUserID: "user_mm_id",
+					RemoteID:         "user_remote_id",
+					Email:            "user_email@example.com",
+				},
+			}, nil).Times(1)
+			r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 
 			loadUser := s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
 				MattermostUserID: "user_mm_id",
@@ -328,6 +352,82 @@ func TestReminders(t *testing.T) {
 	}
 }
 
+func TestRetrieveUsersToSyncIndividually(t *testing.T) {
+	t.Run("no users to sync", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		env, _ := makeStatusSyncTestEnv(ctrl)
+
+		m := New(env, "").(*mscalendar)
+		jobSummary := &StatusSyncJobSummary{}
+
+		_, _, err := m.retrieveUsersToSync([]*store.UserShort{}, jobSummary, true)
+		require.Error(t, err, errNoUsersNeedToBeSynced)
+	})
+
+	t.Run("user reminders and status disabled", func(t *testing.T) {
+		testUser := newTestUser()
+		testUser.Settings.UpdateStatus = false
+		testUser.Settings.ReceiveReminders = false
+
+		userIndex := []*store.UserShort{
+			{
+				MattermostUserID: testUser.MattermostUserID,
+				RemoteID:         testUser.Remote.ID,
+				Email:            testUser.Remote.Mail,
+			},
+		}
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		e, _ := makeStatusSyncTestEnv(ctrl)
+
+		_, s := e.Remote.(*mock_remote.MockRemote), e.Store.(*mock_store.MockStore)
+		s.EXPECT().LoadUser(testUser.MattermostUserID).Return(testUser, nil)
+
+		m := New(e, "").(*mscalendar)
+		jobSummary := &StatusSyncJobSummary{}
+
+		_, _, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		require.Error(t, err, errNoUsersNeedToBeSynced)
+	})
+
+	t.Run("user should be reminded", func(t *testing.T) {
+		t.Skip() // TODO: #gcal got blocked a bit on here, will continue later
+		testUser := newTestUser()
+		testUser.Settings.UpdateStatus = true
+		testUser.Settings.ReceiveReminders = true
+
+		userIndex := []*store.UserShort{
+			{
+				MattermostUserID: testUser.MattermostUserID,
+				RemoteID:         testUser.Remote.ID,
+				Email:            testUser.Remote.Mail,
+			},
+		}
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		e, client := makeStatusSyncTestEnv(ctrl)
+
+		c, r, _, s, papi := client.(*mock_remote.MockClient), e.Remote.(*mock_remote.MockRemote), e.Poster.(*mock_bot.MockPoster), e.Store.(*mock_store.MockStore), e.PluginAPI.(*mock_plugin_api.MockPluginAPI)
+		s.EXPECT().LoadUser(testUser.MattermostUserID).Return(testUser, nil).Times(2)
+		events := []*remote.Event{newTestEvent("", "test")}
+		papi.EXPECT().GetMattermostUser(testUser.MattermostUserID)
+		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token)
+
+		c.EXPECT().GetEventsBetweenDates(testUser.Remote.ID, gomock.Any(), gomock.Any()).Return(events, nil)
+
+		m := New(e, "").(*mscalendar)
+		jobSummary := &StatusSyncJobSummary{}
+
+		_, _, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		require.Error(t, err, errNoUsersNeedToBeSynced)
+	})
+}
+
 func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 	s := mock_store.NewMockStore(ctrl)
 	poster := mock_bot.NewMockPoster(ctrl)
@@ -346,16 +446,6 @@ func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 			PluginAPI: mockPluginAPI,
 		},
 	}
-
-	s.EXPECT().LoadUserIndex().Return(store.UserIndex{
-		&store.UserShort{
-			MattermostUserID: "user_mm_id",
-			RemoteID:         "user_remote_id",
-			Email:            "user_email@example.com",
-		},
-	}, nil).Times(1)
-
-	mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(mockClient, nil)
 
 	return env, mockClient
 }
