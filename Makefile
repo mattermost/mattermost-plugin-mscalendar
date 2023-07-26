@@ -3,7 +3,7 @@ NPM ?= $(shell command -v npm 2> /dev/null)
 CURL ?= $(shell command -v curl 2> /dev/null)
 GOPATH ?= $(shell go env GOPATH)
 
-PROVIDER ?= mscalendar
+CALENDAR_PROVIDER ?= mscalendar
 MANIFEST_FILE ?= plugin.json
 
 GO_TEST_FLAGS ?= -race
@@ -22,9 +22,11 @@ include build/setup.mk
 
 BUNDLE_NAME ?= $(PLUGIN_ID)-$(PLUGIN_VERSION).tar.gz
 
-ifeq ($(PROVIDER),gcal)
-	MANIFEST_FILE = plugin-gcal.json
+ifeq ($(CALENDAR_PROVIDER),gcal)
+	MANIFEST_FILE = plugin-$(CALENDAR_PROVIDER).json
 endif
+
+include build/provider-$(CALENDAR_PROVIDER).mk
 
 # Include custom makefile, if present
 ifneq ($(wildcard build/custom.mk),)

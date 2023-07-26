@@ -11,9 +11,20 @@ import (
 var BuildHash string
 var BuildHashShort string
 var BuildDate string
-var Provider string
+var CalendarProvider string
+var CalendarProviderDisplayName string
 
 func main() {
+	config.Provider = config.ProviderConfig{
+		Name:               CalendarProvider,
+		DisplayName:        CalendarProviderDisplayName,
+		Repository:         "",
+		CommandTrigger:     CalendarProvider,
+		TelemetryShortName: CalendarProvider,
+		BotUsername:        CalendarProvider,
+		BotDisplayName:     CalendarProviderDisplayName,
+	}
+
 	mattermostplugin.ClientMain(
 		plugin.NewWithEnv(
 			mscalendar.Env{
@@ -23,7 +34,7 @@ func main() {
 					BuildHash:      BuildHash,
 					BuildHashShort: BuildHashShort,
 					BuildDate:      BuildDate,
-					Provider:       Provider,
+					Provider:       config.Provider,
 				},
 				Dependencies: &mscalendar.Dependencies{},
 			}))

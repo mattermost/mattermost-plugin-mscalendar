@@ -1,0 +1,1 @@
+CALENDAR_PROVIDER_DISPLAY_NAME := Google Calendar
