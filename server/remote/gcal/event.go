@@ -145,38 +145,4 @@ func convertRemoteDateTimeToGcalEventDateTime(in *remote.DateTime) *calendar.Eve
 	out.TimeZone = in.TimeZone
 
 	return out
-
-}
-
-func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
-	out := &calendar.Event{}
-	out.Summary = in.Subject
-	out.Start = convertRemoteDateTimeToGcalEventDateTime(in.Start)
-	out.End = convertRemoteDateTimeToGcalEventDateTime(in.End)
-	out.Description = in.Body.Content
-	if in.Location != nil {
-		out.Location = in.Location.DisplayName
-	}
-
-	for _, attendee := range in.Attendees {
-		out.Attendees = append(out.Attendees, &calendar.EventAttendee{
-			Email: attendee.EmailAddress.Address,
-		})
-	}
-
-	return out
-}
-
-func convertRemoteDateTimeToGcalEventDateTime(in *remote.DateTime) *calendar.EventDateTime {
-	out := &calendar.EventDateTime{}
-	dt := in.String()
-
-	// Avoid setting non RFC3339 strings
-	if dt != remote.UndefinedDatetime {
-		out.DateTime = dt
-	}
-
-	out.TimeZone = in.TimeZone
-
-	return out
 }
