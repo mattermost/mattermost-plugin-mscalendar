@@ -111,6 +111,13 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
+	// Aliases
+	case "today":
+		parameters = []string{"today"}
+		handler = c.requireConnectedUser(c.dailySummary)
+	case "tomorrow":
+		parameters = []string{"tomorrow"}
+		handler = c.requireConnectedUser(c.dailySummary)
 	}
 	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {

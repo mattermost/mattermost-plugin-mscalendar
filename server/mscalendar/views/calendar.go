@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
@@ -40,6 +41,67 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 
 	return resp, nil
 }
+
+func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model.SlackAttachment, error) {
+	if len(events) == 0 {
+		return "You have no events for that day", nil, nil
+	}
+
+	if timezone != "" {
+		for _, e := range events {
+			e.Start = e.Start.In(timezone)
+			e.End = e.End.In(timezone)
+		}
+	}
+
+	message := fmt.Sprintf("Agenda for %s.\nTimes are shown in %s", events[0].Start.Time().Format("Monday, 02 January"), events[0].Start.TimeZone)
+
+	var attachments []*model.SlackAttachment
+	for _, event := range events {
+		var actions []*model.PostAction
+
+		fields := []*model.SlackAttachmentField{}
+		if event.Location != nil && event.Location.DisplayName != "" {
+			fields = append(fields, &model.SlackAttachmentField{
+				Title: "Location",
+				Value: event.Location.DisplayName,
+				Short: true,
+			})
+
+			// Add actions for known links
+			// Disable join meeting button for now, since we don't have a handler and
+			// the location url is shown parsed and clickable anyway.
+			// if joinMeetingAction := getActionForLocation(event.Location); joinMeetingAction != nil {
+			// 	actions = append(actions, joinMeetingAction)
+			// }
+		}
+
+		attachments = append(attachments, &model.SlackAttachment{
+			Title: event.Subject,
+			// Text:    event.BodyPreview,
+			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+			Fields:  fields,
+			Actions: actions,
+		})
+	}
+
+	return message, attachments, nil
+}
+
+// func getActionForLocation(loc *remote.Location) (action *model.PostAction) {
+// 	if strings.Contains(loc.DisplayName, "zoom.us/j/") || strings.Contains(loc.DisplayName, "meet.google.com") || strings.Contains(loc.DisplayName, "discord.gg") {
+// 		action = &model.PostAction{
+// 			Type:  model.PostActionTypeButton,
+// 			Name:  "Join Meeting",
+// 			Style: "good",
+// 			Integration: &model.PostActionIntegration{
+// 				URL: loc.DisplayName,
+// 			},
+// 		}
+// 	}
+
+// 	return
+// }
 
 func renderTableHeader() string {
 	return `| Time | Subject |
