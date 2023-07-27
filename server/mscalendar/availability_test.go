@@ -330,7 +330,7 @@ func TestReminders(t *testing.T) {
 			}, nil)
 
 			if tc.numReminders > 0 {
-				poster.EXPECT().DM("user_mm_id", gomock.Any()).Times(tc.numReminders)
+				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(tc.numReminders)
 				loadUser.Times(2)
 				c.EXPECT().GetMailboxSettings("user_remote_id").Times(1).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
 			} else {

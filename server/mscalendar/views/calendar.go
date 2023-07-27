@@ -141,5 +141,5 @@ func EnsureSubject(s string) string {
 func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
 	message = "You have an upcoming event:\n"
 	attachment, err = renderEventAsAttachment(event, timeZone)
-	return message, attachment, nil
+	return message, attachment, err
 }
