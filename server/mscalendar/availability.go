@@ -509,12 +509,13 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			message, err := views.RenderUpcomingEvent(event, timezone)
+			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
 			}
-			_, err = m.Poster.DM(mattermostUserID, message)
+
+			_, err = m.Poster.DMWithAttachments(mattermostUserID, attachment)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvents error creating DM. err=%v", err)
 				continue
