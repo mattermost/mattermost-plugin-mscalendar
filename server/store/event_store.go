@@ -18,22 +18,37 @@ import (
 const ttlAfterEventEnd = 30 * 24 * time.Hour // 30 days
 const defaultEventTTL = 30 * 24 * time.Hour  // 30 days
 
+type EventMetadata struct {
+	LinkedChannels []string
+}
+
 type Event struct {
 	Remote        *remote.Event
 	PluginVersion string
 }
 
 type EventStore interface {
+	LoadEventMetadata(eventID string) (*EventMetadata, error)
 	LoadUserEvent(mattermostUserID, eventID string) (*Event, error)
 	StoreUserEvent(mattermostUserID string, event *Event) error
 	DeleteUserEvent(mattermostUserID, eventID string) error
 }
 
 func eventKey(mattermostUserID, eventID string) string { return mattermostUserID + "_" + eventID }
+func eventMetaKey(eventID string) string               { return "metadata_" + eventID }
 
 func (s *pluginStore) LoadUserEvent(mattermostUserID, eventID string) (*Event, error) {
 	event := Event{}
 	err := kvstore.LoadJSON(s.eventKV, eventKey(mattermostUserID, eventID), &event)
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}
+
+func (s *pluginStore) LoadEventMetadata(eventID string) (*EventMetadata, error) {
+	event := EventMetadata{}
+	err := kvstore.LoadJSON(s.eventKV, eventMetaKey(eventID), &event)
 	if err != nil {
 		return nil, err
 	}

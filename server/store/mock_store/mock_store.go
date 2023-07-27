@@ -193,6 +193,21 @@ func (mr *MockStoreMockRecorder) GetSetting(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSetting", reflect.TypeOf((*MockStore)(nil).GetSetting), arg0, arg1)
 }
 
+// LoadEventMetadata mocks base method.
+func (m *MockStore) LoadEventMetadata(arg0 string) (*store.EventMetadata, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadEventMetadata", arg0)
+	ret0, _ := ret[0].(*store.EventMetadata)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadEventMetadata indicates an expected call of LoadEventMetadata.
+func (mr *MockStoreMockRecorder) LoadEventMetadata(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadEventMetadata", reflect.TypeOf((*MockStore)(nil).LoadEventMetadata), arg0)
+}
+
 // LoadMattermostUserID mocks base method.
 func (m *MockStore) LoadMattermostUserID(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
