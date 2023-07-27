@@ -24,6 +24,9 @@ type Poster interface {
 	// DMPUpdate updates the postID with the formatted message
 	DMUpdate(postID, format string, args ...interface{}) error
 
+	// CreatePost creates a post
+	CreatePost(post *model.Post) error
+
 	// DeletePost deletes a single post
 	DeletePost(postID string) error
 
@@ -96,6 +99,16 @@ func (bot *bot) DMUpdate(postID, format string, args ...interface{}) error {
 
 	post.Message = fmt.Sprintf(format, args...)
 	_, appErr = bot.pluginAPI.UpdatePost(post)
+	if appErr != nil {
+		return appErr
+	}
+
+	return nil
+}
+
+func (bot *bot) CreatePost(post *model.Post) error {
+	post.UserId = bot.mattermostUserID
+	_, appErr := bot.pluginAPI.CreatePost(post)
 	if appErr != nil {
 		return appErr
 	}

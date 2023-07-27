@@ -34,6 +34,20 @@ func (m *MockPoster) EXPECT() *MockPosterMockRecorder {
 	return m.recorder
 }
 
+// CreatePost mocks base method.
+func (m *MockPoster) CreatePost(arg0 *model.Post) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePost", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePost indicates an expected call of CreatePost.
+func (mr *MockPosterMockRecorder) CreatePost(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockPoster)(nil).CreatePost), arg0)
+}
+
 // DM mocks base method.
 func (m *MockPoster) DM(arg0, arg1 string, arg2 ...interface{}) (string, error) {
 	m.ctrl.T.Helper()
