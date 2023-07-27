@@ -26,8 +26,6 @@ ifeq ($(CALENDAR_PROVIDER),gcal)
 	MANIFEST_FILE = plugin-$(CALENDAR_PROVIDER).json
 endif
 
-include build/provider-$(CALENDAR_PROVIDER).mk
-
 # Include custom makefile, if present
 ifneq ($(wildcard build/custom.mk),)
 	include build/custom.mk

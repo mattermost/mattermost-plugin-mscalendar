@@ -1,1 +1,0 @@
-CALENDAR_PROVIDER_DISPLAY_NAME := Microsoft Calendar
