@@ -15,9 +15,6 @@ LDFLAGS += -X "main.BuildDate=$(BUILD_DATE)"
 LDFLAGS += -X "main.BuildHash=$(BUILD_HASH)"
 LDFLAGS += -X "main.BuildHashShort=$(BUILD_HASH_SHORT)"
 LDFLAGS += -X "main.CalendarProvider=$(CALENDAR_PROVIDER)"
-LDFLAGS += -X "main.CalendarProviderDisplayName=$(CALENDAR_PROVIDER_DISPLAY_NAME)"
-LDFLAGS += -X "main.ManifestID=$(PLUGIN_ID)"
-LDFLAGS += -X "main.ManivestVersion=$(BUILD_VERSION)"
 
 GO_BUILD_FLAGS = -ldflags '$(LDFLAGS)'
 
