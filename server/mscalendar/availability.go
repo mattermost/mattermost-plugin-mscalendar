@@ -5,7 +5,6 @@ package mscalendar
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
@@ -452,10 +451,6 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remot
 		return nil, errors.Wrap(err, "errror withClient")
 	}
 
-	log.Println(m.client)
-	log.Println(user)
-	log.Println(user.Remote)
-
 	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting events for user %s", user.MattermostUserID)
@@ -509,7 +504,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
+			message, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
@@ -519,6 +514,32 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvents error creating DM. err=%v", err)
 				continue
+			}
+
+			eventMetadata, errMetadata := m.Store.LoadEventMetadata(event.GetMainID())
+			if errMetadata != nil && !errors.Is(errMetadata, store.ErrNotFound) {
+				m.Logger.With(bot.LogContext{
+					"eventID": event.ID,
+					"err":     errMetadata.Error(),
+				}).Warnf("notifyUpcomingEvents error checking store for channel notifications")
+				continue
+			}
+
+			m.Logger.Warnf("eventMetadata: %v | errMetadata: %v | event: %s", eventMetadata, errMetadata, event.ID)
+
+			if eventMetadata != nil {
+				for _, channelID := range eventMetadata.LinkedChannels {
+					post := &model.Post{
+						ChannelId: channelID,
+						Message:   message,
+					}
+					model.ParseSlackAttachment(post, []*model.SlackAttachment{attachment})
+					err = m.Poster.CreatePost(post)
+					if err != nil {
+						m.Logger.Warnf("notifyUpcomingEvents error creating post in channel. err=%v", err)
+						continue
+					}
+				}
 			}
 		}
 	}
