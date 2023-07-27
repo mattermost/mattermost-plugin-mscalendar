@@ -115,7 +115,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	for _, user := range userIndex {
 		storeUser, storeErr := m.Store.LoadUser(user.MattermostUserID)
 		if storeErr != nil {
-			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", user.MattermostUserID, storeErr)
+			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", storeUser.MattermostUserID, storeErr)
 			continue
 		}
 		byRemoteID[storeUser.Remote.ID] = storeUser
@@ -127,7 +127,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
-			m.Logger.Warnf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+			m.Logger.Warnf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
 			continue
 		}
 		if !shouldPost {
@@ -149,13 +149,13 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 			tz, err := m.GetTimezone(u)
 			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
 				continue
 			}
 
 			events, err := m.getTodayCalendarEvents(u, now, tz)
 			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", user.MattermostUserID, shouldPostErr)
+				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
 				continue
 			}
 
