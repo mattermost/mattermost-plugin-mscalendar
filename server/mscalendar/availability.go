@@ -527,7 +527,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 			}
 
 			if eventMetadata != nil {
-				for _, channelID := range eventMetadata.LinkedChannels {
+				for channelID := range eventMetadata.LinkedChannels {
 					post := &model.Post{
 						ChannelId: channelID,
 						Message:   message,

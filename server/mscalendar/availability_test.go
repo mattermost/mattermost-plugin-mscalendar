@@ -301,7 +301,7 @@ func TestReminders(t *testing.T) {
 			},
 			eventMetadata: map[string]*store.EventMetadata{
 				"event_id": {
-					LinkedChannels: []string{"channel_id"},
+					LinkedChannels: map[string]struct{}{"channel_id": struct{}{}},
 				},
 			},
 			numReminders:   1,
@@ -313,7 +313,7 @@ func TestReminders(t *testing.T) {
 			},
 			eventMetadata: map[string]*store.EventMetadata{
 				"event_id": {
-					LinkedChannels: []string{"channel_id"},
+					LinkedChannels: map[string]struct{}{"channel_id": struct{}{}},
 				},
 			},
 			numReminders:   1,
@@ -363,7 +363,7 @@ func TestReminders(t *testing.T) {
 				// Metadata (linked channels test)
 				for eventID, metadata := range tc.eventMetadata {
 					s.EXPECT().LoadEventMetadata(eventID).Return(metadata, nil).Times(1)
-					for _, channelID := range metadata.LinkedChannels {
+					for channelID := range metadata.LinkedChannels {
 						poster.EXPECT().CreatePost(test.DoMatch(func(v *model.Post) bool {
 							return v.ChannelId == channelID
 						})).Return(nil)

@@ -19,7 +19,7 @@ const ttlAfterEventEnd = 30 * 24 * time.Hour // 30 days
 const defaultEventTTL = 30 * 24 * time.Hour  // 30 days
 
 type EventMetadata struct {
-	LinkedChannels []string
+	LinkedChannels map[string]struct{}
 }
 
 type Event struct {
