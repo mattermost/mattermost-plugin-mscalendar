@@ -516,6 +516,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				continue
 			}
 
+			// Process channel reminders
 			eventMetadata, errMetadata := m.Store.LoadEventMetadata(event.GetMainID())
 			if errMetadata != nil && !errors.Is(errMetadata, store.ErrNotFound) {
 				m.Logger.With(bot.LogContext{

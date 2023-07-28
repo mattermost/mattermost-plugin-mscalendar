@@ -19,6 +19,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/test"
 )
 
 func TestSyncStatusAll(t *testing.T) {
@@ -249,6 +250,7 @@ func TestReminders(t *testing.T) {
 	for name, tc := range map[string]struct {
 		apiError       *remote.APIError
 		remoteEvents   []*remote.Event
+		eventMetadata  map[string]*store.EventMetadata
 		numReminders   int
 		shouldLogError bool
 	}{
@@ -293,6 +295,18 @@ func TestReminders(t *testing.T) {
 			numReminders:   2,
 			shouldLogError: false,
 		},
+		"Remote event linked to channel in the range for the reminder. DM and channel reminders should occur.": {
+			remoteEvents: []*remote.Event{
+				{ID: "event_id", ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			eventMetadata: map[string]*store.EventMetadata{
+				"event_id": {
+					LinkedChannels: []string{"channel_id"},
+				},
+			},
+			numReminders:   1,
+			shouldLogError: false,
+		},
 		"Remote API Error. Error should be logged.": {
 			remoteEvents:   []*remote.Event{},
 			numReminders:   0,
@@ -333,7 +347,17 @@ func TestReminders(t *testing.T) {
 				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(tc.numReminders)
 				loadUser.Times(2)
 				c.EXPECT().GetMailboxSettings("user_remote_id").Times(1).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				s.EXPECT().LoadEventMetadata(gomock.Any()).Return(nil, store.ErrNotFound).Times(tc.numReminders)
+
+				// Metadata (linked channels test)
+				for eventID, metadata := range tc.eventMetadata {
+					s.EXPECT().LoadEventMetadata(eventID).Return(metadata, nil).Times(1)
+					for _, channelID := range metadata.LinkedChannels {
+						poster.EXPECT().CreatePost(test.DoMatch(func(v *model.Post) bool {
+							return v.ChannelId == channelID
+						})).Return(nil)
+					}
+				}
+				s.EXPECT().LoadEventMetadata(gomock.Any()).Return(nil, store.ErrNotFound).Times(tc.numReminders - len(tc.eventMetadata))
 			} else {
 				poster.EXPECT().DM(gomock.Any(), gomock.Any()).Times(0)
 				loadUser.Times(1)
