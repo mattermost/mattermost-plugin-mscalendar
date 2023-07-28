@@ -6,7 +6,9 @@ package store
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -17,6 +19,7 @@ type UserStore interface {
 	LoadUser(mattermostUserID string) (*User, error)
 	LoadMattermostUserID(remoteUserID string) (string, error)
 	LoadUserIndex() (UserIndex, error)
+	SearchInUserIndex(term string, limit int) ([]UserShort, error)
 	StoreUser(user *User) error
 	LoadUserFromIndex(mattermostUserID string) (*UserShort, error)
 	DeleteUser(mattermostUserID string) error
@@ -234,6 +237,26 @@ func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
 		}
 		return userIndex, nil
 	})
+}
+
+func (s *pluginStore) SearchInUserIndex(term string, limit int) ([]UserShort, error) {
+	userIndex, err := s.LoadUserIndex()
+	if err != nil {
+		return nil, errors.Wrap(err, "error searching user in index")
+	}
+
+	result := make([]UserShort, 0)
+	for idx, u := range userIndex {
+		if strings.Contains(u.MattermostUsername, term) || strings.Contains(u.MattermostDisplayName, term) || strings.Contains(u.Email, term) {
+			result = append(result, *userIndex[idx])
+		}
+
+		if len(result) == limit {
+			break
+		}
+	}
+
+	return result, nil
 }
 
 func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []string) error {

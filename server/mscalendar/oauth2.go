@@ -90,7 +90,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 	}
 
-	user, userErr := app.PluginAPI.GetMattermostUser(uid)
+	user, userErr := app.PluginAPI.GetMattermostUser(mattermostUserID)
 	if userErr != nil {
 		return fmt.Errorf("error retrieving mattermost user (%s)", mattermostUserID)
 	}

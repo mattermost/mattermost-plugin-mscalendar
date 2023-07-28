@@ -40,6 +40,7 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	app, env := newOAuth2TestApp(ctrl)
 	ss := env.Dependencies.Store.(*mock_store.MockStore)
+	aa := env.PluginAPI.(*mock_plugin_api.MockPluginAPI)
 	welcomer := env.Dependencies.Welcomer.(*mock_welcomer.MockWelcomer)
 
 	state := ""
@@ -64,6 +65,12 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 	gomock.InOrder(
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
 		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("connected user not found")).Times(1),
+		aa.EXPECT().GetMattermostUser(fakeID).Return(&model.User{
+			Id:        fakeID,
+			Username:  "fake_username",
+			FirstName: "fake first name",
+			LastName:  "fake last name",
+		}, nil),
 		ss.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1),
 		ss.EXPECT().StoreUserInIndex(gomock.Any()).Return(nil).Times(1),
 		welcomer.EXPECT().AfterSuccessfullyConnect(fakeID, "mail-value").Return(nil).Times(1),
@@ -233,8 +240,16 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			registerResponder: statusOKGraphAPIResponder,
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
+				aa := d.PluginAPI.(*mock_plugin_api.MockPluginAPI)
 				ss.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
 				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("", errors.New("connected user not found")).Times(1)
+				aa.EXPECT().GetMattermostUser(fakeID).Return(&model.User{
+					Id:        fakeID,
+					Username:  "fake_username",
+					FirstName: "fake first name",
+					LastName:  "fake last name",
+				}, nil)
+				ss.EXPECT()
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
 			expectError: "forced kvstore error",
