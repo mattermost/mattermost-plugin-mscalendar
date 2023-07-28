@@ -307,6 +307,18 @@ func TestReminders(t *testing.T) {
 			numReminders:   1,
 			shouldLogError: false,
 		},
+		"Remote recurring event linked to channel in the range for the reminder. DM and channel reminders should occur.": {
+			remoteEvents: []*remote.Event{
+				{ID: "event_id_20230728", RecurringEventID: "event_id", ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+			},
+			eventMetadata: map[string]*store.EventMetadata{
+				"event_id": {
+					LinkedChannels: []string{"channel_id"},
+				},
+			},
+			numReminders:   1,
+			shouldLogError: false,
+		},
 		"Remote API Error. Error should be logged.": {
 			remoteEvents:   []*remote.Event{},
 			numReminders:   0,
