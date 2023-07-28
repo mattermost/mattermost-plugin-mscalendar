@@ -333,6 +333,7 @@ func TestReminders(t *testing.T) {
 				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(tc.numReminders)
 				loadUser.Times(2)
 				c.EXPECT().GetMailboxSettings("user_remote_id").Times(1).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
+				s.EXPECT().LoadEventMetadata(gomock.Any()).Return(nil, store.ErrNotFound).Times(tc.numReminders)
 			} else {
 				poster.EXPECT().DM(gomock.Any(), gomock.Any()).Times(0)
 				loadUser.Times(1)

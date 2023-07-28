@@ -525,8 +525,6 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				continue
 			}
 
-			m.Logger.Warnf("eventMetadata: %v | errMetadata: %v | event: %s", eventMetadata, errMetadata, event.ID)
-
 			if eventMetadata != nil {
 				for _, channelID := range eventMetadata.LinkedChannels {
 					post := &model.Post{
