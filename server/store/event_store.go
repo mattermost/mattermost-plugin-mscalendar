@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
+	"github.com/pkg/errors"
 )
 
 // If event has an end date/time, its record will be set to expire ttlAfterEventEnd
@@ -29,6 +30,11 @@ type Event struct {
 
 type EventStore interface {
 	LoadEventMetadata(eventID string) (*EventMetadata, error)
+	StoreEventMetadata(eventID string, eventMeta *EventMetadata) error
+
+	AddLinkedChannelToEvent(eventID, channelID string) error
+	DeleteLinkedChannelFromEvent(eventID, channelID string) error
+
 	LoadUserEvent(mattermostUserID, eventID string) (*Event, error)
 	StoreUserEvent(mattermostUserID string, event *Event) error
 	DeleteUserEvent(mattermostUserID, eventID string) error
@@ -44,6 +50,36 @@ func (s *pluginStore) LoadUserEvent(mattermostUserID, eventID string) (*Event, e
 		return nil, err
 	}
 	return &event, nil
+}
+
+func (s *pluginStore) AddLinkedChannelToEvent(eventID, channelID string) error {
+	eventMeta, err := s.LoadEventMetadata(eventID)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return err
+	}
+
+	eventMeta.LinkedChannels[channelID] = struct{}{}
+
+	return s.StoreEventMetadata(eventID, eventMeta)
+}
+
+func (s *pluginStore) DeleteLinkedChannelFromEvent(eventID, channelID string) error {
+	eventMeta, err := s.LoadEventMetadata(eventID)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return err
+	}
+
+	delete(eventMeta.LinkedChannels, channelID)
+
+	return s.StoreEventMetadata(eventID, eventMeta)
+}
+
+func (s *pluginStore) StoreEventMetadata(eventID string, eventMeta *EventMetadata) error {
+	err := kvstore.StoreJSON(s.eventKV, eventMetaKey(eventID), &eventMeta)
+	if err != nil {
+		return errors.Wrap(err, "error storing event metadata")
+	}
+	return nil
 }
 
 func (s *pluginStore) LoadEventMetadata(eventID string) (*EventMetadata, error) {
