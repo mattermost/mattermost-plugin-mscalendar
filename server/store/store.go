@@ -63,7 +63,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker) 
 		userIndexKV:        kvstore.NewHashedKeyStore(basicKV, UserIndexKeyPrefix),
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
-		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
+		eventKV:            basicKV,
 		oauth2KV:           kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix),
 		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
 		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),

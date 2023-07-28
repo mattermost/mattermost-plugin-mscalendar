@@ -29,20 +29,24 @@ type UserStore interface {
 type UserIndex []*UserShort
 
 type UserShort struct {
-	MattermostUserID string `json:"mm_id"`
-	RemoteID         string `json:"remote_id"`
-	Email            string `json:"email"`
+	MattermostUsername    string `json:"mm_username"`
+	MattermostDisplayName string `json:"mm_display_name"`
+	MattermostUserID      string `json:"mm_id"`
+	RemoteID              string `json:"remote_id"`
+	Email                 string `json:"email"`
 }
 
 type User struct {
-	Settings          Settings `json:"mattermostSettings,omitempty"`
-	Remote            *remote.User
-	OAuth2Token       *oauth2.Token
-	PluginVersion     string
-	MattermostUserID  string
-	LastStatus        string
-	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
-	ActiveEvents      []string          `json:"events"`
+	Settings              Settings `json:"mattermostSettings,omitempty"`
+	Remote                *remote.User
+	OAuth2Token           *oauth2.Token
+	PluginVersion         string
+	MattermostUserID      string
+	MattermostUsername    string
+	MattermostDisplayName string
+	LastStatus            string
+	WelcomeFlowStatus     WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
+	ActiveEvents          []string          `json:"events"`
 }
 
 type Settings struct {
@@ -200,9 +204,11 @@ func (s *pluginStore) ModifyUserIndex(modify func(userIndex UserIndex) (UserInde
 func (s *pluginStore) StoreUserInIndex(user *User) error {
 	return s.ModifyUserIndex(func(userIndex UserIndex) (UserIndex, error) {
 		newUser := &UserShort{
-			MattermostUserID: user.MattermostUserID,
-			RemoteID:         user.Remote.ID,
-			Email:            user.Remote.Mail,
+			MattermostUserID:      user.MattermostUserID,
+			MattermostUsername:    user.MattermostUsername,
+			MattermostDisplayName: user.MattermostDisplayName,
+			RemoteID:              user.Remote.ID,
+			Email:                 user.Remote.Mail,
 		}
 
 		for i, u := range userIndex {

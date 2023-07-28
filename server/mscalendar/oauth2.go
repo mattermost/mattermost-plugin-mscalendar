@@ -90,11 +90,18 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.ApplicationName, me.Mail)
 	}
 
+	user, userErr := app.PluginAPI.GetMattermostUser(uid)
+	if userErr != nil {
+		return fmt.Errorf("error retrieving mattermost user (%s)", mattermostUserID)
+	}
+
 	u := &store.User{
-		PluginVersion:    app.Config.PluginVersion,
-		MattermostUserID: mattermostUserID,
-		Remote:           me,
-		OAuth2Token:      tok,
+		PluginVersion:         app.Config.PluginVersion,
+		MattermostUserID:      mattermostUserID,
+		MattermostUsername:    user.Username,
+		MattermostDisplayName: user.GetDisplayName(model.ShowFullName),
+		Remote:                me,
+		OAuth2Token:           tok,
 	}
 
 	mailboxSettings, err := client.GetMailboxSettings(me.ID)
