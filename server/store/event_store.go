@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"github.com/pkg/errors"
 )
 
 // If event has an end date/time, its record will be set to expire ttlAfterEventEnd
