@@ -174,13 +174,13 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	return nil
 }
 
-func (m *mscalendar) GetDaySummaryForUser(now time.Time, user *User) (string, error) {
+func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, error) {
 	tz, err := m.GetTimezone(user)
 	if err != nil {
 		return "", err
 	}
 
-	calendarData, err := m.getTodayCalendarEvents(user, now, tz)
+	calendarData, err := m.getTodayCalendarEvents(user, day, tz)
 	if err != nil {
 		return "Failed to get calendar events", err
 	}
