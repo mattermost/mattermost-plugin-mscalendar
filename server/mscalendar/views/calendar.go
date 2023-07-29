@@ -68,13 +68,6 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 				Value: event.Location.DisplayName,
 				Short: true,
 			})
-
-			// Add actions for known links
-			// Disable join meeting button for now, since we don't have a handler and
-			// the location url is shown parsed and clickable anyway.
-			// if joinMeetingAction := getActionForLocation(event.Location); joinMeetingAction != nil {
-			// 	actions = append(actions, joinMeetingAction)
-			// }
 		}
 
 		attachments = append(attachments, &model.SlackAttachment{
@@ -88,21 +81,6 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 
 	return message, attachments, nil
 }
-
-// func getActionForLocation(loc *remote.Location) (action *model.PostAction) {
-// 	if strings.Contains(loc.DisplayName, "zoom.us/j/") || strings.Contains(loc.DisplayName, "meet.google.com") || strings.Contains(loc.DisplayName, "discord.gg") {
-// 		action = &model.PostAction{
-// 			Type:  model.PostActionTypeButton,
-// 			Name:  "Join Meeting",
-// 			Style: "good",
-// 			Integration: &model.PostActionIntegration{
-// 				URL: loc.DisplayName,
-// 			},
-// 		}
-// 	}
-
-// 	return
-// }
 
 func renderTableHeader() string {
 	return `| Time | Subject |
