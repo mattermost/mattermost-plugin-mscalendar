@@ -327,10 +327,10 @@ func (mr *MockStoreMockRecorder) RemovePostID(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // SearchInUserIndex mocks base method.
-func (m *MockStore) SearchInUserIndex(arg0 string, arg1 int) ([]store.UserShort, error) {
+func (m *MockStore) SearchInUserIndex(arg0 string, arg1 int) (store.UserIndex, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchInUserIndex", arg0, arg1)
-	ret0, _ := ret[0].([]store.UserShort)
+	ret0, _ := ret[0].(store.UserIndex)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

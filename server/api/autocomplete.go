@@ -20,14 +20,14 @@ func (api *api) autocompleteUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	searchString := r.URL.Query().Get("search")
-	result, err := api.Store.SearchInUserIndex(searchString, 10)
+	results, err := api.Store.SearchInUserIndex(searchString, 10)
 	if err != nil {
 		utils.SlackAttachmentError(w, "unable to search in user index: "+err.Error())
 		httputils.WriteInternalServerError(w, err)
 		return
 	}
 
-	if err := httputils.WriteJSONResponse(w, result, http.StatusOK); err != nil {
+	if err := httputils.WriteJSONResponse(w, results.ToDTO(), http.StatusOK); err != nil {
 		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("error sending response to user")
 		httputils.WriteInternalServerError(w, err)
 	}

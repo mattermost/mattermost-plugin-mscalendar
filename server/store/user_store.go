@@ -19,7 +19,7 @@ type UserStore interface {
 	LoadUser(mattermostUserID string) (*User, error)
 	LoadMattermostUserID(remoteUserID string) (string, error)
 	LoadUserIndex() (UserIndex, error)
-	SearchInUserIndex(term string, limit int) ([]UserShort, error)
+	SearchInUserIndex(term string, limit int) (UserIndex, error)
 	StoreUser(user *User) error
 	LoadUserFromIndex(mattermostUserID string) (*UserShort, error)
 	DeleteUser(mattermostUserID string) error
@@ -31,12 +31,34 @@ type UserStore interface {
 
 type UserIndex []*UserShort
 
+func (userIndex UserIndex) ToDTO() (result []UserShortDTO) {
+	for _, u := range userIndex {
+		result = append(result, u.ToDTO())
+	}
+
+	return
+}
+
 type UserShort struct {
 	MattermostUsername    string `json:"mm_username"`
 	MattermostDisplayName string `json:"mm_display_name"`
 	MattermostUserID      string `json:"mm_id"`
 	RemoteID              string `json:"remote_id"`
 	Email                 string `json:"email"`
+}
+
+func (us UserShort) ToDTO() UserShortDTO {
+	return UserShortDTO{
+		MattermostUserID:      us.MattermostUserID,
+		MattermostUsername:    us.MattermostUsername,
+		MattermostDisplayName: us.MattermostDisplayName,
+	}
+}
+
+type UserShortDTO struct {
+	MattermostUserID      string `json:"mm_id"`
+	MattermostUsername    string `json:"mm_username"`
+	MattermostDisplayName string `json:"mm_display_name"`
 }
 
 type User struct {
@@ -239,16 +261,16 @@ func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
 	})
 }
 
-func (s *pluginStore) SearchInUserIndex(term string, limit int) ([]UserShort, error) {
+func (s *pluginStore) SearchInUserIndex(term string, limit int) (UserIndex, error) {
 	userIndex, err := s.LoadUserIndex()
 	if err != nil {
 		return nil, errors.Wrap(err, "error searching user in index")
 	}
 
-	result := make([]UserShort, 0)
+	result := make([]*UserShort, 0)
 	for idx, u := range userIndex {
 		if strings.Contains(u.MattermostUsername, term) || strings.Contains(u.MattermostDisplayName, term) || strings.Contains(u.Email, term) {
-			result = append(result, *userIndex[idx])
+			result = append(result, userIndex[idx])
 		}
 
 		if len(result) == limit {
