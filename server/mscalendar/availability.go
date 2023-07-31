@@ -117,6 +117,12 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 		users = append(users, user)
 
 		if fetchIndividually {
+			err = m.Filter(withActingUser(user.MattermostUserID))
+			if err != nil {
+				m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
+				continue
+			}
+
 			calendarUser := newUserFromStoredUser(user)
 			calendarEvents, err := m.GetCalendarEvents(calendarUser, start, end)
 			if err != nil {
@@ -441,12 +447,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 }
 
 func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
-	err := m.Filter(withActingUser(user.MattermostUserID))
-	if err != nil {
-		return nil, errors.Wrap(err, "error withRemoteUser")
-	}
-
-	err = m.Filter(withClient)
+	err := m.Filter(withClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "errror withClient")
 	}
