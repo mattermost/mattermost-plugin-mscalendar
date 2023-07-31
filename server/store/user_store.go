@@ -31,14 +31,6 @@ type UserStore interface {
 
 type UserIndex []*UserShort
 
-func (userIndex UserIndex) ToDTO() (result []UserShortDTO) {
-	for _, u := range userIndex {
-		result = append(result, u.ToDTO())
-	}
-
-	return
-}
-
 type UserShort struct {
 	MattermostUsername    string `json:"mm_username"`
 	MattermostDisplayName string `json:"mm_display_name"`
@@ -288,6 +280,14 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 	}
 	u.ActiveEvents = events
 	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
+}
+
+func (index UserIndex) ToDTO() (result []UserShortDTO) {
+	for _, u := range index {
+		result = append(result, u.ToDTO())
+	}
+
+	return
 }
 
 func (index UserIndex) ByMattermostID() map[string]*UserShort {
