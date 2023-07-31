@@ -137,7 +137,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 		}
 	}
 	if len(users) == 0 {
-		return users, calendarViews, fmt.Errorf("no users need to be synced")
+		return users, calendarViews, errNoUsersNeedToBeSynced
 	}
 
 	if !fetchIndividually {

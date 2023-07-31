@@ -363,7 +363,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		jobSummary := &StatusSyncJobSummary{}
 
 		_, _, err := m.retrieveUsersToSync([]*store.UserShort{}, jobSummary, true)
-		require.Error(t, err, errNoUsersNeedToBeSynced)
+		require.ErrorIs(t, errNoUsersNeedToBeSynced, err)
 	})
 
 	t.Run("user reminders and status disabled", func(t *testing.T) {
@@ -391,7 +391,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		jobSummary := &StatusSyncJobSummary{}
 
 		_, _, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
-		require.Error(t, err, errNoUsersNeedToBeSynced)
+		require.ErrorIs(t, err, errNoUsersNeedToBeSynced)
 	})
 
 	t.Run("one user should be synced", func(t *testing.T) {
@@ -424,11 +424,11 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
 		require.NoError(t, err)
-		require.Equal(t, users, []*store.User{testUser})
-		require.Equal(t, responses, []*remote.ViewCalendarResponse{{
+		require.Equal(t, []*store.User{testUser}, users)
+		require.Equal(t, []*remote.ViewCalendarResponse{{
 			RemoteUserID: testUser.Remote.ID,
 			Events:       events,
-		}})
+		}}, responses)
 	})
 
 	t.Run("one user should be synced, one user shouldn't", func(t *testing.T) {
@@ -469,11 +469,11 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
 		require.NoError(t, err)
-		require.Equal(t, users, []*store.User{testUser})
-		require.Equal(t, responses, []*remote.ViewCalendarResponse{{
+		require.Equal(t, []*store.User{testUser}, users)
+		require.Equal(t, []*remote.ViewCalendarResponse{{
 			RemoteUserID: testUser.Remote.ID,
 			Events:       events,
-		}})
+		}}, responses)
 	})
 
 	t.Run("two users should be synced", func(t *testing.T) {
@@ -520,14 +520,14 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
 		require.NoError(t, err)
-		require.Equal(t, users, []*store.User{testUser, testUser2})
-		require.Equal(t, responses, []*remote.ViewCalendarResponse{{
+		require.Equal(t, []*store.User{testUser, testUser2}, users)
+		require.Equal(t, []*remote.ViewCalendarResponse{{
 			RemoteUserID: testUser.Remote.ID,
 			Events:       eventsUser1,
 		}, {
 			RemoteUserID: testUser2.Remote.ID,
 			Events:       eventsUser2,
-		}})
+		}}, responses)
 	})
 }
 
