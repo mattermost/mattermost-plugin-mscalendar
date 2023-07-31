@@ -5,7 +5,6 @@ package plugin
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -88,8 +87,6 @@ func (p *Plugin) OnActivate() error {
 	if err != nil {
 		return err
 	}
-
-	log.Printf("%v\n", p.env)
 
 	err = command.Register(pluginAPIClient)
 	if err != nil {
