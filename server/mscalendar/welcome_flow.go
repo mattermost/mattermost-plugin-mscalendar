@@ -1,6 +1,9 @@
 package mscalendar
 
 import (
+	"fmt"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
@@ -94,7 +97,7 @@ func (wf *WelcomeFlow) makeSteps() {
 		FalseResponseMessage: "Great, you will not receive any notification for upcoming events.",
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
-		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",
+		Message: fmt.Sprintf("Remember that you can set-up a daily summary by typing `/%s summary time 8:00AM`.", config.Provider.CommandTrigger),
 	})
 
 	wf.steps = steps
