@@ -185,16 +185,12 @@ func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, er
 		return "Failed to get calendar events", err
 	}
 
-	message, attachments, err := views.RenderDaySummary(calendarData, tz)
+	messageString, err := views.RenderCalendarView(calendarData, tz)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to render daily summary")
 	}
 
-	if _, err := m.Poster.DMWithMessageAndAttachments(user.MattermostUserID, message, attachments...); err != nil {
-		return "", errors.Wrap(err, "failed to send message to user")
-	}
-
-	return "", nil
+	return messageString, nil
 }
 
 func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time) (bool, error) {

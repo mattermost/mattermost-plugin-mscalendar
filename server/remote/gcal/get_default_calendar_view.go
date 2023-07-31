@@ -54,23 +54,23 @@ func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remo
 	req.SingleEvents(true)
 	req.OrderBy("startTime")
 
-	events, err := req.Do()
+	result, err := req.Do()
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal GetDefaultCalendarView, error performing request")
 	}
 
-	result := []*remote.Event{}
-	if len(events.Items) == 0 {
-		return result, nil
+	if len(result.Items) == 0 {
+		return []*remote.Event{}, nil
 	}
 
-	for _, event := range events.Items {
+	events := []*remote.Event{}
+	for _, event := range result.Items {
 		if event.ICalUID != "" {
-			result = append(result, convertGCalEventToRemoteEvent(event))
+			events = append(events, convertGCalEventToRemoteEvent(event))
 		}
 	}
 
-	return result, nil
+	return events, nil
 }
 
 func convertGCalEventDateTimeToRemoteDateTime(dt *calendar.EventDateTime) *remote.DateTime {

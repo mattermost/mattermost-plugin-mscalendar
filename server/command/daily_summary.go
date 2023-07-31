@@ -29,11 +29,11 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 		}
 		return postStr, false, nil
 	case "tomorrow":
-		_, err := c.MSCalendar.GetDaySummaryForUser(time.Now().Add(time.Hour*24), c.user())
+		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now().Add((time.Hour*24)*4), c.user())
 		if err != nil {
 			return err.Error(), false, err
 		}
-		return "", false, nil
+		return postStr, false, nil
 	case "time":
 		if len(parameters) != 2 {
 			return dailySummarySetTimeErrorMessage, false, nil
