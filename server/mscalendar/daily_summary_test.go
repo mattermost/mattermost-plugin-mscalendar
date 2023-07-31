@@ -215,7 +215,7 @@ Wednesday February 12, 2020
 							LastPostTime: "",
 						},
 					},
-				}, nil).Times(2)
+				}, nil).Times(3)
 
 				s.EXPECT().LoadUser("user3_mm_id").Return(&store.User{
 					MattermostUserID: "user3_mm_id",
@@ -231,7 +231,7 @@ Wednesday February 12, 2020
 				}, nil)
 
 				papi.EXPECT().GetMattermostUser("user1_mm_id").Times(2)
-				papi.EXPECT().GetMattermostUser("user2_mm_id").Times(1)
+				papi.EXPECT().GetMattermostUser("user2_mm_id").Times(2)
 
 				mockClient.EXPECT().GetMailboxSettings("user1_remote_id").Return(&remote.MailboxSettings{
 					TimeZone: "Eastern Standard Time",
@@ -240,7 +240,7 @@ Wednesday February 12, 2020
 					TimeZone: "Pacific Standard Time",
 				}, nil)
 
-				mockRemote.EXPECT().MakeClient(context.TODO(), gomock.Any()).Return(mockClient)
+				mockRemote.EXPECT().MakeClient(context.TODO(), gomock.Any()).Return(mockClient).Times(2)
 
 				mockClient.EXPECT().GetDefaultCalendarView("user1_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{}, nil)
 				mockClient.EXPECT().GetDefaultCalendarView("user2_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{
