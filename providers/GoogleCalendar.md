@@ -25,7 +25,7 @@ For a stable production release, please download the latest version from the Plu
         - **Google People API**: Used to link your mattermost account to your Google account
 3. Go to the credentials section, and create a new OAuth 2.0 credentials
     - Under **Application type** specify Web Application
-    - Under **Authorized redirect URIs** add `https://(MM_SITE_URL)/plugins/com.mattermost.gcal/oauth2/complete` replacing `MM_SITE_URL` with your Mattermost instace site URL.
+    - Under **Authorized redirect URIs** add `https://(MM_SITE_URL)/plugins/com.mattermost.gcal/oauth2/complete` replacing `MM_SITE_URL` with your Mattermost instance site URL.
     - Annotate your _Client ID_ and _Client Secret_ for the next step
 4. Navigate to **System Console > Plugin Management > Google Calendar**.
     - Fill in the following fields:
