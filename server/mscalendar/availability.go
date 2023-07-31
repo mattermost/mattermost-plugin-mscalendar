@@ -117,14 +117,14 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 		users = append(users, user)
 
 		if fetchIndividually {
-			err = m.Filter(withActingUser(user.MattermostUserID))
+			engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
 			if err != nil {
 				m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
 				continue
 			}
 
 			calendarUser := newUserFromStoredUser(user)
-			calendarEvents, err := m.GetCalendarEvents(calendarUser, start, end)
+			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end)
 			if err != nil {
 				syncJobSummary.NumberOfUsersFailedStatusChanged++
 				m.Logger.With(bot.LogContext{

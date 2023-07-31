@@ -145,17 +145,21 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 				continue
 			}
 
-			m.Filter(withActingUser(storeUser.MattermostUserID))
-
-			tz, err := m.GetTimezone(u)
+			engine, err := m.FilterCopy(withActingUser(storeUser.MattermostUserID))
 			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
+				m.Logger.Errorf("Error creating user engine %s. err=%v", storeUser.MattermostUserID, err)
 				continue
 			}
 
-			events, err := m.getTodayCalendarEvents(u, now, tz)
+			tz, err := engine.GetTimezone(u)
 			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
+				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, err)
+				continue
+			}
+
+			events, err := engine.getTodayCalendarEvents(u, now, tz)
+			if err != nil {
+				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, err)
 				continue
 			}
 

@@ -3,6 +3,8 @@
 
 package mscalendar
 
+import "github.com/pkg/errors"
+
 type filterf func(*mscalendar) error
 
 func (m *mscalendar) Filter(filters ...filterf) error {
@@ -13,6 +15,16 @@ func (m *mscalendar) Filter(filters ...filterf) error {
 		}
 	}
 	return nil
+}
+
+// FilterCopy creates a copy of the calendar engine and applies filters to it
+func (m *mscalendar) FilterCopy(filters ...filterf) (*mscalendar, error) {
+	engine := m.copy()
+	if err := engine.Filter(filters...); err != nil {
+		return nil, errors.Wrap(err, "error filtering engine copy")
+	}
+
+	return engine, nil
 }
 
 func withActingUserExpanded(m *mscalendar) error {
