@@ -1,22 +1,21 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+import {openCreateEventModal} from './actions';
+
 // import {openCreateModalWithoutPost, openChannelSettings, sendEphemeralPost, openDisconnectModal, handleConnectFlow, getConnected} from '../actions';
 // import {isUserConnected, getInstalledInstances, getPluginSettings, getUserConnectedInstances, instanceIsInstalled} from '../selectors';
 
 type ContextArgs = {channel_id: string};
 
-const createEventCommand = '/gcal createevent';
+const createEventCommand = '/z';
 
-const openCreateEventModal = () => {
-    alert('opening modal')
-}
+// const createEventCommand = '/gcal createevent';
 
 export default class Hooks {
     constructor(private store: any) {}
 
     slashCommandWillBePostedHook = (rawMessage: string, contextArgs: ContextArgs) => {
-        debugger;
         let message;
         if (rawMessage) {
             message = rawMessage.trim();
@@ -31,7 +30,7 @@ export default class Hooks {
         }
 
         return Promise.resolve({message, args: contextArgs});
-    }
+    };
 
     handleCreateEventSlashCommand = async (message: string, contextArgs: ContextArgs) => {
         if (!(await this.checkUserIsConnected())) {
@@ -40,7 +39,7 @@ export default class Hooks {
 
         this.store.dispatch(openCreateEventModal(contextArgs.channel_id));
         return Promise.resolve({});
-    }
+    };
 
     checkUserIsConnected = async (): Promise<boolean> => {
         return true;
@@ -54,5 +53,5 @@ export default class Hooks {
         }
 
         return true;
-    }
+    };
 }

@@ -16,7 +16,7 @@ function userConnected(state = false, action) {
 
 const createEventModalVisible = (state = false, action) => {
     switch (action.type) {
-    case ActionTypes.CLOSE_CREATE_EVENT_MODAL:
+    case ActionTypes.OPEN_CREATE_EVENT_MODAL:
     case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
         return true;
     case ActionTypes.CLOSE_CREATE_EVENT_MODAL:
@@ -42,7 +42,6 @@ const createEventModal = (state = '', action) => {
         return state;
     }
 };
-
 
 export default combineReducers({
     userConnected,

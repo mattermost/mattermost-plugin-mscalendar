@@ -2,23 +2,19 @@
 // See LICENSE.txt for license information.
 
 import React, {useState} from 'react';
+import {useSelector} from 'react-redux';
 
-// import {Modal} from 'react-bootstrap';
 import {Modal} from 'react-bootstrap';
 
-// import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
+import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
-const getTheme = state => {
-    return state.entities.preferences.myPreferences['theme--'];
-}
+import {CreateEventPayload} from '@/types/calendar_api_types';
 
 import {getModalStyles} from '@/utils/styles';
 
 import FormButton from '@/components/form_button';
 import Loading from '@/components/loading';
-import {useSelector} from 'react-redux';
-import {CreateEventPayload} from '@/types/calendar_api_types';
-// import ReactSelectSetting from '@/components/react_select_setting';
+import ReactSelectSetting from '@/components/react_select_setting';
 
 type Props = {
     close: (e?: Event) => void;
@@ -39,11 +35,11 @@ export default function CreateEventForm(props: Props) {
     });
 
     const setFormValue = (name, value) => {
-        setFormValues(values => ({
+        setFormValues((values) => ({
             ...values,
             [name]: value,
         }));
-    }
+    };
 
     const theme = useSelector(getTheme);
 
@@ -53,15 +49,15 @@ export default function CreateEventForm(props: Props) {
         }
 
         props.close();
-    }
+    };
 
     const handleError = (error: string) => {
         setStoredError(error);
-    }
+    };
 
     const createEvent = async (payload: CreateEventPayload) => {
 
-    }
+    };
 
     const handleSubmit = (e?: React.FormEvent) => {
         if (e && e.preventDefault) {
@@ -78,7 +74,7 @@ export default function CreateEventForm(props: Props) {
 
             handleClose();
         });
-    }
+    };
 
     const style = getModalStyles(theme);
 
@@ -105,9 +101,14 @@ export default function CreateEventForm(props: Props) {
 
     let form;
     if (loading) {
-        form = <Loading />;
+        form = <Loading/>;
     } else {
-        form = <ActualForm formValues={formValues} setFormValue={setFormValue}/>;
+        form = (
+            <ActualForm
+                formValues={formValues}
+                setFormValue={setFormValue}
+            />
+        );
     }
 
     let error;
@@ -150,38 +151,70 @@ type ActualFormProps = {
 const ActualForm = (props: ActualFormProps) => {
     const {formValues, setFormValue} = props;
 
-    return (
-        <div>
-            <div>
-                <label>
-                    {'Subject:'}
-                </label>
+    const theme = useSelector(getTheme);
+
+    const attendeeOptions = [
+        {label: 'sysadmin', value: 'sysadmin'},
+    ];
+
+    const attendeesSelect = (
+        <ReactSelectSetting
+            theme={theme}
+            options={attendeeOptions}
+            value={formValues.attendees}
+            onChange={(selected) => setFormValue('attendees', selected)}
+            isMulti={true}
+        />
+    );
+
+    const components = [
+        {
+            label: 'Subject',
+            component: (
                 <input
                     onChange={(e) => setFormValue('subject', e.target.value)}
                     value={formValues.subject}
                     className='form-control'
                 />
-            </div>
-            <div>
-                <label>
-                    {'Start Time:'}
-                </label>
+            ),
+        },
+        {
+            label: 'Start Time',
+            component: (
                 <input
                     onChange={(e) => setFormValue('start_time', e.target.value)}
                     value={formValues.start_time}
                     className='form-control'
                 />
-            </div>
-            <div>
-                <label>
-                    {'End Time:'}
-                </label>
+            ),
+        },
+        {
+            label: 'End Time',
+            component: (
                 <input
                     onChange={(e) => setFormValue('end_time', e.target.value)}
                     value={formValues.end_time}
                     className='form-control'
                 />
-            </div>
+            ),
+        },
+        {
+            label: 'Guests',
+            component: attendeesSelect,
+        },
+    ];
+
+    return (
+        <div>
+            {components.map((c) => (
+                <div
+                    key={c.label}
+                    className='form-group'
+                >
+                    <label>{c.label}</label>
+                    {c.component}
+                </div>
+            ))}
         </div>
-    )
+    );
 };

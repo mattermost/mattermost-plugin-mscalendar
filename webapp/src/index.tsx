@@ -4,22 +4,24 @@ import {Store, Action} from 'redux';
 
 import {GlobalState} from '@mattermost/types/lib/store';
 
-import manifest from '../../plugin.json';
-
 import {PluginRegistry} from '@/types/mattermost-webapp';
-import CreateIssueModal from './components/modals/create_event_modal';
+
+import {PluginId} from './plugin_id';
+
 import Hooks from './plugin_hooks';
+import reducer from './reducers';
+
+import CreateEventModal from './components/modals/create_event_modal';
 
 export default class Plugin {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
-        // @see https://developers.mattermost.com/extend/plugins/webapp/reference/
+        registry.registerReducer(reducer);
 
         const hooks = new Hooks(store);
         registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
 
         const setup = () => {
-            registry.registerRootComponent(CreateIssueModal);
+            registry.registerRootComponent(CreateEventModal);
         };
 
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);
@@ -35,7 +37,7 @@ const SetupUI = ({setup}) => {
     }, []);
 
     return null;
-}
+};
 
 declare global {
     interface Window {
@@ -43,4 +45,4 @@ declare global {
     }
 }
 
-window.registerPlugin(manifest.id, new Plugin());
+window.registerPlugin(PluginId, new Plugin());

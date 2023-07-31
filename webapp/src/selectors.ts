@@ -36,11 +36,11 @@ export const getCurrentUserLocale = createSelector(
         }
 
         return locale;
-    }
+    },
 );
 
 export const isCreateEventModalVisible = (state) => getPluginState(state).createEventModalVisible;
 
 export const getCreateEventModal = (state) => getPluginState(state).createEventModal;
 
-export const isUserConnected = (state) => getPluginState(state).createEventModal;
+export const isUserConnected = (state) => getPluginState(state).userConnected;
