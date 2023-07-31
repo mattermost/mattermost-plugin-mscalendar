@@ -33,7 +33,7 @@ func TestConnect(t *testing.T) {
 			},
 			expectedOutput: fmt.Sprintf(
 				"Your Mattermost account is already connected to %s account `user@email.com`. To connect to a different account, first run `/%s disconnect`.",
-				config.ApplicationName, config.CommandTrigger,
+				config.Provider.DisplayName, config.Provider.CommandTrigger,
 			),
 			expectedError: "",
 		},
@@ -63,7 +63,7 @@ func TestConnect(t *testing.T) {
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
-					Command: fmt.Sprintf("/%s %s", config.CommandTrigger, tc.command),
+					Command: fmt.Sprintf("/%s %s", config.Provider.CommandTrigger, tc.command),
 					UserId:  "user_id",
 				},
 				ChannelID:  "channel_id",

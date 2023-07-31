@@ -2,6 +2,8 @@ package config
 
 import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 
+var Provider ProviderConfig
+
 // StoredConfig represents the data stored in and managed with the Mattermost
 // config.
 type StoredConfig struct {
@@ -16,9 +18,17 @@ type StoredConfig struct {
 	GoogleDomainVerifyKey string
 }
 
-// ProviderConfig manages the configuration relative to the provider being built
+// ProviderConfig represents the specific configuration that changes when building for different
+// calendar providers.
 type ProviderConfig struct {
-	EncryptedStore bool
+	Name               string
+	DisplayName        string
+	Repository         string
+	CommandTrigger     string
+	TelemetryShortName string
+	BotUsername        string
+	BotDisplayName     string
+	EncryptedStore     bool
 }
 
 // Config represents the the metadata handed to all request runners (command,
@@ -34,7 +44,7 @@ type Config struct {
 	PluginURLPath          string
 	PluginVersion          string
 	StoredConfig
-	ProviderConfig
+	Provider ProviderConfig
 }
 
 func (c *Config) GetNotificationURL() string {
