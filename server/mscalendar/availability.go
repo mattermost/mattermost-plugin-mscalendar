@@ -444,7 +444,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withActingUser(user.MattermostUserID))
 	if err != nil {
-		return nil, errors.Wrap(err, "error withRemoteUser")
+		return nil, errors.Wrap(err, "error withActingUser")
 	}
 
 	err = m.Filter(withClient)
