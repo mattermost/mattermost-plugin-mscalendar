@@ -28,14 +28,14 @@ type Command struct {
 }
 
 func getNotConnectedText() string {
-	return fmt.Sprintf("It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/%s connect`.", config.CommandTrigger)
+	return fmt.Sprintf("It looks like your Mattermost account is not connected to a %s account. Please connect your account using `/%s connect`.", config.Provider.DisplayName, config.Provider.CommandTrigger)
 }
 
 type handleFunc func(parameters ...string) (string, bool, error)
 
 var cmds = []*model.AutocompleteData{
-	model.NewAutocompleteData("connect", "", "Connect to your Microsoft account"),
-	model.NewAutocompleteData("disconnect", "", "Disconnect from your Microsoft Account"),
+	model.NewAutocompleteData("connect", "", fmt.Sprintf("Connect to your %s account", config.Provider.DisplayName)),
+	model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
 	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
 	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
@@ -54,18 +54,18 @@ func Register(client *pluginapilicense.Client) error {
 
 	hint := "[" + strings.Join(names[:4], "|") + "...]"
 
-	cmd := model.NewAutocompleteData(config.CommandTrigger, hint, "Interact with your Outlook calendar.")
+	cmd := model.NewAutocompleteData(config.Provider.CommandTrigger, hint, fmt.Sprintf("Interact with your %s calendar.", config.Provider.DisplayName))
 	cmd.SubCommands = cmds
 
-	iconData, err := command.GetIconData(&client.System, "assets/profile.svg")
+	iconData, err := command.GetIconData(&client.System, fmt.Sprintf("assets/profile-%s.svg", config.Provider.Name))
 	if err != nil {
 		return errors.Wrap(err, "failed to get icon data")
 	}
 
 	return client.SlashCommand.Register(&model.Command{
-		Trigger:              config.CommandTrigger,
-		DisplayName:          "Microsoft Calendar",
-		Description:          "Interact with your Outlook calendar.",
+		Trigger:              config.Provider.CommandTrigger,
+		DisplayName:          config.Provider.DisplayName,
+		Description:          fmt.Sprintf("Interact with your %s calendar.", config.Provider.DisplayName),
 		AutoComplete:         true,
 		AutoCompleteDesc:     strings.Join(names, ", "),
 		AutoCompleteHint:     "(subcommand)",
@@ -114,7 +114,7 @@ func (c *Command) Handle() (string, bool, error) {
 	}
 	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {
-		return out, false, errors.WithMessagef(err, "Command /%s %s failed", config.CommandTrigger, cmd)
+		return out, false, errors.WithMessagef(err, "Command /%s %s failed", config.Provider.CommandTrigger, cmd)
 	}
 
 	return out, mustRedirectToDM, nil
@@ -126,7 +126,7 @@ func (c *Command) isValid() (subcommand string, parameters []string, err error) 
 	}
 	split := strings.Fields(c.Args.Command)
 	command := split[0]
-	if command != "/"+config.CommandTrigger {
+	if command != "/"+config.Provider.CommandTrigger {
 		return "", nil, fmt.Errorf("%q is not a supported command. Please contact your system administrator", command)
 	}
 

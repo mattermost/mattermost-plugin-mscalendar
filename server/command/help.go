@@ -23,5 +23,5 @@ func (c *Command) help(parameters ...string) (string, bool, error) {
 }
 
 func getCommandText(s string) string {
-	return fmt.Sprintf("/%s %s\n", config.CommandTrigger, s)
+	return fmt.Sprintf("/%s %s\n", config.Provider.CommandTrigger, s)
 }
