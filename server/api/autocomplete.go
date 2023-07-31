@@ -12,8 +12,6 @@ import (
 )
 
 func (api *api) autocompleteUsers(w http.ResponseWriter, r *http.Request) {
-	// TODO: This doesn't seem like proper authorization. Anyone can send a header to an http
-	// request impersonating the user (?)
 	mattermostUserID := r.Header.Get("Mattermost-User-Id")
 	_, err := api.Store.LoadUser(mattermostUserID)
 	if mattermostUserID == "" || errors.Is(err, store.ErrNotFound) {
