@@ -103,7 +103,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	}
 
 	var other string
-	if isKnownMeetingURL(event.Location.DisplayName) {
+	if event.Location != nil && isKnownMeetingURL(event.Location.DisplayName) {
 		other = "[Join meeting](" + event.Location.DisplayName + ")"
 	}
 
