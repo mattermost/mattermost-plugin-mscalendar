@@ -330,7 +330,7 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 				DisplayName: e.Provider.BotDisplayName,
 				Description: fmt.Sprintf(config.BotDescription, e.Provider.DisplayName),
 			},
-			filepath.Join("assets", fmt.Sprintf("profile-%s.png", e.Provider.DisplayName)),
+			filepath.Join("assets", fmt.Sprintf("profile-%s.png", e.Provider.Name)),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to ensure bot account")
