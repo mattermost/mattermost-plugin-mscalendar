@@ -17,7 +17,7 @@ For a stable production release, please download the latest version from the Plu
 
 ## Configuration
 
-1. Create a project in the Google Cloud Cnosole
+1. Create a project in the Google Cloud Console
     - Go to [console.cloud.google.com](https://console.cloud.google.com/) and click on the dropdown at the top of the page to create a new project.
 2. When you have your project ready, the required APIs need to be enabled on it:
     - Go to **APIs & Services** search and enable two services:
