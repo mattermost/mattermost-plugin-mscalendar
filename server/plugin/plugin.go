@@ -114,9 +114,8 @@ func (p *Plugin) OnActivate() error {
 			),
 		)
 		// TODO: replace with proper logic
-		e.EncryptedStore = true
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.EncryptedStore, []byte(e.EncryptionKey))
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 	})
 
 	return nil
@@ -168,9 +167,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	p.updateEnv(func(e *Env) {
 		p.initEnv(e, pluginURL)
 
-		// TODO: replace with proper logic
-		e.EncryptedStore = true
-
 		e.StoredConfig = stored
 		e.Config.MattermostSiteURL = *mattermostSiteURL
 		e.Config.MattermostSiteHostname = mattermostURL.Hostname()
@@ -192,7 +188,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.EncryptedStore, []byte(e.EncryptionKey))
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
