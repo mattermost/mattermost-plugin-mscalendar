@@ -108,7 +108,7 @@ func (p *Plugin) OnActivate() error {
 				p.API.GetServerVersion(),
 				e.PluginID,
 				e.PluginVersion,
-				config.TelemetryShortName,
+				config.Provider.TelemetryShortName,
 				telemetry.NewTrackerConfig(p.API.GetConfig()),
 				telemetry.NewLogger(p.API),
 			),
@@ -255,7 +255,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		if appErr != nil {
 			return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, appErr.Error(), http.StatusInternalServerError)
 		}
-		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.BotUserName)
+		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.Provider.BotUsername)
 		response.GotoLocation = dmURL
 	}
 
@@ -323,11 +323,11 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 		e.bot = bot.New(p.API, pluginURL)
 		err := e.bot.Ensure(
 			&model.Bot{
-				Username:    config.BotUserName,
-				DisplayName: config.BotDisplayName,
-				Description: config.BotDescription,
+				Username:    e.Provider.BotUsername,
+				DisplayName: e.Provider.BotDisplayName,
+				Description: fmt.Sprintf(config.BotDescription, e.Provider.DisplayName),
 			},
-			filepath.Join("assets", "profile.png"),
+			filepath.Join("assets", fmt.Sprintf("profile-%s.png", e.Provider.Name)),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to ensure bot account")

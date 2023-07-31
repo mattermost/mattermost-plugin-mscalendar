@@ -15,7 +15,7 @@ func (c *Command) info(parameters ...string) (string, bool, error) {
 		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
 		c.Config.PluginVersion,
 		c.Config.BuildHashShort,
-		config.Repository,
+		config.Provider.Repository,
 		c.Config.BuildHash,
 		c.Config.BuildDate)
 	return resp, false, nil

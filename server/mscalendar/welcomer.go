@@ -133,7 +133,7 @@ func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachme
 }
 
 func (bot *mscBot) notifySettings(userID string) error {
-	_, err := bot.DM(userID, "Feel free to change these settings anytime by typing `/%s settings`", config.CommandTrigger)
+	_, err := bot.DM(userID, "Feel free to change these settings anytime by typing `/%s settings`", config.Provider.CommandTrigger)
 	if err != nil {
 		return err
 	}
