@@ -34,6 +34,7 @@ func withRemoteUser(user *User) func(m *mscalendar) error {
 func withActingUser(mattermostUserID string) func(m *mscalendar) error {
 	return func(m *mscalendar) error {
 		m.actingUser = NewUser(mattermostUserID)
+		m.client = nil
 		return nil
 	}
 }
