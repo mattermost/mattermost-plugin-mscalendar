@@ -19,7 +19,7 @@ const (
 func (c *Command) connect(parameters ...string) (string, bool, error) {
 	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
-		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), false, nil
+		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.Provider.DisplayName, ru.Mail, config.Provider.CommandTrigger), false, nil
 	}
 
 	out := ""
