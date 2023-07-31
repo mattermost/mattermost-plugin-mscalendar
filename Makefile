@@ -1,8 +1,11 @@
 GO ?= $(shell command -v go 2> /dev/null)
 NPM ?= $(shell command -v npm 2> /dev/null)
 CURL ?= $(shell command -v curl 2> /dev/null)
-MANIFEST_FILE ?= plugin.json
 GOPATH ?= $(shell go env GOPATH)
+
+CALENDAR_PROVIDER ?= mscalendar
+MANIFEST_FILE ?= plugin.json
+
 GO_TEST_FLAGS ?= -race
 GO_BUILD_FLAGS ?=
 MM_UTILITIES_DIR ?= ../mattermost-utilities
@@ -19,6 +22,10 @@ include build/setup.mk
 
 BUNDLE_NAME ?= $(PLUGIN_ID)-$(PLUGIN_VERSION).tar.gz
 
+ifeq ($(CALENDAR_PROVIDER),gcal)
+	MANIFEST_FILE = plugin-$(CALENDAR_PROVIDER).json
+endif
+
 # Include custom makefile, if present
 ifneq ($(wildcard build/custom.mk),)
 	include build/custom.mk
@@ -30,14 +37,13 @@ else
 	GO_BUILD_GCFLAGS =
 endif
 
-
 ## Checks the code style, tests, builds and bundles the plugin.
 all: check-style test dist
 
 ## Propagates plugin manifest information into the server/ and webapp/ folders as required.
 .PHONY: apply
 apply:
-	./build/bin/manifest apply
+	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
 
 ## Runs golangci-lint and eslint.
 .PHONY: check-style
@@ -121,7 +127,7 @@ else
 endif
 	rm -rf dist/
 	mkdir -p dist/$(PLUGIN_ID)/server/dist
-	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/
+	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
 	cp -r server/dist/* dist/$(PLUGIN_ID)/server/dist/
 	mkdir -p ../mattermost-server/plugins
 	cp -r dist/* ../mattermost-server/plugins/
@@ -143,7 +149,7 @@ validate-go-version: ## Validates the installed version of go against Mattermost
 bundle:
 	rm -rf dist/
 	mkdir -p dist/$(PLUGIN_ID)
-	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/
+	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
 ifneq ($(wildcard $(ASSETS_DIR)/.),)
 	cp -r $(ASSETS_DIR) dist/$(PLUGIN_ID)/
 endif

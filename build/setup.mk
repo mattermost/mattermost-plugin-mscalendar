@@ -11,7 +11,8 @@ $(shell cd build/manifest && $(GO) build -o ../bin/manifest)
 $(shell cd build/deploy && $(GO) build -o ../bin/deploy)
 
 # Extract the plugin id from the manifest.
-PLUGIN_ID ?= $(shell build/bin/manifest id)
+# TODO: Not working
+PLUGIN_ID ?= $(shell MANIFEST_FILE=$(MANIFEST_FILE) build/bin/manifest id)
 ifeq ($(PLUGIN_ID),)
     $(error "Cannot parse id from $(MANIFEST_FILE)")
 endif
