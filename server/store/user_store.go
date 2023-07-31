@@ -259,7 +259,7 @@ func (s *pluginStore) SearchInUserIndex(term string, limit int) (UserIndex, erro
 		return nil, errors.Wrap(err, "error searching user in index")
 	}
 
-	result := make([]*UserShort, 0)
+	result := []*UserShort{}
 	for idx, u := range userIndex {
 		if strings.Contains(u.MattermostUsername, term) || strings.Contains(u.MattermostDisplayName, term) || strings.Contains(u.Email, term) {
 			result = append(result, userIndex[idx])
