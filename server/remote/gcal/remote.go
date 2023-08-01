@@ -76,5 +76,9 @@ func (r *impl) CheckConfiguration(cfg config.StoredConfig) error {
 		return fmt.Errorf("OAuth2 credentials to be set in the config")
 	}
 
+	if cfg.EncryptionKey == "" {
+		return fmt.Errorf("encryption key cannot be empty")
+	}
+
 	return nil
 }
