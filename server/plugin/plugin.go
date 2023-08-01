@@ -113,7 +113,6 @@ func (p *Plugin) OnActivate() error {
 				telemetry.NewLogger(p.API),
 			),
 		)
-		// TODO: replace with proper logic
 		e.bot = e.bot.WithConfig(stored.Config)
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 	})
