@@ -5,6 +5,7 @@ package gcal
 
 import (
 	"context"
+	"fmt"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
@@ -68,4 +69,16 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 		},
 		Endpoint: google.Endpoint,
 	}
+}
+
+func (r *impl) CheckConfiguration(cfg config.StoredConfig) error {
+	if cfg.OAuth2ClientID == "" || cfg.OAuth2ClientSecret == "" {
+		return fmt.Errorf("OAuth2 credentials to be set in the config")
+	}
+
+	if cfg.EncryptionKey == "" {
+		return fmt.Errorf("encryption key cannot be empty")
+	}
+
+	return nil
 }
