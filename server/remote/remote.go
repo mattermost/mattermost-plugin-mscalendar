@@ -14,7 +14,10 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
-var ErrSuperUserClientNotSupported = errors.New("superuser client is not supported")
+var (
+	ErrSuperUserClientNotSupported = errors.New("superuser client is not supported")
+	ErrNotImplemented              = errors.New("not implemented")
+)
 
 type Remote interface {
 	MakeClient(context.Context, *oauth2.Token) Client
