@@ -71,10 +71,8 @@ func (p *Plugin) OnActivate() error {
 		return errors.WithMessage(err, "failed to load plugin configuration")
 	}
 
-	if stored.OAuth2Authority == "" ||
-		stored.OAuth2ClientID == "" ||
-		stored.OAuth2ClientSecret == "" {
-		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
+	if errConfig := p.env.Remote.CheckConfiguration(stored); errConfig != nil {
+		return errors.Wrap(errConfig, "failed to configure: ")
 	}
 
 	p.initEnv(&p.env, "")
