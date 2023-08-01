@@ -301,7 +301,7 @@ func TestReminders(t *testing.T) {
 			},
 			eventMetadata: map[string]*store.EventMetadata{
 				"event_id": {
-					LinkedChannels: map[string]struct{}{"channel_id": {}},
+					LinkedChannels: map[string]struct{}{"some_channel_id": {}},
 				},
 			},
 			numReminders:   1,
