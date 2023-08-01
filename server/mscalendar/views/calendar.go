@@ -85,7 +85,7 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 
 func renderTableHeader() string {
 	return `| Time | Subject | |
-	| :-- | :-- | :--`
+| :-- | :-- | :-- |`
 }
 
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
