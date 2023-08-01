@@ -25,7 +25,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/gcal"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
@@ -173,7 +172,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURLPath = pluginURLPath
 
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Remote = remote.Makers[gcal.Kind](e.Config, e.bot)
+		e.Dependencies.Remote = remote.Makers[config.Provider.Name](e.Config, e.bot)
 
 		// REVIEW: need to make this provider agnostic terminology
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
@@ -209,7 +208,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		}
 
 		e.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env), config.Provider)
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)

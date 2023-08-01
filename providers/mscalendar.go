@@ -1,11 +1,14 @@
 package providers
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+import (
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
+)
 
 const (
-	ProviderMSCalendar            = "mscalendar"
+	ProviderMSCalendar            = msgraph.Kind
 	ProviderMSCalendarDisplayName = "Microsoft Calendar"
-	ProviderMSCalendarRepository  = ""
+	ProviderMSCalendarRepository  = "mattermost-plugin-mscalendar"
 )
 
 func GetMSCalendarProviderConfig() *config.ProviderConfig {

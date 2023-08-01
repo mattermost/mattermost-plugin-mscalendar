@@ -1,6 +1,9 @@
 package mscalendar
 
 import (
+	"fmt"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
@@ -53,7 +56,7 @@ func (wf *WelcomeFlow) makeSteps() {
 	steps := []flow.Step{}
 	steps = append(steps, &flow.SimpleStep{
 		Title:                "Update Status",
-		Message:              "Would you like your Mattermost status to be automatically updated at the time of your Microsoft Calendar events?",
+		Message:              "Would you like your Mattermost status to be automatically updated at the time of your events?",
 		PropertyName:         store.UpdateStatusPropertyName,
 		TrueButtonMessage:    "Yes - Update my status",
 		FalseButtonMessage:   "No - Don't update my status",
@@ -94,7 +97,7 @@ func (wf *WelcomeFlow) makeSteps() {
 		FalseResponseMessage: "Great, you will not receive any notification for upcoming events.",
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
-		Message: "Remember that you can set-up a daily summary by typing `/mscalendar summary time 8:00AM`.",
+		Message: fmt.Sprintf("Remember that you can set-up a daily summary by typing `/%s summary time 8:00AM`.", config.Provider.CommandTrigger),
 	})
 
 	wf.steps = steps
