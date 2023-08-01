@@ -72,7 +72,7 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	if errConfig := p.env.Remote.CheckConfiguration(stored); errConfig != nil {
-		return errors.Wrap(errConfig, "failed to configure: ")
+		return errors.Wrap(errConfig, "failed to configure")
 	}
 
 	p.initEnv(&p.env, "")
