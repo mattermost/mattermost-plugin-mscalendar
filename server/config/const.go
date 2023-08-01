@@ -23,6 +23,9 @@ const (
 	PathEvent                 = "/event"
 	PathVerifyDomain          = "/verify"
 
+	PathAutocomplete = "/autocomplete"
+	PathUsers        = "/users"
+
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete
 

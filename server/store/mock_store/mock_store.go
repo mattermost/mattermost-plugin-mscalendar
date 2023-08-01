@@ -326,6 +326,21 @@ func (mr *MockStoreMockRecorder) RemovePostID(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePostID", reflect.TypeOf((*MockStore)(nil).RemovePostID), arg0, arg1)
 }
 
+// SearchInUserIndex mocks base method.
+func (m *MockStore) SearchInUserIndex(arg0 string, arg1 int) (store.UserIndex, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchInUserIndex", arg0, arg1)
+	ret0, _ := ret[0].(store.UserIndex)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchInUserIndex indicates an expected call of SearchInUserIndex.
+func (mr *MockStoreMockRecorder) SearchInUserIndex(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchInUserIndex", reflect.TypeOf((*MockStore)(nil).SearchInUserIndex), arg0, arg1)
+}
+
 // SetCurrentStep mocks base method.
 func (m *MockStore) SetCurrentStep(arg0 string, arg1 int) error {
 	m.ctrl.T.Helper()
