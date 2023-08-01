@@ -347,6 +347,20 @@ func (mr *MockClientMockRecorder) RenewSubscription(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewSubscription", reflect.TypeOf((*MockClient)(nil).RenewSubscription), arg0, arg1, arg2)
 }
 
+// RevokeToken mocks base method.
+func (m *MockClient) RevokeToken(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeToken", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevokeToken indicates an expected call of RevokeToken.
+func (mr *MockClientMockRecorder) RevokeToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeToken", reflect.TypeOf((*MockClient)(nil).RevokeToken), arg0)
+}
+
 // TentativelyAcceptEvent mocks base method.
 func (m *MockClient) TentativelyAcceptEvent(arg0, arg1 string) error {
 	m.ctrl.T.Helper()

@@ -19,6 +19,7 @@ type Client interface {
 
 type Core interface {
 	GetMe() (*User, error)
+	RevokeSession(session Session) error
 }
 
 type Calendars interface {
