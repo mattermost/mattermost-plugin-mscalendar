@@ -5,7 +5,7 @@ package gcal
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
@@ -51,25 +51,9 @@ func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Clien
 }
 
 // MakeSuperuserClient creates a new client used for app-only permissions.
-func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
-	httpClient := &http.Client{}
-	c := &client{
-		conf:       r.conf,
-		ctx:        ctx,
-		httpClient: httpClient,
-		Logger:     r.logger,
-		// rbuilder:   msgraph.NewClient(httpClient),
-	}
-	token, err := c.GetSuperuserToken()
-	if err != nil {
-		return nil, err
-	}
-
-	o := &oauth2.Token{
-		AccessToken: token,
-		TokenType:   "Bearer",
-	}
-	return r.MakeClient(ctx, o), nil
+// Super user tokens are not available on google calendar, so we instantiate a normal client
+func (r *impl) MakeSuperuserClient(_ context.Context) (remote.Client, error) {
+	return nil, remote.ErrSuperUserClientNotSupported
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {
@@ -85,4 +69,16 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 		},
 		Endpoint: google.Endpoint,
 	}
+}
+
+func (r *impl) CheckConfiguration(cfg config.StoredConfig) error {
+	if cfg.OAuth2ClientID == "" || cfg.OAuth2ClientSecret == "" {
+		return fmt.Errorf("OAuth2 credentials to be set in the config")
+	}
+
+	if cfg.EncryptionKey == "" {
+		return fmt.Errorf("encryption key cannot be empty")
+	}
+
+	return nil
 }

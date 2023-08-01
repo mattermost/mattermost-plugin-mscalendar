@@ -51,6 +51,9 @@ func (m *mscalendar) LoadMyEventSubscription() (*store.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: if m.actingUser.Settings.EventSubscriptionID is empty, there's no sub
+
 	storedSub, err := m.Store.LoadSubscription(m.actingUser.Settings.EventSubscriptionID)
 	if err != nil {
 		return nil, err
@@ -115,15 +118,16 @@ func (m *mscalendar) DeleteMyEventSubscription() error {
 
 	subscriptionID := m.actingUser.Settings.EventSubscriptionID
 
+	err = m.DeleteOrphanedSubscription(subscriptionID)
+	if err != nil {
+		return err
+	}
+
 	err = m.Store.DeleteUserSubscription(m.actingUser.User, subscriptionID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
 	}
 
-	err = m.DeleteOrphanedSubscription(subscriptionID)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

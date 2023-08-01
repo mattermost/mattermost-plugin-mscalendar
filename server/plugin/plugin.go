@@ -25,7 +25,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/gcal"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
@@ -72,10 +71,8 @@ func (p *Plugin) OnActivate() error {
 		return errors.WithMessage(err, "failed to load plugin configuration")
 	}
 
-	if stored.OAuth2Authority == "" ||
-		stored.OAuth2ClientID == "" ||
-		stored.OAuth2ClientSecret == "" {
-		return errors.New("failed to configure: OAuth2 credentials to be set in the config")
+	if errConfig := p.env.Remote.CheckConfiguration(stored); errConfig != nil {
+		return errors.Wrap(errConfig, "failed to configure")
 	}
 
 	p.initEnv(&p.env, "")
@@ -114,7 +111,7 @@ func (p *Plugin) OnActivate() error {
 			),
 		)
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 	})
 
 	return nil
@@ -173,7 +170,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURLPath = pluginURLPath
 
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Remote = remote.Makers[gcal.Kind](e.Config, e.bot)
+		e.Dependencies.Remote = remote.Makers[config.Provider.Name](e.Config, e.bot)
 
 		// REVIEW: need to make this provider agnostic terminology
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
@@ -187,7 +184,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -209,7 +206,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		}
 
 		e.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env), config.Provider)
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)

@@ -10,6 +10,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	config "github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	oauth2 "golang.org/x/oauth2"
 )
@@ -35,6 +36,20 @@ func NewMockRemote(ctrl *gomock.Controller) *MockRemote {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRemote) EXPECT() *MockRemoteMockRecorder {
 	return m.recorder
+}
+
+// CheckConfiguration mocks base method.
+func (m *MockRemote) CheckConfiguration(arg0 config.StoredConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckConfiguration", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckConfiguration indicates an expected call of CheckConfiguration.
+func (mr *MockRemoteMockRecorder) CheckConfiguration(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckConfiguration", reflect.TypeOf((*MockRemote)(nil).CheckConfiguration), arg0)
 }
 
 // HandleWebhook mocks base method.

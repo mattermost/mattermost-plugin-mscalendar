@@ -35,6 +35,13 @@ func NewUser(mattermostUserID string) *User {
 	}
 }
 
+func newUserFromStoredUser(u *store.User) *User {
+	return &User{
+		User:             u,
+		MattermostUserID: u.MattermostUserID,
+	}
+}
+
 func (user *User) Clone() *User {
 	clone := *user
 	clone.User = user.User.Clone()
@@ -61,7 +68,7 @@ func (m *mscalendar) ExpandRemoteUser(user *User) error {
 	if user.User == nil {
 		storedUser, err := m.Store.LoadUser(user.MattermostUserID)
 		if err != nil {
-			return errors.Wrap(err, "It looks like your Mattermost account is not connected to a Microsoft account. Please connect your account using `/mscalendar connect`.") //nolint:revive
+			return errors.Wrapf(err, "It looks like your Mattermost account is not connected to %s. Please connect your account using `/%s connect`.", m.Provider.DisplayName, m.Provider.CommandTrigger) //nolint:revive
 		}
 		user.User = storedUser
 	}

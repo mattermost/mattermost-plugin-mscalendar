@@ -93,6 +93,26 @@ func (mr *MockPosterMockRecorder) DMWithAttachments(arg0 interface{}, arg1 ...in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMWithAttachments", reflect.TypeOf((*MockPoster)(nil).DMWithAttachments), varargs...)
 }
 
+// DMWithMessageAndAttachments mocks base method.
+func (m *MockPoster) DMWithMessageAndAttachments(arg0, arg1 string, arg2 ...*model.SlackAttachment) (string, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DMWithMessageAndAttachments", varargs...)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DMWithMessageAndAttachments indicates an expected call of DMWithMessageAndAttachments.
+func (mr *MockPosterMockRecorder) DMWithMessageAndAttachments(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DMWithMessageAndAttachments", reflect.TypeOf((*MockPoster)(nil).DMWithMessageAndAttachments), varargs...)
+}
+
 // DeletePost mocks base method.
 func (m *MockPoster) DeletePost(arg0 string) error {
 	m.ctrl.T.Helper()

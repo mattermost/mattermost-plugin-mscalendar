@@ -14,6 +14,7 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
+	EncryptionKey         string
 	GoogleDomainVerifyKey string
 }
 
@@ -27,6 +28,7 @@ type ProviderConfig struct {
 	TelemetryShortName string
 	BotUsername        string
 	BotDisplayName     string
+	EncryptedStore     bool
 }
 
 // Config represents the the metadata handed to all request runners (command,

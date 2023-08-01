@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
@@ -48,4 +49,16 @@ func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
 		return errors.Wrap(err, "msgraph TentativelyAcceptEvent")
 	}
 	return nil
+}
+
+func (c *client) GetEventsBetweenDates(remoteUserID string, start, end time.Time) ([]*remote.Event, error) {
+	paramStr := getQueryParamStringForCalendarView(start, end)
+	res := &calendarViewResponse{}
+	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
+		c.ctx, http.MethodGet, paramStr, nil, res)
+	if err != nil {
+		return nil, errors.Wrap(err, "msgraph GetEventsBetweenDates")
+	}
+
+	return res.Value, nil
 }

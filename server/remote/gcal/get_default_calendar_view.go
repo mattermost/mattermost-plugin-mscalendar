@@ -5,8 +5,6 @@ package gcal
 
 import (
 	"context"
-	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
@@ -54,23 +52,23 @@ func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remo
 	req.SingleEvents(true)
 	req.OrderBy("startTime")
 
-	events, err := req.Do()
+	result, err := req.Do()
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal GetDefaultCalendarView, error performing request")
 	}
 
-	result := []*remote.Event{}
-	if len(events.Items) == 0 {
-		return result, nil
+	if len(result.Items) == 0 {
+		return []*remote.Event{}, nil
 	}
 
-	for _, event := range events.Items {
+	events := []*remote.Event{}
+	for _, event := range result.Items {
 		if event.ICalUID != "" {
-			result = append(result, convertGCalEventToRemoteEvent(event))
+			events = append(events, convertGCalEventToRemoteEvent(event))
 		}
 	}
 
-	return result, nil
+	return events, nil
 }
 
 func convertGCalEventDateTimeToRemoteDateTime(dt *calendar.EventDateTime) *remote.DateTime {
@@ -162,80 +160,6 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 	}
 }
 
-/*
-	Rest of file is unimplemented batch request stuff
-*/
-
-type calendarViewResponse struct {
-	Value []*remote.Event  `json:"value,omitempty"`
-	Error *remote.APIError `json:"error,omitempty"`
-}
-
-type calendarViewSingleResponse struct {
-	ID      string               `json:"id"`
-	Status  int                  `json:"status"`
-	Body    calendarViewResponse `json:"body"`
-	Headers map[string]string    `json:"headers"`
-}
-
-type calendarViewBatchResponse struct {
-	Responses []*calendarViewSingleResponse `json:"responses"`
-}
-
-func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
-	// REVIEW: we can just not use googles batch api if necessary
-	if true {
-		return nil, errors.New("gcal DoBatchViewCalendarRequests not implemented")
-	}
-
-	requests := []*singleRequest{}
-	for _, params := range allParams {
-		u := getCalendarViewURL(params)
-		req := &singleRequest{
-			ID:      params.RemoteUserID,
-			URL:     u,
-			Method:  http.MethodGet,
-			Headers: map[string]string{},
-		}
-		requests = append(requests, req)
-	}
-
-	batchRequests := prepareBatchRequests(requests)
-	var batchResponses []*calendarViewBatchResponse
-	for _, req := range batchRequests {
-		batchRes := &calendarViewBatchResponse{}
-		err := c.batchRequest(req, batchRes)
-		if err != nil {
-			return nil, errors.Wrap(err, "msgraph ViewCalendar batch request")
-		}
-
-		batchResponses = append(batchResponses, batchRes)
-	}
-
-	result := []*remote.ViewCalendarResponse{}
-	for _, batchRes := range batchResponses {
-		for _, res := range batchRes.Responses {
-			viewCalRes := &remote.ViewCalendarResponse{
-				RemoteUserID: res.ID,
-				Events:       res.Body.Value,
-				Error:        res.Body.Error,
-			}
-			result = append(result, viewCalRes)
-		}
-	}
-
-	return result, nil
-}
-
-func getCalendarViewURL(params *remote.ViewCalendarParams) string {
-	paramStr := getQueryParamStringForCalendarView(params.StartTime, params.EndTime)
-	return "/Users/" + params.RemoteUserID + "/calendarView" + paramStr
-}
-
-func getQueryParamStringForCalendarView(start, end time.Time) string {
-	q := url.Values{}
-	q.Add("startDateTime", start.Format(time.RFC3339))
-	q.Add("endDateTime", end.Format(time.RFC3339))
-	q.Add("$top", "20")
-	return "?" + q.Encode()
+func (c *client) DoBatchViewCalendarRequests(_ []*remote.ViewCalendarParams) ([]*remote.ViewCalendarResponse, error) {
+	return nil, remote.ErrNotImplemented
 }

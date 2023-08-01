@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func NormalizeRemoteBaseURL(mattermostSiteURL, remoteURL string) (string, error) {
@@ -70,4 +72,18 @@ func WriteNotFoundError(w http.ResponseWriter, err error) {
 
 func WriteUnauthorizedError(w http.ResponseWriter, err error) {
 	WriteJSONError(w, http.StatusUnauthorized, "Unauthorized.", err)
+}
+
+func WriteJSONResponse(w http.ResponseWriter, data any, statusCode int) error {
+	jsonResponse, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "couldn't parse response")
+	}
+
+	w.WriteHeader(statusCode)
+	if _, err := w.Write(jsonResponse); err != nil {
+		return errors.Wrap(err, "couldn't send response to user")
+	}
+
+	return nil
 }
