@@ -6,7 +6,9 @@ package store
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
@@ -17,6 +19,7 @@ type UserStore interface {
 	LoadUser(mattermostUserID string) (*User, error)
 	LoadMattermostUserID(remoteUserID string) (string, error)
 	LoadUserIndex() (UserIndex, error)
+	SearchInUserIndex(term string, limit int) (UserIndex, error)
 	StoreUser(user *User) error
 	LoadUserFromIndex(mattermostUserID string) (*UserShort, error)
 	DeleteUser(mattermostUserID string) error
@@ -29,20 +32,38 @@ type UserStore interface {
 type UserIndex []*UserShort
 
 type UserShort struct {
-	MattermostUserID string `json:"mm_id"`
-	RemoteID         string `json:"remote_id"`
-	Email            string `json:"email"`
+	MattermostUsername    string `json:"mm_username"`
+	MattermostDisplayName string `json:"mm_display_name"`
+	MattermostUserID      string `json:"mm_id"`
+	RemoteID              string `json:"remote_id"`
+	Email                 string `json:"email"`
+}
+
+func (us UserShort) ToDTO() UserShortDTO {
+	return UserShortDTO{
+		MattermostUserID:      us.MattermostUserID,
+		MattermostUsername:    us.MattermostUsername,
+		MattermostDisplayName: us.MattermostDisplayName,
+	}
+}
+
+type UserShortDTO struct {
+	MattermostUserID      string `json:"mm_id"`
+	MattermostUsername    string `json:"mm_username"`
+	MattermostDisplayName string `json:"mm_display_name"`
 }
 
 type User struct {
-	Settings          Settings `json:"mattermostSettings,omitempty"`
-	Remote            *remote.User
-	OAuth2Token       *oauth2.Token
-	PluginVersion     string
-	MattermostUserID  string
-	LastStatus        string
-	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
-	ActiveEvents      []string          `json:"events"`
+	Settings              Settings `json:"mattermostSettings,omitempty"`
+	Remote                *remote.User
+	OAuth2Token           *oauth2.Token
+	PluginVersion         string
+	MattermostUserID      string
+	MattermostUsername    string
+	MattermostDisplayName string
+	LastStatus            string
+	WelcomeFlowStatus     WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
+	ActiveEvents          []string          `json:"events"`
 }
 
 type Settings struct {
@@ -200,9 +221,11 @@ func (s *pluginStore) ModifyUserIndex(modify func(userIndex UserIndex) (UserInde
 func (s *pluginStore) StoreUserInIndex(user *User) error {
 	return s.ModifyUserIndex(func(userIndex UserIndex) (UserIndex, error) {
 		newUser := &UserShort{
-			MattermostUserID: user.MattermostUserID,
-			RemoteID:         user.Remote.ID,
-			Email:            user.Remote.Mail,
+			MattermostUserID:      user.MattermostUserID,
+			MattermostUsername:    user.MattermostUsername,
+			MattermostDisplayName: user.MattermostDisplayName,
+			RemoteID:              user.Remote.ID,
+			Email:                 user.Remote.Mail,
 		}
 
 		for i, u := range userIndex {
@@ -230,6 +253,26 @@ func (s *pluginStore) DeleteUserFromIndex(mattermostUserID string) error {
 	})
 }
 
+func (s *pluginStore) SearchInUserIndex(term string, limit int) (UserIndex, error) {
+	userIndex, err := s.LoadUserIndex()
+	if err != nil {
+		return nil, errors.Wrap(err, "error searching user in index")
+	}
+
+	result := []*UserShort{}
+	for idx, u := range userIndex {
+		if strings.Contains(u.MattermostUsername, term) || strings.Contains(u.MattermostDisplayName, term) || strings.Contains(u.Email, term) {
+			result = append(result, userIndex[idx])
+		}
+
+		if len(result) == limit {
+			break
+		}
+	}
+
+	return result, nil
+}
+
 func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []string) error {
 	u, err := s.LoadUser(mattermostUserID)
 	if err != nil {
@@ -237,6 +280,14 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 	}
 	u.ActiveEvents = events
 	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
+}
+
+func (index UserIndex) ToDTO() (result []UserShortDTO) {
+	for _, u := range index {
+		result = append(result, u.ToDTO())
+	}
+
+	return
 }
 
 func (index UserIndex) ByMattermostID() map[string]*UserShort {

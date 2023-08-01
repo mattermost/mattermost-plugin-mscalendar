@@ -9,13 +9,13 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
-// REVIEW: hardcoded "microsoft"
 func (c *Command) info(parameters ...string) (string, bool, error) {
-	resp := fmt.Sprintf("Mattermost Microsoft Calendar plugin version: %s, "+
+	resp := fmt.Sprintf("Mattermost %s plugin version: %s, "+
 		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
+		c.Config.Provider.DisplayName,
 		c.Config.PluginVersion,
 		c.Config.BuildHashShort,
-		config.Repository,
+		config.Provider.Repository,
 		c.Config.BuildHash,
 		c.Config.BuildDate)
 	return resp, false, nil

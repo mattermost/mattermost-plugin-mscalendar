@@ -6,14 +6,7 @@ package config
 // REVIEW: need an interface for returning bot info
 // probably good to have a struct to capture the data clump
 const (
-	BotUserName    = "gcal"
-	BotDisplayName = "Google Calendar"
-	BotDescription = "Created by the Google Calendar Plugin."
-
-	ApplicationName    = "Google Calendar"
-	Repository         = "mattermost-plugin-gcal"
-	CommandTrigger     = "gcal"
-	TelemetryShortName = "gcal"
+	BotDescription = "Created by the %s Plugin."
 
 	PathOAuth2                = "/oauth2"
 	PathComplete              = "/complete"
@@ -29,6 +22,9 @@ const (
 	PathNotification          = "/notification/v1"
 	PathEvent                 = "/event"
 	PathVerifyDomain          = "/verify"
+
+	PathAutocomplete = "/autocomplete"
+	PathUsers        = "/users"
 
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete

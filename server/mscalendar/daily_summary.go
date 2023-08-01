@@ -12,7 +12,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/tz"
 )
 
@@ -22,7 +21,7 @@ const dailySummaryTimeWindow = time.Minute * 2
 const DailySummaryJobInterval = 15 * time.Minute
 
 type DailySummary interface {
-	GetDailySummaryForUser(user *User) (string, error)
+	GetDaySummaryForUser(now time.Time, user *User) (string, error)
 	GetDailySummarySettingsForUser(user *User) (*store.DailySummaryUserSettings, error)
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummaryUserSettings, error)
@@ -134,45 +133,13 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			continue
 		}
 
-		if fetchIndividually {
-			u := NewUser(storeUser.MattermostUserID)
-			if err := m.ExpandUser(u); err != nil {
-				m.Logger.With(bot.LogContext{
-					"mattermost_id": storeUser.MattermostUserID,
-					"remote_id":     storeUser.Remote.ID,
-					"err":           err,
-				}).Errorf("error getting user information")
-				continue
-			}
-
-			m.Filter(withActingUser(storeUser.MattermostUserID))
-
-			tz, err := m.GetTimezone(u)
-			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
-				continue
-			}
-
-			events, err := m.getTodayCalendarEvents(u, now, tz)
-			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
-				continue
-			}
-
-			calendarViews = append(calendarViews, &remote.ViewCalendarResponse{
-				Error:        nil,
-				RemoteUserID: storeUser.Remote.ID,
-				Events:       events,
-			})
-		} else {
-			start, end := getTodayHoursForTimezone(now, dsum.Timezone)
-			req := &remote.ViewCalendarParams{
-				RemoteUserID: storeUser.Remote.ID,
-				StartTime:    start,
-				EndTime:      end,
-			}
-			requests = append(requests, req)
+		start, end := getTodayHoursForTimezone(now, dsum.Timezone)
+		req := &remote.ViewCalendarParams{
+			RemoteUserID: storeUser.Remote.ID,
+			StartTime:    start,
+			EndTime:      end,
 		}
+		requests = append(requests, req)
 	}
 
 	if !fetchIndividually {
@@ -213,18 +180,23 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	return nil
 }
 
-func (m *mscalendar) GetDailySummaryForUser(user *User) (string, error) {
+func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, error) {
 	tz, err := m.GetTimezone(user)
 	if err != nil {
 		return "", err
 	}
 
-	calendarData, err := m.getTodayCalendarEvents(user, time.Now(), tz)
+	calendarData, err := m.getTodayCalendarEvents(user, day, tz)
 	if err != nil {
 		return "Failed to get calendar events", err
 	}
 
-	return views.RenderCalendarView(calendarData, tz)
+	messageString, err := views.RenderCalendarView(calendarData, tz)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to render daily summary")
+	}
+
+	return messageString, nil
 }
 
 func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time) (bool, error) {

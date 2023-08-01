@@ -43,7 +43,7 @@ func TestDisconnect(t *testing.T) {
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
-			expectedError:  fmt.Sprintf("Command /%s disconnect failed: some error", config.CommandTrigger),
+			expectedError:  fmt.Sprintf("Command /%s disconnect failed: some error", config.Provider.CommandTrigger),
 		},
 		{
 			name:    "disconnect failed",
@@ -54,7 +54,7 @@ func TestDisconnect(t *testing.T) {
 				mscal.EXPECT().DisconnectUser("user_id").Return(errors.New("some error")).Times(1)
 			},
 			expectedOutput: "",
-			expectedError:  fmt.Sprintf("Command /%s disconnect failed: some error", config.CommandTrigger),
+			expectedError:  fmt.Sprintf("Command /%s disconnect failed: some error", config.Provider.CommandTrigger),
 		},
 		{
 			name:    "disconnect successful",
@@ -83,7 +83,7 @@ func TestDisconnect(t *testing.T) {
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
-					Command: fmt.Sprintf("/%s %s", config.CommandTrigger, tc.command),
+					Command: fmt.Sprintf("/%s %s", config.Provider.CommandTrigger, tc.command),
 					UserId:  "user_id",
 				},
 				ChannelID:  "channel_id",

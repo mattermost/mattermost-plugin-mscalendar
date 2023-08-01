@@ -4,6 +4,7 @@
 package oauth2connect
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
@@ -28,7 +29,6 @@ func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// REVIEW "microsoft" is hardcoded
 	html := `
 		<!DOCTYPE html>
 		<html>
@@ -38,11 +38,11 @@ func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 				</script>
 			</head>
 			<body>
-				<p>Completed connecting to Microsoft Calendar. Please close this window.</p>
+				<p>Completed connecting to %s. Please close this window.</p>
 			</body>
 		</html>
 		`
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Write([]byte(fmt.Sprintf(html, oa.provider.DisplayName)))
 }

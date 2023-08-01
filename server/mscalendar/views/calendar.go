@@ -43,9 +43,48 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 	return resp, nil
 }
 
+func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model.SlackAttachment, error) {
+	if len(events) == 0 {
+		return "You have no events for that day", nil, nil
+	}
+
+	if timezone != "" {
+		for _, e := range events {
+			e.Start = e.Start.In(timezone)
+			e.End = e.End.In(timezone)
+		}
+	}
+
+	message := fmt.Sprintf("Agenda for %s.\nTimes are shown in %s", events[0].Start.Time().Format("Monday, 02 January"), events[0].Start.TimeZone)
+
+	var attachments []*model.SlackAttachment
+	for _, event := range events {
+		var actions []*model.PostAction
+
+		fields := []*model.SlackAttachmentField{}
+		if event.Location != nil && event.Location.DisplayName != "" {
+			fields = append(fields, &model.SlackAttachmentField{
+				Title: "Location",
+				Value: event.Location.DisplayName,
+				Short: true,
+			})
+		}
+
+		attachments = append(attachments, &model.SlackAttachment{
+			Title: event.Subject,
+			// Text:    event.BodyPreview,
+			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+			Fields:  fields,
+			Actions: actions,
+		})
+	}
+
+	return message, attachments, nil
+}
+
 func renderTableHeader() string {
-	return `| Time | Subject |
-| :--: | :-- |`
+	return `| Time | Subject | |
+| :-- | :-- | :-- |`
 }
 
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
@@ -54,7 +93,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
-		format = "| %s - %s | [%s](%s) |"
+		format = "| %s - %s | [%s](%s) | %s |"
 	}
 
 	link, err := url.QueryUnescape(event.Weblink)
@@ -62,9 +101,19 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 		return "", err
 	}
 
+	var other string
+	if event.Location != nil && isKnownMeetingURL(event.Location.DisplayName) {
+		other = "[Join meeting](" + event.Location.DisplayName + ")"
+	}
+
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, subject, link), nil
+	return fmt.Sprintf(format, start, end, subject, link, other), nil
+}
+
+func isKnownMeetingURL(location string) bool {
+	_, err := url.ParseRequestURI(location)
+	return err == nil
 }
 
 func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
@@ -80,8 +129,7 @@ func renderEventAsAttachment(event *remote.Event, timezone string) (*model.Slack
 		})
 
 		// Use location display name as link if can be parsed as an URL
-		_, err := url.ParseRequestURI(event.Location.DisplayName)
-		if err == nil {
+		if isKnownMeetingURL(event.Location.DisplayName) {
 			titleLink = event.Location.DisplayName
 		}
 	}

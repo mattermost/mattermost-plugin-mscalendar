@@ -25,7 +25,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/gcal"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
@@ -108,13 +107,13 @@ func (p *Plugin) OnActivate() error {
 				p.API.GetServerVersion(),
 				e.PluginID,
 				e.PluginVersion,
-				config.TelemetryShortName,
+				config.Provider.TelemetryShortName,
 				telemetry.NewTrackerConfig(p.API.GetConfig()),
 				telemetry.NewLogger(p.API),
 			),
 		)
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 	})
 
 	return nil
@@ -173,7 +172,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Config.PluginURLPath = pluginURLPath
 
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Remote = remote.Makers[gcal.Kind](e.Config, e.bot)
+		e.Dependencies.Remote = remote.Makers[config.Provider.Name](e.Config, e.bot)
 
 		// REVIEW: need to make this provider agnostic terminology
 		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
@@ -187,7 +186,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker)
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -209,7 +208,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		}
 
 		e.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env))
+		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env), config.Provider)
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
@@ -255,7 +254,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		if appErr != nil {
 			return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, appErr.Error(), http.StatusInternalServerError)
 		}
-		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.BotUserName)
+		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.Provider.BotUsername)
 		response.GotoLocation = dmURL
 	}
 
@@ -323,11 +322,11 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 		e.bot = bot.New(p.API, pluginURL)
 		err := e.bot.Ensure(
 			&model.Bot{
-				Username:    config.BotUserName,
-				DisplayName: config.BotDisplayName,
-				Description: config.BotDescription,
+				Username:    e.Provider.BotUsername,
+				DisplayName: e.Provider.BotDisplayName,
+				Description: fmt.Sprintf(config.BotDescription, e.Provider.DisplayName),
 			},
-			filepath.Join("assets", "profile.png"),
+			filepath.Join("assets", fmt.Sprintf("profile-%s.png", e.Provider.Name)),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to ensure bot account")

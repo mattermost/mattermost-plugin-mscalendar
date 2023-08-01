@@ -2,18 +2,21 @@ package command
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
-const dailySummaryHelp = "### Daily summary commands:\n" +
-	"`/mscalendar summary view` - View your daily summary\n" +
-	"`/mscalendar summary settings` - View your settings for the daily summary\n" +
-	"`/mscalendar summary time 8:00AM` - Set the time you would like to receive your daily summary\n" +
-	"`/mscalendar summary enable` - Enable your daily summary\n" +
-	"`/mscalendar summary disable` - Disable your daily summary"
-
-const dailySummarySetTimeErrorMessage = "Please enter a time, for example:\n`/mscalendar summary time 8:00AM`"
+var (
+	dailySummaryHelp = "### Daily summary commands:\n" +
+		fmt.Sprintf("`/%s summary view` - View your daily summary\n", config.Provider.CommandTrigger) +
+		fmt.Sprintf("`/%s summary settings` - View your settings for the daily summary\n", config.Provider.CommandTrigger) +
+		fmt.Sprintf("`/%s summary time 8:00AM` - Set the time you would like to receive your daily summary\n", config.Provider.CommandTrigger) +
+		fmt.Sprintf("`/%s summary enable` - Enable your daily summary\n", config.Provider.CommandTrigger) +
+		fmt.Sprintf("`/%s summary disable` - Disable your daily summary", config.Provider.CommandTrigger)
+	dailySummarySetTimeErrorMessage = fmt.Sprintf("Please enter a time, for example:\n`/%s summary time 8:00AM`", config.Provider.CommandTrigger)
+)
 
 func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
@@ -21,8 +24,14 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 	}
 
 	switch parameters[0] {
-	case "view":
-		postStr, err := c.MSCalendar.GetDailySummaryForUser(c.user())
+	case "view", "today":
+		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now(), c.user())
+		if err != nil {
+			return err.Error(), false, err
+		}
+		return postStr, false, nil
+	case "tomorrow":
+		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now().Add(time.Hour*24), c.user())
 		if err != nil {
 			return err.Error(), false, err
 		}
@@ -59,9 +68,8 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 			return err.Error(), false, err
 		}
 		return dailySummaryResponse(dsum), false, nil
-	default:
-		return "Invalid command. Please try again\n\n" + dailySummaryHelp, false, nil
 	}
+	return "Invalid command. Please try again\n\n" + dailySummaryHelp, false, nil
 }
 
 func dailySummaryResponse(dsum *store.DailySummaryUserSettings) string {
@@ -71,7 +79,7 @@ func dailySummaryResponse(dsum *store.DailySummaryUserSettings) string {
 
 	enableStr := ""
 	if !dsum.Enable {
-		enableStr = ", but is disabled. Enable it with `/mscalendar summary enable`"
+		enableStr = fmt.Sprintf(", but is disabled. Enable it with `/%s summary enable`", config.Provider.CommandTrigger)
 	}
 	return fmt.Sprintf("Your daily summary is configured to show at %s %s%s.", dsum.PostTime, dsum.Timezone, enableStr)
 }

@@ -265,21 +265,6 @@ func (mr *MockMSCalendarMockRecorder) GetCalendars(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCalendars", reflect.TypeOf((*MockMSCalendar)(nil).GetCalendars), arg0)
 }
 
-// GetDailySummaryForUser mocks base method.
-func (m *MockMSCalendar) GetDailySummaryForUser(arg0 *mscalendar.User) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDailySummaryForUser", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetDailySummaryForUser indicates an expected call of GetDailySummaryForUser.
-func (mr *MockMSCalendarMockRecorder) GetDailySummaryForUser(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailySummaryForUser", reflect.TypeOf((*MockMSCalendar)(nil).GetDailySummaryForUser), arg0)
-}
-
 // GetDailySummarySettingsForUser mocks base method.
 func (m *MockMSCalendar) GetDailySummarySettingsForUser(arg0 *mscalendar.User) (*store.DailySummaryUserSettings, error) {
 	m.ctrl.T.Helper()
@@ -293,6 +278,21 @@ func (m *MockMSCalendar) GetDailySummarySettingsForUser(arg0 *mscalendar.User) (
 func (mr *MockMSCalendarMockRecorder) GetDailySummarySettingsForUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailySummarySettingsForUser", reflect.TypeOf((*MockMSCalendar)(nil).GetDailySummarySettingsForUser), arg0)
+}
+
+// GetDaySummaryForUser mocks base method.
+func (m *MockMSCalendar) GetDaySummaryForUser(arg0 time.Time, arg1 *mscalendar.User) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDaySummaryForUser", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDaySummaryForUser indicates an expected call of GetDaySummaryForUser.
+func (mr *MockMSCalendarMockRecorder) GetDaySummaryForUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDaySummaryForUser", reflect.TypeOf((*MockMSCalendar)(nil).GetDaySummaryForUser), arg0, arg1)
 }
 
 // GetRemoteUser mocks base method.

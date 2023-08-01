@@ -60,6 +60,17 @@ type mscalendar struct {
 	client     remote.Client
 }
 
+// copy returns a copy of the calendar engine
+func (m mscalendar) copy() *mscalendar {
+	user := *m.actingUser
+	client := m.client
+	return &mscalendar{
+		Env:        m.Env,
+		actingUser: &user,
+		client:     client,
+	}
+}
+
 func New(env Env, actingMattermostUserID string) MSCalendar {
 	return &mscalendar{
 		Env:        env,

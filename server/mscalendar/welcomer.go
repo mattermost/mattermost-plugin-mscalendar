@@ -31,9 +31,7 @@ type mscBot struct {
 }
 
 const (
-	// REVIEW: "microsoft" referenced here
-	WelcomeMessage = `Welcome to the Microsoft Calendar plugin.
-	[Click here to link your account.](%s/oauth2/connect)`
+	WelcomeMessage = `Welcome to the %s plugin. [Click here to link your account.](%s/oauth2/connect)`
 )
 
 func (m *mscalendar) Welcome(userID string) error {
@@ -111,7 +109,7 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 
 func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
 	title := "Connect"
-	text := fmt.Sprintf(WelcomeMessage, bot.pluginURL)
+	text := fmt.Sprintf(WelcomeMessage, bot.Provider.DisplayName, bot.pluginURL)
 	sa := model.SlackAttachment{
 		Title:    title,
 		Text:     text,
@@ -123,8 +121,7 @@ func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachment {
 	title := "Connect"
-	// REVIEW: "microsoft" referenced here
-	text := ":tada: Congratulations! Your microsoft account (*" + userLogin + "*) has been connected to Mattermost."
+	text := ":tada: Congratulations! Your " + bot.Provider.DisplayName + " account (*" + userLogin + "*) has been connected to Mattermost."
 	return &model.SlackAttachment{
 		Title:    title,
 		Text:     text,
@@ -133,7 +130,7 @@ func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachme
 }
 
 func (bot *mscBot) notifySettings(userID string) error {
-	_, err := bot.DM(userID, "Feel free to change these settings anytime by typing `/%s settings`", config.CommandTrigger)
+	_, err := bot.DM(userID, "Feel free to change these settings anytime by typing `/%s settings`", config.Provider.CommandTrigger)
 	if err != nil {
 		return err
 	}
