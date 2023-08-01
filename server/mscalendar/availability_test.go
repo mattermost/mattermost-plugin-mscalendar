@@ -297,11 +297,11 @@ func TestReminders(t *testing.T) {
 		},
 		"Remote event linked to channel in the range for the reminder. DM and channel reminders should occur.": {
 			remoteEvents: []*remote.Event{
-				{ID: "event_id", ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ID: "event_id_1", ICalUID: "event_id_1", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			eventMetadata: map[string]*store.EventMetadata{
-				"event_id": {
-					LinkedChannels: map[string]struct{}{"some_channel_id": {}},
+				"event_id_1": {
+					LinkedChannelIDs: map[string]struct{}{"some_channel_id": {}},
 				},
 			},
 			numReminders:   1,
@@ -309,11 +309,11 @@ func TestReminders(t *testing.T) {
 		},
 		"Remote recurring event linked to channel in the range for the reminder. DM and channel reminders should occur.": {
 			remoteEvents: []*remote.Event{
-				{ID: "event_id_20230728", RecurringEventID: "event_id", ICalUID: "event_id", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
+				{ID: "event_id_1_recurring", ICalUID: "event_id_1", Start: remote.NewDateTime(time.Now().Add(7*time.Minute).UTC(), "UTC"), End: remote.NewDateTime(time.Now().Add(45*time.Minute).UTC(), "UTC")},
 			},
 			eventMetadata: map[string]*store.EventMetadata{
-				"event_id": {
-					LinkedChannels: map[string]struct{}{"channel_id": {}},
+				"event_id_1": {
+					LinkedChannelIDs: map[string]struct{}{"channel_id": {}},
 				},
 			},
 			numReminders:   1,
@@ -363,7 +363,7 @@ func TestReminders(t *testing.T) {
 				// Metadata (linked channels test)
 				for eventID, metadata := range tc.eventMetadata {
 					s.EXPECT().LoadEventMetadata(eventID).Return(metadata, nil).Times(1)
-					for channelID := range metadata.LinkedChannels {
+					for channelID := range metadata.LinkedChannelIDs {
 						poster.EXPECT().CreatePost(test.DoMatch(func(v *model.Post) bool {
 							return v.ChannelId == channelID
 						})).Return(nil)

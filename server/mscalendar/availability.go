@@ -518,7 +518,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 			}
 
 			// Process channel reminders
-			eventMetadata, errMetadata := m.Store.LoadEventMetadata(event.GetMainID())
+			eventMetadata, errMetadata := m.Store.LoadEventMetadata(event.ICalUID)
 			if errMetadata != nil && !errors.Is(errMetadata, store.ErrNotFound) {
 				m.Logger.With(bot.LogContext{
 					"eventID": event.ID,
@@ -528,7 +528,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 			}
 
 			if eventMetadata != nil {
-				for channelID := range eventMetadata.LinkedChannels {
+				for channelID := range eventMetadata.LinkedChannelIDs {
 					post := &model.Post{
 						ChannelId: channelID,
 						Message:   message,

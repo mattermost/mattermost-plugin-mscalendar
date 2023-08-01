@@ -141,7 +141,6 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 
 	return &remote.Event{
 		ID:                event.Id,
-		RecurringEventID:  event.RecurringEventId,
 		ICalUID:           event.ICalUID,
 		Subject:           event.Summary,
 		Body:              &remote.ItemBody{Content: event.Description},

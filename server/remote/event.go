@@ -18,20 +18,12 @@ type Event struct {
 	ShowAs                     string               `json:"showAs,omitempty"`
 	Weblink                    string               `json:"weblink,omitempty"`
 	ID                         string               `json:"id,omitempty"`
-	RecurringEventID           string               `json:"recurringEventId,omitempty"`
 	Attendees                  []*Attendee          `json:"attendees,omitempty"`
 	ReminderMinutesBeforeStart int                  `json:"reminderMinutesBeforeStart,omitempty"`
 	IsOrganizer                bool                 `json:"isOrganizer,omitempty"`
 	IsCancelled                bool                 `json:"isCancelled,omitempty"`
 	IsAllDay                   bool                 `json:"isAllDay,omitempty"`
 	ResponseRequested          bool                 `json:"responseRequested,omitempty"`
-}
-
-func (e Event) GetMainID() string {
-	if e.RecurringEventID != "" {
-		return e.RecurringEventID
-	}
-	return e.ID
 }
 
 type ItemBody struct {

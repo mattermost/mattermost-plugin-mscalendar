@@ -21,7 +21,7 @@ const ttlAfterEventEnd = 30 * 24 * time.Hour // 30 days
 const defaultEventTTL = 30 * 24 * time.Hour  // 30 days
 
 type EventMetadata struct {
-	LinkedChannels map[string]struct{}
+	LinkedChannelIDs map[string]struct{}
 }
 
 type Event struct {
@@ -59,7 +59,7 @@ func (s *pluginStore) AddLinkedChannelToEvent(eventID, channelID string) error {
 		return err
 	}
 
-	eventMeta.LinkedChannels[channelID] = struct{}{}
+	eventMeta.LinkedChannelIDs[channelID] = struct{}{}
 
 	return s.StoreEventMetadata(eventID, eventMeta)
 }
@@ -70,7 +70,7 @@ func (s *pluginStore) DeleteLinkedChannelFromEvent(eventID, channelID string) er
 		return err
 	}
 
-	delete(eventMeta.LinkedChannels, channelID)
+	delete(eventMeta.LinkedChannelIDs, channelID)
 
 	return s.StoreEventMetadata(eventID, eventMeta)
 }
