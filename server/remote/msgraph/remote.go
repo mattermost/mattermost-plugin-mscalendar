@@ -5,6 +5,7 @@ package msgraph
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -84,4 +85,12 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 		},
 		Endpoint: microsoft.AzureADEndpoint(r.conf.OAuth2Authority),
 	}
+}
+
+func (r *impl) CheckConfiguration(cfg config.StoredConfig) error {
+	if cfg.OAuth2ClientID == "" || cfg.OAuth2ClientSecret == "" || cfg.OAuth2Authority == "" {
+		return fmt.Errorf("OAuth2 credentials to be set in the config")
+	}
+
+	return nil
 }
