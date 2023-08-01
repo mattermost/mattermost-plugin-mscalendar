@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
-func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request, providerDisplayName string) {
+func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
@@ -44,5 +44,5 @@ func (oa *oa) oauth2Complete(w http.ResponseWriter, r *http.Request, providerDis
 		`
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fmt.Sprintf(html, providerDisplayName)))
+	w.Write([]byte(fmt.Sprintf(html, oa.provider.DisplayName)))
 }
