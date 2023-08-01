@@ -1,11 +1,14 @@
 package providers
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+import (
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/gcal"
+)
 
 const (
-	ProviderGCal            = "gcal"
+	ProviderGCal            = gcal.Kind
 	ProviderGCalDisplayName = "Google Calendar"
-	ProviderGCalRepository  = ""
+	ProviderGCalRepository  = ProviderMSCalendarRepository
 )
 
 func GetGcalProviderConfig() *config.ProviderConfig {

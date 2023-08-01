@@ -4,6 +4,7 @@
 package oauth2connect
 
 import (
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
@@ -14,11 +15,14 @@ type App interface {
 
 type oa struct {
 	app App
+
+	provider config.ProviderConfig
 }
 
-func Init(h *httputils.Handler, app App) {
+func Init(h *httputils.Handler, app App, providerConfig config.ProviderConfig) {
 	oa := &oa{
-		app: app,
+		app:      app,
+		provider: providerConfig,
 	}
 
 	oauth2Router := h.Router.PathPrefix("/oauth2").Subrouter()
