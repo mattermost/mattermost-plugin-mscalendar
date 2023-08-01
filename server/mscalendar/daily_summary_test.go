@@ -164,6 +164,113 @@ Wednesday February 12, 2020
 				mockLogger.EXPECT().Infof("Processed daily summary for %d users", 2)
 			},
 		},
+		{
+			name: "User receives their daily summary (individual data call)",
+			err:  "",
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				s := deps.Store.(*mock_store.MockStore)
+				mockRemote := deps.Remote.(*mock_remote.MockRemote)
+				mockClient := client.(*mock_remote.MockClient)
+				papi := deps.PluginAPI.(*mock_plugin_api.MockPluginAPI)
+
+				loc, err := time.LoadLocation("MST")
+				require.Nil(t, err)
+				hour, minute := 10, 0 // Time is "10:00AM"
+				moment := makeTime(hour, minute, loc)
+
+				s.EXPECT().LoadUserIndex().Return(store.UserIndex{{
+					MattermostUserID: "user1_mm_id",
+					RemoteID:         "user1_remote_id",
+				}, {
+					MattermostUserID: "user2_mm_id",
+					RemoteID:         "user2_remote_id",
+				}, {
+					MattermostUserID: "user3_mm_id",
+					RemoteID:         "user3_remote_id",
+				}}, nil)
+
+				mockRemote.EXPECT().MakeSuperuserClient(context.Background()).Return(nil, remote.ErrSuperUserClientNotSupported).Times(1)
+
+				s.EXPECT().LoadUser("user1_mm_id").Return(&store.User{
+					MattermostUserID: "user1_mm_id",
+					Remote:           &remote.User{ID: "user1_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "9:00AM",
+							Timezone:     "Eastern Standard Time",
+							LastPostTime: "",
+						},
+					},
+				}, nil).Times(3)
+
+				s.EXPECT().LoadUser("user2_mm_id").Return(&store.User{
+					MattermostUserID: "user2_mm_id",
+					Remote:           &remote.User{ID: "user2_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "6:00AM",
+							Timezone:     "Pacific Standard Time",
+							LastPostTime: "",
+						},
+					},
+				}, nil).Times(3)
+
+				s.EXPECT().LoadUser("user3_mm_id").Return(&store.User{
+					MattermostUserID: "user3_mm_id",
+					Remote:           &remote.User{ID: "user3_remote_id"},
+					Settings: store.Settings{
+						DailySummary: &store.DailySummaryUserSettings{
+							Enable:       true,
+							PostTime:     "10:00AM", // should not receive summary
+							Timezone:     "Pacific Standard Time",
+							LastPostTime: "",
+						},
+					},
+				}, nil)
+
+				papi.EXPECT().GetMattermostUser("user1_mm_id").Times(2)
+				papi.EXPECT().GetMattermostUser("user2_mm_id").Times(2)
+
+				mockClient.EXPECT().GetMailboxSettings("user1_remote_id").Return(&remote.MailboxSettings{
+					TimeZone: "Eastern Standard Time",
+				}, nil)
+				mockClient.EXPECT().GetMailboxSettings("user2_remote_id").Return(&remote.MailboxSettings{
+					TimeZone: "Pacific Standard Time",
+				}, nil)
+
+				mockRemote.EXPECT().MakeClient(context.TODO(), gomock.Any()).Return(mockClient).Times(2)
+
+				mockClient.EXPECT().GetDefaultCalendarView("user1_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{}, nil)
+				mockClient.EXPECT().GetDefaultCalendarView("user2_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{
+					{
+						Subject: "The subject",
+						Start:   remote.NewDateTime(moment, "Mountain Standard Time"),
+						End:     remote.NewDateTime(moment.Add(2*time.Hour), "Mountain Standard Time"),
+					},
+				}, nil)
+
+				mockPoster := deps.Poster.(*mock_bot.MockPoster)
+				gomock.InOrder(
+					mockPoster.EXPECT().DM("user1_mm_id", "You have no upcoming events.").Return("postID1", nil).Times(1),
+					mockPoster.EXPECT().DM("user2_mm_id", `Times are shown in Pacific Standard Time
+Wednesday February 12, 2020
+
+| Time | Subject |
+| :--: | :-- |
+| 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
+				)
+
+				s.EXPECT().StoreUser(gomock.Any()).Times(2).DoAndReturn(func(u *store.User) error {
+					require.NotEmpty(t, u.Settings.DailySummary.LastPostTime)
+					return nil
+				})
+
+				mockLogger := deps.Logger.(*mock_bot.MockLogger)
+				mockLogger.EXPECT().Infof("Processed daily summary for %d users", 2)
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)

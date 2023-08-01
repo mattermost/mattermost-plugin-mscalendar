@@ -5,6 +5,7 @@ package mscalendar
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,10 +30,10 @@ func newTestNotificationProcessor(env Env) NotificationProcessor {
 	return processor
 }
 
-func newTestEvent(locationDisplayName string, subjectDisplayName string) *remote.Event {
+func newTestEvent(identifier, locationDisplayName string, subjectDisplayName string) *remote.Event {
 	return &remote.Event{
-		ID:      "remote_event_id",
-		ICalUID: "remote_event_uid",
+		ID:      fmt.Sprintf("remote_event_id_%s", identifier),
+		ICalUID: fmt.Sprintf("remote_event_uid_%s", identifier),
 		Organizer: &remote.Attendee{
 			EmailAddress: &remote.EmailAddress{
 				Address: "event_organizer_email",
@@ -65,15 +66,19 @@ func newTestSubscription() *store.Subscription {
 }
 
 func newTestUser() *store.User {
+	return newTestUserNumbered(1)
+}
+
+func newTestUserNumbered(number int) *store.User {
 	return &store.User{
 		Settings: store.Settings{
-			EventSubscriptionID: "remote_subscription_id",
+			EventSubscriptionID: fmt.Sprintf("remote_subscription_id_%d", number),
 		},
-		Remote: &remote.User{ID: "remote_user_id"},
+		Remote: &remote.User{ID: fmt.Sprintf("remote_user_id_%d", number)},
 		OAuth2Token: &oauth2.Token{
-			AccessToken: "creator_oauth_token",
+			AccessToken: fmt.Sprintf("creator_oauth_token_%d", number),
 		},
-		MattermostUserID: "creator_mm_id",
+		MattermostUserID: fmt.Sprintf("creator_mm_id_%d", number),
 	}
 }
 
@@ -83,7 +88,7 @@ func newTestNotification(clientState string, recommendRenew bool) *remote.Notifi
 		SubscriptionID:      "remote_subscription_id",
 		IsBare:              true,
 		SubscriptionCreator: &remote.User{},
-		Event:               newTestEvent("event_location_display_name", "event_subject"),
+		Event:               newTestEvent("1", "event_location_display_name", "event_subject"),
 		Subscription:        &remote.Subscription{},
 		ClientState:         clientState,
 		RecommendRenew:      recommendRenew,
@@ -114,7 +119,7 @@ func TestProcessNotification(t *testing.T) {
 			name:          "prior event exists",
 			expectedError: "",
 			notification:  newTestNotification("stored_client_state", false),
-			priorEvent:    newTestEvent("prior_event_location_display_name", "other_event_subject"),
+			priorEvent:    newTestEvent("1", "prior_event_location_display_name", "other_event_subject"),
 		}, {
 			name:          "sub renewal recommended",
 			expectedError: "",

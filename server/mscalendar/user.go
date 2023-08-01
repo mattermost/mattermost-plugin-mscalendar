@@ -35,6 +35,13 @@ func NewUser(mattermostUserID string) *User {
 	}
 }
 
+func newUserFromStoredUser(u *store.User) *User {
+	return &User{
+		User:             u,
+		MattermostUserID: u.MattermostUserID,
+	}
+}
+
 func (user *User) Clone() *User {
 	clone := *user
 	clone.User = user.User.Clone()

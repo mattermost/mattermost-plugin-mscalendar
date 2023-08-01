@@ -34,6 +34,7 @@ type Events interface {
 	AcceptEvent(remoteUserID, eventID string) error
 	DeclineEvent(remoteUserID, eventID string) error
 	TentativelyAcceptEvent(remoteUserID, eventID string) error
+	GetEventsBetweenDates(remoteUserID string, start, end time.Time) ([]*Event, error)
 }
 
 type Subscriptions interface {

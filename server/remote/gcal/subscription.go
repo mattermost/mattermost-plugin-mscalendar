@@ -18,7 +18,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
-const subscribeTTL = 48 * time.Hour
+const subscribeTTL = 7 * 24 * time.Hour // 7 days
 
 const defaultCalendarName = "primary"
 const googleSubscriptionType = "webhook"

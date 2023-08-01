@@ -15,6 +15,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const (
@@ -26,6 +27,10 @@ const (
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 // 110% of the interval
 	logTruncateMsg                  = "We've truncated the logs due to too many messages"
 	logTruncateLimit                = 5
+)
+
+var (
+	errNoUsersNeedToBeSynced = errors.New("no users need to be synced")
 )
 
 type StatusSyncJobSummary struct {
@@ -46,15 +51,17 @@ func (m *mscalendar) Sync(mattermostUserID string) (string, *StatusSyncJobSummar
 		return "", nil, err
 	}
 
-	return m.syncUsers(store.UserIndex{user})
-}
+	userIndex := store.UserIndex{user}
 
-func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
-	err := m.Filter(withSuperuserClient)
-	if err != nil {
+	err = m.Filter(withSuperuserClient)
+	if err != nil && !errors.Is(err, remote.ErrSuperUserClientNotSupported) {
 		return "", &StatusSyncJobSummary{}, errors.Wrap(err, "not able to filter the super user client")
 	}
 
+	return m.syncUsers(userIndex, errors.Is(err, remote.ErrSuperUserClientNotSupported))
+}
+
+func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 	userIndex, err := m.Store.LoadUserIndex()
 	if err != nil {
 		if err.Error() == "not found" {
@@ -63,18 +70,29 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 		return "", &StatusSyncJobSummary{}, errors.Wrap(err, "not able to load the users from user index")
 	}
 
-	return m.syncUsers(userIndex)
+	err = m.Filter(withSuperuserClient)
+	if err != nil && !errors.Is(err, remote.ErrSuperUserClientNotSupported) {
+		return "", &StatusSyncJobSummary{}, errors.Wrap(err, "not able to filter the super user client")
+	}
+
+	result, jobSummary, err := m.syncUsers(userIndex, errors.Is(err, remote.ErrSuperUserClientNotSupported))
+	if result != "" && err != nil {
+		return result, jobSummary, nil
+	}
+
+	return result, jobSummary, err
 }
 
-func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJobSummary, error) {
-	syncJobSummary := &StatusSyncJobSummary{}
-	if len(userIndex) == 0 {
-		return "No connected users found", syncJobSummary, nil
-	}
-	syncJobSummary.NumberOfUsersProcessed = len(userIndex)
+// retrieveUsersToSync retrieves the users and their calendar data to sync up and send notifications
+// The parameter fetchIndividually determines if the calendar data should be fetched while we loop the
+// users (using individual credentials) or on a batch after the loop.
+func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSummary *StatusSyncJobSummary, fetchIndividually bool) ([]*store.User, []*remote.ViewCalendarResponse, error) {
+	start := time.Now().UTC()
+	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
 	numberOfLogs := 0
 	users := []*store.User{}
+	calendarViews := []*remote.ViewCalendarResponse{}
 	for _, u := range userIndex {
 		// TODO fetch users from kvstore in batches, and process in batches instead of all at once
 		user, err := m.Store.LoadUser(u.MattermostUserID)
@@ -90,20 +108,63 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 			// In case of error in loading, skip this user and continue with the next user
 			continue
 		}
-		if user.Settings.UpdateStatus || user.Settings.ReceiveReminders {
-			users = append(users, user)
+
+		// If user does not have the proper features enabled, just go to the next one
+		if !(user.Settings.UpdateStatus || user.Settings.ReceiveReminders) {
+			continue
+		}
+
+		users = append(users, user)
+
+		if fetchIndividually {
+			engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
+			if err != nil {
+				m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
+				continue
+			}
+
+			calendarUser := newUserFromStoredUser(user)
+			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end)
+			if err != nil {
+				syncJobSummary.NumberOfUsersFailedStatusChanged++
+				m.Logger.With(bot.LogContext{
+					"user": u.MattermostUserID,
+					"err":  err,
+				}).Errorf("error getting calendar events")
+				continue
+			}
+			calendarViews = append(calendarViews, calendarEvents)
 		}
 	}
 	if len(users) == 0 {
-		return "No users need to be synced", syncJobSummary, nil
+		return users, calendarViews, errNoUsersNeedToBeSynced
 	}
 
-	calendarViews, err := m.GetCalendarViews(users)
-	if err != nil {
-		return "", syncJobSummary, errors.Wrap(err, "not able to get calendar views for connected users")
+	if !fetchIndividually {
+		var err error
+		calendarViews, err = m.GetCalendarViews(users)
+		if err != nil {
+			return users, calendarViews, errors.Wrap(err, "not able to get calendar views for connected users")
+		}
 	}
+
 	if len(calendarViews) == 0 {
-		return "No calendar views found", syncJobSummary, nil
+		return users, calendarViews, fmt.Errorf("no calendar views found")
+	}
+
+	return users, calendarViews, nil
+}
+
+func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool) (string, *StatusSyncJobSummary, error) {
+	syncJobSummary := &StatusSyncJobSummary{}
+	if len(userIndex) == 0 {
+		return "No connected users found", syncJobSummary, nil
+	}
+	syncJobSummary.NumberOfUsersProcessed = len(userIndex)
+
+	users, calendarViews, err := m.retrieveUsersToSync(userIndex, syncJobSummary, fetchIndividually)
+	if err != nil {
+		return err.Error(), syncJobSummary, errors.Wrapf(err, "error retrieving users to sync (individually=%v)", fetchIndividually)
 	}
 
 	m.deliverReminders(users, calendarViews)
@@ -385,6 +446,23 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 	return nil
 }
 
+func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
+	err := m.Filter(withClient)
+	if err != nil {
+		return nil, errors.Wrap(err, "errror withClient")
+	}
+
+	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error getting events for user %s", user.MattermostUserID)
+	}
+
+	return &remote.ViewCalendarResponse{
+		RemoteUserID: user.Remote.ID,
+		Events:       events,
+	}, nil
+}
+
 func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
@@ -427,12 +505,13 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			message, err := views.RenderUpcomingEvent(event, timezone)
+			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
 			}
-			_, err = m.Poster.DM(mattermostUserID, message)
+
+			_, err = m.Poster.DMWithAttachments(mattermostUserID, attachment)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvents error creating DM. err=%v", err)
 				continue
