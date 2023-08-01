@@ -23,5 +23,7 @@ func GetGcalProviderConfig() *config.ProviderConfig {
 
 		BotUsername:    ProviderGCal,
 		BotDisplayName: ProviderGCalDisplayName,
+
+		EncryptedStore: true,
 	}
 }
