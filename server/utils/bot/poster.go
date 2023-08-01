@@ -18,6 +18,9 @@ type Poster interface {
 	// Often used to include post actions.
 	DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) (string, error)
 
+	// DMWithMessageAndAttachments posts a Direct Message that contains Slack attachments and a message.
+	DMWithMessageAndAttachments(mattermostUserID, message string, attachments ...*model.SlackAttachment) (string, error)
+
 	// Ephemeral sends an ephemeral message to a user
 	Ephemeral(mattermostUserID, channelID, format string, args ...interface{})
 
@@ -46,6 +49,13 @@ func (bot *bot) DM(mattermostUserID, format string, args ...interface{}) (string
 // Often used to include post actions.
 func (bot *bot) DMWithAttachments(mattermostUserID string, attachments ...*model.SlackAttachment) (string, error) {
 	post := model.Post{}
+	model.ParseSlackAttachment(&post, attachments)
+	return bot.dm(mattermostUserID, &post)
+}
+
+// DMWithMessageAndAttachments posts a Direct Message that contains Slack attachments and a message.
+func (bot *bot) DMWithMessageAndAttachments(mattermostUserID, message string, attachments ...*model.SlackAttachment) (string, error) {
+	post := model.Post{Message: message}
 	model.ParseSlackAttachment(&post, attachments)
 	return bot.dm(mattermostUserID, &post)
 }

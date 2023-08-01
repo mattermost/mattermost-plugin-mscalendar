@@ -38,6 +38,8 @@ var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
 	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
 	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+	model.NewAutocompleteData("today", "", "Display today's events."),
+	model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
 	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
 	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
@@ -111,6 +113,13 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
+	// Aliases
+	case "today":
+		parameters = []string{"today"}
+		handler = c.requireConnectedUser(c.dailySummary)
+	case "tomorrow":
+		parameters = []string{"tomorrow"}
+		handler = c.requireConnectedUser(c.dailySummary)
 	}
 	out, mustRedirectToDM, err := handler(parameters...)
 	if err != nil {

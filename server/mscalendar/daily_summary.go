@@ -22,7 +22,7 @@ const dailySummaryTimeWindow = time.Minute * 2
 const DailySummaryJobInterval = 15 * time.Minute
 
 type DailySummary interface {
-	GetDailySummaryForUser(user *User) (string, error)
+	GetDaySummaryForUser(now time.Time, user *User) (string, error)
 	GetDailySummarySettingsForUser(user *User) (*store.DailySummaryUserSettings, error)
 	SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error)
 	SetDailySummaryEnabled(user *User, enable bool) (*store.DailySummaryUserSettings, error)
@@ -217,18 +217,23 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	return nil
 }
 
-func (m *mscalendar) GetDailySummaryForUser(user *User) (string, error) {
+func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, error) {
 	tz, err := m.GetTimezone(user)
 	if err != nil {
 		return "", err
 	}
 
-	calendarData, err := m.getTodayCalendarEvents(user, time.Now(), tz)
+	calendarData, err := m.getTodayCalendarEvents(user, day, tz)
 	if err != nil {
 		return "Failed to get calendar events", err
 	}
 
-	return views.RenderCalendarView(calendarData, tz)
+	messageString, err := views.RenderCalendarView(calendarData, tz)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to render daily summary")
+	}
+
+	return messageString, nil
 }
 
 func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time) (bool, error) {

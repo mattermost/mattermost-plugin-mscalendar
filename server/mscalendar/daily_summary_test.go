@@ -150,9 +150,9 @@ func TestProcessAllDailySummary(t *testing.T) {
 					mockPoster.EXPECT().DM("user2_mm_id", `Times are shown in Pacific Standard Time
 Wednesday February 12, 2020
 
-| Time | Subject |
-| :--: | :-- |
-| 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
+| Time | Subject | |
+| :-- | :-- | :-- |
+| 9:00AM - 11:00AM | [The subject]() |  |`).Return("postID2", nil).Times(1),
 				)
 
 				s.EXPECT().StoreUser(gomock.Any()).Times(2).DoAndReturn(func(u *store.User) error {

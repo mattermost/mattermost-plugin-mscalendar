@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -23,8 +24,14 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 	}
 
 	switch parameters[0] {
-	case "view":
-		postStr, err := c.MSCalendar.GetDailySummaryForUser(c.user())
+	case "view", "today":
+		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now(), c.user())
+		if err != nil {
+			return err.Error(), false, err
+		}
+		return postStr, false, nil
+	case "tomorrow":
+		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now().Add(time.Hour*24), c.user())
 		if err != nil {
 			return err.Error(), false, err
 		}
@@ -61,9 +68,8 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 			return err.Error(), false, err
 		}
 		return dailySummaryResponse(dsum), false, nil
-	default:
-		return "Invalid command. Please try again\n\n" + dailySummaryHelp, false, nil
 	}
+	return "Invalid command. Please try again\n\n" + dailySummaryHelp, false, nil
 }
 
 func dailySummaryResponse(dsum *store.DailySummaryUserSettings) string {
