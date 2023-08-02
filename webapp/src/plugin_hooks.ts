@@ -2,6 +2,7 @@
 // See LICENSE.txt for license information.
 
 import {openCreateEventModal} from './actions';
+import {isUserConnected} from './selectors';
 
 // import {openCreateModalWithoutPost, openChannelSettings, sendEphemeralPost, openDisconnectModal, handleConnectFlow, getConnected} from '../actions';
 // import {isUserConnected, getInstalledInstances, getPluginSettings, getUserConnectedInstances, instanceIsInstalled} from '../selectors';
@@ -12,8 +13,17 @@ const createEventCommand = '/z';
 
 // const createEventCommand = '/gcal createevent';
 
+interface Store {
+    dispatch(action: {type: string}): void;
+    getState(): object;
+}
+
 export default class Hooks {
-    constructor(private store: any) {}
+    private store: Store;
+
+    constructor(store: Store) {
+        this.store = store;
+    }
 
     slashCommandWillBePostedHook = (rawMessage: string, contextArgs: ContextArgs) => {
         let message;

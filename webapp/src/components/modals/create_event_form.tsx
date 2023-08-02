@@ -14,7 +14,9 @@ import {getModalStyles} from '@/utils/styles';
 
 import FormButton from '@/components/form_button';
 import Loading from '@/components/loading';
-import ReactSelectSetting from '@/components/react_select_setting';
+import Setting from '@/components/setting';
+import AttendeeSelector from '@/components/attendee_selector';
+import TimeSelector from '@/components/time_selector';
 
 type Props = {
     close: (e?: Event) => void;
@@ -29,12 +31,13 @@ export default function CreateEventForm(props: Props) {
         subject: '',
         all_day: false,
         attendees: [],
+        date: '',
         start_time: '',
         end_time: '',
-        body: '',
+        description: '',
     });
 
-    const setFormValue = (name, value) => {
+    const setFormValue = <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => {
         setFormValues((values) => ({
             ...values,
             [name]: value,
@@ -53,10 +56,12 @@ export default function CreateEventForm(props: Props) {
 
     const handleError = (error: string) => {
         setStoredError(error);
+        setSubmitting(false);
     };
 
-    const createEvent = async (payload: CreateEventPayload) => {
-
+    const createEvent = async (payload: CreateEventPayload): Promise<{error?: string}> => {
+        alert(JSON.stringify(payload));
+        return {};
     };
 
     const handleSubmit = (e?: React.FormEvent) => {
@@ -64,11 +69,12 @@ export default function CreateEventForm(props: Props) {
             e.preventDefault();
         }
 
+        // add required field validation
+
         setSubmitting(true);
-        createEvent(event).then(({error}) => {
+        createEvent(formValues).then(({error}) => {
             if (error) {
-                setStoredError(error.message);
-                setSubmitting(false);
+                handleError(error);
                 return;
             }
 
@@ -101,7 +107,7 @@ export default function CreateEventForm(props: Props) {
 
     let form;
     if (loading) {
-        form = <Loading/>;
+        form = <Loading />;
     } else {
         form = (
             <ActualForm
@@ -145,7 +151,7 @@ export default function CreateEventForm(props: Props) {
 
 type ActualFormProps = {
     formValues: CreateEventPayload;
-    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => void;
+    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => Promise<{error?: string}>;
 }
 
 const ActualForm = (props: ActualFormProps) => {
@@ -153,23 +159,10 @@ const ActualForm = (props: ActualFormProps) => {
 
     const theme = useSelector(getTheme);
 
-    const attendeeOptions = [
-        {label: 'sysadmin', value: 'sysadmin'},
-    ];
-
-    const attendeesSelect = (
-        <ReactSelectSetting
-            theme={theme}
-            options={attendeeOptions}
-            value={formValues.attendees}
-            onChange={(selected) => setFormValue('attendees', selected)}
-            isMulti={true}
-        />
-    );
-
     const components = [
         {
             label: 'Subject',
+            required: true,
             component: (
                 <input
                     onChange={(e) => setFormValue('subject', e.target.value)}
@@ -179,41 +172,68 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Start Time',
+            label: 'Guests (optional)',
+            component: (
+                <AttendeeSelector
+                    onChange={(selected) => setFormValue('attendees', selected)}
+                />
+            ),
+        },
+        {
+            label: 'Date',
+            required: true,
             component: (
                 <input
-                    onChange={(e) => setFormValue('start_time', e.target.value)}
-                    value={formValues.start_time}
+                    onChange={(e) => setFormValue('date', e.target.value)}
+                    value={formValues.date}
                     className='form-control'
+                    type='date'
+                />
+            ),
+        },
+        {
+            label: 'Start Time',
+            required: true,
+            component: (
+                <TimeSelector
+                    value={formValues.start_time}
+                    onChange={(value) => setFormValue('start_time', value)}
                 />
             ),
         },
         {
             label: 'End Time',
+            required: true,
             component: (
-                <input
-                    onChange={(e) => setFormValue('end_time', e.target.value)}
+                <TimeSelector
                     value={formValues.end_time}
-                    className='form-control'
+                    onChange={(value) => setFormValue('end_time', value)}
                 />
             ),
         },
         {
-            label: 'Guests',
-            component: attendeesSelect,
+            label: 'Description (optional)',
+            component: (
+                <textarea
+                    onChange={(e) => setFormValue('description', e.target.value)}
+                    value={formValues.description}
+                    className='form-control'
+                />
+            ),
         },
     ];
 
     return (
         <div>
             {components.map((c) => (
-                <div
+                <Setting
                     key={c.label}
-                    className='form-group'
+                    label={c.label}
+                    inputId={c.label}
+                    required={c.required}
                 >
-                    <label>{c.label}</label>
                     {c.component}
-                </div>
+                </Setting>
             ))}
         </div>
     );

@@ -14,3 +14,9 @@ export const closeCreateEventModal = () => {
         type: ActionTypes.CLOSE_CREATE_EVENT_MODAL,
     };
 };
+
+export const autocompleteConnectedUsers = async (input: string) => {
+    const sampleUsers = ['sysadmin', 'user1', 'user2'];
+
+    return sampleUsers.filter(u => u.toLowerCase().includes(input.toLowerCase()));
+}

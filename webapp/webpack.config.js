@@ -4,6 +4,7 @@ const path = require('path');
 
 const webpack = require('webpack');
 
+// eslint-disable-next-line no-process-env
 const CALENDAR_PROVIDER = process.env.CALENDAR_PROVIDER;
 
 let manifestFile = '../plugin.json';
