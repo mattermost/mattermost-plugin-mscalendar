@@ -36,6 +36,19 @@ type handleFunc func(parameters ...string) (string, bool, error)
 var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("connect", "", fmt.Sprintf("Connect to your %s account", config.Provider.DisplayName)),
 	model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
+	{
+		Trigger:  "summary",
+		HelpText: "View your events for today, or edit the settings for your daily summary.",
+		SubCommands: []*model.AutocompleteData{
+			model.NewAutocompleteData("view", "", "View your daily summary."),
+			model.NewAutocompleteData("today", "", "Display today's events."),
+			model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
+			model.NewAutocompleteData("settings", "", "View your settings for the daily summary."),
+			model.NewAutocompleteData("time", "", "Set the time you would like to receive your daily summary."),
+			model.NewAutocompleteData("enable", "", "Enable your daily summary."),
+			model.NewAutocompleteData("disable", "", "Disable your daily summary."),
+		},
+	},
 	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
 	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
 	model.NewAutocompleteData("today", "", "Display today's events."),
