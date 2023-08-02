@@ -216,6 +216,7 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 			engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
 			if err != nil {
 				m.Logger.With(bot.LogContext{"err": err}).Errorf("error getting engine for user")
+				continue
 			}
 			engine.notifyUpcomingEvents(mattermostUserID, view.Events)
 		} else {
