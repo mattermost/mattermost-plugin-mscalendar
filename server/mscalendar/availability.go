@@ -494,7 +494,6 @@ func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalend
 }
 
 func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*remote.Event) {
-	m.Logger.With(bot.LogContext{"mm_id": mattermostUserID, "events": *events[0]}).Warnf("notifyUpconmingEvents")
 	var timezone string
 	for _, event := range events {
 		if event.IsCancelled {
