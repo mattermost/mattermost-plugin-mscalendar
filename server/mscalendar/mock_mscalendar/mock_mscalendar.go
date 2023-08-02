@@ -179,7 +179,7 @@ func (mr *MockMSCalendarMockRecorder) DeleteMyEventSubscription() *gomock.Call {
 }
 
 // DeleteOrphanedSubscription mocks base method.
-func (m *MockMSCalendar) DeleteOrphanedSubscription(arg0 string) error {
+func (m *MockMSCalendar) DeleteOrphanedSubscription(arg0 *store.Subscription) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteOrphanedSubscription", arg0)
 	ret0, _ := ret[0].(error)

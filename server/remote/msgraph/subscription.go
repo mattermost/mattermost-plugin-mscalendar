@@ -46,20 +46,20 @@ func (c *client) CreateMySubscription(notificationURL, remoteUserID string) (*re
 	return sub, nil
 }
 
-func (c *client) DeleteSubscription(subscriptionID string) error {
-	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().Delete(c.ctx)
+func (c *client) DeleteSubscription(sub *remote.Subscription) error {
+	err := c.rbuilder.Subscriptions().ID(sub.ID).Request().Delete(c.ctx)
 	if err != nil {
 		return errors.Wrap(err, "msgraph DeleteSubscription")
 	}
 
 	c.Logger.With(bot.LogContext{
-		"subscriptionID": subscriptionID,
+		"subscriptionID": sub.ID,
 	}).Debugf("msgraph: deleted subscription.")
 
 	return nil
 }
 
-func (c *client) RenewSubscription(notificationURL, remoteUserID, subscriptionID string) (*remote.Subscription, error) {
+func (c *client) RenewSubscription(notificationURL, remoteUserID string, oldSub *remote.Subscription) (*remote.Subscription, error) {
 	expires := time.Now().Add(subscribeTTL)
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
@@ -67,13 +67,13 @@ func (c *client) RenewSubscription(notificationURL, remoteUserID, subscriptionID
 		expires.Format(time.RFC3339),
 	}
 	sub := remote.Subscription{}
-	err := c.rbuilder.Subscriptions().ID(subscriptionID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
+	err := c.rbuilder.Subscriptions().ID(oldSub.ID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
 	if err != nil {
 		return nil, errors.Wrap(err, "msgraph RenewSubscription")
 	}
 
 	c.Logger.With(bot.LogContext{
-		"subscriptionID":     subscriptionID,
+		"subscriptionID":     oldSub.ID,
 		"expirationDateTime": expires.Format(time.RFC3339),
 	}).Debugf("msgraph: renewed subscription.")
 
