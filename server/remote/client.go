@@ -39,10 +39,10 @@ type Events interface {
 
 type Subscriptions interface {
 	CreateMySubscription(notificationURL, remoteUserID string) (*Subscription, error)
-	DeleteSubscription(subscriptionID string) error
+	DeleteSubscription(sub *Subscription) error
 	GetNotificationData(*Notification) (*Notification, error)
 	ListSubscriptions() ([]*Subscription, error)
-	RenewSubscription(notificationURL, remoteUserID, subscriptionID string) (*Subscription, error)
+	RenewSubscription(notificationURL, remoteUserID string, sub *Subscription) (*Subscription, error)
 }
 
 type Utils interface {

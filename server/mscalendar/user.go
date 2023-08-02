@@ -140,13 +140,17 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	eventSubscriptionID := storedUser.Settings.EventSubscriptionID
 	if eventSubscriptionID != "" {
 		// REVIEW: deleting local notification subscription during disconnect
+		sub, errLoad := m.Store.LoadSubscription(eventSubscriptionID)
+		if errLoad != nil {
+			return errors.Wrap(errLoad, "error loading subscription")
+		}
+
 		err = m.Store.DeleteUserSubscription(storedUser, eventSubscriptionID)
 		if err != nil && err != store.ErrNotFound {
 			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
 		}
 
-		// REVIEW: deleting remote notification subscription during disconnect
-		err = m.client.DeleteSubscription(eventSubscriptionID)
+		err = m.client.DeleteSubscription(sub.Remote)
 		if err != nil {
 			m.Logger.Warnf("failed to delete remote subscription %s. err=%v", eventSubscriptionID, err)
 		}
