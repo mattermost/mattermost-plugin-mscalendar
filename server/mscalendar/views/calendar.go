@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
@@ -103,7 +104,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, subject, link), nil
+	return fmt.Sprintf(format, start, end, CleanSubject(subject), link), nil
 }
 
 func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
@@ -176,6 +177,10 @@ func EnsureSubject(s string) string {
 	}
 
 	return s
+}
+
+func CleanSubject(s string) string {
+	return strings.ReplaceAll(s, "|", `\|`)
 }
 
 func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
