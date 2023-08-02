@@ -4,9 +4,11 @@
 package gcal
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type webhook struct {
@@ -33,9 +35,16 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 		return []*remote.Notification{}
 	}
 
+	r.logger.Warnf("%v", req.Header)
+
 	notificationChannelID := req.Header.Get("X-Goog-Channel-Id")
 	resourceID := req.Header.Get("X-Goog-Resource-Id")
 	token := req.Header.Get("X-Goog-Channel-Token")
+
+	data, err := io.ReadAll(req.Body)
+	if err == nil {
+		r.logger.With(bot.LogContext{"body": string(data)}).Warnf("webhook body")
+	}
 
 	wh := &webhook{
 		SubscriptionID: notificationChannelID,
