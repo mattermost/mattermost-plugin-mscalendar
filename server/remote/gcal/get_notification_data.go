@@ -5,6 +5,7 @@ package gcal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"google.golang.org/api/calendar/v3"
@@ -14,6 +15,8 @@ import (
 )
 
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
+	return nil, fmt.Errorf("not implemented")
+
 	service, err := calendar.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal GetNotificationData, error creating service")
