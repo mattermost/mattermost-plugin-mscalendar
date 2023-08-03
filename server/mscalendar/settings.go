@@ -1,6 +1,7 @@
 package mscalendar
 
 import (
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
@@ -22,7 +23,7 @@ func (m *mscalendar) ClearSettingsPosts(userID string) {
 	}
 }
 
-func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getCal func(userID string) MSCalendar) settingspanel.Panel {
+func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getCal func(userID string) MSCalendar, providerFeatures config.ProviderFeatures) settingspanel.Panel {
 	settings := []settingspanel.Setting{}
 	settings = append(settings, settingspanel.NewBoolSetting(
 		store.UpdateStatusSettingID,
@@ -52,7 +53,9 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		"",
 		settingStore,
 	))
-	settings = append(settings, NewNotificationsSetting(getCal))
+	if providerFeatures.EventNotifications {
+		settings = append(settings, NewNotificationsSetting(getCal))
+	}
 	settings = append(settings, NewDailySummarySetting(
 		settingStore,
 		func(userID string) (string, error) { return getCal(userID).GetTimezone(NewUser(userID)) },

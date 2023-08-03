@@ -41,8 +41,8 @@ var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("today", "", "Display today's events."),
 	model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
-	model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
-	model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
+	// model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
+	// model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
 	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
 	model.NewAutocompleteData("help", "", "Read help text for the commands"),
 }
