@@ -17,6 +17,7 @@ import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
+import { doFetch } from '@/client';
 
 type Props = {
     close: (e?: Event) => void;
@@ -61,6 +62,14 @@ export default function CreateEventForm(props: Props) {
 
     const createEvent = async (payload: CreateEventPayload): Promise<{error?: string}> => {
         alert(JSON.stringify(payload));
+
+        let data = null;
+
+        data = await doFetch("/plugins/com.mattermost.gcal/events/create", {
+            body: JSON.stringify(payload),
+            method: "POST",
+        })
+
         return {};
     };
 
