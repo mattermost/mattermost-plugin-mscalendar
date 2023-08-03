@@ -114,7 +114,7 @@ server-debug: server-debug-deploy reset
 
 .PHONY: server-debug-deploy
 server-debug-deploy: validate-go-version
-	./build/bin/manifest apply
+	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
 	mkdir -p server/dist
 ifeq ($(OS),Darwin)
 	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-darwin-amd64;
