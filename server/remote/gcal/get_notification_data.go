@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
+func (c *client) GetNotificationData(_ *remote.Notification) (*remote.Notification, error) {
 	return nil, fmt.Errorf("not implemented")
 
 	// service, err := calendar.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
