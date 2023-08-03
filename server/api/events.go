@@ -3,11 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
@@ -38,22 +39,30 @@ type createEventPayload struct {
 	Location    *createEventLocationPayload `json:"location,omitempty"`
 }
 
-func (cep createEventPayload) ToRemoteEvent() *remote.Event {
+func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, error) {
 	var evt remote.Event
 
 	evt.IsAllDay = cep.AllDay
 
-	if cep.Date != "" {
-		evt.Start = &remote.DateTime{
-			DateTime: cep.Date,
-		}
-		evt.End = &remote.DateTime{
-			DateTime: cep.Date,
-		}
-	} else {
-		evt.Start = &remote.DateTime{DateTime: cep.StartTime}
-		evt.End = &remote.DateTime{DateTime: cep.EndTime}
+	start, err := cep.parseStartTime(loc)
+	if err != nil {
+		return nil, errors.Wrap(err, "error parsing start time")
 	}
+
+	end, err := cep.parseEndTime(loc)
+	if err != nil {
+		return nil, errors.Wrap(err, "error parsing start time")
+	}
+
+	evt.Start = &remote.DateTime{
+		DateTime: start.Format(remote.RFC3339NanoNoTimezone),
+		TimeZone: loc.String(),
+	}
+	evt.End = &remote.DateTime{
+		DateTime: end.Format(remote.RFC3339NanoNoTimezone),
+		TimeZone: loc.String(),
+	}
+
 	if cep.Description != "" {
 		evt.Body = &remote.ItemBody{
 			Content:     cep.Description,
@@ -68,7 +77,7 @@ func (cep createEventPayload) ToRemoteEvent() *remote.Event {
 		}
 	}
 
-	return &evt
+	return &evt, nil
 }
 
 func (cep createEventPayload) parseStartTime(loc *time.Location) (time.Time, error) {
@@ -92,12 +101,18 @@ func (cep createEventPayload) IsValid(loc *time.Location) error {
 		return fmt.Errorf("either start time/end time must be set or event should last all day")
 	}
 
-	if _, err := cep.parseStartTime(loc); err != nil {
+	start, err := cep.parseStartTime(loc)
+	if err != nil {
 		return fmt.Errorf("please use a valid start time")
 	}
 
-	if _, err := cep.parseEndTime(loc); err != nil {
+	end, err := cep.parseEndTime(loc)
+	if err != nil {
 		return fmt.Errorf("please use a valid end time")
+	}
+
+	if start.After(end) {
+		return fmt.Errorf("end date should be after start date")
 	}
 
 	return nil
@@ -145,7 +160,12 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := payload.ToRemoteEvent()
+	event, errParse := payload.ToRemoteEvent(loc)
+	if errParse != nil {
+		httputils.WriteBadRequestError(w, errParse)
+		return
+	}
+
 	for _, pa := range payload.Attendees {
 		var attendee remote.Attendee
 
@@ -165,6 +185,9 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 
 		event.Attendees = append(event.Attendees, &attendee)
 	}
+
+	d, _ := json.Marshal(event)
+	api.Logger.Warnf("%v", string(d))
 
 	result, err := client.CreateEvent(user.Remote.ID, event)
 	if err != nil {

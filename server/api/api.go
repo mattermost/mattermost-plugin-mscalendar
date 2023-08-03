@@ -23,6 +23,7 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 		Env:                   env,
 		NotificationProcessor: notificationProcessor,
 	}
+
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", api.getAuthorized).Methods("GET")
 
@@ -40,7 +41,7 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
 
 	eventsRouter := h.Router.PathPrefix(config.PathEvents).Subrouter()
-	eventsRouter.HandleFunc(config.PathCreate, api.createEvent)
+	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods("POST")
 
 	notificationRouter.HandleFunc("/{fname}", func(w http.ResponseWriter, r *http.Request) {
 		if api.GoogleDomainVerifyKey == "" {
