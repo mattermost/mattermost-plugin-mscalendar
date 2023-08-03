@@ -119,7 +119,10 @@ func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
 	out.Summary = in.Subject
 	out.Start = convertRemoteDateTimeToGcalEventDateTime(in.Start)
 	out.End = convertRemoteDateTimeToGcalEventDateTime(in.End)
-	out.Description = in.Body.Content
+	if in.Body != nil {
+		out.Description = in.Body.Content
+	}
+
 	if in.Location != nil {
 		out.Location = in.Location.DisplayName
 	}
