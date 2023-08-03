@@ -2,6 +2,8 @@ package tz
 
 import (
 	"time"
+
+	_ "time/tzdata" // Import tzdata so we have it available in slim environments where tzdata may not be present
 )
 
 // Go converts a time zone into a Go-compatible time zone if it is not compatible.
