@@ -37,6 +37,7 @@ type createEventPayload struct {
 	Description string                      `json:"description,omitempty"`
 	Subject     string                      `json:"subject"`
 	Location    *createEventLocationPayload `json:"location,omitempty"`
+	ChannelID   string                      `json:"channel_id"`
 }
 
 func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, error) {
@@ -138,6 +139,13 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	var payload createEventPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httputils.WriteBadRequestError(w, err)
+		return
+	}
+
+	// TODO: Check if user can access the channel it wants to link the channel
+	_, appErr := api.PluginAPI.GetChannelMember(payload.ChannelID, user.MattermostUserID)
+	if appErr != nil {
+		httputils.WriteUnauthorizedError(w, appErr)
 		return
 	}
 
