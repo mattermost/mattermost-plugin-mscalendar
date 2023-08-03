@@ -75,7 +75,7 @@ func convertGCalEventDateTimeToRemoteDateTime(dt *calendar.EventDateTime) *remot
 	t, _ := time.Parse(time.RFC3339, dt.DateTime)
 
 	location := dt.TimeZone
-	if t.Location() != nil {
+	if t.Location() != nil && t.Location().String() != "" {
 		location = t.Location().String()
 	}
 
