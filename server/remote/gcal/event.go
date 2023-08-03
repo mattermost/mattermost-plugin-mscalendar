@@ -125,9 +125,13 @@ func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
 	}
 
 	for _, attendee := range in.Attendees {
-		out.Attendees = append(out.Attendees, &calendar.EventAttendee{
-			Email: attendee.EmailAddress.Address,
-		})
+		outAttendee := &calendar.EventAttendee{
+			Id: attendee.RemoteID,
+		}
+		if attendee.EmailAddress != nil {
+			outAttendee.Email = attendee.EmailAddress.Address
+		}
+		out.Attendees = append(out.Attendees, outAttendee)
 	}
 
 	return out
