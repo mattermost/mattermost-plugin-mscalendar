@@ -39,6 +39,9 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
 	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
 
+	eventsRouter := h.Router.PathPrefix(config.PathEvents).Subrouter()
+	eventsRouter.HandleFunc(config.PathCreate, api.createEvent)
+
 	notificationRouter.HandleFunc("/{fname}", func(w http.ResponseWriter, r *http.Request) {
 		if api.GoogleDomainVerifyKey == "" {
 			w.WriteHeader(http.StatusInternalServerError)

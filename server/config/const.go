@@ -26,6 +26,9 @@ const (
 	PathAutocomplete = "/autocomplete"
 	PathUsers        = "/users"
 
+	PathEvents = "/events"
+	PathCreate = "/create"
+
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete
 
