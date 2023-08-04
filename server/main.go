@@ -3,8 +3,6 @@ package main
 import (
 	mattermostplugin "github.com/mattermost/mattermost-server/v6/plugin"
 
-	_ "time/tzdata" // Import tzdata so we have it available in slim environments where tzdata package may not be present
-
 	"github.com/mattermost/mattermost-plugin-mscalendar/providers"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"

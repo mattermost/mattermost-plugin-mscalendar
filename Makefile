@@ -7,7 +7,7 @@ CALENDAR_PROVIDER ?= mscalendar
 MANIFEST_FILE ?= plugin.json
 
 GO_TEST_FLAGS ?= -race
-GO_BUILD_FLAGS ?=
+GO_BUILD_FLAGS ?= -tags timetzdata
 MM_UTILITIES_DIR ?= ../mattermost-utilities
 DEFAULT_GOOS := $(shell go env GOOS)
 DEFAULT_GOARCH := $(shell go env GOARCH)
