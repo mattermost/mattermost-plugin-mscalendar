@@ -72,13 +72,13 @@
                 "key": "EncryptionKey",
                 "display_name": "Encryption key",
                 "type": "generated",
-                "help_text": "**Required**: The encryption key used to store data in the database"
+                "help_text": "**Required**: The encryption key used to store data in the database. If this is regenerated all user authentication data will be lost and users will need to reconnect again."
             },
             {
                 "key": "OAuth2ClientId",
                 "display_name": "Google Application Client ID:",
                 "type": "text",
-                "help_text": "Microsoft Office Client ID.",
+                "help_text": "Google Auth Client ID",
                 "placeholder": "",
                 "default": ""
             },
@@ -86,7 +86,7 @@
                 "key": "OAuth2ClientSecret",
                 "display_name": "Google Client Secret:",
                 "type": "text",
-                "help_text": "Microsoft Office Client Secret.",
+                "help_text": "Google Auth Client Secret.",
                 "placeholder": "",
                 "default": ""
             },
