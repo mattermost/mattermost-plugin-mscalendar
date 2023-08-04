@@ -44,7 +44,7 @@ func newTestEvent(identifier, locationDisplayName string, subjectDisplayName str
 			DisplayName: locationDisplayName,
 		},
 		ResponseStatus: &remote.EventResponseStatus{
-			Response: "event_response",
+			Response: remote.EventResponseStatusAccepted,
 		},
 		Weblink:           "event_weblink",
 		Subject:           subjectDisplayName,
