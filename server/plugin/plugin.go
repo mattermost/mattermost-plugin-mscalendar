@@ -200,10 +200,12 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer, e.Provider.Features)
 		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
 
-		if e.notificationProcessor == nil && e.Provider.Features.EventNotifications {
-			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
-		} else {
-			e.notificationProcessor.Configure(e.Env)
+		if e.Provider.Features.EventNotifications {
+			if e.notificationProcessor == nil {
+				e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
+			} else {
+				e.notificationProcessor.Configure(e.Env)
+			}
 		}
 
 		e.httpHandler = httputils.NewHandler()
