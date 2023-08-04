@@ -41,8 +41,6 @@ var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("today", "", "Display today's events."),
 	model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
-	// model.NewAutocompleteData("subscribe", "", "Enable notifications for event invitations and updates."),
-	// model.NewAutocompleteData("unsubscribe", "", "Disable notifications for event invitations and updates."),
 	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
 	model.NewAutocompleteData("help", "", "Read help text for the commands"),
 }
@@ -101,18 +99,19 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.createEvent)
 	case "deletecal":
 		handler = c.requireConnectedUser(c.deleteCalendar)
-	case "subscribe":
-		handler = c.requireConnectedUser(c.subscribe)
-	case "unsubscribe":
-		handler = c.requireConnectedUser(c.unsubscribe)
 	case "findmeetings":
 		handler = c.requireConnectedUser(c.findMeetings)
 	case "showcals":
 		handler = c.requireConnectedUser(c.showCalendars)
-	case "avail":
-		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
+	// Admin only
+	case "avail":
+		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
+	case "subscribe":
+		handler = c.requireConnectedUser(c.requireAdminUser(c.subscribe))
+	case "unsubscribe":
+		handler = c.requireConnectedUser(c.requireAdminUser(c.unsubscribe))
 	// Aliases
 	case "today":
 		parameters = []string{"today"}
