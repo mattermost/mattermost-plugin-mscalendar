@@ -82,6 +82,15 @@ func (a *API) GetMattermostUser(mattermostUserID string) (*model.User, error) {
 	return mmuser, nil
 }
 
+func (a *API) GetChannelMember(channelId, userID string) (*model.ChannelMember, error) {
+	cm, err := a.api.GetChannelMember(channelId, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return cm, nil
+}
+
 func (a *API) CleanKVStore() error {
 	appErr := a.api.KVDeleteAll()
 	if appErr != nil {
