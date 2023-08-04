@@ -127,7 +127,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
-			m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "now": now.String()}).Warnf("Error checking daily summary should be posted")
+			m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "now": now.String(), "err": shouldPostErr}).Warnf("Error checking daily summary should be posted")
 			continue
 		}
 		if !shouldPost {
