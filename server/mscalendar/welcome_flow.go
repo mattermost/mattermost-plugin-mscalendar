@@ -10,17 +10,19 @@ import (
 )
 
 type WelcomeFlow struct {
-	controller bot.FlowController
-	onFlowDone func(userID string)
-	url        string
-	steps      []flow.Step
+	controller       bot.FlowController
+	onFlowDone       func(userID string)
+	url              string
+	providerFeatures config.ProviderFeatures
+	steps            []flow.Step
 }
 
-func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer) *WelcomeFlow {
+func NewWelcomeFlow(bot bot.FlowController, welcomer Welcomer, providerFeatures config.ProviderFeatures) *WelcomeFlow {
 	wf := WelcomeFlow{
-		url:        "/welcome",
-		controller: bot,
-		onFlowDone: welcomer.WelcomeFlowEnd,
+		url:              "/welcome",
+		controller:       bot,
+		onFlowDone:       welcomer.WelcomeFlowEnd,
+		providerFeatures: providerFeatures,
 	}
 	wf.makeSteps()
 	return &wf
@@ -79,15 +81,21 @@ func (wf *WelcomeFlow) makeSteps() {
 		FalseButtonMessage:   "Do not Disturb",
 		TrueResponseMessage:  "Great, your status will be set to Away.",
 		FalseResponseMessage: "Great, your status will be set to Do not Disturb.",
-	}, &flow.SimpleStep{
-		Title:                "Subscribe to events",
-		Message:              "Do you want to receive notifications when you are invited to an event?",
-		PropertyName:         store.SubscribePropertyName,
-		TrueButtonMessage:    "Yes - I would like to receive notifications for new events",
-		FalseButtonMessage:   "No - Do not notify me of new events",
-		TrueResponseMessage:  "Great, you will receive a message any time you receive a new event.",
-		FalseResponseMessage: "Great, you will not receive any notification on new events.",
-	}, &flow.SimpleStep{
+	})
+
+	if wf.providerFeatures.EventNotifications {
+		steps = append(steps, &flow.SimpleStep{
+			Title:                "Subscribe to events",
+			Message:              "Do you want to receive notifications when you are invited to an event?",
+			PropertyName:         store.SubscribePropertyName,
+			TrueButtonMessage:    "Yes - I would like to receive notifications for new events",
+			FalseButtonMessage:   "No - Do not notify me of new events",
+			TrueResponseMessage:  "Great, you will receive a message any time you receive a new event.",
+			FalseResponseMessage: "Great, you will not receive any notification on new events.",
+		})
+	}
+
+	steps = append(steps, &flow.SimpleStep{
 		Title:                "Receive reminder",
 		Message:              "Do you want to receive a reminder for upcoming events?",
 		PropertyName:         store.ReceiveUpcomingEventReminderName,

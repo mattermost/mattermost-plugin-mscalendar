@@ -24,6 +24,9 @@ func GetMSCalendarProviderConfig() *config.ProviderConfig {
 		BotUsername:    ProviderMSCalendar,
 		BotDisplayName: ProviderMSCalendarDisplayName,
 
-		EncryptedStore: false,
+		Features: config.ProviderFeatures{
+			EncryptedStore:     false,
+			EventNotifications: true,
+		},
 	}
 }
