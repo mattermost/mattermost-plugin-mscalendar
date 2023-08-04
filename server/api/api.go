@@ -40,7 +40,8 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
 	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
 
-	eventsRouter := h.Router.PathPrefix(config.PathEvents).Subrouter()
+	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
+	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()
 	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods("POST")
 
 	notificationRouter.HandleFunc("/{fname}", func(w http.ResponseWriter, r *http.Request) {
