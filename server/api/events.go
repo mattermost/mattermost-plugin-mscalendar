@@ -16,16 +16,10 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
-const createEventTimeFormat = "2006-01-02 15:04"
-
-type createEventLocationPayload struct {
-	DisplayName string `json:"display_name"`
-	Street      string `json:"street,omitempty"`
-	City        string `json:"city,omitempty"`
-	State       string `json:"state,omitempty"`
-	PostalCode  string `json:"postal_code,omitempty"`
-	Country     string `json:"country,omitempty"`
-}
+const (
+	createEventDateTimeFormat = "2006-01-02 15:04"
+	createEventDateFormat     = "2006-01-02"
+)
 
 type createEventPayload struct {
 	AllDay    bool     `json:"all_day"`
@@ -34,10 +28,10 @@ type createEventPayload struct {
 	StartTime string   `json:"start_time"`
 	EndTime   string   `json:"end_time"`
 	// Reminder  bool     `json:"reminder"
-	Description string                      `json:"description,omitempty"`
-	Subject     string                      `json:"subject"`
-	Location    *createEventLocationPayload `json:"location,omitempty"`
-	ChannelID   string                      `json:"channel_id"`
+	Description string `json:"description,omitempty"`
+	Subject     string `json:"subject"`
+	Location    string `json:"location,omitempty"`
+	ChannelID   string `json:"channel_id"`
 }
 
 func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, error) {
@@ -55,13 +49,29 @@ func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, 
 		return nil, errors.Wrap(err, "error parsing start time")
 	}
 
-	evt.Start = &remote.DateTime{
-		DateTime: start.Format(remote.RFC3339NanoNoTimezone),
-		TimeZone: loc.String(),
-	}
-	evt.End = &remote.DateTime{
-		DateTime: end.Format(remote.RFC3339NanoNoTimezone),
-		TimeZone: loc.String(),
+	if !cep.AllDay {
+		evt.Start = &remote.DateTime{
+			DateTime: start.Format(remote.RFC3339NanoNoTimezone),
+			TimeZone: loc.String(),
+		}
+		evt.End = &remote.DateTime{
+			DateTime: end.Format(remote.RFC3339NanoNoTimezone),
+			TimeZone: loc.String(),
+		}
+	} else {
+		date, err := cep.parseDate(loc)
+		if err != nil {
+			return nil, errors.Wrap(err, "error parsing date")
+		}
+
+		evt.Start = &remote.DateTime{
+			DateTime: time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc).Format(remote.RFC3339NanoNoTimezone),
+			TimeZone: loc.String(),
+		}
+		evt.End = &remote.DateTime{
+			DateTime: time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 99, loc).Format(remote.RFC3339NanoNoTimezone),
+			TimeZone: loc.String(),
+		}
 	}
 
 	if cep.Description != "" {
@@ -71,10 +81,9 @@ func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, 
 		}
 	}
 	evt.Subject = cep.Subject
-	if cep.Location != nil {
+	if cep.Location != "" {
 		evt.Location = &remote.Location{
-			DisplayName: evt.Location.DisplayName,
-			Address:     evt.Location.Address,
+			DisplayName: cep.Location,
 		}
 	}
 
@@ -82,11 +91,15 @@ func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, 
 }
 
 func (cep createEventPayload) parseStartTime(loc *time.Location) (time.Time, error) {
-	return time.ParseInLocation(createEventTimeFormat, fmt.Sprintf("%s %s", cep.Date, cep.StartTime), loc)
+	return time.ParseInLocation(createEventDateTimeFormat, fmt.Sprintf("%s %s", cep.Date, cep.StartTime), loc)
 }
 
 func (cep createEventPayload) parseEndTime(loc *time.Location) (time.Time, error) {
-	return time.ParseInLocation(createEventTimeFormat, fmt.Sprintf("%s %s", cep.Date, cep.EndTime), loc)
+	return time.ParseInLocation(createEventDateTimeFormat, fmt.Sprintf("%s %s", cep.Date, cep.EndTime), loc)
+}
+
+func (cep createEventPayload) parseDate(loc *time.Location) (time.Time, error) {
+	return time.ParseInLocation(createEventDateFormat, cep.Date, loc)
 }
 
 func (cep createEventPayload) IsValid(loc *time.Location) error {
@@ -96,6 +109,11 @@ func (cep createEventPayload) IsValid(loc *time.Location) error {
 
 	if cep.Date == "" {
 		return fmt.Errorf("date must not be empty")
+	}
+
+	_, err := cep.parseDate(loc)
+	if err != nil {
+		return fmt.Errorf("invalid date")
 	}
 
 	if cep.StartTime == "" && cep.EndTime == "" && !cep.AllDay {
@@ -194,14 +212,11 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		event.Attendees = append(event.Attendees, &attendee)
 	}
 
-	d, _ := json.Marshal(event)
-	api.Logger.Warnf("%v", string(d))
-
-	result, err := client.CreateEvent(user.Remote.ID, event)
+	_, err := client.CreateEvent(user.Remote.ID, event)
 	if err != nil {
 		httputils.WriteInternalServerError(w, err)
 		return
 	}
 
-	httputils.WriteJSONResponse(w, result, http.StatusCreated)
+	httputils.WriteJSONResponse(w, `{"ok": true}`, http.StatusCreated)
 }
