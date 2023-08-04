@@ -15,7 +15,7 @@ import (
 type Subscriptions interface {
 	CreateMyEventSubscription() (*store.Subscription, error)
 	RenewMyEventSubscription() (*store.Subscription, error)
-	DeleteOrphanedSubscription(ID string) error
+	DeleteOrphanedSubscription(*store.Subscription) error
 	DeleteMyEventSubscription() error
 	ListRemoteSubscriptions() ([]*remote.Subscription, error)
 	LoadMyEventSubscription() (*store.Subscription, error)
@@ -83,7 +83,13 @@ func (m *mscalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	if subscriptionID == "" {
 		return nil, nil
 	}
-	renewed, err := m.client.RenewSubscription(m.Config.GetNotificationURL(), m.actingUser.Remote.ID, subscriptionID)
+
+	sub, err := m.Store.LoadSubscription(subscriptionID)
+	if err != nil {
+		return nil, errors.Wrap(err, "error loading subscription")
+	}
+
+	renewed, err := m.client.RenewSubscription(m.Config.GetNotificationURL(), m.actingUser.Remote.ID, sub.Remote)
 	if err != nil {
 		if strings.Contains(err.Error(), "The object was not found") {
 			err = m.Store.DeleteUserSubscription(m.actingUser.User, subscriptionID)
@@ -118,7 +124,12 @@ func (m *mscalendar) DeleteMyEventSubscription() error {
 
 	subscriptionID := m.actingUser.Settings.EventSubscriptionID
 
-	err = m.DeleteOrphanedSubscription(subscriptionID)
+	sub, err := m.Store.LoadSubscription(subscriptionID)
+	if err != nil {
+		return errors.Wrap(err, "error loading subscription")
+	}
+
+	err = m.DeleteOrphanedSubscription(sub)
 	if err != nil {
 		return err
 	}
@@ -131,14 +142,14 @@ func (m *mscalendar) DeleteMyEventSubscription() error {
 	return nil
 }
 
-func (m *mscalendar) DeleteOrphanedSubscription(subscriptionID string) error {
+func (m *mscalendar) DeleteOrphanedSubscription(sub *store.Subscription) error {
 	err := m.Filter(withClient)
 	if err != nil {
 		return err
 	}
-	err = m.client.DeleteSubscription(subscriptionID)
+	err = m.client.DeleteSubscription(sub.Remote)
 	if err != nil {
-		return errors.WithMessagef(err, "failed to delete subscription %s", subscriptionID)
+		return errors.WithMessagef(err, "failed to delete subscription %s", sub.Remote.ID)
 	}
 	return nil
 }

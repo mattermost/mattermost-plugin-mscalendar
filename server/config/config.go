@@ -18,6 +18,11 @@ type StoredConfig struct {
 	GoogleDomainVerifyKey string
 }
 
+type ProviderFeatures struct {
+	EncryptedStore     bool
+	EventNotifications bool
+}
+
 // ProviderConfig represents the specific configuration that changes when building for different
 // calendar providers.
 type ProviderConfig struct {
@@ -28,7 +33,7 @@ type ProviderConfig struct {
 	TelemetryShortName string
 	BotUsername        string
 	BotDisplayName     string
-	EncryptedStore     bool
+	Features           ProviderFeatures
 }
 
 // Config represents the the metadata handed to all request runners (command,

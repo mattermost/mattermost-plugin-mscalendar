@@ -111,7 +111,7 @@ func (p *Plugin) OnActivate() error {
 			),
 		)
 		e.bot = e.bot.WithConfig(stored.Config)
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.Features.EncryptedStore, []byte(e.EncryptionKey))
 	})
 
 	return nil
@@ -184,7 +184,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
-		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.EncryptedStore, []byte(e.EncryptionKey))
+		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.Features.EncryptedStore, []byte(e.EncryptionKey))
 		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -194,15 +194,18 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			func(userID string) mscalendar.MSCalendar {
 				return mscalendar.New(e.Env, userID)
 			},
+			e.Provider.Features,
 		)
 
-		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer)
+		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer, e.Provider.Features)
 		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
 
-		if e.notificationProcessor == nil {
-			e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
-		} else {
-			e.notificationProcessor.Configure(e.Env)
+		if e.Provider.Features.EventNotifications {
+			if e.notificationProcessor == nil {
+				e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
+			} else {
+				e.notificationProcessor.Configure(e.Env)
+			}
 		}
 
 		e.httpHandler = httputils.NewHandler()
