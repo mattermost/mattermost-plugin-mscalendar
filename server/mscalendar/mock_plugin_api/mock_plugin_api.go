@@ -34,19 +34,18 @@ func (m *MockPluginAPI) EXPECT() *MockPluginAPIMockRecorder {
 	return m.recorder
 }
 
-// GetChannelMember mocks base method.
-func (m *MockPluginAPI) GetChannelMember(arg0, arg1 string) (*model.ChannelMember, error) {
+// CanLinkEventToChannel mocks base method.
+func (m *MockPluginAPI) CanLinkEventToChannel(arg0, arg1 string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChannelMember", arg0, arg1)
-	ret0, _ := ret[0].(*model.ChannelMember)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "CanLinkEventToChannel", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	return ret0
 }
 
-// GetChannelMember indicates an expected call of GetChannelMember.
-func (mr *MockPluginAPIMockRecorder) GetChannelMember(arg0, arg1 interface{}) *gomock.Call {
+// CanLinkEventToChannel indicates an expected call of CanLinkEventToChannel.
+func (mr *MockPluginAPIMockRecorder) CanLinkEventToChannel(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChannelMember", reflect.TypeOf((*MockPluginAPI)(nil).GetChannelMember), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanLinkEventToChannel", reflect.TypeOf((*MockPluginAPI)(nil).CanLinkEventToChannel), arg0, arg1)
 }
 
 // GetMattermostUser mocks base method.

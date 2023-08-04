@@ -160,10 +160,8 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Check if user can access the channel it wants to link the channel
-	_, appErr := api.PluginAPI.GetChannelMember(payload.ChannelID, user.MattermostUserID)
-	if appErr != nil {
-		httputils.WriteUnauthorizedError(w, appErr)
+	if !api.PluginAPI.CanLinkEventToChannel(payload.ChannelID, user.MattermostUserID) {
+		httputils.WriteUnauthorizedError(w, fmt.Errorf("you don't have permission to link events in this channel"))
 		return
 	}
 

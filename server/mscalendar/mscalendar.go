@@ -43,10 +43,10 @@ type PluginAPI interface {
 	GetMattermostUserByUsername(mattermostUsername string) (*model.User, error)
 	GetMattermostUserStatus(mattermostUserID string) (*model.Status, error)
 	GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error)
-	GetChannelMember(channelId, userID string) (*model.ChannelMember, error)
 	IsSysAdmin(mattermostUserID string) (bool, error)
 	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)
 	GetPost(postID string) (*model.Post, error)
+	CanLinkEventToChannel(channelID, userID string) bool
 }
 
 type Env struct {
