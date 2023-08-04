@@ -124,7 +124,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 			}
 
 			calendarUser := newUserFromStoredUser(user)
-			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end)
+			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end, true)
 			if err != nil {
 				syncJobSummary.NumberOfUsersFailedStatusChanged++
 				m.Logger.With(bot.LogContext{
@@ -455,7 +455,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 	return nil
 }
 
-func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
+func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, onlyAccepted bool) (*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "errror withClient")
@@ -464,6 +464,10 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remot
 	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting events for user %s", user.MattermostUserID)
+	}
+
+	if onlyAccepted {
+		events = m.filterOnlyAcceptedEvents(events)
 	}
 
 	return &remote.ViewCalendarResponse{
