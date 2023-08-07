@@ -7,7 +7,7 @@ CALENDAR_PROVIDER ?= mscalendar
 MANIFEST_FILE ?= plugin.json
 
 GO_TEST_FLAGS ?= -race
-GO_BUILD_FLAGS ?=
+GO_BUILD_FLAGS ?= -tags timetzdata
 MM_UTILITIES_DIR ?= ../mattermost-utilities
 DEFAULT_GOOS := $(shell go env GOOS)
 DEFAULT_GOARCH := $(shell go env GOARCH)
@@ -114,7 +114,7 @@ server-debug: server-debug-deploy reset
 
 .PHONY: server-debug-deploy
 server-debug-deploy: validate-go-version
-	./build/bin/manifest apply
+	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
 	mkdir -p server/dist
 ifeq ($(OS),Darwin)
 	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-darwin-amd64;

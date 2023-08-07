@@ -167,7 +167,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool
 		return err.Error(), syncJobSummary, errors.Wrapf(err, "error retrieving users to sync (individually=%v)", fetchIndividually)
 	}
 
-	m.deliverReminders(users, calendarViews)
+	m.deliverReminders(users, calendarViews, fetchIndividually)
 	out, numberOfUsersStatusChanged, numberOfUsersFailedStatusChanged, err := m.setUserStatuses(users, calendarViews)
 	if err != nil {
 		return "", syncJobSummary, errors.Wrap(err, "error setting the user statuses")
@@ -179,7 +179,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool
 	return out, syncJobSummary, nil
 }
 
-func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remote.ViewCalendarResponse) {
+func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remote.ViewCalendarResponse, fetchIndividually bool) {
 	numberOfLogs := 0
 	toNotify := []*store.User{}
 	for _, u := range users {
@@ -212,7 +212,16 @@ func (m *mscalendar) deliverReminders(users []*store.User, calendarViews []*remo
 		}
 
 		mattermostUserID := usersByRemoteID[view.RemoteUserID].MattermostUserID
-		m.notifyUpcomingEvents(mattermostUserID, view.Events)
+		if fetchIndividually {
+			engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
+			if err != nil {
+				m.Logger.With(bot.LogContext{"err": err}).Errorf("error getting engine for user")
+				continue
+			}
+			engine.notifyUpcomingEvents(mattermostUserID, view.Events)
+		} else {
+			m.notifyUpcomingEvents(mattermostUserID, view.Events)
+		}
 	}
 }
 

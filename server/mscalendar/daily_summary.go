@@ -127,7 +127,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 		shouldPost, shouldPostErr := shouldPostDailySummary(dsum, now)
 		if shouldPostErr != nil {
-			m.Logger.Warnf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, shouldPostErr)
+			m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "now": now.String(), "err": shouldPostErr}).Warnf("Error checking daily summary should be posted")
 			continue
 		}
 		if !shouldPost {
@@ -153,13 +153,13 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 
 			tz, err := engine.GetTimezone(u)
 			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, err)
+				m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "err": err}).Errorf("Error getting timezone for user.")
 				continue
 			}
 
 			events, err := engine.getTodayCalendarEvents(u, now, tz)
 			if err != nil {
-				m.Logger.Errorf("Error posting daily summary for user %s. err=%v", storeUser.MattermostUserID, err)
+				m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "now": now.String(), "tz": tz, "err": err}).Errorf("Error getting calendar events for user")
 				continue
 			}
 

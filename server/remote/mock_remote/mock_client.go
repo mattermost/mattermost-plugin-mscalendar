@@ -154,7 +154,7 @@ func (mr *MockClientMockRecorder) DeleteCalendar(arg0, arg1 interface{}) *gomock
 }
 
 // DeleteSubscription mocks base method.
-func (m *MockClient) DeleteSubscription(arg0 string) error {
+func (m *MockClient) DeleteSubscription(arg0 *remote.Subscription) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteSubscription", arg0)
 	ret0, _ := ret[0].(error)
@@ -333,7 +333,7 @@ func (mr *MockClientMockRecorder) ListSubscriptions() *gomock.Call {
 }
 
 // RenewSubscription mocks base method.
-func (m *MockClient) RenewSubscription(arg0, arg1, arg2 string) (*remote.Subscription, error) {
+func (m *MockClient) RenewSubscription(arg0, arg1 string, arg2 *remote.Subscription) (*remote.Subscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RenewSubscription", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*remote.Subscription)

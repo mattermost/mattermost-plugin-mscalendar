@@ -83,8 +83,8 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 }
 
 func renderTableHeader() string {
-	return `| Time | Subject | |
-| :-- | :-- | :-- |`
+	return `| Time | Subject |
+| :-- | :-- |`
 }
 
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
@@ -93,7 +93,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
-		format = "| %s - %s | [%s](%s) | %s |"
+		format = "| %s - %s | [%s](%s) |"
 	}
 
 	link, err := url.QueryUnescape(event.Weblink)
@@ -101,14 +101,9 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 		return "", err
 	}
 
-	var other string
-	if event.Location != nil && isKnownMeetingURL(event.Location.DisplayName) {
-		other = "[Join meeting](" + event.Location.DisplayName + ")"
-	}
-
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, subject, link, other), nil
+	return fmt.Sprintf(format, start, end, subject, link), nil
 }
 
 func isKnownMeetingURL(location string) bool {

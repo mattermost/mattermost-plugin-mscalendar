@@ -53,8 +53,9 @@ func (c *client) CreateMySubscription(notificationURL, remoteUserID string) (*re
 	}
 
 	sub := &remote.Subscription{
-		ID:       googleSubscription.Id,
-		Resource: defaultCalendarName,
+		ID:         googleSubscription.Id,
+		ResourceID: googleSubscription.ResourceId,
+		Resource:   defaultCalendarName,
 		// ChangeType:         "created,updated,deleted",
 		NotificationURL:    notificationURL,
 		ExpirationDateTime: time.Now().Add(time.Second * time.Duration(googleSubscription.Expiration)).Format(time.RFC3339),
@@ -72,13 +73,16 @@ func (c *client) CreateMySubscription(notificationURL, remoteUserID string) (*re
 	return sub, nil
 }
 
-func (c *client) DeleteSubscription(subscriptionID string) error {
+func (c *client) DeleteSubscription(sub *remote.Subscription) error {
 	service, err := calendar.NewService(context.Background(), option.WithHTTPClient(c.httpClient))
 	if err != nil {
 		return errors.Wrap(err, "gcal DeleteSubscription, error creating service")
 	}
 
-	stopRequest := service.Channels.Stop(&calendar.Channel{Id: subscriptionID})
+	stopRequest := service.Channels.Stop(&calendar.Channel{
+		Id:         sub.ID,
+		ResourceId: sub.ResourceID,
+	})
 	err = stopRequest.Do()
 
 	if err != nil {
@@ -86,14 +90,14 @@ func (c *client) DeleteSubscription(subscriptionID string) error {
 	}
 
 	c.Logger.With(bot.LogContext{
-		"subscriptionID": subscriptionID,
+		"subscriptionID": sub.ID,
 	}).Debugf("gcal: deleted subscription.")
 
 	return nil
 }
 
-func (c *client) RenewSubscription(notificationURL, remoteUserID, subscriptionID string) (*remote.Subscription, error) {
-	err := c.DeleteSubscription(subscriptionID)
+func (c *client) RenewSubscription(notificationURL, remoteUserID string, oldSub *remote.Subscription) (*remote.Subscription, error) {
+	err := c.DeleteSubscription(oldSub)
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal RenewSubscription, error deleting subscription")
 	}

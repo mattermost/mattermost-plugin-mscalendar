@@ -5,6 +5,7 @@ package remote
 
 type Subscription struct {
 	ID                 string `json:"id"`
+	ResourceID         string `json:"resourceId,omitempty"`
 	Resource           string `json:"resource,omitempty"`
 	ApplicationID      string `json:"applicationId,omitempty"`
 	ChangeType         string `json:"changeType,omitempty"`
