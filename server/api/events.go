@@ -104,34 +104,34 @@ func (cep createEventPayload) parseDate(loc *time.Location) (time.Time, error) {
 
 func (cep createEventPayload) IsValid(loc *time.Location) error {
 	if cep.Subject == "" {
-		return fmt.Errorf("subject must not be empty")
+		return fmt.Errorf("Subject must not be empty")
 	}
 
 	if cep.Date == "" {
-		return fmt.Errorf("date must not be empty")
+		return fmt.Errorf("Date must not be empty")
 	}
 
 	_, err := cep.parseDate(loc)
 	if err != nil {
-		return fmt.Errorf("invalid date")
+		return fmt.Errorf("Invalid date")
 	}
 
 	if cep.StartTime == "" && cep.EndTime == "" && !cep.AllDay {
-		return fmt.Errorf("either start time/end time must be set or event should last all day")
+		return fmt.Errorf("Start time/end time must be set or event should last all day")
 	}
 
 	start, err := cep.parseStartTime(loc)
 	if err != nil {
-		return fmt.Errorf("please use a valid start time")
+		return fmt.Errorf("Please use a valid start time")
 	}
 
 	end, err := cep.parseEndTime(loc)
 	if err != nil {
-		return fmt.Errorf("please use a valid end time")
+		return fmt.Errorf("Please use a valid end time")
 	}
 
 	if start.After(end) {
-		return fmt.Errorf("end date should be after start date")
+		return fmt.Errorf("End date should be after start date")
 	}
 
 	return nil
@@ -161,9 +161,11 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if !api.PluginAPI.CanLinkEventToChannel(payload.ChannelID, user.MattermostUserID) {
-		httputils.WriteUnauthorizedError(w, fmt.Errorf("you don't have permission to link events in this channel"))
-		return
+	if payload.ChannelID != "" {
+		if !api.PluginAPI.CanLinkEventToChannel(payload.ChannelID, user.MattermostUserID) {
+			httputils.WriteBadRequestError(w, fmt.Errorf("You don't have permission to link events in the selected channel."))
+			return
+		}
 	}
 
 	client := api.Remote.MakeClient(context.Background(), user.OAuth2Token)
