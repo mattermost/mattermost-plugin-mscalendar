@@ -14,7 +14,7 @@ type SelectOption = {
 }
 
 type Props = {
-    onChange: (selected: string[]) => void;
+    onChange: (selected: string) => void;
     value: string[];
 };
 
@@ -30,6 +30,10 @@ export default function ChannelSelector(props: Props) {
         }));
     }, []);
 
+    const handleChange = (selected: SelectOption) => {
+        props.onChange(selected.value);
+    }
+
     return (
         <AsyncSelect
             value={props.value}
@@ -37,6 +41,7 @@ export default function ChannelSelector(props: Props) {
             defaultOptions={true}
             menuPortalTarget={document.body}
             menuPlacement='auto'
+            onChange={handleChange}
             styles={getStyleForReactSelect(theme)}
             isMulti={false}
         />
