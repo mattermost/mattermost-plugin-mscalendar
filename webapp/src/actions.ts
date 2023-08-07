@@ -1,4 +1,5 @@
 import ActionTypes from './action_types';
+import { doFetch, doFetchWithResponse } from './client';
 
 export const openCreateEventModal = (channelId: string) => {
     return {
@@ -15,13 +16,40 @@ export const closeCreateEventModal = () => {
     };
 };
 
-export const autocompleteConnectedUsers = async (input: string) => {
-    return await fetch('/plugins/com.mattermost.gcal/autocomplete/users?search=' + input)
+type AutocompleteUser = {
+    mm_id: string
+    mm_username: string
+    mm_display_name: string
+}
+
+export const autocompleteConnectedUsers = async (input: string) : Promise<AutocompleteUser[]> => {
+    return await doFetchWithResponse('/plugins/com.mattermost.gcal/autocomplete/users?search=' + input, {method: "GET"})
         .then((response) => {
-            if (!response.ok) {
+            if (!response.response.ok) {
                 throw new Error("error fetching autocomplete users")
             }
-            return response.json();
+            return response.data
+        })
+        .then((data) => {
+            return data
+        })
+        .catch((error) => {
+            console.error(error)
+        });
+}
+
+type AutocompleteChannel = {
+    id: string
+    display_name: string
+}
+
+export const autocompleteUserChannels = async (input: string) : Promise<AutocompleteChannel[]> =>  {
+    return await doFetchWithResponse('/plugins/com.mattermost.gcal/autocomplete/channels?search=' + input, {method: "GET"})
+        .then((response) => {
+            if (!response.response.ok) {
+                throw new Error("error fetching autocomplete channels")
+            }
+            return response.data
         })
         .then((data) => {
             return data

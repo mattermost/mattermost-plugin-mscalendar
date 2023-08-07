@@ -25,6 +25,7 @@ const (
 
 	PathAutocomplete = "/autocomplete"
 	PathUsers        = "/users"
+	PathChannels     = "/channels"
 
 	InternalAPIPath = "/api/v1"
 	PathEvents      = "/events"

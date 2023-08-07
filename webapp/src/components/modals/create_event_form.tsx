@@ -1,23 +1,24 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useState} from 'react';
-import {useSelector} from 'react-redux';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import {Modal} from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 
-import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
+import { getTheme } from 'mattermost-redux/selectors/entities/preferences';
 
-import {CreateEventPayload} from '@/types/calendar_api_types';
+import { CreateEventPayload } from '@/types/calendar_api_types';
 
-import {getModalStyles} from '@/utils/styles';
+import { getModalStyles } from '@/utils/styles';
 
 import FormButton from '@/components/form_button';
 import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
-import { doFetch } from '@/client';
+import { doFetchWithResponse } from '@/client';
+import ChannelSelector from '../channel_selector';
 
 type Props = {
     close: (e?: Event) => void;
@@ -36,6 +37,7 @@ export default function CreateEventForm(props: Props) {
         start_time: '',
         end_time: '',
         description: '',
+        channel_id: '',
     });
 
     const setFormValue = <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => {
@@ -62,9 +64,15 @@ export default function CreateEventForm(props: Props) {
 
     const createEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
         return new Promise((resolve, reject) => {
-            fetch('/plugins/com.mattermost.gcal/events/create', {method: 'POST'})
+            doFetchWithResponse('/plugins/com.mattermost.gcal/api/v1/events/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
                 .then((response) => {
-                    return response.json();
+                    return response.data
                 })
                 .then((data) => {
                     if (data && data.error) {
@@ -87,13 +95,15 @@ export default function CreateEventForm(props: Props) {
         // add required field validation
 
         setSubmitting(true);
-        createEvent(formValues).then(({ error }) => {
+        createEvent(formValues).then(({ data }) => {
+
+            handleClose();
+        }).catch(({ error }) => {
+
             if (error) {
                 handleError(error);
                 return;
             }
-
-            handleClose();
         });
     };
 
@@ -137,7 +147,7 @@ export default function CreateEventForm(props: Props) {
         error = (
             <p className='alert alert-danger'>
                 <i
-                    style={{marginRight: '10px'}}
+                    style={{ marginRight: '10px' }}
                     className='fa fa-warning'
                     title='Warning Icon'
                 />
@@ -166,11 +176,11 @@ export default function CreateEventForm(props: Props) {
 
 type ActualFormProps = {
     formValues: CreateEventPayload;
-    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => Promise<{error?: string}>;
+    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => Promise<{ error?: string }>;
 }
 
 const ActualForm = (props: ActualFormProps) => {
-    const {formValues, setFormValue} = props;
+    const { formValues, setFormValue } = props;
 
     const theme = useSelector(getTheme);
 
@@ -236,6 +246,15 @@ const ActualForm = (props: ActualFormProps) => {
                 />
             ),
         },
+        {
+            label: 'Link event to channel',
+            component: (
+                <ChannelSelector
+                    onChange={(selected) => setFormValue('channel_id', selected)}
+                />
+            ),
+        },
+
     ];
 
     return (

@@ -108,6 +108,21 @@ func (mr *MockPluginAPIMockRecorder) GetMattermostUserStatusesByIds(arg0 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserStatusesByIds", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserStatusesByIds), arg0)
 }
 
+// GetMattermostUserTeams mocks base method.
+func (m *MockPluginAPI) GetMattermostUserTeams(arg0 string) ([]*model.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMattermostUserTeams", arg0)
+	ret0, _ := ret[0].([]*model.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMattermostUserTeams indicates an expected call of GetMattermostUserTeams.
+func (mr *MockPluginAPIMockRecorder) GetMattermostUserTeams(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserTeams", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserTeams), arg0)
+}
+
 // GetPost mocks base method.
 func (m *MockPluginAPI) GetPost(arg0 string) (*model.Post, error) {
 	m.ctrl.T.Helper()
@@ -136,6 +151,21 @@ func (m *MockPluginAPI) IsSysAdmin(arg0 string) (bool, error) {
 func (mr *MockPluginAPIMockRecorder) IsSysAdmin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSysAdmin", reflect.TypeOf((*MockPluginAPI)(nil).IsSysAdmin), arg0)
+}
+
+// SearchLinkableChannelForUser mocks base method.
+func (m *MockPluginAPI) SearchLinkableChannelForUser(arg0, arg1, arg2 string) ([]*model.Channel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchLinkableChannelForUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*model.Channel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchLinkableChannelForUser indicates an expected call of SearchLinkableChannelForUser.
+func (mr *MockPluginAPIMockRecorder) SearchLinkableChannelForUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchLinkableChannelForUser", reflect.TypeOf((*MockPluginAPI)(nil).SearchLinkableChannelForUser), arg0, arg1, arg2)
 }
 
 // UpdateMattermostUserStatus mocks base method.

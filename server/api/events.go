@@ -159,6 +159,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		httputils.WriteBadRequestError(w, err)
 		return
 	}
+	defer r.Body.Close()
 
 	if !api.PluginAPI.CanLinkEventToChannel(payload.ChannelID, user.MattermostUserID) {
 		httputils.WriteUnauthorizedError(w, fmt.Errorf("you don't have permission to link events in this channel"))

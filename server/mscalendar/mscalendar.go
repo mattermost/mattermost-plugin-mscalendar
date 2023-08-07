@@ -47,6 +47,8 @@ type PluginAPI interface {
 	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)
 	GetPost(postID string) (*model.Post, error)
 	CanLinkEventToChannel(channelID, userID string) bool
+	SearchLinkableChannelForUser(teamID, mattemostUserID, search string) ([]*model.Channel, error)
+	GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error)
 }
 
 type Env struct {
