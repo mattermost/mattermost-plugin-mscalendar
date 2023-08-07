@@ -34,6 +34,20 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// AddLinkedChannelToEvent mocks base method.
+func (m *MockStore) AddLinkedChannelToEvent(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddLinkedChannelToEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddLinkedChannelToEvent indicates an expected call of AddLinkedChannelToEvent.
+func (mr *MockStoreMockRecorder) AddLinkedChannelToEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddLinkedChannelToEvent", reflect.TypeOf((*MockStore)(nil).AddLinkedChannelToEvent), arg0, arg1)
+}
+
 // DeleteCurrentStep mocks base method.
 func (m *MockStore) DeleteCurrentStep(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -46,6 +60,20 @@ func (m *MockStore) DeleteCurrentStep(arg0 string) error {
 func (mr *MockStoreMockRecorder) DeleteCurrentStep(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCurrentStep", reflect.TypeOf((*MockStore)(nil).DeleteCurrentStep), arg0)
+}
+
+// DeleteLinkedChannelFromEvent mocks base method.
+func (m *MockStore) DeleteLinkedChannelFromEvent(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteLinkedChannelFromEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteLinkedChannelFromEvent indicates an expected call of DeleteLinkedChannelFromEvent.
+func (mr *MockStoreMockRecorder) DeleteLinkedChannelFromEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLinkedChannelFromEvent", reflect.TypeOf((*MockStore)(nil).DeleteLinkedChannelFromEvent), arg0, arg1)
 }
 
 // DeletePanelPostID mocks base method.
@@ -191,6 +219,21 @@ func (m *MockStore) GetSetting(arg0, arg1 string) (interface{}, error) {
 func (mr *MockStoreMockRecorder) GetSetting(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSetting", reflect.TypeOf((*MockStore)(nil).GetSetting), arg0, arg1)
+}
+
+// LoadEventMetadata mocks base method.
+func (m *MockStore) LoadEventMetadata(arg0 string) (*store.EventMetadata, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadEventMetadata", arg0)
+	ret0, _ := ret[0].(*store.EventMetadata)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadEventMetadata indicates an expected call of LoadEventMetadata.
+func (mr *MockStoreMockRecorder) LoadEventMetadata(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadEventMetadata", reflect.TypeOf((*MockStore)(nil).LoadEventMetadata), arg0)
 }
 
 // LoadMattermostUserID mocks base method.
@@ -409,6 +452,20 @@ func (m *MockStore) SetSetting(arg0, arg1 string, arg2 interface{}) error {
 func (mr *MockStoreMockRecorder) SetSetting(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSetting", reflect.TypeOf((*MockStore)(nil).SetSetting), arg0, arg1, arg2)
+}
+
+// StoreEventMetadata mocks base method.
+func (m *MockStore) StoreEventMetadata(arg0 string, arg1 *store.EventMetadata) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreEventMetadata", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreEventMetadata indicates an expected call of StoreEventMetadata.
+func (mr *MockStoreMockRecorder) StoreEventMetadata(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreEventMetadata", reflect.TypeOf((*MockStore)(nil).StoreEventMetadata), arg0, arg1)
 }
 
 // StoreOAuth2State mocks base method.

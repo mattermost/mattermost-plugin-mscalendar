@@ -514,7 +514,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
+			message, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
@@ -524,6 +524,31 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvents error creating DM. err=%v", err)
 				continue
+			}
+
+			// Process channel reminders
+			eventMetadata, errMetadata := m.Store.LoadEventMetadata(event.ICalUID)
+			if errMetadata != nil && !errors.Is(errMetadata, store.ErrNotFound) {
+				m.Logger.With(bot.LogContext{
+					"eventID": event.ID,
+					"err":     errMetadata.Error(),
+				}).Warnf("notifyUpcomingEvents error checking store for channel notifications")
+				continue
+			}
+
+			if eventMetadata != nil {
+				for channelID := range eventMetadata.LinkedChannelIDs {
+					post := &model.Post{
+						ChannelId: channelID,
+						Message:   message,
+					}
+					model.ParseSlackAttachment(post, []*model.SlackAttachment{attachment})
+					err = m.Poster.CreatePost(post)
+					if err != nil {
+						m.Logger.Warnf("notifyUpcomingEvents error creating post in channel. err=%v", err)
+						continue
+					}
+				}
 			}
 		}
 	}

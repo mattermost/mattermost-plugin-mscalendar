@@ -106,9 +106,15 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	return fmt.Sprintf(format, start, end, subject, link), nil
 }
 
+func isKnownMeetingURL(location string) bool {
+	_, err := url.ParseRequestURI(location)
+	return err == nil
+}
+
 func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
+	var titleLink string
 
 	if event.Location != nil && event.Location.DisplayName != "" {
 		fields = append(fields, &model.SlackAttachmentField{
@@ -117,19 +123,18 @@ func renderEventAsAttachment(event *remote.Event, timezone string) (*model.Slack
 			Short: true,
 		})
 
-		// Add actions for known links
-		// Disable join meeting button for now, since we don't have a handler and
-		// the location url is shown parsed and clickable anyway.
-		// if joinMeetingAction := getActionForLocation(event.Location); joinMeetingAction != nil {
-		// 	actions = append(actions, joinMeetingAction)
-		// }
+		// Use location display name as link if can be parsed as an URL
+		if isKnownMeetingURL(event.Location.DisplayName) {
+			titleLink = event.Location.DisplayName
+		}
 	}
 
 	return &model.SlackAttachment{
-		Title:   event.Subject,
-		Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
-		Fields:  fields,
-		Actions: actions,
+		Title:     event.Subject,
+		TitleLink: titleLink,
+		Text:      fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Fields:    fields,
+		Actions:   actions,
 	}, nil
 }
 
@@ -179,7 +184,7 @@ func EnsureSubject(s string) string {
 }
 
 func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
-	message = "You have an upcoming event:\n"
+	message = "Upcoming event:\n"
 	attachment, err = renderEventAsAttachment(event, timeZone)
 	return message, attachment, err
 }
