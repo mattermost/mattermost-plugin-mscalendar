@@ -16,7 +16,17 @@ export const closeCreateEventModal = () => {
 };
 
 export const autocompleteConnectedUsers = async (input: string) => {
-    const sampleUsers = ['sysadmin', 'user1', 'user2'];
-
-    return sampleUsers.filter(u => u.toLowerCase().includes(input.toLowerCase()));
+    return await fetch('/plugins/com.mattermost.gcal/autocomplete/users?search=' + input)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("error fetching autocomplete users")
+            }
+            return response.json();
+        })
+        .then((data) => {
+            return data
+        })
+        .catch((error) => {
+            console.error(error)
+        });
 }

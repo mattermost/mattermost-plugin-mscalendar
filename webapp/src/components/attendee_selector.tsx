@@ -25,8 +25,8 @@ export default function AttendeeSelector(props: Props) {
         const matchedUsers = await autocompleteConnectedUsers(input);
 
         return matchedUsers.map(u => ({
-            label: u,
-            value: u,
+            label: u.mm_display_name,
+            value: u.mm_username,
         }));
     }, []);
 
