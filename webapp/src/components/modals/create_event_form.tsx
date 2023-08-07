@@ -43,6 +43,7 @@ export default function CreateEventForm(props: Props) {
         end_time: '',
         description: '',
         channel_id: '',
+        location: '',
     });
 
     const setFormValue = <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => {
@@ -191,6 +192,17 @@ const ActualForm = (props: ActualFormProps) => {
                 <input
                     onChange={(e) => setFormValue('subject', e.target.value)}
                     value={formValues.subject}
+                    className='form-control'
+                />
+            ),
+        },
+        {
+            label: 'Location',
+            required: false,
+            component: (
+                <input
+                    onChange={(e) => setFormValue('location', e.target.value)}
+                    value={formValues.location}
                     className='form-control'
                 />
             ),
