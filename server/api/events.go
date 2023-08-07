@@ -194,12 +194,10 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, pa := range payload.Attendees {
-		var attendee remote.Attendee
+		var emailAddress string
 
 		if strings.Contains(pa, "@") {
-			attendee.EmailAddress = &remote.EmailAddress{
-				Address: pa,
-			}
+			emailAddress = pa
 		} else {
 			attendeeUser, err := api.Store.LoadUser(pa)
 			if err != nil {
@@ -207,10 +205,14 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			attendee.RemoteID = attendeeUser.Remote.ID
+			emailAddress = attendeeUser.Remote.Mail
 		}
 
-		event.Attendees = append(event.Attendees, &attendee)
+		event.Attendees = append(event.Attendees, &remote.Attendee{
+			EmailAddress: &remote.EmailAddress{
+				Address: emailAddress,
+			},
+		})
 	}
 
 	_, err := client.CreateEvent(user.Remote.ID, event)
