@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
@@ -222,14 +223,32 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	attachment, err := views.RenderEventAsAttachment(event, "")
+	if err != nil {
+		api.Logger.With(bot.LogContext{"err": err}).Errorf("error rendering event as slack attachment")
+	}
+
 	// Event linking
 	if payload.ChannelID != "" {
-		// TOOD: Link event to channel
-		// TODO: Create post in channel
+		if err := api.Store.AddLinkedChannelToEvent(event.ICalUID, payload.ChannelID); err != nil {
+			api.Logger.With(bot.LogContext{"err": err}).Errorf("error linking event to channel")
+			defer func() {
+				api.Poster.DM(mattermostUserID, "You event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
+			}()
+		} else {
+			post := &model.Post{
+				Message:   fmt.Sprintf("The event **%s** was linked to this channel by @%s", event.Subject, user.MattermostUsername),
+				ChannelId: payload.ChannelID,
+			}
+			if attachment != nil {
+				model.ParseSlackAttachment(post, []*model.SlackAttachment{attachment})
+			}
+			if err := api.Poster.CreatePost(post); err != nil {
+				api.Logger.With(bot.LogContext{"err": err}).Errorf("error sending post to channel about linked event")
+			}
+		}
 	} else {
-		attachment, err := views.RenderEventAsAttachment(event, "")
-		if err != nil {
-			api.Logger.With(bot.LogContext{"err": err}).Errorf("error rendering event as slack attachment")
+		if attachment == nil {
 			api.Poster.DM(mattermostUserID, "You event: **%s** was created successfully.", event.Subject)
 		} else {
 			api.Poster.DMWithMessageAndAttachments(mattermostUserID, "Your event was created successfully.", attachment)
