@@ -60,17 +60,23 @@ export default function CreateEventForm(props: Props) {
         setSubmitting(false);
     };
 
-    const createEvent = async (payload: CreateEventPayload): Promise<{error?: string}> => {
-        alert(JSON.stringify(payload));
-
-        let data = null;
-
-        data = await doFetch("/plugins/com.mattermost.gcal/events/create", {
-            body: JSON.stringify(payload),
-            method: "POST",
-        })
-
-        return {};
+    const createEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
+        return new Promise((resolve, reject) => {
+            fetch('/plugins/com.mattermost.gcal/events/create', {method: 'POST'})
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    if (data && data.error) {
+                        reject({ error: data.error });
+                    } else {
+                        resolve({ data });
+                    }
+                })
+                .catch((error) => {
+                    reject({ 'error': error });
+                });
+        });
     };
 
     const handleSubmit = (e?: React.FormEvent) => {
@@ -81,7 +87,7 @@ export default function CreateEventForm(props: Props) {
         // add required field validation
 
         setSubmitting(true);
-        createEvent(formValues).then(({error}) => {
+        createEvent(formValues).then(({ error }) => {
             if (error) {
                 handleError(error);
                 return;
