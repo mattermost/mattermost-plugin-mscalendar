@@ -24,7 +24,7 @@ export default function ChannelSelector(props: Props) {
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
         const matchedChannels = await autocompleteUserChannels(input);
 
-        return matchedChannels.map(c => ({
+        return matchedChannels.map((c) => ({
             label: c.display_name,
             value: c.id,
         }));
@@ -32,7 +32,7 @@ export default function ChannelSelector(props: Props) {
 
     const handleChange = (selected: SelectOption) => {
         props.onChange(selected.value);
-    }
+    };
 
     return (
         <AsyncSelect

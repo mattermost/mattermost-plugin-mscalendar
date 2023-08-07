@@ -1,23 +1,23 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, {useState} from 'react';
+import {useSelector} from 'react-redux';
 
-import { Modal } from 'react-bootstrap';
+import {Modal} from 'react-bootstrap';
 
-import { getTheme } from 'mattermost-redux/selectors/entities/preferences';
+import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
-import { CreateEventPayload } from '@/types/calendar_api_types';
+import {CreateEventPayload} from '@/types/calendar_api_types';
 
-import { getModalStyles } from '@/utils/styles';
+import {getModalStyles} from '@/utils/styles';
 
 import FormButton from '@/components/form_button';
 import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
-import { doFetchWithResponse } from '@/client';
+import {doFetchWithResponse} from '@/client';
 import ChannelSelector from '../channel_selector';
 
 type Props = {
@@ -76,14 +76,13 @@ export default function CreateEventForm(props: Props) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(payload),
-            })
-                .then((data) => {
+            }).
+                then((data) => {
                     resolve(data);
-                })
-                .catch((response) => {
+                }).
+                catch((response) => {
                     if (response.status_code >= 400) {
                         handleError(response.message);
-                        return;
                     }
                 });
         });
@@ -102,7 +101,6 @@ export default function CreateEventForm(props: Props) {
         }).catch((response) => {
             if (response.status_code >= 400) {
                 handleError(response.message);
-                return;
             }
         });
     };
@@ -132,7 +130,7 @@ export default function CreateEventForm(props: Props) {
 
     let form;
     if (loading) {
-        form = <Loading />;
+        form = <Loading/>;
     } else {
         form = (
             <ActualForm
@@ -147,7 +145,7 @@ export default function CreateEventForm(props: Props) {
         error = (
             <p className='alert alert-danger'>
                 <i
-                    style={{ marginRight: '10px' }}
+                    style={{marginRight: '10px'}}
                     className='fa fa-warning'
                     title='Warning Icon'
                 />
@@ -180,7 +178,7 @@ type ActualFormProps = {
 }
 
 const ActualForm = (props: ActualFormProps) => {
-    const { formValues, setFormValue } = props;
+    const {formValues, setFormValue} = props;
 
     const theme = useSelector(getTheme);
 

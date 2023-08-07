@@ -17,14 +17,14 @@ type Props = {
 export default function TimeSelector(props: Props) {
     const theme = useSelector(getTheme);
 
-    const options = useMemo(() => militaryTimeOptions.map(t => ({
+    const options = useMemo(() => militaryTimeOptions.map((t) => ({
         label: t,
         value: t,
     })), []);
 
     let value = null;
     if (props.value) {
-        value = options.find(option => option.value === props.value);
+        value = options.find((option) => option.value === props.value);
     }
 
     return (

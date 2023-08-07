@@ -1,12 +1,12 @@
-import React, { useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import React, {useCallback} from 'react';
+import {useSelector} from 'react-redux';
 
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
-import { getTheme } from 'mattermost-redux/selectors/entities/preferences';
+import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
-import { getStyleForReactSelect } from '@/utils/styles';
-import { autocompleteConnectedUsers } from '@/actions';
+import {getStyleForReactSelect} from '@/utils/styles';
+import {autocompleteConnectedUsers} from '@/actions';
 
 type SelectOption = {
     label: string;
@@ -24,19 +24,19 @@ export default function AttendeeSelector(props: Props) {
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
         const matchedUsers = await autocompleteConnectedUsers(input);
 
-        return matchedUsers.map(u => ({
+        return matchedUsers.map((u) => ({
             label: u.mm_display_name,
             value: u.mm_id,
         }));
     }, []);
 
     const isValidEmmail = (input: string): boolean => {
-        return /\S+@\S+\.\S+/.test(input);
-    }
+        return (/\S+@\S+\.\S+/).test(input);
+    };
 
     const handleChange = (selected: SelectOption[]) => {
-        props.onChange(selected.map(option => option.value));
-    }
+        props.onChange(selected.map((option) => option.value));
+    };
 
     return (
         <AsyncCreatableSelect
