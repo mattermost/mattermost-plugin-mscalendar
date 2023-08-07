@@ -10,10 +10,12 @@ import (
 )
 
 func (api *api) notification(w http.ResponseWriter, req *http.Request) {
-	err := api.NotificationProcessor.Enqueue(
-		api.Env.Remote.HandleWebhook(w, req)...)
-	if err != nil {
-		httputils.WriteInternalServerError(w, err)
-		return
+	if api.NotificationProcessor != nil {
+		err := api.NotificationProcessor.Enqueue(
+			api.Env.Remote.HandleWebhook(w, req)...)
+		if err != nil {
+			httputils.WriteInternalServerError(w, err)
+			return
+		}
 	}
 }
