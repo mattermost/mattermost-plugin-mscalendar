@@ -24,6 +24,11 @@ type Props = {
     close: (e?: Event) => void;
 };
 
+type ErrorPayload = {
+    error?: string
+    details?: string
+}
+
 export default function CreateEventForm(props: Props) {
     const [storedError, setStoredError] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -41,7 +46,7 @@ export default function CreateEventForm(props: Props) {
     });
 
     const setFormValue = <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => {
-        setFormValues((values) => ({
+        setFormValues((values: any) => ({
             ...values,
             [name]: value,
         }));
@@ -57,8 +62,8 @@ export default function CreateEventForm(props: Props) {
         props.close();
     };
 
-    const handleError = (error: string) => {
-        setStoredError(error);
+    const handleError = (errorPayload: ErrorPayload) => {
+        setStoredError(errorPayload.error);
         setSubmitting(false);
     };
 
@@ -71,18 +76,14 @@ export default function CreateEventForm(props: Props) {
                 },
                 body: JSON.stringify(payload),
             })
-                .then((response) => {
-                    return response.data
-                })
                 .then((data) => {
-                    if (data && data.error) {
-                        reject({ error: data.error });
-                    } else {
-                        resolve({ data });
-                    }
+                    resolve(data);
                 })
-                .catch((error) => {
-                    reject({ 'error': error });
+                .catch((response) => {
+                    if (response.status_code >= 400) {
+                        handleError(response.message);
+                        return;
+                    }
                 });
         });
     };
@@ -95,13 +96,11 @@ export default function CreateEventForm(props: Props) {
         // add required field validation
 
         setSubmitting(true);
-        createEvent(formValues).then(({ data }) => {
-
+        createEvent(formValues).then((_data) => {
             handleClose();
-        }).catch(({ error }) => {
-
-            if (error) {
-                handleError(error);
+        }).catch((response) => {
+            if (response.status_code >= 400) {
+                handleError(response.message);
                 return;
             }
         });

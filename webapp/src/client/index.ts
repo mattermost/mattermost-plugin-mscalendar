@@ -11,17 +11,14 @@ export const doFetch = async (url: string, options: Options) => {
 export const doFetchWithResponse = async (url: string, options: Options = {}) => {
     const response = await fetch(url, Client4.getOptions(options));
 
-    let data;
-    if (response.ok) {
-        data = await response.json();
+    let data = await response.json();
 
+    if (response.ok) {
         return {
             response,
             data,
         };
     }
-
-    data = await response.text();
 
     throw new ClientError(Client4.url, {
         message: data || '',
