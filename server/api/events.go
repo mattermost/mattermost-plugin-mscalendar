@@ -105,34 +105,34 @@ func (cep createEventPayload) parseDate(loc *time.Location) (time.Time, error) {
 
 func (cep createEventPayload) IsValid(loc *time.Location) error {
 	if cep.Subject == "" {
-		return fmt.Errorf("Subject must not be empty")
+		return fmt.Errorf("subject must not be empty")
 	}
 
 	if cep.Date == "" {
-		return fmt.Errorf("Date must not be empty")
+		return fmt.Errorf("date must not be empty")
 	}
 
 	_, err := cep.parseDate(loc)
 	if err != nil {
-		return fmt.Errorf("Invalid date")
+		return fmt.Errorf("invalid date")
 	}
 
 	if cep.StartTime == "" && cep.EndTime == "" && !cep.AllDay {
-		return fmt.Errorf("Start time/end time must be set or event should last all day")
+		return fmt.Errorf("start time/end time must be set or event should last all day")
 	}
 
 	start, err := cep.parseStartTime(loc)
 	if err != nil {
-		return fmt.Errorf("Please use a valid start time")
+		return fmt.Errorf("please use a valid start time")
 	}
 
 	end, err := cep.parseEndTime(loc)
 	if err != nil {
-		return fmt.Errorf("Please use a valid end time")
+		return fmt.Errorf("please use a valid end time")
 	}
 
 	if start.After(end) {
-		return fmt.Errorf("End date should be after start date")
+		return fmt.Errorf("end date should be after start date")
 	}
 
 	return nil

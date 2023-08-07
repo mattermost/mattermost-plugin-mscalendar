@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func NormalizeRemoteBaseURL(mattermostSiteURL, remoteURL string) (string, error) {
@@ -53,7 +55,7 @@ func WriteJSONError(w http.ResponseWriter, statusCode int, summary string, err e
 		Summary string `json:"details"`
 	}{
 		Summary: summary,
-		Error:   err.Error(),
+		Error:   cases.Title(language.English).String(err.Error()),
 	})
 	_, _ = w.Write(b)
 }
