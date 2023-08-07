@@ -116,7 +116,7 @@ func isKnownMeetingURL(location string) bool {
 	return strings.Contains(location, "zoom.us/j/") || strings.Contains(location, "discord.gg") || strings.Contains(location, "meet.google.com")
 }
 
-func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
+func RenderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
 
@@ -190,6 +190,6 @@ func EnsureSubject(s string) string {
 
 func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
 	message = "You have an upcoming event:\n"
-	attachment, err = renderEventAsAttachment(event, timeZone)
+	attachment, err = RenderEventAsAttachment(event, timeZone)
 	return message, attachment, err
 }

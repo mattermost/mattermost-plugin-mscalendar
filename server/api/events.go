@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
@@ -215,10 +216,24 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	_, err := client.CreateEvent(user.Remote.ID, event)
+	event, err := client.CreateEvent(user.Remote.ID, event)
 	if err != nil {
 		httputils.WriteInternalServerError(w, err)
 		return
+	}
+
+	// Event linking
+	if payload.ChannelID != "" {
+		// TOOD: Link event to channel
+		// TODO: Create post in channel
+	} else {
+		attachment, err := views.RenderEventAsAttachment(event, "")
+		if err != nil {
+			api.Logger.With(bot.LogContext{"err": err}).Errorf("error rendering event as slack attachment")
+			api.Poster.DM(mattermostUserID, "You event: **%s** was created successfully.", event.Subject)
+		} else {
+			api.Poster.DMWithMessageAndAttachments(mattermostUserID, "Your event was created successfully.", attachment)
+		}
 	}
 
 	httputils.WriteJSONResponse(w, `{"ok": true}`, http.StatusCreated)
