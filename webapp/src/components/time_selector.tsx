@@ -5,6 +5,8 @@ import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
 import ReactSelectSetting from './react_select_setting';
 
+const minuteStep = 15;
+
 type Props = {
     value: string;
     onChange: (value: string) => void;
@@ -26,7 +28,7 @@ export default function TimeSelector(props: Props) {
         if (props.startTime != undefined && props.startTime != '') {
             const parts = props.startTime.split(":")
             fromHour = parseInt(parts[0]);
-            fromMinute = parseInt(parts[1]);
+            fromMinute = parseInt(parts[1]) + minuteStep;
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute)
         }
 
@@ -70,7 +72,7 @@ export default function TimeSelector(props: Props) {
     );
 }
 
-const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = 15) => {
+const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = minuteStep) => {
     const timeArray = [];
     for (let hour = fromHour; hour <= toHour; hour++) {
         if (hour != fromHour) fromMinute = 0
