@@ -39,10 +39,12 @@ export default function TimeSelector(props: Props) {
     );
 }
 
-const generateMilitaryTimeArray = () => {
+const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 0, toMinute = 0, step = 15) => {
     const timeArray = [];
-    for (let hour = 0; hour <= 23; hour++) {
-        for (let minute = 0; minute <= 30; minute += 30) {
+    for (let hour = fromHour; hour <= toHour; hour++) {
+        if (hour != fromHour) fromMinute = 0
+        if (hour != toHour) toMinute = 45
+        for (let minute = fromMinute; minute <= toMinute; minute += step) {
             const formattedHour = hour.toString().padStart(2, '0');
             const formattedMinute = minute.toString().padStart(2, '0');
             const timeString = `${formattedHour}:${formattedMinute}`;
