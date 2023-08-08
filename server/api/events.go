@@ -133,7 +133,7 @@ func (cep createEventPayload) IsValid(loc *time.Location) error {
 	}
 
 	if start.After(end) {
-		return fmt.Errorf("end date should be after start date")
+		return fmt.Errorf("end date cannot be earlier than start date")
 	}
 
 	return nil

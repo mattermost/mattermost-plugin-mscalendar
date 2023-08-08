@@ -25,8 +25,8 @@ type Props = {
 };
 
 type ErrorPayload = {
-    error?: string
-    details?: string
+    error: string
+    details: string
 }
 
 export default function CreateEventForm(props: Props) {
@@ -64,7 +64,8 @@ export default function CreateEventForm(props: Props) {
     };
 
     const handleError = (errorPayload: ErrorPayload) => {
-        setStoredError(errorPayload.error);
+        const errorMessage = errorPayload.error.charAt(0).toUpperCase() + errorPayload.error.slice(1)
+        setStoredError(errorMessage);
         setSubmitting(false);
     };
 
