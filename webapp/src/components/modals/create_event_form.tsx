@@ -231,6 +231,7 @@ const ActualForm = (props: ActualFormProps) => {
             component: (
                 <TimeSelector
                     value={formValues.start_time}
+                    endTime={formValues.end_time}
                     onChange={(value) => setFormValue('start_time', value)}
                 />
             ),
@@ -241,6 +242,7 @@ const ActualForm = (props: ActualFormProps) => {
             component: (
                 <TimeSelector
                     value={formValues.end_time}
+                    startTime={formValues.start_time}
                     onChange={(value) => setFormValue('end_time', value)}
                 />
             ),
