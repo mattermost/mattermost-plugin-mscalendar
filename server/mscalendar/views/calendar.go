@@ -11,6 +11,20 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
+type Option interface {
+	Apply(remote.Event, *model.SlackAttachment)
+}
+
+type showTimezoneOption struct{}
+
+func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.SlackAttachment) {
+	attachment.Text = attachment.Text + " (" + event.Start.TimeZone + ")"
+}
+
+func ShowTimezoneOption() Option {
+	return showTimezoneOption{}
+}
+
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
@@ -111,7 +125,7 @@ func isKnownMeetingURL(location string) bool {
 	return err == nil
 }
 
-func RenderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
+func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
 	var titleLink string
@@ -129,13 +143,19 @@ func RenderEventAsAttachment(event *remote.Event, timezone string) (*model.Slack
 		}
 	}
 
-	return &model.SlackAttachment{
+	attachment := &model.SlackAttachment{
 		Title:     event.Subject,
 		TitleLink: titleLink,
 		Text:      fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 		Fields:    fields,
 		Actions:   actions,
-	}, nil
+	}
+
+	for _, opt := range options {
+		opt.Apply(*event, attachment)
+	}
+
+	return attachment, nil
 }
 
 func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
@@ -183,8 +203,8 @@ func EnsureSubject(s string) string {
 	return s
 }
 
-func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
+func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string, options ...Option) (message string, attachment *model.SlackAttachment, err error) {
 	message = "Upcoming event:\n"
-	attachment, err = RenderEventAsAttachment(event, timeZone)
+	attachment, err = RenderEventAsAttachment(event, timeZone, options...)
 	return message, attachment, err
 }
