@@ -15,8 +15,6 @@ import CreateEventModal from './components/modals/create_event_modal';
 import { openCreateEventModal } from './actions';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-function nullFunc(): void {}
-
 export default class Plugin {
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
         registry.registerReducer(reducer);
