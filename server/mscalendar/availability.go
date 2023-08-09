@@ -542,7 +542,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 						ChannelId: channelID,
 						Message:   "Upcoming event",
 					}
-					attachment, errRender := views.RenderEventAsAttachment(event, timezone, views.ShowTimezoneOption())
+					attachment, errRender := views.RenderEventAsAttachment(event, timezone, views.ShowTimezoneOption(timezone))
 					if errRender != nil {
 						m.Logger.With(bot.LogContext{"err": errRender}).Errorf("notifyUpcomingEvents error rendering channel post")
 						continue

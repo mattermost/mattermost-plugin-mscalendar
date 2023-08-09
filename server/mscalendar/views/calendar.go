@@ -15,14 +15,27 @@ type Option interface {
 	Apply(remote.Event, *model.SlackAttachment)
 }
 
-type showTimezoneOption struct{}
-
-func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.SlackAttachment) {
-	attachment.Text = attachment.Text + " (" + event.Start.TimeZone + ")"
+type showTimezoneOption struct {
+	timezone string
 }
 
-func ShowTimezoneOption() Option {
-	return showTimezoneOption{}
+func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.SlackAttachment) {
+	attachment.Text = fmt.Sprintf(
+		"%s - %s (%s)",
+		event.Start.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		event.End.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		tzOpt.timezone,
+	)
+}
+
+func ShowTimezoneOption(timezone string) Option {
+	if timezone == "" {
+		timezone = "UTC"
+	}
+
+	return showTimezoneOption{
+		timezone: timezone,
+	}
 }
 
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
@@ -146,7 +159,7 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	attachment := &model.SlackAttachment{
 		Title:     event.Subject,
 		TitleLink: titleLink,
-		Text:      fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 		Fields:    fields,
 		Actions:   actions,
 	}
