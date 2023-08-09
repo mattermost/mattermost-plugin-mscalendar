@@ -25,6 +25,11 @@ const (
 
 	PathAutocomplete = "/autocomplete"
 	PathUsers        = "/users"
+	PathChannels     = "/channels"
+
+	InternalAPIPath = "/api/v1"
+	PathEvents      = "/events"
+	PathCreate      = "/create"
 
 	FullPathEventNotification = PathNotification + PathEvent
 	FullPathOAuth2Redirect    = PathOAuth2 + PathComplete
