@@ -3,6 +3,13 @@
 
 package remote
 
+const (
+	EventResponseStatusNotAnswered = "not_answered"
+	EventResponseStatusAccepted    = "accepted"
+	EventResponseStatusTentative   = "tentative"
+	EventResponseStatusDeclined    = "declined"
+)
+
 // REVIEW: we should vet exactly what fields are used from the remote package, and get rid of any "dead fields" from these structs
 type Event struct {
 	Start                      *DateTime            `json:"start,omitempty"`
