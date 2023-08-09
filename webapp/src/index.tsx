@@ -1,18 +1,18 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 
-import { Store, Action } from 'redux';
+import {Store, Action} from 'redux';
 
-import { GlobalState } from '@mattermost/types/lib/store';
+import {GlobalState} from '@mattermost/types/lib/store';
 
-import { PluginRegistry } from '@/types/mattermost-webapp';
+import {PluginRegistry} from '@/types/mattermost-webapp';
 
-import { PluginId } from './plugin_id';
+import {PluginId} from './plugin_id';
 
 import Hooks from './plugin_hooks';
 import reducer from './reducers';
 
 import CreateEventModal from './components/modals/create_event_modal';
-import { openCreateEventModal } from './actions';
+import {openCreateEventModal} from './actions';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export default class Plugin {
@@ -26,10 +26,10 @@ export default class Plugin {
             registry.registerRootComponent(CreateEventModal);
         };
 
-        registry.registerRootComponent(() => <SetupUI setup={setup} />);
+        registry.registerRootComponent(() => <SetupUI setup={setup}/>);
 
         registry.registerChannelHeaderMenuAction(
-            <span><i className='icon fa fa-calendar-plus-o'></i> Create calendar event</span>,
+            <span><i className='icon fa fa-calendar-plus-o'/> Create calendar event</span>,
             (channelID) => store.dispatch(openCreateEventModal(channelID)),
         );
 
@@ -38,7 +38,7 @@ export default class Plugin {
     }
 }
 
-const SetupUI = ({ setup }) => {
+const SetupUI = ({setup}) => {
     useEffect(() => {
         setup();
     }, []);

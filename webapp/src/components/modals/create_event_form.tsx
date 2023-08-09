@@ -64,7 +64,7 @@ export default function CreateEventForm(props: Props) {
     };
 
     const handleError = (errorPayload: ErrorPayload) => {
-        const errorMessage = errorPayload.error.charAt(0).toUpperCase() + errorPayload.error.slice(1)
+        const errorMessage = errorPayload.error.charAt(0).toUpperCase() + errorPayload.error.slice(1);
         setStoredError(errorMessage);
         setSubmitting(false);
     };
