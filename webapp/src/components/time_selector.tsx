@@ -21,9 +21,7 @@ export default function TimeSelector(props: Props) {
     let ranges: string[];
 
     const updateOptions = () => {
-        let fromHour, fromMinute = 0;
-        let toHour = 23;
-        let toMinute = 45;
+        let fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45;
 
         if (props.startTime != undefined && props.startTime != '') {
             const parts = props.startTime.split(":")
