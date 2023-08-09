@@ -39,7 +39,7 @@ export default function TimeSelector(props: Props) {
         }
 
         if (ranges == undefined) {
-            ranges = generateMilitaryTimeArray()
+            ranges = generateMilitaryTimeArray();
         }
 
         options = ranges.map((t) => ({
@@ -73,8 +73,8 @@ export default function TimeSelector(props: Props) {
 const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = minuteStep) => {
     const timeArray = [];
     for (let hour = fromHour; hour <= toHour; hour++) {
-        if (hour != fromHour) fromMinute = 0
-        if (hour != toHour) toMinute = 45
+        if (hour !== fromHour) fromMinute = 0
+        if (hour !== toHour) toMinute = 45
         for (let minute = fromMinute; minute <= toMinute; minute += step) {
             const formattedHour = hour.toString().padStart(2, '0');
             const formattedMinute = minute.toString().padStart(2, '0');

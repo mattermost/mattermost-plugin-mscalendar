@@ -47,7 +47,7 @@ export default function CreateEventForm(props: Props) {
     });
 
     const setFormValue = <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => {
-        setFormValues((values: any) => ({
+        setFormValues((values: CreateEventPayload) => ({
             ...values,
             [name]: value,
         }));

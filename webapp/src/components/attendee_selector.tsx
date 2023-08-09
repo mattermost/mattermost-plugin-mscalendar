@@ -30,7 +30,7 @@ export default function AttendeeSelector(props: Props) {
         }));
     }, []);
 
-    const isValidEmmail = (input: string): boolean => {
+    const isValidEmail = (input: string): boolean => {
         return (/\S+@\S+\.\S+/).test(input);
     };
 
@@ -46,7 +46,7 @@ export default function AttendeeSelector(props: Props) {
             menuPortalTarget={document.body}
             menuPlacement='auto'
             onChange={handleChange}
-            isValidNewOption={isValidEmmail}
+            isValidNewOption={isValidEmail}
             styles={getStyleForReactSelect(theme)}
             isMulti={true}
         />

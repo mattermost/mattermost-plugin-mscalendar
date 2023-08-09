@@ -38,7 +38,7 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	postActionRouter.HandleFunc(config.PathConfirmStatusChange, api.postActionConfirmStatusChange).Methods("POST")
 
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
-	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
+	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers)
 	dialogRouter.HandleFunc(config.PathChannels, api.autocompleteChannels)
 
 	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
