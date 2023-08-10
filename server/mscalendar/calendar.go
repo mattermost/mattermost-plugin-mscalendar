@@ -46,9 +46,9 @@ func (m *mscalendar) getTodayCalendarEvents(user *User, now time.Time, timezone 
 	return m.client.GetDefaultCalendarView(user.Remote.ID, from, to)
 }
 
-func (m *mscalendar) filterOnlyAcceptedEvents(events []*remote.Event) (result []*remote.Event) {
+func (m *mscalendar) excludeDeclinedEvents(events []*remote.Event) (result []*remote.Event) {
 	for ix, evt := range events {
-		if evt.ResponseStatus.Response == remote.EventResponseStatusAccepted {
+		if evt.ResponseStatus.Response != remote.EventResponseStatusDeclined {
 			result = append(result, events[ix])
 		}
 	}

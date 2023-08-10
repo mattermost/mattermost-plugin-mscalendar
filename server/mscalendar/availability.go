@@ -455,7 +455,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 	return nil
 }
 
-func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, onlyAccepted bool) (*remote.ViewCalendarResponse, error) {
+func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, excludeDeclined bool) (*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "errror withClient")
@@ -466,8 +466,8 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, onlyAcc
 		return nil, errors.Wrapf(err, "error getting events for user %s", user.MattermostUserID)
 	}
 
-	if onlyAccepted {
-		events = m.filterOnlyAcceptedEvents(events)
+	if excludeDeclined {
+		events = m.excludeDeclinedEvents(events)
 	}
 
 	return &remote.ViewCalendarResponse{
