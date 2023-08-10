@@ -15,6 +15,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
+type ChannelEventLink map[string]string
+
 type UserStore interface {
 	LoadUser(mattermostUserID string) (*User, error)
 	LoadMattermostUserID(remoteUserID string) (string, error)
@@ -27,6 +29,7 @@ type UserStore interface {
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
 	StoreUserActiveEvents(mattermostUserID string, events []string) error
+	StoreUserLinkedEvent(mattermostUserID, eventID, channelID string) error
 }
 
 type UserIndex []*UserShort
@@ -68,6 +71,7 @@ type User struct {
 	LastStatus            string
 	WelcomeFlowStatus     WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 	ActiveEvents          []string          `json:"events"`
+	ChannelEvents         ChannelEventLink  `json:"linkedEvents,omitempty"`
 }
 
 type Settings struct {
@@ -283,6 +287,21 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 		return err
 	}
 	u.ActiveEvents = events
+	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
+}
+
+func (s *pluginStore) StoreUserLinkedEvent(mattermostUserID, eventID, channelID string) error {
+	u, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	if u.ChannelEvents == nil {
+		u.ChannelEvents = make(ChannelEventLink, 1)
+	}
+
+	u.ChannelEvents[eventID] = channelID
+
 	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
 }
 

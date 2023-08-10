@@ -230,6 +230,12 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 
 	// Event linking
 	if payload.ChannelID != "" {
+		if err := api.Store.StoreUserLinkedEvent(user.MattermostUserID, event.ICalUID, payload.ChannelID); err != nil {
+			api.Poster.DM(mattermostUserID, "You event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
+			httputils.WriteInternalServerError(w, err)
+			return
+		}
+
 		if err := api.Store.AddLinkedChannelToEvent(event.ICalUID, payload.ChannelID); err != nil {
 			api.Logger.With(bot.LogContext{"err": err}).Errorf("error linking event to channel")
 			defer func() {
