@@ -5,6 +5,7 @@ package gcal
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/pkg/errors"
@@ -12,6 +13,8 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const (
@@ -64,6 +67,10 @@ func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remo
 	events := []*remote.Event{}
 	for _, event := range result.Items {
 		if event.ICalUID != "" {
+			b, _ := json.Marshal(event)
+			c.Logger.With(bot.LogContext{
+				"event": string(b),
+			}).Warnf("event")
 			events = append(events, convertGCalEventToRemoteEvent(event))
 		}
 	}
@@ -94,8 +101,24 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 	start := convertGCalEventDateTimeToRemoteDateTime(event.Start)
 	end := convertGCalEventDateTimeToRemoteDateTime(event.End)
 
-	location := &remote.Location{
-		DisplayName: event.Location,
+	var conference *remote.Conference
+	var location *remote.Location
+
+	if event.ConferenceData != nil && len(event.ConferenceData.EntryPoints) > 0 {
+		conference = &remote.Conference{
+			Application: event.ConferenceData.ConferenceSolution.Name,
+			URL:         event.ConferenceData.EntryPoints[0].Uri,
+		}
+	} else if utils.IsURL(event.Location) {
+		conference = &remote.Conference{
+			URL: event.Location,
+		}
+	}
+
+	if !utils.IsURL(event.Location) {
+		location = &remote.Location{
+			DisplayName: event.Location,
+		}
 	}
 
 	organizer := &remote.Attendee{
@@ -149,6 +172,7 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 		Start:             start,
 		End:               end,
 		Location:          location,
+		Conference:        conference,
 		Organizer:         organizer,
 		Attendees:         attendees,
 		ResponseStatus:    responseStatus,

@@ -7,6 +7,7 @@ package remote
 type Event struct {
 	Start                      *DateTime            `json:"start,omitempty"`
 	Location                   *Location            `json:"location,omitempty"`
+	Conference                 *Conference          `json:"conference,omitempty"`
 	End                        *DateTime            `json:"end,omitempty"`
 	Organizer                  *Attendee            `json:"organizer,omitempty"`
 	Body                       *ItemBody            `json:"Body,omitempty"`
@@ -54,6 +55,11 @@ type Address struct {
 type Coordinates struct {
 	Latitude  float32 `json:"latitude,omitempty"`
 	Longitude float32 `json:"longitude,omitempty"`
+}
+
+type Conference struct {
+	Application string `json:"application"`
+	URL         string `json:"url"`
 }
 
 type Attendee struct {

@@ -106,11 +106,6 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	return fmt.Sprintf(format, start, end, subject, link), nil
 }
 
-func isKnownMeetingURL(location string) bool {
-	_, err := url.ParseRequestURI(location)
-	return err == nil
-}
-
 func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
@@ -122,11 +117,22 @@ func renderEventAsAttachment(event *remote.Event, timezone string) (*model.Slack
 			Value: event.Location.DisplayName,
 			Short: true,
 		})
+	}
 
-		// Use location display name as link if can be parsed as an URL
-		if isKnownMeetingURL(event.Location.DisplayName) {
-			titleLink = event.Location.DisplayName
+	if event.Conference != nil {
+		// Use conference URL as title link if theres conference data present
+		titleLink = event.Conference.URL
+
+		title := "Meeting URL"
+		if event.Conference.Application != "" {
+			title = event.Conference.Application
 		}
+
+		fields = append(fields, &model.SlackAttachmentField{
+			Title: title,
+			Value: event.Conference.URL,
+			Short: true,
+		})
 	}
 
 	return &model.SlackAttachment{
