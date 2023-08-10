@@ -12,6 +12,13 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
+var subjectReplacer = strings.NewReplacer(
+	"|", `\|`,
+	"[", `\[`,
+	"]", `\]`,
+	">", `\>`,
+)
+
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
@@ -104,7 +111,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, CleanSubject(subject), link), nil
+	return fmt.Sprintf(format, start, end, subjectReplacer.Replace(subject), link), nil
 }
 
 func isKnownMeetingURL(location string) bool {
@@ -182,10 +189,6 @@ func EnsureSubject(s string) string {
 	}
 
 	return s
-}
-
-func CleanSubject(s string) string {
-	return strings.ReplaceAll(s, "|", `\|`)
 }
 
 func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
