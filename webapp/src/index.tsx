@@ -29,7 +29,7 @@ export default class Plugin {
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);
 
         registry.registerChannelHeaderMenuAction(
-            <span><i className='icon fa fa-calendar-plus-o'/> Create calendar event</span>,
+            <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
             (channelID) => store.dispatch(openCreateEventModal(channelID)),
         );
 

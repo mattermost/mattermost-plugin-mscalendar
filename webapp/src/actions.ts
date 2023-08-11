@@ -55,7 +55,7 @@ export const autocompleteUserChannels = async (input: string): Promise<Autocompl
         });
 };
 
-export const createCalendarEvent = async (payload: CreateEventPayload) => {
+export const createCalendarEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
     return doFetchWithResponse('/plugins/com.mattermost.gcal/api/v1/events/create', {
         method: 'POST',
         headers: {
@@ -67,8 +67,10 @@ export const createCalendarEvent = async (payload: CreateEventPayload) => {
             return {data};
         }).
         catch((response) => {
-            if (response.status_code >= 400) {
+            if ('message' in response) {
                 return response.message;
             }
+
+            return {error: 'An error occurred.'};
         });
 };

@@ -17,7 +17,6 @@ import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
-import {doFetchWithResponse} from '@/client';
 import ChannelSelector from '../channel_selector';
 import {capitalizeFirstCharacter} from '@/utils/text';
 import {createCalendarEvent} from '@/actions';
@@ -71,10 +70,6 @@ export default function CreateEventForm(props: Props) {
         setSubmitting(false);
     };
 
-    const createEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
-        return createCalendarEvent(payload);
-    };
-
     const handleSubmit = (e?: React.FormEvent) => {
         if (e && e.preventDefault) {
             e.preventDefault();
@@ -83,7 +78,7 @@ export default function CreateEventForm(props: Props) {
         // add required field validation
 
         setSubmitting(true);
-        createEvent(formValues).then((_data) => {
+        createCalendarEvent(formValues).then((_data) => {
             handleClose();
         }).catch((response) => {
             if (response.status_code >= 400) {
