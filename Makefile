@@ -43,7 +43,7 @@ all: check-style test dist
 ## Propagates plugin manifest information into the server/ and webapp/ folders as required.
 .PHONY: apply
 apply:
-	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
+	MANIFEST_FILE=plugin-gcal.json ./build/bin/manifest apply
 
 ## Runs golangci-lint and eslint.
 .PHONY: check-style
