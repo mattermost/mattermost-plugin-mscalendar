@@ -1,6 +1,7 @@
 import ActionTypes from './action_types';
 import {doFetchWithResponse} from './client';
-import { PluginId } from './plugin_id';
+import {PluginId} from './plugin_id';
+import {CreateEventPayload} from './types/calendar_api_types';
 
 export const openCreateEventModal = (channelId: string) => {
     return {
@@ -33,7 +34,7 @@ export const autocompleteConnectedUsers = async (input: string): Promise<Autocom
         }).
         then((data) => {
             return data;
-        })
+        });
 };
 
 type AutocompleteChannel = {
@@ -51,5 +52,23 @@ export const autocompleteUserChannels = async (input: string): Promise<Autocompl
         }).
         then((data) => {
             return data;
-        })
+        });
+};
+
+export const createCalendarEvent = async (payload: CreateEventPayload) => {
+    return doFetchWithResponse('/plugins/com.mattermost.gcal/api/v1/events/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    }).
+        then((data) => {
+            return {data};
+        }).
+        catch((response) => {
+            if (response.status_code >= 400) {
+                return response.message;
+            }
+        });
 };

@@ -20,6 +20,7 @@ import TimeSelector from '@/components/time_selector';
 import {doFetchWithResponse} from '@/client';
 import ChannelSelector from '../channel_selector';
 import {capitalizeFirstCharacter} from '@/utils/text';
+import {createCalendarEvent} from '@/actions';
 
 type Props = {
     close: (e?: Event) => void;
@@ -71,23 +72,7 @@ export default function CreateEventForm(props: Props) {
     };
 
     const createEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
-        return new Promise((resolve, reject) => {
-            doFetchWithResponse('/plugins/com.mattermost.gcal/api/v1/events/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            }).
-                then((data) => {
-                    resolve(data);
-                }).
-                catch((response) => {
-                    if (response.status_code >= 400) {
-                        handleError(response.message);
-                    }
-                });
-        });
+        return createCalendarEvent(payload);
     };
 
     const handleSubmit = (e?: React.FormEvent) => {
