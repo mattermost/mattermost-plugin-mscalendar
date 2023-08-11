@@ -67,7 +67,7 @@ export const createCalendarEvent = async (payload: CreateEventPayload): Promise<
             return {data};
         }).
         catch((response) => {
-            if ('message' in response) {
+            if ('message' in response && 'error' in response.message) {
                 return response.message;
             }
 
