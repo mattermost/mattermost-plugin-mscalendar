@@ -1,5 +1,6 @@
 import ActionTypes from './action_types';
 import {doFetchWithResponse} from './client';
+import { PluginId } from './plugin_id';
 
 export const openCreateEventModal = (channelId: string) => {
     return {
@@ -23,7 +24,7 @@ type AutocompleteUser = {
 }
 
 export const autocompleteConnectedUsers = async (input: string): Promise<AutocompleteUser[]> => {
-    return doFetchWithResponse('/plugins/com.mattermost.gcal/autocomplete/users?search=' + input, {method: 'GET'}).
+    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/users?search=` + input).
         then((response) => {
             if (!response.response.ok) {
                 throw new Error('error fetching autocomplete users');
@@ -44,7 +45,7 @@ type AutocompleteChannel = {
 }
 
 export const autocompleteUserChannels = async (input: string): Promise<AutocompleteChannel[]> => {
-    return doFetchWithResponse('/plugins/com.mattermost.gcal/autocomplete/channels?search=' + input, {method: 'GET'}).
+    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/users?search=` + input).
         then((response) => {
             if (!response.response.ok) {
                 throw new Error('error fetching autocomplete channels');
