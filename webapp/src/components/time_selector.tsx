@@ -14,14 +14,18 @@ type Props = {
     endTime?: string
 }
 
+type Option = {
+    label: string
+    value: string
+}
+
 export default function TimeSelector(props: Props) {
     const theme = useSelector(getTheme);
-    let options = null;
     let value = null;
-    let ranges: string[];
 
-    const updateOptions = () => {
+    let options: Option[] = useMemo(() => {
         let fromHour = 0; let fromMinute = 0; let toHour = 23; let toMinute = 45;
+        let ranges: string[] = [];
 
         if (props.startTime) {
             const parts = props.startTime.split(':');
@@ -37,26 +41,24 @@ export default function TimeSelector(props: Props) {
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
-        if (!ranges) {
+        if (!ranges.length) {
             ranges = generateMilitaryTimeArray();
         }
 
-        options = ranges.map((t) => ({
+        return ranges.map((t) => ({
             label: t,
             value: t,
         }));
+    }, [props.startTime, props.endTime]);
 
-        if (props.value) {
-            value = options.find((option) => option.value === props.value);
-        }
+
+    if (props.value) {
+        value = options.find((option: Option) => option.value === props.value);
     };
 
-    const handleChange = (_, time) => {
-        props.onChange(time);
+    const handleChange = (_: string, value: string) => {
+        props.onChange(value);
     };
-
-    useEffect(updateOptions, [props.startTime, props.endTime]);
-    updateOptions();
 
     return (
         <ReactSelectSetting
