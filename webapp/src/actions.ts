@@ -43,7 +43,7 @@ type AutocompleteChannel = {
 }
 
 export const autocompleteUserChannels = async (input: string): Promise<AutocompleteChannel[]> => {
-    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/users?search=` + input).
+    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/channels?search=` + input).
         then((response) => {
             if (!response.response.ok) {
                 throw new Error('error fetching autocomplete channels');
