@@ -4,11 +4,19 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+)
+
+var subjectReplacer = strings.NewReplacer(
+	"|", `\|`,
+	"[", `\[`,
+	"]", `\]`,
+	">", `\>`,
 )
 
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
@@ -103,7 +111,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, subject, link), nil
+	return fmt.Sprintf(format, start, end, subjectReplacer.Replace(subject), link), nil
 }
 
 func isKnownMeetingURL(location string) bool {
