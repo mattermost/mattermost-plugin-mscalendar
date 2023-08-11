@@ -33,10 +33,7 @@ export const autocompleteConnectedUsers = async (input: string): Promise<Autocom
         }).
         then((data) => {
             return data;
-        }).
-        catch((error) => {
-            throw new Error(error);
-        });
+        })
 };
 
 type AutocompleteChannel = {
@@ -54,8 +51,5 @@ export const autocompleteUserChannels = async (input: string): Promise<Autocompl
         }).
         then((data) => {
             return data;
-        }).
-        catch((error) => {
-            throw new Error(error);
-        });
+        })
 };
