@@ -37,7 +37,7 @@ export default function TimeSelector(props: Props) {
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
-        if (ranges == undefined) {
+        if (!ranges) {
             ranges = generateMilitaryTimeArray();
         }
 
