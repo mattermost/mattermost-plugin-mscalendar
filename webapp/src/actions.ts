@@ -24,16 +24,17 @@ type AutocompleteUser = {
     mm_display_name: string
 }
 
-export const autocompleteConnectedUsers = async (input: string): Promise<AutocompleteUser[]> => {
-    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/users?search=` + input).
+export const autocompleteConnectedUsers = async (input: string): Promise<{data: AutocompleteUser[]} | {error: string}> => {
+    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/users?search=${input}`).
         then((response) => {
-            if (!response.response.ok) {
-                throw new Error('error fetching autocomplete users');
-            }
-            return response.data;
+            return {data: response.data};
         }).
-        then((data) => {
-            return data;
+        catch(response => {
+            if ('message' in response && 'error' in response.message) {
+                return response.message;
+            }
+
+            return {error: 'An error occurred while searching for users.'};
         });
 };
 
@@ -42,20 +43,21 @@ type AutocompleteChannel = {
     display_name: string
 }
 
-export const autocompleteUserChannels = async (input: string): Promise<AutocompleteChannel[]> => {
-    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/channels?search=` + input).
+export const autocompleteUserChannels = async (input: string): Promise<{data: AutocompleteChannel[]} | {error: string}> => {
+    return doFetchWithResponse(`/plugins/${PluginId}/autocomplete/channels?search=${input}`).
         then((response) => {
-            if (!response.response.ok) {
-                throw new Error('error fetching autocomplete channels');
-            }
-            return response.data;
+            return {data: response.data};
         }).
-        then((data) => {
-            return data;
+        catch(response => {
+            if ('message' in response && 'error' in response.message) {
+                return response.message;
+            }
+
+            return {error: 'An error occurred while searching for channels.'};
         });
 };
 
-export const createCalendarEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
+export const createCalendarEvent = async (payload: CreateEventPayload): Promise<{error: string} | {data: any}> => {
     return doFetchWithResponse('/plugins/com.mattermost.gcal/api/v1/events/create', {
         method: 'POST',
         headers: {
@@ -71,6 +73,6 @@ export const createCalendarEvent = async (payload: CreateEventPayload): Promise<
                 return response.message;
             }
 
-            return {error: 'An error occurred.'};
+            return {error: 'An error occurred while creating the event.'};
         });
 };

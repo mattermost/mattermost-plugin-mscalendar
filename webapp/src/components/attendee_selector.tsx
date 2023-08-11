@@ -22,9 +22,14 @@ export default function AttendeeSelector(props: Props) {
     const theme = useSelector(getTheme);
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
-        const matchedUsers = await autocompleteConnectedUsers(input);
+        const response = await autocompleteConnectedUsers(input);
 
-        return matchedUsers.map((u) => ({
+        if (response.error) {
+            // TODO: show the error in the UI
+            return [];
+        }
+
+        return response.data.map((u) => ({
             label: u.mm_display_name,
             value: u.mm_id,
         }));

@@ -22,9 +22,14 @@ export default function ChannelSelector(props: Props) {
     const theme = useSelector(getTheme);
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
-        const matchedChannels = await autocompleteUserChannels(input);
+        const response = await autocompleteUserChannels(input);
 
-        return matchedChannels.map((c) => ({
+        if (response.error) {
+            // TODO: show the error in the UI
+            return [];
+        }
+
+        return response.data.map((c) => ({
             label: c.display_name,
             value: c.id,
         }));
