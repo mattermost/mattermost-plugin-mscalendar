@@ -19,6 +19,7 @@ import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
 import {doFetchWithResponse} from '@/client';
 import ChannelSelector from '../channel_selector';
+import { capitalizeFirstCharacter } from '@/utils/text';
 
 type Props = {
     close: (e?: Event) => void;
@@ -64,7 +65,7 @@ export default function CreateEventForm(props: Props) {
     };
 
     const handleError = (errorPayload: ErrorPayload) => {
-        const errorMessage = errorPayload.error.charAt(0).toUpperCase() + errorPayload.error.slice(1);
+        const errorMessage = capitalizeFirstCharacter(errorPayload.error);
         setStoredError(errorMessage);
         setSubmitting(false);
     };
