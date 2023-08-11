@@ -233,7 +233,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		if err := api.Store.AddLinkedChannelToEvent(event.ICalUID, payload.ChannelID); err != nil {
 			api.Logger.With(bot.LogContext{"err": err}).Errorf("error linking event to channel")
 			defer func() {
-				api.Poster.DM(mattermostUserID, "You event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
+				api.Poster.DM(mattermostUserID, "Your event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
 			}()
 		} else {
 			post := &model.Post{
@@ -249,7 +249,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if attachment == nil {
-			api.Poster.DM(mattermostUserID, "You event: **%s** was created successfully.", event.Subject)
+			api.Poster.DM(mattermostUserID, "Your event: **%s** was created successfully.", event.Subject)
 		} else {
 			api.Poster.DMWithMessageAndAttachments(mattermostUserID, "Your event was created successfully.", attachment)
 		}
