@@ -23,7 +23,7 @@ export default function TimeSelector(props: Props) {
     const updateOptions = () => {
         let fromHour = 0; let fromMinute = 0; let toHour = 23; let toMinute = 45;
 
-        if (props.startTime != undefined && props.startTime != '') {
+        if (props.startTime) {
             const parts = props.startTime.split(':');
             fromHour = parseInt(parts[0]);
             fromMinute = parseInt(parts[1]) + minuteStep;
