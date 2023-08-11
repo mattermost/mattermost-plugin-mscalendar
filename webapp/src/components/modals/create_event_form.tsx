@@ -19,7 +19,7 @@ import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
 import {doFetchWithResponse} from '@/client';
 import ChannelSelector from '../channel_selector';
-import { capitalizeFirstCharacter } from '@/utils/text';
+import {capitalizeFirstCharacter} from '@/utils/text';
 
 type Props = {
     close: (e?: Event) => void;

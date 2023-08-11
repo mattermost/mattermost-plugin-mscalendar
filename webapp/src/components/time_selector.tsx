@@ -23,7 +23,7 @@ export default function TimeSelector(props: Props) {
     const theme = useSelector(getTheme);
     let value = null;
 
-    let options: Option[] = useMemo(() => {
+    const options: Option[] = useMemo(() => {
         let fromHour = 0; let fromMinute = 0; let toHour = 23; let toMinute = 45;
         let ranges: string[] = [];
 
@@ -51,10 +51,9 @@ export default function TimeSelector(props: Props) {
         }));
     }, [props.startTime, props.endTime]);
 
-
     if (props.value) {
         value = options.find((option: Option) => option.value === props.value);
-    };
+    }
 
     const handleChange = (_: string, value: string) => {
         props.onChange(value);
