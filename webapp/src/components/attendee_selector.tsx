@@ -1,12 +1,12 @@
-import React, {useCallback} from 'react';
-import {useSelector} from 'react-redux';
+import React, {useCallback, useState} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
 
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
 import {getStyleForReactSelect} from '@/utils/styles';
-import {autocompleteConnectedUsers} from '@/actions';
+import {AutocompleteChannelsResponse, autocompleteConnectedUsers} from '@/actions';
 
 type SelectOption = {
     label: string;
@@ -19,15 +19,21 @@ type Props = {
 };
 
 export default function AttendeeSelector(props: Props) {
+    const [storedError, setStoredError] = useState('');
+
     const theme = useSelector(getTheme);
 
+    const dispatch = useDispatch();
+
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
-        const response = await autocompleteConnectedUsers(input);
+        const response = (await dispatch(autocompleteConnectedUsers(input))) as AutocompleteChannelsResponse;
 
         if (response.error) {
-            // TODO: show the error in the UI
+            setStoredError(response.error);
             return [];
         }
+
+        setStoredError('');
 
         return response.data.map((u) => ({
             label: u.mm_display_name,
@@ -44,16 +50,23 @@ export default function AttendeeSelector(props: Props) {
     };
 
     return (
-        <AsyncCreatableSelect
-            value={props.value}
-            loadOptions={loadOptions}
-            defaultOptions={true}
-            menuPortalTarget={document.body}
-            menuPlacement='auto'
-            onChange={handleChange}
-            isValidNewOption={isValidEmail}
-            styles={getStyleForReactSelect(theme)}
-            isMulti={true}
-        />
+        <>
+            <AsyncCreatableSelect
+                value={props.value}
+                loadOptions={loadOptions}
+                defaultOptions={true}
+                menuPortalTarget={document.body}
+                menuPlacement='auto'
+                onChange={handleChange}
+                isValidNewOption={isValidEmail}
+                styles={getStyleForReactSelect(theme)}
+                isMulti={true}
+            />
+            {storedError && (
+                <div>
+                    <span className='error-text'>{storedError}</span>
+                </div>
+            )}
+        </>
     );
 }
