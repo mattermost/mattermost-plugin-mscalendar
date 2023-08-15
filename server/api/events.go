@@ -231,7 +231,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	// Event linking
 	if payload.ChannelID != "" {
 		if err := api.Store.StoreUserLinkedEvent(user.MattermostUserID, event.ICalUID, payload.ChannelID); err != nil {
-			api.Poster.DM(mattermostUserID, "You event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
+			api.Poster.DM(mattermostUserID, "Your event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
 			httputils.WriteInternalServerError(w, err)
 			return
 		}
