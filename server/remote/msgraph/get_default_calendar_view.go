@@ -63,7 +63,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 		for _, res := range batchRes.Responses {
 			viewCalRes := &remote.ViewCalendarResponse{
 				RemoteUserID: res.ID,
-				Events:       res.Body.Value,
+				Events:       normalizeEvents(res.Body.Value),
 				Error:        res.Body.Error,
 			}
 			result = append(result, viewCalRes)

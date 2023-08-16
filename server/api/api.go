@@ -20,6 +20,7 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 		Env:                   env,
 		NotificationProcessor: notificationProcessor,
 	}
+
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", api.getAuthorized).Methods("GET")
 
@@ -34,5 +35,9 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	postActionRouter.HandleFunc(config.PathConfirmStatusChange, api.postActionConfirmStatusChange).Methods("POST")
 
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
-	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
+	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers)
+
+	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
+	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()
+	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods("POST")
 }
