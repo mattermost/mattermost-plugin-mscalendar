@@ -13,6 +13,32 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
+const (
+	MicrosoftResponseStatusYes          = "accepted"
+	MicrosoftResponseStatusMaybe        = "tentativelyAccepted"
+	MicrosoftResponseStatusNo           = "declined"
+	MicrosoftResponseStatusNone         = "none"
+	MicrosoftResponseStatusOrganizer    = "organizer"
+	MicrosoftResponseStatusNotResponsed = MicrosoftResponseStatusNone
+)
+
+var responseStatusConversion = map[string]string{
+	MicrosoftResponseStatusYes:   remote.EventResponseStatusAccepted,
+	MicrosoftResponseStatusMaybe: remote.EventResponseStatusTentative,
+	MicrosoftResponseStatusNo:    remote.EventResponseStatusDeclined,
+	MicrosoftResponseStatusNone:  remote.EventResponseStatusNotAnswered,
+	// TODO: unused by us? Should we prefill event organizer response to this?
+	MicrosoftResponseStatusOrganizer: remote.EventResponseStatusNotAnswered,
+}
+
+// converts microsoft calendar responses to our representation of fields
+func normalizeEvents(events []*remote.Event) []*remote.Event {
+	for i := range events {
+		events[i].ResponseStatus.Response = responseStatusConversion[events[i].ResponseStatus.Response]
+	}
+	return events
+}
+
 func (c *client) GetEvent(remoteUserID, eventID string) (*remote.Event, error) {
 	e := &remote.Event{}
 
@@ -60,5 +86,5 @@ func (c *client) GetEventsBetweenDates(remoteUserID string, start, end time.Time
 		return nil, errors.Wrap(err, "msgraph GetEventsBetweenDates")
 	}
 
-	return res.Value, nil
+	return normalizeEvents(res.Value), nil
 }

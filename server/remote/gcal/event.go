@@ -98,8 +98,9 @@ func (c *client) GetEventsBetweenDates(_ string, start, end time.Time) (events [
 		List(defaultCalendarName).
 		TimeMin(start.Format(time.RFC3339)).
 		TimeMax(end.Format(time.RFC3339)).
-		SingleEvents(true).
 		OrderBy("startTime").
+		SingleEvents(true).
+		ShowDeleted(false).
 		ShowHiddenInvitations(false).
 		Context(ctx).
 		Do()

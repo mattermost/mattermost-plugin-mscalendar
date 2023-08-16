@@ -21,11 +21,6 @@ const (
 	GoogleEventBusy = "opaque"
 	GoogleEventFree = "transparent"
 
-	ResponseYes   = "accepted"
-	ResponseMaybe = "tentativelyAccepted"
-	ResponseNo    = "declined"
-	ResponseNone  = "notResponded"
-
 	GoogleResponseStatusYes   = "accepted"
 	GoogleResponseStatusMaybe = "tentative"
 	GoogleResponseStatusNo    = "declined"
@@ -33,10 +28,10 @@ const (
 )
 
 var responseStatusConversion = map[string]string{
-	GoogleResponseStatusYes:   ResponseYes,
-	GoogleResponseStatusMaybe: ResponseMaybe,
-	GoogleResponseStatusNo:    ResponseNo,
-	GoogleResponseStatusNone:  ResponseNone,
+	GoogleResponseStatusYes:   remote.EventResponseStatusAccepted,
+	GoogleResponseStatusMaybe: remote.EventResponseStatusTentative,
+	GoogleResponseStatusNo:    remote.EventResponseStatusDeclined,
+	GoogleResponseStatusNone:  remote.EventResponseStatusNotAnswered,
 }
 
 func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remote.Event, error) {
@@ -45,12 +40,15 @@ func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remo
 		return nil, errors.Wrap(err, "gcal GetDefaultCalendarView, error creating service")
 	}
 
-	req := service.Events.List("primary")
-	req.MaxResults(20)
-	req.TimeMin(start.Format(time.RFC3339))
-	req.TimeMax(end.Format(time.RFC3339))
-	req.SingleEvents(true)
-	req.OrderBy("startTime")
+	req := service.Events.
+		List(defaultCalendarName).
+		TimeMin(start.Format(time.RFC3339)).
+		TimeMax(end.Format(time.RFC3339)).
+		SingleEvents(true).
+		ShowDeleted(false).
+		ShowHiddenInvitations(false).
+		OrderBy("startTime").
+		Context(context.TODO())
 
 	result, err := req.Do()
 	if err != nil {
@@ -96,7 +94,9 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 		},
 	}
 
-	var responseStatus *remote.EventResponseStatus
+	responseStatus := &remote.EventResponseStatus{
+		Response: remote.EventResponseStatusNotAnswered,
+	}
 	responseRequested := false
 	isOrganizer := false
 
@@ -118,9 +118,7 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 			}
 
 			response := responseStatusConversion[attendee.ResponseStatus]
-			responseStatus = &remote.EventResponseStatus{
-				Response: response,
-			}
+			responseStatus.Response = response
 
 			isOrganizer = attendee.Organizer
 		}
