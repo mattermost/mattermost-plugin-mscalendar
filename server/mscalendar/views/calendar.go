@@ -12,7 +12,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
-
 type Option interface {
 	Apply(remote.Event, *model.SlackAttachment)
 }
@@ -46,7 +45,6 @@ var subjectReplacer = strings.NewReplacer(
 	"]", `\]`,
 	">", `\>`,
 )
-
 
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
