@@ -255,7 +255,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if attachment == nil {
-			api.Poster.DM(mattermostUserID, "You event: **%s** was created successfully.", event.Subject)
+			api.Poster.DM(mattermostUserID, "Your event: **%s** was created successfully.", event.Subject)
 		} else {
 			api.Poster.DMWithMessageAndAttachments(mattermostUserID, "Your event was created successfully.", attachment)
 		}

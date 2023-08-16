@@ -12,7 +12,10 @@ import Setting from '@/components/setting';
 
 import {getStyleForReactSelect} from '@/utils/styles';
 
-import {ReactSelectOption} from '@/types/model';
+type ReactSelectOption = {
+    label: string;
+    value: string;
+}
 
 const MAX_NUM_OPTIONS = 100;
 

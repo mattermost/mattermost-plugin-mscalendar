@@ -2,7 +2,7 @@
 // See LICENSE.txt for license information.
 
 import React, {useState} from 'react';
-import {useSelector} from 'react-redux';
+import {useSelector, useDispatch} from 'react-redux';
 
 import {Modal} from 'react-bootstrap';
 
@@ -17,22 +17,20 @@ import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
-import {doFetchWithResponse} from '@/client';
 import ChannelSelector from '../channel_selector';
+import {capitalizeFirstCharacter} from '@/utils/text';
+import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
 
 type Props = {
     close: (e?: Event) => void;
 };
 
-type ErrorPayload = {
-    error: string
-    details: string
-}
-
 export default function CreateEventForm(props: Props) {
     const [storedError, setStoredError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const dispatch = useDispatch();
 
     const [formValues, setFormValues] = useState<CreateEventPayload>({
         subject: '',
@@ -63,33 +61,13 @@ export default function CreateEventForm(props: Props) {
         props.close();
     };
 
-    const handleError = (errorPayload: ErrorPayload) => {
-        const errorMessage = errorPayload.error.charAt(0).toUpperCase() + errorPayload.error.slice(1);
+    const handleError = (error: string) => {
+        const errorMessage = capitalizeFirstCharacter(error);
         setStoredError(errorMessage);
         setSubmitting(false);
     };
 
-    const createEvent = async (payload: CreateEventPayload): Promise<{ error?: string, data?: any }> => {
-        return new Promise((resolve, reject) => {
-            doFetchWithResponse('/plugins/com.mattermost.gcal/api/v1/events/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            }).
-                then((data) => {
-                    resolve(data);
-                }).
-                catch((response) => {
-                    if (response.status_code >= 400) {
-                        handleError(response.message);
-                    }
-                });
-        });
-    };
-
-    const handleSubmit = (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent) => {
         if (e && e.preventDefault) {
             e.preventDefault();
         }
@@ -97,13 +75,14 @@ export default function CreateEventForm(props: Props) {
         // add required field validation
 
         setSubmitting(true);
-        createEvent(formValues).then((_data) => {
-            handleClose();
-        }).catch((response) => {
-            if (response.status_code >= 400) {
-                handleError(response.message);
-            }
-        });
+
+        const response = (await dispatch(createCalendarEvent(formValues))) as CreateCalendarEventResponse;
+        if (response.error) {
+            handleError(response.error);
+            return;
+        }
+
+        handleClose();
     };
 
     const style = getModalStyles(theme);

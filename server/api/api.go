@@ -39,7 +39,6 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
 	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers)
-	dialogRouter.HandleFunc(config.PathChannels, api.autocompleteChannels)
 
 	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
 	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()

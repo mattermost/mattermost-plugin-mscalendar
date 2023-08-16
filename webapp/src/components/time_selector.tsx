@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useMemo} from 'react';
 import {useSelector} from 'react-redux';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
@@ -14,49 +14,53 @@ type Props = {
     endTime?: string
 }
 
+type Option = {
+    label: string
+    value: string
+}
+
 export default function TimeSelector(props: Props) {
     const theme = useSelector(getTheme);
-    let options = null;
-    let value = null;
-    let ranges: string[];
 
-    const updateOptions = () => {
-        let fromHour = 0; let fromMinute = 0; let toHour = 23; let toMinute = 45;
+    const options: Option[] = useMemo(() => {
+        let fromHour = 0;
+        let fromMinute = 0;
+        let toHour = 23;
+        let toMinute = 45;
+        let ranges: string[] = [];
 
-        if (props.startTime != undefined && props.startTime != '') {
+        if (props.startTime) {
             const parts = props.startTime.split(':');
-            fromHour = parseInt(parts[0]);
-            fromMinute = parseInt(parts[1]) + minuteStep;
+            fromHour = parseInt(parts[0], 10);
+            fromMinute = parseInt(parts[1], 10) + minuteStep;
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
-        if (props.endTime != undefined && props.endTime != '') {
+        if (props.endTime) {
             const parts = props.endTime.split(':');
-            toHour = parseInt(parts[0]);
-            toMinute = parseInt(parts[1]);
+            toHour = parseInt(parts[0], 10);
+            toMinute = parseInt(parts[1], 10);
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
-        if (ranges == undefined) {
+        if (!ranges.length) {
             ranges = generateMilitaryTimeArray();
         }
 
-        options = ranges.map((t) => ({
+        return ranges.map((t) => ({
             label: t,
             value: t,
         }));
+    }, [props.startTime, props.endTime]);
 
-        if (props.value) {
-            value = options.find((option) => option.value === props.value);
-        }
+    let value = null;
+    if (props.value) {
+        value = options.find((option: Option) => option.value === props.value);
+    }
+
+    const handleChange = (_: string, newValue: string) => {
+        props.onChange(newValue);
     };
-
-    const handleChange = (_, time) => {
-        props.onChange(time);
-    };
-
-    useEffect(updateOptions, [props.startTime, props.endTime]);
-    updateOptions();
 
     return (
         <ReactSelectSetting

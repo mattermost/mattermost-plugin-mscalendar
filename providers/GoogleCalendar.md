@@ -12,7 +12,8 @@ For a stable production release, please download the latest version from the Plu
 
 - Receive a daily summary at a specific time
 - Receive event reminders 5 minutes before a meeting via direct message
-- Receive direct message notification on event invitations
+- Create events directly from a channel, optionally linking them to a channel for reminders
+- Receive event remidners 5 minutes before a meeting via message post
 - Automatically set an user status (away, DND) during meetings
 
 ## Configuration
