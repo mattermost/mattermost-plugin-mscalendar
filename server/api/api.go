@@ -4,9 +4,6 @@
 package api
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
@@ -38,23 +35,4 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
 	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
-
-	notificationRouter.HandleFunc("/{fname}", func(w http.ResponseWriter, r *http.Request) {
-		if api.GoogleDomainVerifyKey == "" {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Domain verify key is not set"))
-			return
-		}
-
-		parts := strings.Split(r.URL.Path, "/")
-		fname := parts[len(parts)-1]
-		if fname != api.GoogleDomainVerifyKey {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Incorrect file name requested"))
-			return
-		}
-
-		resp := "google-site-verification: " + api.GoogleDomainVerifyKey
-		w.Write([]byte(resp))
-	})
 }
