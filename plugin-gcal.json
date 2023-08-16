@@ -18,6 +18,9 @@
         },
         "executable": ""
     },
+    "webapp": {
+        "bundle_path": "webapp/dist/main.js"
+    },
     "settings_schema": {
         "header": "",
         "footer": "",
@@ -88,13 +91,6 @@
                 "type": "text",
                 "help_text": "Google Auth Client Secret.",
                 "placeholder": "",
-                "default": ""
-            },
-            {
-                "key": "GoogleDomainVerifyKey",
-                "display_name": "Google Domain verify key",
-                "type": "text",
-                "help_text": "This should look something like \"googlebd09b1075898e210.html\"",
                 "default": ""
             }
         ]

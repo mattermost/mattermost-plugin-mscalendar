@@ -124,7 +124,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 			}
 
 			calendarUser := newUserFromStoredUser(user)
-			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end)
+			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end, true)
 			if err != nil {
 				syncJobSummary.NumberOfUsersFailedStatusChanged++
 				m.Logger.With(bot.LogContext{
@@ -455,7 +455,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 	return nil
 }
 
-func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remote.ViewCalendarResponse, error) {
+func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, excludeDeclined bool) (*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "errror withClient")
@@ -464,6 +464,10 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time) (*remot
 	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting events for user %s", user.MattermostUserID)
+	}
+
+	if excludeDeclined {
+		events = m.excludeDeclinedEvents(events)
 	}
 
 	return &remote.ViewCalendarResponse{
@@ -514,7 +518,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			message, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
+			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
@@ -540,12 +544,17 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				for channelID := range eventMetadata.LinkedChannelIDs {
 					post := &model.Post{
 						ChannelId: channelID,
-						Message:   message,
+						Message:   "Upcoming event",
+					}
+					attachment, errRender := views.RenderEventAsAttachment(event, timezone, views.ShowTimezoneOption(timezone))
+					if errRender != nil {
+						m.Logger.With(bot.LogContext{"err": errRender}).Errorf("notifyUpcomingEvents error rendering channel post")
+						continue
 					}
 					model.ParseSlackAttachment(post, []*model.SlackAttachment{attachment})
-					err = m.Poster.CreatePost(post)
-					if err != nil {
-						m.Logger.Warnf("notifyUpcomingEvents error creating post in channel. err=%v", err)
+					errPoster := m.Poster.CreatePost(post)
+					if errPoster != nil {
+						m.Logger.With(bot.LogContext{"err": errPoster}).Warnf("notifyUpcomingEvents error creating post in channel")
 						continue
 					}
 				}

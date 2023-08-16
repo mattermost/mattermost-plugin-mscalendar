@@ -12,6 +12,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 type Users interface {
@@ -135,6 +136,25 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	storedUser, err := m.Store.LoadUser(mattermostUserID)
 	if err != nil {
 		return err
+	}
+
+	// Unlink events owned by the user that is disconnecting its account
+	linkedEventsLeft := make(map[string]string)
+	for eventID, channelID := range storedUser.ChannelEvents {
+		if errStore := m.Store.DeleteLinkedChannelFromEvent(eventID, channelID); errStore != nil {
+			linkedEventsLeft[eventID] = channelID
+		}
+	}
+	if len(linkedEventsLeft) != 0 {
+		storedUser.ChannelEvents = linkedEventsLeft
+		if errStore := m.Store.StoreUser(storedUser); errStore != nil {
+			m.Logger.With(bot.LogContext{
+				"err":                  errStore,
+				"mm_user_id":           storedUser.MattermostDisplayName,
+				"linked_channels_left": linkedEventsLeft,
+			}).Errorf("error storing user after failing deleting linked channels from store")
+		}
+		return fmt.Errorf("error deleting linked channels from events")
 	}
 
 	eventSubscriptionID := storedUser.Settings.EventSubscriptionID

@@ -32,6 +32,7 @@ type Event struct {
 type EventStore interface {
 	LoadEventMetadata(eventID string) (*EventMetadata, error)
 	StoreEventMetadata(eventID string, eventMeta *EventMetadata) error
+	DeleteEventMetadata(eventID string) error
 
 	AddLinkedChannelToEvent(eventID, channelID string) error
 	DeleteLinkedChannelFromEvent(eventID, channelID string) error
@@ -57,6 +58,12 @@ func (s *pluginStore) AddLinkedChannelToEvent(eventID, channelID string) error {
 	eventMeta, err := s.LoadEventMetadata(eventID)
 	if err != nil && !errors.Is(err, ErrNotFound) {
 		return err
+	}
+
+	if eventMeta == nil {
+		eventMeta = &EventMetadata{
+			LinkedChannelIDs: make(map[string]struct{}, 1),
+		}
 	}
 
 	eventMeta.LinkedChannelIDs[channelID] = struct{}{}
@@ -90,6 +97,10 @@ func (s *pluginStore) LoadEventMetadata(eventID string) (*EventMetadata, error) 
 		return nil, err
 	}
 	return &event, nil
+}
+
+func (s *pluginStore) DeleteEventMetadata(eventID string) error {
+	return s.eventKV.Delete(eventMetaKey(eventID))
 }
 
 func (s *pluginStore) StoreUserEvent(mattermostUserID string, event *Event) error {

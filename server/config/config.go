@@ -14,8 +14,7 @@ type StoredConfig struct {
 	EnableStatusSync   bool
 	EnableDailySummary bool
 
-	EncryptionKey         string
-	GoogleDomainVerifyKey string
+	EncryptionKey string
 }
 
 type ProviderFeatures struct {

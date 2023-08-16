@@ -11,7 +11,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
-func (api *api) autocompleteUsers(w http.ResponseWriter, r *http.Request) {
+func (api *api) autocompleteConnectedUsers(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-Id")
 	_, err := api.Store.LoadUser(mattermostUserID)
 	if mattermostUserID == "" || errors.Is(err, store.ErrNotFound) {
