@@ -11,6 +11,33 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
+type Option interface {
+	Apply(remote.Event, *model.SlackAttachment)
+}
+
+type showTimezoneOption struct {
+	timezone string
+}
+
+func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.SlackAttachment) {
+	attachment.Text = fmt.Sprintf(
+		"%s - %s (%s)",
+		event.Start.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		event.End.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		tzOpt.timezone,
+	)
+}
+
+func ShowTimezoneOption(timezone string) Option {
+	if timezone == "" {
+		timezone = "UTC"
+	}
+
+	return showTimezoneOption{
+		timezone: timezone,
+	}
+}
+
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
@@ -111,7 +138,7 @@ func isKnownMeetingURL(location string) bool {
 	return err == nil
 }
 
-func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
+func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
 	var titleLink string
@@ -129,13 +156,19 @@ func renderEventAsAttachment(event *remote.Event, timezone string) (*model.Slack
 		}
 	}
 
-	return &model.SlackAttachment{
+	attachment := &model.SlackAttachment{
 		Title:     event.Subject,
 		TitleLink: titleLink,
-		Text:      fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 		Fields:    fields,
 		Actions:   actions,
-	}, nil
+	}
+
+	for _, opt := range options {
+		opt.Apply(*event, attachment)
+	}
+
+	return attachment, nil
 }
 
 func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
@@ -183,8 +216,8 @@ func EnsureSubject(s string) string {
 	return s
 }
 
-func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
+func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string, options ...Option) (message string, attachment *model.SlackAttachment, err error) {
 	message = "Upcoming event:\n"
-	attachment, err = renderEventAsAttachment(event, timeZone)
+	attachment, err = RenderEventAsAttachment(event, timeZone, options...)
 	return message, attachment, err
 }

@@ -12,7 +12,9 @@ import Hooks from './plugin_hooks';
 import reducer from './reducers';
 
 import CreateEventModal from './components/modals/create_event_modal';
+import {openCreateEventModal} from './actions';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export default class Plugin {
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
         registry.registerReducer(reducer);
@@ -25,6 +27,11 @@ export default class Plugin {
         };
 
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);
+
+        registry.registerChannelHeaderMenuAction(
+            <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
+            (channelID) => store.dispatch(openCreateEventModal(channelID)),
+        );
 
         // reminder to set up site url for any API calls
         // and i18n

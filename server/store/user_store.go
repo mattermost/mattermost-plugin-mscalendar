@@ -39,6 +39,10 @@ type UserShort struct {
 	Email                 string `json:"email"`
 }
 
+func (us UserShort) Matches(term string) bool {
+	return strings.Contains(us.MattermostUsername, term) || strings.Contains(us.MattermostDisplayName, term) || strings.Contains(us.Email, term)
+}
+
 func (us UserShort) ToDTO() UserShortDTO {
 	return UserShortDTO{
 		MattermostUserID:      us.MattermostUserID,
@@ -261,7 +265,7 @@ func (s *pluginStore) SearchInUserIndex(term string, limit int) (UserIndex, erro
 
 	result := []*UserShort{}
 	for idx, u := range userIndex {
-		if strings.Contains(u.MattermostUsername, term) || strings.Contains(u.MattermostDisplayName, term) || strings.Contains(u.Email, term) {
+		if u.Matches(term) {
 			result = append(result, userIndex[idx])
 		}
 

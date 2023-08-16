@@ -2,7 +2,7 @@
 // See LICENSE.txt for license information.
 
 import React, {useState} from 'react';
-import {useSelector} from 'react-redux';
+import {useSelector, useDispatch} from 'react-redux';
 
 import {Modal} from 'react-bootstrap';
 
@@ -17,6 +17,9 @@ import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
+import ChannelSelector from '../channel_selector';
+import {capitalizeFirstCharacter} from '@/utils/text';
+import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
 
 type Props = {
     close: (e?: Event) => void;
@@ -27,6 +30,8 @@ export default function CreateEventForm(props: Props) {
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const dispatch = useDispatch();
+
     const [formValues, setFormValues] = useState<CreateEventPayload>({
         subject: '',
         all_day: false,
@@ -35,10 +40,12 @@ export default function CreateEventForm(props: Props) {
         start_time: '',
         end_time: '',
         description: '',
+        channel_id: '',
+        location: '',
     });
 
     const setFormValue = <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => {
-        setFormValues((values) => ({
+        setFormValues((values: CreateEventPayload) => ({
             ...values,
             [name]: value,
         }));
@@ -55,16 +62,12 @@ export default function CreateEventForm(props: Props) {
     };
 
     const handleError = (error: string) => {
-        setStoredError(error);
+        const errorMessage = capitalizeFirstCharacter(error);
+        setStoredError(errorMessage);
         setSubmitting(false);
     };
 
-    const createEvent = async (payload: CreateEventPayload): Promise<{error?: string}> => {
-        alert(JSON.stringify(payload));
-        return {};
-    };
-
-    const handleSubmit = (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent) => {
         if (e && e.preventDefault) {
             e.preventDefault();
         }
@@ -72,14 +75,14 @@ export default function CreateEventForm(props: Props) {
         // add required field validation
 
         setSubmitting(true);
-        createEvent(formValues).then(({error}) => {
-            if (error) {
-                handleError(error);
-                return;
-            }
 
-            handleClose();
-        });
+        const response = (await dispatch(createCalendarEvent(formValues))) as CreateCalendarEventResponse;
+        if (response.error) {
+            handleError(response.error);
+            return;
+        }
+
+        handleClose();
     };
 
     const style = getModalStyles(theme);
@@ -107,7 +110,7 @@ export default function CreateEventForm(props: Props) {
 
     let form;
     if (loading) {
-        form = <Loading />;
+        form = <Loading/>;
     } else {
         form = (
             <ActualForm
@@ -151,7 +154,7 @@ export default function CreateEventForm(props: Props) {
 
 type ActualFormProps = {
     formValues: CreateEventPayload;
-    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => Promise<{error?: string}>;
+    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => Promise<{ error?: string }>;
 }
 
 const ActualForm = (props: ActualFormProps) => {
@@ -167,6 +170,17 @@ const ActualForm = (props: ActualFormProps) => {
                 <input
                     onChange={(e) => setFormValue('subject', e.target.value)}
                     value={formValues.subject}
+                    className='form-control'
+                />
+            ),
+        },
+        {
+            label: 'Location',
+            required: false,
+            component: (
+                <input
+                    onChange={(e) => setFormValue('location', e.target.value)}
+                    value={formValues.location}
                     className='form-control'
                 />
             ),
@@ -197,6 +211,7 @@ const ActualForm = (props: ActualFormProps) => {
             component: (
                 <TimeSelector
                     value={formValues.start_time}
+                    endTime={formValues.end_time}
                     onChange={(value) => setFormValue('start_time', value)}
                 />
             ),
@@ -207,6 +222,7 @@ const ActualForm = (props: ActualFormProps) => {
             component: (
                 <TimeSelector
                     value={formValues.end_time}
+                    startTime={formValues.start_time}
                     onChange={(value) => setFormValue('end_time', value)}
                 />
             ),
@@ -221,6 +237,15 @@ const ActualForm = (props: ActualFormProps) => {
                 />
             ),
         },
+        {
+            label: 'Link event to channel',
+            component: (
+                <ChannelSelector
+                    onChange={(selected) => setFormValue('channel_id', selected)}
+                />
+            ),
+        },
+
     ];
 
     return (

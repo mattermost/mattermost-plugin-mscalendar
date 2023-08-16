@@ -3,7 +3,7 @@ NPM ?= $(shell command -v npm 2> /dev/null)
 CURL ?= $(shell command -v curl 2> /dev/null)
 GOPATH ?= $(shell go env GOPATH)
 
-CALENDAR_PROVIDER ?= mscalendar
+CALENDAR_PROVIDER ?= gcal
 MANIFEST_FILE ?= plugin.json
 
 GO_TEST_FLAGS ?= -race

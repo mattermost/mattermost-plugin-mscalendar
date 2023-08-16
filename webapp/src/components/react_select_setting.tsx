@@ -2,19 +2,20 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import ReactSelect from 'react-select';
+import ReactSelect, {ActionMeta} from 'react-select';
 import AsyncSelect, {Props as ReactSelectProps} from 'react-select/async';
 import CreatableSelect from 'react-select/creatable';
 
 import {Theme} from 'mattermost-redux/types/preferences';
 
-import {ActionMeta, ValueType} from 'react-select/src/types';
-
 import Setting from '@/components/setting';
 
 import {getStyleForReactSelect} from '@/utils/styles';
 
-import {ReactSelectOption} from '@/types/model';
+type ReactSelectOption = {
+    label: string;
+    value: string;
+}
 
 const MAX_NUM_OPTIONS = 100;
 

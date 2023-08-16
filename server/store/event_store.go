@@ -59,6 +59,12 @@ func (s *pluginStore) AddLinkedChannelToEvent(eventID, channelID string) error {
 		return err
 	}
 
+	if eventMeta == nil {
+		eventMeta = &EventMetadata{
+			LinkedChannelIDs: make(map[string]struct{}, 1),
+		}
+	}
+
 	eventMeta.LinkedChannelIDs[channelID] = struct{}{}
 
 	return s.StoreEventMetadata(eventID, eventMeta)

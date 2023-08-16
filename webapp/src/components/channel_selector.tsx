@@ -1,12 +1,13 @@
 import React, {useCallback, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
-import AsyncCreatableSelect from 'react-select/async-creatable';
+import AsyncSelect from 'react-select/async';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
+import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 
 import {getStyleForReactSelect} from '@/utils/styles';
-import {AutocompleteChannelsResponse, autocompleteConnectedUsers} from '@/actions';
+import {AutocompleteChannelsResponse, autocompleteUserChannels} from '@/actions';
 
 type SelectOption = {
     label: string;
@@ -14,19 +15,20 @@ type SelectOption = {
 }
 
 type Props = {
-    onChange: (selected: string[]) => void;
+    onChange: (selected: string) => void;
     value: string[];
 };
 
-export default function AttendeeSelector(props: Props) {
+export default function ChannelSelector(props: Props) {
     const [storedError, setStoredError] = useState('');
 
     const theme = useSelector(getTheme);
+    const teamId = useSelector(getCurrentTeamId);
 
     const dispatch = useDispatch();
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
-        const response = (await dispatch(autocompleteConnectedUsers(input))) as AutocompleteChannelsResponse;
+        const response = (await dispatch(autocompleteUserChannels(input, teamId)) as unknown as AutocompleteChannelsResponse);
 
         if (response.error) {
             setStoredError(response.error);
@@ -35,32 +37,27 @@ export default function AttendeeSelector(props: Props) {
 
         setStoredError('');
 
-        return response.data.map((u) => ({
-            label: u.mm_display_name,
-            value: u.mm_id,
+        return response.data.map((c) => ({
+            label: c.display_name,
+            value: c.id,
         }));
     }, []);
 
-    const isValidEmail = (input: string): boolean => {
-        return (/\S+@\S+\.\S+/).test(input);
-    };
-
-    const handleChange = (selected: SelectOption[]) => {
-        props.onChange(selected.map((option) => option.value));
+    const handleChange = (selected: SelectOption) => {
+        props.onChange(selected.value);
     };
 
     return (
         <>
-            <AsyncCreatableSelect
+            <AsyncSelect
                 value={props.value}
                 loadOptions={loadOptions}
                 defaultOptions={true}
                 menuPortalTarget={document.body}
                 menuPlacement='auto'
                 onChange={handleChange}
-                isValidNewOption={isValidEmail}
                 styles={getStyleForReactSelect(theme)}
-                isMulti={true}
+                isMulti={false}
             />
             {storedError && (
                 <div>
