@@ -71,16 +71,7 @@ func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remo
 
 func convertGCalEventDateTimeToRemoteDateTime(dt *calendar.EventDateTime) *remote.DateTime {
 	t, _ := time.Parse(time.RFC3339, dt.DateTime)
-
-	location := dt.TimeZone
-	if t.Location() != nil && t.Location().String() != "" {
-		location = t.Location().String()
-	}
-
-	return &remote.DateTime{
-		DateTime: t.Format(remote.RFC3339NanoNoTimezone),
-		TimeZone: location,
-	}
+	return remote.NewDateTime(t.UTC(), "UTC")
 }
 
 func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {

@@ -12,6 +12,40 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
+type Option interface {
+	Apply(remote.Event, *model.SlackAttachment)
+}
+
+type showTimezoneOption struct {
+	timezone string
+}
+
+func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.SlackAttachment) {
+	attachment.Text = fmt.Sprintf(
+		"%s - %s (%s)",
+		event.Start.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		event.End.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		tzOpt.timezone,
+	)
+}
+
+func ShowTimezoneOption(timezone string) Option {
+	if timezone == "" {
+		timezone = "UTC"
+	}
+
+	return showTimezoneOption{
+		timezone: timezone,
+	}
+}
+
+var subjectReplacer = strings.NewReplacer(
+	"|", `\|`,
+	"[", `\[`,
+	"]", `\]`,
+	">", `\>`,
+)
+
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
@@ -84,8 +118,8 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 }
 
 func renderTableHeader() string {
-	return `| Time | Subject | |
-| :-- | :-- | :-- |`
+	return `| Time | Subject |
+| :-- | :-- |`
 }
 
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
@@ -94,7 +128,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
-		format = "| %s - %s | [%s](%s) | %s |"
+		format = "| %s - %s | [%s](%s) |"
 	}
 
 	link, err := url.QueryUnescape(event.Weblink)
@@ -102,23 +136,20 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 		return "", err
 	}
 
-	var other string
-	if event.Location != nil && isKnownMeetingURL(event.Location.DisplayName) {
-		other = "[Join meeting](" + event.Location.DisplayName + ")"
-	}
-
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, subject, link, other), nil
+	return fmt.Sprintf(format, start, end, subjectReplacer.Replace(subject), link), nil
 }
 
 func isKnownMeetingURL(location string) bool {
-	return strings.Contains(location, "zoom.us/j/") || strings.Contains(location, "discord.gg") || strings.Contains(location, "meet.google.com")
+	_, err := url.ParseRequestURI(location)
+	return err == nil
 }
 
-func renderEventAsAttachment(event *remote.Event, timezone string) (*model.SlackAttachment, error) {
+func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
+	var titleLink string
 
 	if event.Location != nil && event.Location.DisplayName != "" {
 		fields = append(fields, &model.SlackAttachmentField{
@@ -127,20 +158,25 @@ func renderEventAsAttachment(event *remote.Event, timezone string) (*model.Slack
 			Short: true,
 		})
 
-		// Add actions for known links
-		// Disable join meeting button for now, since we don't have a handler and
-		// the location url is shown parsed and clickable anyway.
-		// if joinMeetingAction := getActionForLocation(event.Location); joinMeetingAction != nil {
-		// 	actions = append(actions, joinMeetingAction)
-		// }
+		// Use location display name as link if can be parsed as an URL
+		if isKnownMeetingURL(event.Location.DisplayName) {
+			titleLink = event.Location.DisplayName
+		}
 	}
 
-	return &model.SlackAttachment{
-		Title:   event.Subject,
-		Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
-		Fields:  fields,
-		Actions: actions,
-	}, nil
+	attachment := &model.SlackAttachment{
+		Title:     event.Subject,
+		TitleLink: titleLink,
+		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Fields:    fields,
+		Actions:   actions,
+	}
+
+	for _, opt := range options {
+		opt.Apply(*event, attachment)
+	}
+
+	return attachment, nil
 }
 
 func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
@@ -188,8 +224,8 @@ func EnsureSubject(s string) string {
 	return s
 }
 
-func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string) (message string, attachment *model.SlackAttachment, err error) {
-	message = "You have an upcoming event:\n"
-	attachment, err = renderEventAsAttachment(event, timeZone)
+func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string, options ...Option) (message string, attachment *model.SlackAttachment, err error) {
+	message = "Upcoming event:\n"
+	attachment, err = RenderEventAsAttachment(event, timeZone, options...)
 	return message, attachment, err
 }
