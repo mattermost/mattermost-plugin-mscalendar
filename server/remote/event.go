@@ -57,6 +57,7 @@ type Coordinates struct {
 }
 
 type Attendee struct {
+	RemoteID     string               `json:"remoteId,omitempty"`
 	Status       *EventResponseStatus `json:"status,omitempty"`
 	EmailAddress *EmailAddress        `json:"emailAddress,omitempty"`
 	Type         string               `json:"type,omitempty"`
