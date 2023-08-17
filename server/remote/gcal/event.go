@@ -40,7 +40,10 @@ func (c *client) CreateEvent(_ string, in *remote.Event) (*remote.Event, error) 
 
 	evt := convertRemoteEventToGcalEvent(in)
 
-	resultEvent, err := service.Events.Insert(defaultCalendarName, evt).Do()
+	resultEvent, err := service.Events.
+		Insert(defaultCalendarName, evt).
+		SendUpdates("all"). // Send notifications to all attendees.
+		Do()
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal CreateEvent")
 	}
