@@ -30,7 +30,12 @@ export default class Plugin {
 
         registry.registerChannelHeaderMenuAction(
             <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
-            (channelID) => store.dispatch(openCreateEventModal(channelID)),
+            async (channelID) => {
+                if (await hooks.CheckUserIsConnected()) {
+                    store.dispatch(openCreateEventModal(channelID));
+                    return
+                }
+            }
         );
 
         // reminder to set up site url for any API calls

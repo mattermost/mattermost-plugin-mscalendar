@@ -136,7 +136,7 @@ export function sendEphemeralPost(message: string, channelId?: string) {
     return (dispatch, getState) => {
         const timestamp = Date.now();
         const post = {
-            id: 'jiraPlugin' + Date.now(),
+            id: 'gcalplugin_' + Date.now(),
             user_id: getState().entities.users.currentUserId,
             channel_id: channelId || getCurrentChannelId(getState()),
             message,
