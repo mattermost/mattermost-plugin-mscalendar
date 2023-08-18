@@ -5,6 +5,7 @@ package mscalendar
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
@@ -37,6 +38,7 @@ type StatusSyncJobSummary struct {
 	NumberOfUsersFailedStatusChanged int
 	NumberOfUsersStatusChanged       int
 	NumberOfUsersProcessed           int
+	Calendar                         *remote.ViewCalendarResponse
 }
 
 type Availability interface {
@@ -116,28 +118,80 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 
 		users = append(users, user)
 
-		if fetchIndividually {
-			engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
-			if err != nil {
-				m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
-				continue
-			}
+		// if fetchIndividually {
+		// 	engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
+		// 	if err != nil {
+		// 		m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
+		// 		continue
+		// 	}
 
-			calendarUser := newUserFromStoredUser(user)
-			calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end, true)
-			if err != nil {
-				syncJobSummary.NumberOfUsersFailedStatusChanged++
-				m.Logger.With(bot.LogContext{
-					"user": u.MattermostUserID,
-					"err":  err,
-				}).Errorf("error getting calendar events")
-				continue
-			}
-			calendarViews = append(calendarViews, calendarEvents)
-		}
+		// 	calendarUser := newUserFromStoredUser(user)
+		// 	calendarEvents, err := engine.GetCalendarEvents(calendarUser, start, end, true)
+		// 	if err != nil {
+		// 		syncJobSummary.NumberOfUsersFailedStatusChanged++
+		// 		m.Logger.With(bot.LogContext{
+		// 			"user": u.MattermostUserID,
+		// 			"err":  err,
+		// 		}).Errorf("error getting calendar events")
+		// 		continue
+		// 	}
+		// 	calendarViews = append(calendarViews, calendarEvents)
+		// }
 	}
 	if len(users) == 0 {
 		return users, calendarViews, errNoUsersNeedToBeSynced
+	}
+
+	if fetchIndividually {
+		wg := sync.WaitGroup{}
+		in := make(chan *store.User, 12)
+		defer close(in)
+		out := make(chan StatusSyncJobSummary, 12)
+		defer close(out)
+
+		// Launch goros
+		for i := 0; i < 4; i++ {
+			go func(chan *store.User, chan StatusSyncJobSummary) {
+				for u := range in {
+					summary := StatusSyncJobSummary{}
+
+					engine, err := m.FilterCopy(withActingUser(u.MattermostUserID))
+					if err != nil {
+						m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", u.MattermostUserID, err)
+						break
+					}
+
+					calendarUser := newUserFromStoredUser(u)
+					summary.Calendar, err = engine.GetCalendarEvents(calendarUser, start, end, true)
+					if err != nil {
+						summary.NumberOfUsersFailedStatusChanged++
+						m.Logger.With(bot.LogContext{
+							"user": u.MattermostUserID,
+							"err":  err,
+						}).Errorf("error getting calendar events")
+					}
+
+					out <- summary
+				}
+			}(in, out)
+		}
+
+		for _, user := range users {
+			wg.Add(1)
+			in <- user
+		}
+
+		go func() {
+			for result := range out {
+				syncJobSummary.NumberOfUsersFailedStatusChanged += result.NumberOfUsersFailedStatusChanged
+				syncJobSummary.NumberOfUsersProcessed += result.NumberOfUsersProcessed
+				syncJobSummary.NumberOfUsersStatusChanged += result.NumberOfUsersStatusChanged
+				calendarViews = append(calendarViews, syncJobSummary.Calendar)
+				wg.Done()
+			}
+		}()
+
+		wg.Wait()
 	}
 
 	if !fetchIndividually {
