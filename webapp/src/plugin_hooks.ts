@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {openCreateEventModal} from './actions';
+import {getConnected, openCreateEventModal, sendEphemeralPost} from './actions';
 import {isUserConnected} from './selectors';
 
 // import {openCreateModalWithoutPost, openChannelSettings, sendEphemeralPost, openDisconnectModal, handleConnectFlow, getConnected} from '../actions';
@@ -52,12 +52,10 @@ export default class Hooks {
     };
 
     checkUserIsConnected = async (): Promise<boolean> => {
-        return true;
-
         if (!isUserConnected(this.store.getState())) {
             await this.store.dispatch(getConnected());
             if (!isUserConnected(this.store.getState())) {
-                this.store.dispatch(sendEphemeralPost('Your Mattermost account is not connected to Jira. Please use `/jira connect` to connect your account, then try again.'));
+                this.store.dispatch(sendEphemeralPost('Your Mattermost account is not connected.'));
                 return false;
             }
         }
