@@ -43,7 +43,7 @@ export default class Hooks {
     };
 
     handleCreateEventSlashCommand = async (message: string, contextArgs: ContextArgs) => {
-        if (!(await this.CheckUserIsConnected())) {
+        if (!(await this.checkUserIsConnected())) {
             return Promise.resolve({});
         }
 
@@ -51,7 +51,7 @@ export default class Hooks {
         return Promise.resolve({});
     };
 
-    CheckUserIsConnected = async (): Promise<boolean> => {
+    checkUserIsConnected = async (): Promise<boolean> => {
         if (!isUserConnected(this.store.getState())) {
             await this.store.dispatch(getConnected());
             if (!isUserConnected(this.store.getState())) {
