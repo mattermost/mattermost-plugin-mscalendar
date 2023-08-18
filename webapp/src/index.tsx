@@ -33,9 +33,8 @@ export default class Plugin {
             async (channelID) => {
                 if (await hooks.CheckUserIsConnected()) {
                     store.dispatch(openCreateEventModal(channelID));
-                    return
                 }
-            }
+            },
         );
 
         // reminder to set up site url for any API calls
