@@ -215,8 +215,8 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 					gomock.Eq(RemoteUserAlreadyConnected),
 					gomock.Eq(config.Provider.DisplayName),
 					gomock.Eq("mail-value"),
-					gomock.Eq(config.Provider.CommandTrigger),
 					gomock.Eq("sample-username"),
+					gomock.Eq(config.Provider.CommandTrigger),
 				).Return("post_id", nil).Times(1)
 			},
 		},
