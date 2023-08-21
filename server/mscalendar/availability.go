@@ -214,21 +214,23 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 		users = append(users, user)
 	}
 
+	if len(users) == 0 {
+		close(in)
+		close(out)
+		return users, calendarViews, errNoUsersNeedToBeSynced
+	}
+
 	go func() {
 		wg.Wait()
 		close(in)
 		// Ensure information was pulled successfully
-		// time.Sleep(250 * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 		close(out)
 	}()
 
 	for js := range out {
 		syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
 		calendarViews = append(calendarViews, js.CalendarEvents)
-	}
-
-	if len(users) == 0 {
-		return users, calendarViews, errNoUsersNeedToBeSynced
 	}
 
 	if len(calendarViews) == 0 {
