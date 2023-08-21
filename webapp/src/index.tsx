@@ -12,7 +12,7 @@ import Hooks from './plugin_hooks';
 import reducer from './reducers';
 
 import CreateEventModal from './components/modals/create_event_modal';
-import {openCreateEventModal} from './actions';
+import {getProviderConfiguration, handleConnectChange, openCreateEventModal} from './actions';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export default class Plugin {
@@ -22,8 +22,14 @@ export default class Plugin {
         const hooks = new Hooks(store);
         registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
 
-        const setup = () => {
+        const setup = async () => {
+            // Retrieve provider configuration so we can access names and other options in messages to use in the frontend.
+            await store.dispatch(getProviderConfiguration());
+
             registry.registerRootComponent(CreateEventModal);
+
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_connect`, handleConnectChange(store));
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnect`, handleConnectChange(store));
         };
 
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);

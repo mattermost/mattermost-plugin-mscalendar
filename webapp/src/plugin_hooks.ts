@@ -2,7 +2,7 @@
 // See LICENSE.txt for license information.
 
 import {getConnected, openCreateEventModal, sendEphemeralPost} from './actions';
-import {isUserConnected} from './selectors';
+import {getProviderConfiguration, isUserConnected} from './selectors';
 
 // import {openCreateModalWithoutPost, openChannelSettings, sendEphemeralPost, openDisconnectModal, handleConnectFlow, getConnected} from '../actions';
 // import {isUserConnected, getInstalledInstances, getPluginSettings, getUserConnectedInstances, instanceIsInstalled} from '../selectors';
@@ -55,7 +55,8 @@ export default class Hooks {
         if (!isUserConnected(this.store.getState())) {
             await this.store.dispatch(getConnected());
             if (!isUserConnected(this.store.getState())) {
-                this.store.dispatch(sendEphemeralPost('Your Mattermost account is not connected.'));
+                const providerConfiguration = await getProviderConfiguration(this.store.getState());
+                this.store.dispatch(sendEphemeralPost(`Your Mattermost account is not connected to ${providerConfiguration.DisplayName}. In order to create a calendar event please connect your account first using \`/${providerConfiguration.CommandTrigger} connect\`.`));
                 return false;
             }
         }

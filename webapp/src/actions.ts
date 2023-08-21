@@ -155,3 +155,42 @@ export function sendEphemeralPost(message: string, channelId?: string) {
         });
     };
 }
+
+export function handleConnectChange(store) {
+    return (msg) => {
+        if (!msg.data) {
+            return;
+        }
+
+        let dispatchType = ActionTypes.RECEIVED_CONNECTED;
+        if (msg.data.event === 'disconnected') {
+            dispatchType = ActionTypes.RECEIVED_DISCONNECTED;
+        }
+
+        store.dispatch({
+            type: dispatchType,
+            data: msg.data,
+        });
+    };
+}
+
+export function getProviderConfiguration() {
+    return async (dispatch, getState): Promise<ProviderConfig | null>  => {
+        let data;
+        const baseUrl = getPluginServerRoute(getState());
+        try {
+            data = await doFetch(`${baseUrl}/api/v1/provider`, {
+                method: 'get',
+            });
+
+            dispatch({
+                type: ActionTypes.RECEIVED_PROVIDER_CONFIGURATION,
+                data,
+            });
+        } catch (error) {
+            return {error};
+        }
+
+        return data;
+    };
+}
