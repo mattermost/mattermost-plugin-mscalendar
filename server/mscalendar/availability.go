@@ -4,6 +4,7 @@
 package mscalendar
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -139,14 +140,20 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 	start := time.Now().UTC()
 	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
-	in := make(chan store.User, 16)
-	out := make(chan StatusSyncJobSummary, 16)
+	in := make(chan store.User)
+	out := make(chan StatusSyncJobSummary, concurrency)
 	var wg sync.WaitGroup
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
 	for i := 0; i <= concurrency; i++ {
-		go func(m mscalendar, w *sync.WaitGroup, in chan store.User, out chan StatusSyncJobSummary) {
+		go func(m *mscalendar, c context.Context, w *sync.WaitGroup, in chan store.User, out chan StatusSyncJobSummary) {
 			for {
 				select {
+				case <-c.Done():
+					m.Logger.Errorf("Tiemout processing users availability")
+					break
 				case user, ok := <-in:
 					if !ok {
 						// Closed channel
@@ -177,7 +184,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 					w.Done()
 				}
 			}
-		}(*m, &wg, in, out)
+		}(m, ctx, &wg, in, out)
 	}
 
 	numberOfLogs := 0
@@ -209,9 +216,9 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 
 	go func() {
 		wg.Wait()
-		// Ensure information went away to all channels
-		time.Sleep(250 * time.Millisecond)
 		close(in)
+		// Ensure information was pulled successfully
+		time.Sleep(250 * time.Millisecond)
 		close(out)
 	}()
 
