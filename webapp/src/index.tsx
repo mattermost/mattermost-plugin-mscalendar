@@ -26,6 +26,15 @@ export default class Plugin {
             // Retrieve provider configuration so we can access names and other options in messages to use in the frontend.
             await store.dispatch(getProviderConfiguration());
 
+            registry.registerChannelHeaderMenuAction(
+                <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
+                async (channelID) => {
+                    if (await hooks.checkUserIsConnected()) {
+                        store.dispatch(openCreateEventModal(channelID));
+                    }
+                },
+            );
+
             registry.registerRootComponent(CreateEventModal);
 
             registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnectChange(store));
@@ -33,15 +42,6 @@ export default class Plugin {
         };
 
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);
-
-        registry.registerChannelHeaderMenuAction(
-            <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
-            async (channelID) => {
-                if (await hooks.checkUserIsConnected()) {
-                    store.dispatch(openCreateEventModal(channelID));
-                }
-            },
-        );
 
         // reminder to set up site url for any API calls
         // and i18n
