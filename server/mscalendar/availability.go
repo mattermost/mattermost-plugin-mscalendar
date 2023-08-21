@@ -136,7 +136,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 	return users, calendarViews, nil
 }
 
-func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserIndex, syncJobSummary *StatusSyncJobSummary, concurrency int) ([]*store.User, []*remote.ViewCalendarResponse, error) {
+func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, userIndex store.UserIndex, syncJobSummary *StatusSyncJobSummary, concurrency int) ([]*store.User, []*remote.ViewCalendarResponse, error) {
 	start := time.Now().UTC()
 	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
@@ -144,7 +144,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 	out := make(chan StatusSyncJobSummary, concurrency*4)
 	var wg sync.WaitGroup
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	for i := 0; i <= concurrency; i++ {
@@ -184,7 +184,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 					w.Done()
 				}
 			}
-		}(*m, ctx, &wg, in, out)
+		}(*m, ctxTimeout, &wg, in, out)
 	}
 
 	numberOfLogs := 0
@@ -252,7 +252,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool
 	var err error
 
 	if fetchIndividually {
-		users, calendarViews, err = m.retrieveUsersToSyncUsingGoroutines(userIndex, syncJobSummary, defaultConcurrency)
+		users, calendarViews, err = m.retrieveUsersToSyncUsingGoroutines(context.Background(), userIndex, syncJobSummary, defaultConcurrency)
 	} else {
 		users, calendarViews, err = m.retrieveUsersToSync(userIndex, syncJobSummary)
 	}
