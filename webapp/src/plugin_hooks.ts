@@ -6,7 +6,7 @@ import {getProviderConfiguration, isUserConnected} from './selectors';
 
 type ContextArgs = {channel_id: string};
 
-const createEventCommand = '/gcal events create';
+const createEventCommand = 'events create';
 
 interface Store {
     dispatch(action: {type: string}): void;
@@ -20,7 +20,7 @@ export default class Hooks {
         this.store = store;
     }
 
-    slashCommandWillBePostedHook = (rawMessage: string, contextArgs: ContextArgs) => {
+    slashCommandWillBePostedHook = async (rawMessage: string, contextArgs: ContextArgs) => {
         let message;
         if (rawMessage) {
             message = rawMessage.trim();
@@ -30,7 +30,8 @@ export default class Hooks {
             return Promise.resolve({message, args: contextArgs});
         }
 
-        if (message.startsWith(createEventCommand)) {
+        const providerConfiguration = await getProviderConfiguration(this.store.getState());
+        if (message.startsWith(`/${providerConfiguration.CommandTrigger} ` + createEventCommand)) {
             return this.handleCreateEventSlashCommand(message, contextArgs);
         }
 
