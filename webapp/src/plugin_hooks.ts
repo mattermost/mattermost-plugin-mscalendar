@@ -4,14 +4,9 @@
 import {getConnected, openCreateEventModal, sendEphemeralPost} from './actions';
 import {getProviderConfiguration, isUserConnected} from './selectors';
 
-// import {openCreateModalWithoutPost, openChannelSettings, sendEphemeralPost, openDisconnectModal, handleConnectFlow, getConnected} from '../actions';
-// import {isUserConnected, getInstalledInstances, getPluginSettings, getUserConnectedInstances, instanceIsInstalled} from '../selectors';
-
 type ContextArgs = {channel_id: string};
 
-const createEventCommand = '/z';
-
-// const createEventCommand = '/gcal createevent';
+const createEventCommand = '/gcal create event';
 
 interface Store {
     dispatch(action: {type: string}): void;

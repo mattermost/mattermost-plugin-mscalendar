@@ -36,7 +36,7 @@ type handleFunc func(parameters ...string) (string, bool, error)
 var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("connect", "", fmt.Sprintf("Connect to your %s account", config.Provider.DisplayName)),
 	model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
-	{
+	{ // Summary
 		Trigger:  "summary",
 		HelpText: "View your events for today, or edit the settings for your daily summary.",
 		SubCommands: []*model.AutocompleteData{
@@ -49,8 +49,14 @@ var cmds = []*model.AutocompleteData{
 			model.NewAutocompleteData("disable", "", "Disable your daily summary."),
 		},
 	},
-	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
 	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+	{ // Create
+		Trigger:  "create",
+		HelpText: "Create resources on your account.",
+		SubCommands: []*model.AutocompleteData{
+			model.NewAutocompleteData("event", "", "Creates a new event (desktop only)."),
+		},
+	},
 	model.NewAutocompleteData("today", "", "Display today's events."),
 	model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
@@ -118,6 +124,8 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
+	case "create":
+		handler = c.requireConnectedUser(c.create)
 	// Admin only
 	case "avail":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
