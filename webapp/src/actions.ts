@@ -162,7 +162,7 @@ export function handleConnectChange(store) {
             return;
         }
 
-        let dispatchType = ActionTypes.RECEIVED_CONNECTED;
+        var dispatchType = ActionTypes.RECEIVED_CONNECTED;
         if (msg.data.event === 'disconnected') {
             dispatchType = ActionTypes.RECEIVED_DISCONNECTED;
         }

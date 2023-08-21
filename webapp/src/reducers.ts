@@ -8,7 +8,9 @@ import ActionTypes from './action_types';
 function userConnected(state = false, action) {
     switch (action.type) {
     case ActionTypes.RECEIVED_CONNECTED:
-        return action.data.is_connected;
+        return true;
+    case ActionTypes.RECEIVED_DISCONNECTED:
+        return false;
     default:
         return state;
     }

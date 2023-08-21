@@ -72,6 +72,8 @@ func (bot *mscBot) Welcome(userID string) error {
 }
 
 func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
+	bot.PluginAPI.PublishWebsocketEvent(userID, "connected", map[string]any{"action": "connected"})
+
 	bot.Tracker.TrackUserAuthenticated(userID)
 	postID, err := bot.Store.DeleteUserWelcomePost(userID)
 	if err != nil {
@@ -89,6 +91,8 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 }
 
 func (bot *mscBot) AfterDisconnect(userID string) error {
+	bot.PluginAPI.PublishWebsocketEvent(userID, "disconnected", map[string]any{"action": "disconnected"})
+
 	bot.Tracker.TrackUserDeauthenticated(userID)
 	errCancel := bot.Cancel(userID)
 	errClean := bot.cleanWelcomePost(userID)

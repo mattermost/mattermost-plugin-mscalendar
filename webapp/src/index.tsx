@@ -28,8 +28,8 @@ export default class Plugin {
 
             registry.registerRootComponent(CreateEventModal);
 
-            registry.registerWebSocketEventHandler(`custom_${PluginId}_connect`, handleConnectChange(store));
-            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnect`, handleConnectChange(store));
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnectChange(store));
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleConnectChange(store));
         };
 
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);
