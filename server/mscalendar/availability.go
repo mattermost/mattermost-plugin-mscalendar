@@ -140,15 +140,15 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 	start := time.Now().UTC()
 	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
-	in := make(chan store.User)
-	out := make(chan StatusSyncJobSummary, concurrency)
+	in := make(chan store.User, concurrency*4)
+	out := make(chan StatusSyncJobSummary, concurrency*4)
 	var wg sync.WaitGroup
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	for i := 0; i <= concurrency; i++ {
-		go func(m *mscalendar, c context.Context, w *sync.WaitGroup, in chan store.User, out chan StatusSyncJobSummary) {
+		go func(m mscalendar, c context.Context, w *sync.WaitGroup, in chan store.User, out chan StatusSyncJobSummary) {
 			for {
 				select {
 				case <-c.Done():
@@ -184,7 +184,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 					w.Done()
 				}
 			}
-		}(m, ctx, &wg, in, out)
+		}(*m, ctx, &wg, in, out)
 	}
 
 	numberOfLogs := 0
@@ -218,7 +218,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(userIndex store.UserInde
 		wg.Wait()
 		close(in)
 		// Ensure information was pulled successfully
-		time.Sleep(250 * time.Millisecond)
+		// time.Sleep(250 * time.Millisecond)
 		close(out)
 	}()
 

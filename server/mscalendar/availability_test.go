@@ -389,7 +389,7 @@ func TestReminders(t *testing.T) {
 	}
 }
 
-func TestRetrieveUsersToSyncIndividually(t *testing.T) {
+func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 	concurrency := 2
 
 	t.Run("no users to sync", func(t *testing.T) {
@@ -471,11 +471,11 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 	})
 
 	t.Run("one user should be synced, one user shouldn't", func(t *testing.T) {
-		testUser := newTestUser()
+		testUser := newTestUserNumbered(1)
 		testUser.Settings.UpdateStatus = true
 		testUser.Settings.ReceiveReminders = true
 
-		testUser2 := newTestUserNumbered(1)
+		testUser2 := newTestUserNumbered(2)
 
 		userIndex := []*store.UserShort{
 			{
