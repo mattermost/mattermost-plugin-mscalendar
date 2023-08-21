@@ -6,7 +6,7 @@ import {getProviderConfiguration, isUserConnected} from './selectors';
 
 type ContextArgs = {channel_id: string};
 
-const createEventCommand = '/gcal create event';
+const createEventCommand = '/gcal event create';
 
 interface Store {
     dispatch(action: {type: string}): void;
