@@ -156,22 +156,24 @@ export function sendEphemeralPost(message: string, channelId?: string) {
     };
 }
 
-export function handleConnectChange(store) {
-    return (msg) => {
-        if (!msg.data) {
-            return;
-        }
+export function handleConnectChange() {
+    return (dispatch, getState) => {
+        return (msg) => {
+            if (!msg.data) {
+                return;
+            }
 
-        let dispatchType = ActionTypes.RECEIVED_CONNECTED;
-        if (msg.data.event === 'disconnected') {
-            dispatchType = ActionTypes.RECEIVED_DISCONNECTED;
-        }
+            let dispatchType = ActionTypes.RECEIVED_CONNECTED;
+            if (msg.data.event === 'disconnected') {
+                dispatchType = ActionTypes.RECEIVED_DISCONNECTED;
+            }
 
-        store.dispatch({
-            type: dispatchType,
-            data: msg.data,
-        });
-    };
+            dispatch({
+                type: dispatchType,
+                data: msg.data,
+            });
+        };
+    }
 }
 
 export function getProviderConfiguration() {
