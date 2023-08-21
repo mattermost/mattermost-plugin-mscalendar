@@ -51,10 +51,10 @@ var cmds = []*model.AutocompleteData{
 	},
 	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
 	{ // Create
-		Trigger:  "create",
-		HelpText: "Create resources on your account.",
+		Trigger:  "events",
+		HelpText: "Manage events.",
 		SubCommands: []*model.AutocompleteData{
-			model.NewAutocompleteData("event", "", "Creates a new event (desktop only)."),
+			model.NewAutocompleteData("create", "", "Creates a new event (desktop only)."),
 		},
 	},
 	model.NewAutocompleteData("today", "", "Display today's events."),
@@ -124,8 +124,8 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
-	case "create":
-		handler = c.requireConnectedUser(c.create)
+	case "events":
+		handler = c.requireConnectedUser(c.events)
 	// Admin only
 	case "avail":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))

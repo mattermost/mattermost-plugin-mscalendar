@@ -3,12 +3,12 @@
 
 package command
 
-func (c *Command) create(parameters ...string) (string, bool, error) {
+func (c *Command) events(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
 		return getDailySummaryHelp(), false, nil
 	}
 
-	if parameters[0] == "event" {
+	if parameters[0] == "create" {
 		return "Creating events is only supported on desktop.", false, nil
 	}
 
