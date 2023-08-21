@@ -162,7 +162,7 @@ export function handleConnectChange(store) {
             return;
         }
 
-        var dispatchType = ActionTypes.RECEIVED_CONNECTED;
+        let dispatchType = ActionTypes.RECEIVED_CONNECTED;
         if (msg.data.event === 'disconnected') {
             dispatchType = ActionTypes.RECEIVED_DISCONNECTED;
         }
@@ -175,7 +175,7 @@ export function handleConnectChange(store) {
 }
 
 export function getProviderConfiguration() {
-    return async (dispatch, getState): Promise<ProviderConfig | null>  => {
+    return async (dispatch, getState): Promise<ProviderConfig | null> => {
         let data;
         const baseUrl = getPluginServerRoute(getState());
         try {
