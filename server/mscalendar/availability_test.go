@@ -390,6 +390,8 @@ func TestReminders(t *testing.T) {
 }
 
 func TestRetrieveUsersToSyncIndividually(t *testing.T) {
+	concurrency := 2
+
 	t.Run("no users to sync", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -399,7 +401,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		m := New(env, "").(*mscalendar)
 		jobSummary := &StatusSyncJobSummary{}
 
-		_, _, err := m.retrieveUsersToSync([]*store.UserShort{}, jobSummary, true)
+		_, _, err := m.retrieveUsersToSyncUsingGoroutines([]*store.UserShort{}, jobSummary, concurrency)
 		require.ErrorIs(t, errNoUsersNeedToBeSynced, err)
 	})
 
@@ -427,7 +429,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		m := New(e, "").(*mscalendar)
 		jobSummary := &StatusSyncJobSummary{}
 
-		_, _, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		_, _, err := m.retrieveUsersToSyncUsingGoroutines(userIndex, jobSummary, concurrency)
 		require.ErrorIs(t, err, errNoUsersNeedToBeSynced)
 	})
 
@@ -459,7 +461,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		m := New(e, "").(*mscalendar)
 		jobSummary := &StatusSyncJobSummary{}
 
-		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		users, responses, err := m.retrieveUsersToSyncUsingGoroutines(userIndex, jobSummary, concurrency)
 		require.NoError(t, err)
 		require.Equal(t, []*store.User{testUser}, users)
 		require.Equal(t, []*remote.ViewCalendarResponse{{
@@ -504,7 +506,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		m := New(e, "").(*mscalendar)
 		jobSummary := &StatusSyncJobSummary{}
 
-		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		users, responses, err := m.retrieveUsersToSyncUsingGoroutines(userIndex, jobSummary, concurrency)
 		require.NoError(t, err)
 		require.Equal(t, []*store.User{testUser}, users)
 		require.Equal(t, []*remote.ViewCalendarResponse{{
@@ -555,7 +557,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		m := New(e, "").(*mscalendar)
 		jobSummary := &StatusSyncJobSummary{}
 
-		users, responses, err := m.retrieveUsersToSync(userIndex, jobSummary, true)
+		users, responses, err := m.retrieveUsersToSyncUsingGoroutines(userIndex, jobSummary, concurrency)
 		require.NoError(t, err)
 		require.Equal(t, []*store.User{testUser, testUser2}, users)
 		require.Equal(t, []*remote.ViewCalendarResponse{{
