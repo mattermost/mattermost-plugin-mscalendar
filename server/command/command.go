@@ -120,7 +120,7 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.settings)
 	// Admin only
 	case "avail":
-		handler = c.requireAdminUser(c.debugAvailability)
+		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "subscribe":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.subscribe))
 	case "unsubscribe":
