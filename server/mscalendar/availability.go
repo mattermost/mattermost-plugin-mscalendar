@@ -128,7 +128,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 	}
 
 	if len(calendarViews) == 0 {
-		return users, calendarViews, fmt.Errorf("no calendar views found")
+		return users, calendarViews, errors.New("no calendar views found")
 	}
 
 	return users, calendarViews, nil
@@ -231,7 +231,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 	}
 
 	if len(calendarViews) == 0 {
-		return users, calendarViews, fmt.Errorf("no calendar views found")
+		return users, calendarViews, errors.New("no calendar views found")
 	}
 
 	return users, calendarViews, nil
