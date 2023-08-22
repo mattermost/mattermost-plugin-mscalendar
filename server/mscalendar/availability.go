@@ -90,8 +90,6 @@ func (m *mscalendar) SyncAll() (string, *StatusSyncJobSummary, error) {
 }
 
 // retrieveUsersToSync retrieves the users and their calendar data to sync up and send notifications
-// The parameter fetchIndividually determines if the calendar data should be fetched while we loop the
-// users (using individual credentials) or on a batch after the loop.
 func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSummary *StatusSyncJobSummary) ([]*store.User, []*remote.ViewCalendarResponse, error) {
 	numberOfLogs := 0
 	users := []*store.User{}
