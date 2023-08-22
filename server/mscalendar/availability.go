@@ -30,7 +30,7 @@ const (
 	logTruncateMsg                  = "We've truncated the logs due to too many messages"
 	logTruncateLimit                = 5
 
-	// defaultConcurrency is the default number of workers to spawn for calendar providers that doesn't allow batch requests
+	// defaultConcurrency is the default number of workers to span for calendar providers that doesn't allow batch requests
 	defaultConcurrency = 4
 )
 
@@ -182,7 +182,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 				select {
 				case <-c.Done():
 					m.Logger.Errorf("Timeout processing users availability")
-					break
+					return
 				case user, ok := <-in:
 					if !ok {
 						// Closed channel
@@ -225,16 +225,23 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 	}(users, in, out)
 
 	// Read results and wait until all workers have finished.
-	for js := range out {
-		syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
-		calendarViews = append(calendarViews, js.CalendarEvents)
-	}
+	for {
+		select {
+		case js, ok := <-out:
+			if !ok {
+				if len(calendarViews) == 0 {
+					return users, calendarViews, errors.New("no calendar views found")
+				}
 
-	if len(calendarViews) == 0 {
-		return users, calendarViews, errors.New("no calendar views found")
-	}
+				return users, calendarViews, nil
+			}
 
-	return users, calendarViews, nil
+			syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
+			calendarViews = append(calendarViews, js.CalendarEvents)
+		case <-ctxTimeout.Done():
+			return users, calendarViews, ctxTimeout.Err()
+		}
+	}
 }
 
 func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool) (string, *StatusSyncJobSummary, error) {

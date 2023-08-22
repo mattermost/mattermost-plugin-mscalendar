@@ -6,7 +6,7 @@ GOPATH ?= $(shell go env GOPATH)
 CALENDAR_PROVIDER ?= gcal
 MANIFEST_FILE ?= plugin.json
 
-GO_TEST_FLAGS ?= -race
+GO_TEST_FLAGS ?= -race -timeout 30s
 GO_BUILD_FLAGS ?= -tags timetzdata
 MM_UTILITIES_DIR ?= ../mattermost-utilities
 DEFAULT_GOOS := $(shell go env GOOS)
@@ -96,7 +96,8 @@ endif
 .PHONY: webapp
 webapp: webapp/.npminstall
 ifneq ($(HAS_WEBAPP),)
-	cd webapp && $(NPM) run debug;
+#	cd webapp && $(NPM) run debug;
+	cd webapp && $(NPM) run build;
 endif
 
 ## Builds the webapp in debug mode, if it exists.
@@ -189,7 +190,7 @@ debug-dist: apply server webapp-debug bundle
 .PHONY: test
 test: webapp/.npminstall
 ifneq ($(HAS_SERVER),)
-	$(GO) test -v $(GO_TEST_FLAGS) ./server/...
+	$(GO) test $(GO_TEST_FLAGS) ./server/...
 endif
 ifneq ($(HAS_WEBAPP),)
 	cd webapp && $(NPM) run fix && $(NPM) run test;
