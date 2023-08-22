@@ -152,7 +152,7 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 			for {
 				select {
 				case <-c.Done():
-					m.Logger.Errorf("Tiemout processing users availability")
+					m.Logger.Errorf("Timeout processing users availability")
 					break
 				case user, ok := <-in:
 					if !ok {
