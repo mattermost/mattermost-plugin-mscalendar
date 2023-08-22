@@ -138,53 +138,6 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 	start := time.Now().UTC()
 	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
-	in := make(chan store.User, concurrency*4)
-	out := make(chan StatusSyncJobSummary, concurrency*4)
-	var wg sync.WaitGroup
-
-	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
-
-	for i := 0; i <= concurrency; i++ {
-		go func(m mscalendar, c context.Context, w *sync.WaitGroup, in chan store.User, out chan StatusSyncJobSummary) {
-			for {
-				select {
-				case <-c.Done():
-					m.Logger.Errorf("Timeout processing users availability")
-					break
-				case user, ok := <-in:
-					if !ok {
-						// Closed channel
-						return
-					}
-
-					js := StatusSyncJobSummary{}
-					engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
-					if err != nil {
-						m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
-						w.Done()
-						continue
-					}
-
-					calendarUser := newUserFromStoredUser(&user)
-					js.CalendarEvents, err = engine.GetCalendarEvents(calendarUser, start, end, true)
-					if err != nil {
-						js.NumberOfUsersFailedStatusChanged++
-						m.Logger.With(bot.LogContext{
-							"user": user.MattermostUserID,
-							"err":  err,
-						}).Errorf("error getting calendar events")
-						w.Done()
-						continue
-					}
-
-					out <- js
-					w.Done()
-				}
-			}
-		}(*m, ctxTimeout, &wg, in, out)
-	}
-
 	numberOfLogs := 0
 	users := []*store.User{}
 	calendarViews := []*remote.ViewCalendarResponse{}
@@ -206,36 +159,91 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 			continue
 		}
 
-		wg.Add(1)
-		in <- *user
-
 		users = append(users, user)
 	}
 
 	if len(users) == 0 {
-		close(in)
-		close(out)
 		return users, calendarViews, errNoUsersNeedToBeSynced
 	}
 
-	go func() {
-		wg.Wait()
+	in := make(chan store.User)
+	out := make(chan StatusSyncJobSummary)
+	finishChan := make(chan struct{})
+	var wg sync.WaitGroup
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	// Start workers
+	for i := 0; i <= concurrency; i++ {
+		wg.Add(1)
+		go func(m mscalendar, c context.Context, w *sync.WaitGroup, in chan store.User, out chan StatusSyncJobSummary) {
+			defer w.Done()
+			for {
+				select {
+				case <-c.Done():
+					m.Logger.Errorf("Timeout processing users availability")
+					break
+				case user, ok := <-in:
+					if !ok {
+						// Closed channel
+						return
+					}
+
+					js := StatusSyncJobSummary{}
+					engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
+					if err != nil {
+						m.Logger.Warnf("Not able to enable active user %s from user index. err=%v", user.MattermostUserID, err)
+						continue
+					}
+
+					calendarUser := newUserFromStoredUser(&user)
+					js.CalendarEvents, err = engine.GetCalendarEvents(calendarUser, start, end, true)
+					if err != nil {
+						js.NumberOfUsersFailedStatusChanged++
+						m.Logger.With(bot.LogContext{
+							"user": user.MattermostUserID,
+							"err":  err,
+						}).Errorf("error getting calendar events")
+						continue
+					}
+
+					out <- js
+				}
+			}
+		}(*m, ctxTimeout, &wg, in, out)
+	}
+
+	// Populate the input channel with the users and wait for the workers to finish
+	go func(users []*store.User, in chan store.User, out chan StatusSyncJobSummary) {
+		for _, user := range users {
+			in <- *user
+		}
 		close(in)
-		// Ensure information was pulled successfully
-		time.Sleep(250 * time.Millisecond)
+
+		wg.Wait()
 		close(out)
-	}()
+		close(finishChan)
+	}(users, in, out)
 
-	for js := range out {
-		syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
-		calendarViews = append(calendarViews, js.CalendarEvents)
+	// Read results and wait until all workers have finished.
+	for {
+		select {
+		case js, ok := <-out:
+			if !ok {
+				continue
+			}
+
+			syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
+			calendarViews = append(calendarViews, js.CalendarEvents)
+		case <-finishChan:
+			if len(calendarViews) == 0 {
+				return users, calendarViews, fmt.Errorf("no calendar views found")
+			}
+
+			return users, calendarViews, nil
+		}
 	}
-
-	if len(calendarViews) == 0 {
-		return users, calendarViews, fmt.Errorf("no calendar views found")
-	}
-
-	return users, calendarViews, nil
 }
 
 func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool) (string, *StatusSyncJobSummary, error) {
