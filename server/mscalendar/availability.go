@@ -30,7 +30,7 @@ const (
 	logTruncateMsg                  = "We've truncated the logs due to too many messages"
 	logTruncateLimit                = 5
 
-	// defaultConcurrency is the default concurrency to use for calendar providers that doesn't allow batch requests
+	// defaultConcurrency is the default number of workers to span for calendar providers that doesn't allow batch requests
 	defaultConcurrency = 4
 )
 
