@@ -173,7 +173,7 @@ export function handleConnectChange() {
                 data: msg.data,
             });
         };
-    }
+    };
 }
 
 export function getProviderConfiguration() {
