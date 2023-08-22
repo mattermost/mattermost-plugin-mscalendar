@@ -32,7 +32,7 @@ func TestDisconnect(t *testing.T) {
 				mscal := m.(*mock_mscalendar.MockMSCalendar)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{}, store.ErrNotFound).Times(1)
 			},
-			expectedOutput: getNotConnectedText(),
+			expectedOutput: getNotConnectedText("http://localhost"),
 			expectedError:  "",
 		},
 		{
