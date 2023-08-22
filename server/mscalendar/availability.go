@@ -30,7 +30,7 @@ const (
 	logTruncateMsg                  = "We've truncated the logs due to too many messages"
 	logTruncateLimit                = 5
 
-	// defaultConcurrency is the default number of workers to span for calendar providers that doesn't allow batch requests
+	// defaultConcurrency is the default number of workers to spawn for calendar providers that doesn't allow batch requests
 	defaultConcurrency = 4
 )
 
@@ -168,7 +168,6 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 
 	in := make(chan store.User)
 	out := make(chan StatusSyncJobSummary)
-	finishChan := make(chan struct{})
 	var wg sync.WaitGroup
 
 	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
@@ -223,27 +222,19 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 
 		wg.Wait()
 		close(out)
-		close(finishChan)
 	}(users, in, out)
 
 	// Read results and wait until all workers have finished.
-	for {
-		select {
-		case js, ok := <-out:
-			if !ok {
-				continue
-			}
-
-			syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
-			calendarViews = append(calendarViews, js.CalendarEvents)
-		case <-finishChan:
-			if len(calendarViews) == 0 {
-				return users, calendarViews, fmt.Errorf("no calendar views found")
-			}
-
-			return users, calendarViews, nil
-		}
+	for js := range out {
+		syncJobSummary.NumberOfUsersFailedStatusChanged += js.NumberOfUsersFailedStatusChanged
+		calendarViews = append(calendarViews, js.CalendarEvents)
 	}
+
+	if len(calendarViews) == 0 {
+		return users, calendarViews, fmt.Errorf("no calendar views found")
+	}
+
+	return users, calendarViews, nil
 }
 
 func (m *mscalendar) syncUsers(userIndex store.UserIndex, fetchIndividually bool) (string, *StatusSyncJobSummary, error) {
