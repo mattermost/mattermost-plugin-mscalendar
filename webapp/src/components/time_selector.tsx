@@ -66,7 +66,7 @@ export default function TimeSelector(props: Props) {
             label: t,
             value: t,
         }));
-    }, [props.startTime, props.endTime]);
+    }, [props.startTime, props.endTime, props.date]);
 
     let value = null;
     if (props.value) {
