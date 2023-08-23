@@ -199,7 +199,11 @@ const ActualForm = (props: ActualFormProps) => {
             required: true,
             component: (
                 <input
-                    onChange={(e) => setFormValue('date', e.target.value)}
+                    onChange={(e) => {
+                        setFormValue('date', e.target.value);
+                        setFormValue("start_time", "");
+                        setFormValue("end_time", "");
+                    }}
                     min={getTodayString()}
                     value={formValues.date}
                     className='form-control'
