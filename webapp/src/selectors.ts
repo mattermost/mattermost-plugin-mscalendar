@@ -8,7 +8,7 @@ import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 
 import {PluginId} from './plugin_id';
 
-import {ReducerState} from './reducers';
+import {ProviderConfig, ReducerState} from './reducers';
 
 const getPluginState = (state): ReducerState => state['plugins-' + PluginId] || {};
 
@@ -44,3 +44,5 @@ export const isCreateEventModalVisible = (state) => getPluginState(state).create
 export const getCreateEventModal = (state) => getPluginState(state).createEventModal;
 
 export const isUserConnected = (state) => getPluginState(state).userConnected;
+
+export const getProviderConfiguration = (state): ProviderConfig => getPluginState(state).providerConfiguration;

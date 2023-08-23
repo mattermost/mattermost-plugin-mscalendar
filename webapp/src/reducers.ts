@@ -8,7 +8,9 @@ import ActionTypes from './action_types';
 function userConnected(state = false, action) {
     switch (action.type) {
     case ActionTypes.RECEIVED_CONNECTED:
-        return action.data.is_connected;
+        return true;
+    case ActionTypes.RECEIVED_DISCONNECTED:
+        return false;
     default:
         return state;
     }
@@ -43,11 +45,37 @@ const createEventModal = (state = '', action) => {
     }
 };
 
+function providerConfiguration(state = null, action) {
+    switch (action.type) {
+    case ActionTypes.RECEIVED_PROVIDER_CONFIGURATION:
+        return action.data;
+    default:
+        return state;
+    }
+}
+
 export default combineReducers({
     userConnected,
+    providerConfiguration,
     createEventModalVisible,
     createEventModal,
 });
+
+export type ProviderFeatures = {
+    EncryptedStore: boolean;
+    EventNotifications: boolean;
+}
+
+export type ProviderConfig = {
+    Name: string;
+    DisplayName: string;
+    Repository: string;
+    CommandTrigger: string;
+    TelemetryShortName: string;
+    BotUsername: string;
+    BotDisplayName: string;
+    Features: ProviderFeatures;
+}
 
 export type ReducerState = {
     userConnected: boolean;
@@ -57,4 +85,5 @@ export type ReducerState = {
         postId?: string;
         description?: string;
     } | null;
+    providerConfiguration: ProviderConfig;
 }

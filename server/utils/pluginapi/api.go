@@ -135,3 +135,7 @@ func (a *API) GetPost(postID string) (*model.Post, error) {
 	}
 	return p, nil
 }
+
+func (a *API) PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any) {
+	a.api.PublishWebSocketEvent(event, payload, &model.WebsocketBroadcast{UserId: mattermostUserID})
+}

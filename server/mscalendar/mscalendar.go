@@ -49,6 +49,7 @@ type PluginAPI interface {
 	CanLinkEventToChannel(channelID, userID string) bool
 	SearchLinkableChannelForUser(teamID, mattemostUserID, search string) ([]*model.Channel, error)
 	GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error)
+	PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any)
 }
 
 type Env struct {
