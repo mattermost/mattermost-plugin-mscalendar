@@ -135,6 +135,9 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 }
 
 func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, userIndex store.UserIndex, syncJobSummary *StatusSyncJobSummary, concurrency int) ([]*store.User, []*remote.ViewCalendarResponse, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
 	start := time.Now().UTC()
 	end := time.Now().UTC().Add(calendarViewTimeWindowSize)
 
@@ -169,9 +172,6 @@ func (m *mscalendar) retrieveUsersToSyncUsingGoroutines(ctx context.Context, use
 	in := make(chan store.User)
 	out := make(chan StatusSyncJobSummary)
 	var wg sync.WaitGroup
-
-	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
 
 	// Start workers
 	for i := 0; i <= concurrency; i++ {
