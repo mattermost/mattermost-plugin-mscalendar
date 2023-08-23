@@ -3,7 +3,7 @@
 
 package command
 
-func (c *Command) events(parameters ...string) (string, bool, error) {
+func (c *Command) event(parameters ...string) (string, bool, error) {
 	if len(parameters) == 0 {
 		return getDailySummaryHelp(), false, nil
 	}
