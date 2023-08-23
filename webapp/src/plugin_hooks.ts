@@ -30,7 +30,7 @@ export default class Hooks {
             return Promise.resolve({message, args: contextArgs});
         }
 
-        const providerConfiguration = await getProviderConfiguration(this.store.getState());
+        const providerConfiguration = getProviderConfiguration(this.store.getState());
         if (message.startsWith(`/${providerConfiguration.CommandTrigger} ` + createEventCommand)) {
             return this.handleCreateEventSlashCommand(message, contextArgs);
         }
