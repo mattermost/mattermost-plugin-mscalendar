@@ -27,8 +27,13 @@ type Command struct {
 	ChannelID  string
 }
 
-func getNotConnectedText() string {
-	return fmt.Sprintf("It looks like your Mattermost account is not connected to a %s account. Please connect your account using `/%s connect`.", config.Provider.DisplayName, config.Provider.CommandTrigger)
+func getNotConnectedText(pluginURL string) string {
+	return fmt.Sprintf(
+		"It looks like your Mattermost account is not connected to a %s account. [Click here to connect your account](%s/oauth2/connect) or use `/%s connect`.",
+		config.Provider.DisplayName,
+		pluginURL,
+		config.Provider.CommandTrigger,
+	)
 }
 
 type handleFunc func(parameters ...string) (string, bool, error)
@@ -183,7 +188,7 @@ func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
 		}
 
 		if !connected {
-			return getNotConnectedText(), false, nil
+			return getNotConnectedText(c.Config.PluginURL), false, nil
 		}
 		return handle(parameters...)
 	}
