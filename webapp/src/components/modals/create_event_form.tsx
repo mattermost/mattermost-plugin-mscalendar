@@ -20,7 +20,7 @@ import TimeSelector from '@/components/time_selector';
 import ChannelSelector from '../channel_selector';
 import {capitalizeFirstCharacter} from '@/utils/text';
 import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
-import { getTodayString } from '@/utils/datetime';
+import {getTodayString} from '@/utils/datetime';
 
 type Props = {
     close: (e?: Event) => void;
@@ -201,8 +201,8 @@ const ActualForm = (props: ActualFormProps) => {
                 <input
                     onChange={(e) => {
                         setFormValue('date', e.target.value);
-                        setFormValue("start_time", "");
-                        setFormValue("end_time", "");
+                        setFormValue('start_time', '');
+                        setFormValue('end_time', '');
                     }}
                     min={getTodayString()}
                     value={formValues.date}

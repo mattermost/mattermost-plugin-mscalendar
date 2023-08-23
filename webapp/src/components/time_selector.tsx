@@ -3,8 +3,9 @@ import {useSelector} from 'react-redux';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
+import {getTodayString} from '@/utils/datetime';
+
 import ReactSelectSetting from './react_select_setting';
-import { getTodayString } from '@/utils/datetime';
 
 const minuteStep = 15;
 
@@ -35,7 +36,7 @@ export default function TimeSelector(props: Props) {
         if (props.date === getTodayString()) {
             const now = new Date();
             fromHour = now.getHours();
-            fromMinute = (Math.ceil(now.getMinutes()/15) * 15) % 60;
+            fromMinute = (Math.ceil(now.getMinutes() / 15) * 15) % 60;
             if (fromMinute === 0) {
                 fromHour++;
             }
