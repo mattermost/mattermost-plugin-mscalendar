@@ -74,6 +74,11 @@ type User struct {
 	ChannelEvents         ChannelEventLink  `json:"linkedEvents,omitempty"`
 }
 
+var DefaultSettings = Settings{
+	GetConfirmation:                   false,
+	ReceiveNotificationsDuringMeeting: true,
+}
+
 type Settings struct {
 	DailySummary                      *DailySummaryUserSettings
 	EventSubscriptionID               string
