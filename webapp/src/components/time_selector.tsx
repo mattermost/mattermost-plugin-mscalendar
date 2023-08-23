@@ -4,6 +4,7 @@ import {useSelector} from 'react-redux';
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
 import ReactSelectSetting from './react_select_setting';
+import { getTodayString } from '@/utils/datetime';
 
 const minuteStep = 15;
 
@@ -12,6 +13,7 @@ type Props = {
     onChange: (value: string) => void;
     startTime?: string
     endTime?: string
+    date?: string
 }
 
 type Option = {
@@ -29,6 +31,18 @@ export default function TimeSelector(props: Props) {
         let toMinute = 45;
         let ranges: string[] = [];
 
+        // Handle fields not allowing times before the current time if the date selected is the current day
+        if (props.date === getTodayString()) {
+            const now = new Date();
+            fromHour = now.getHours();
+            fromMinute = (Math.ceil(now.getMinutes()/15) * 15) % 60;
+            if (fromMinute === 0) {
+                fromHour++;
+            }
+            ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
+        }
+
+        // Handle end time not allowing dates before the startTime field
         if (props.startTime) {
             const parts = props.startTime.split(':');
             fromHour = parseInt(parts[0], 10);
@@ -36,6 +50,7 @@ export default function TimeSelector(props: Props) {
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
+        // Handle start time not allowing dates after the endTime field
         if (props.endTime) {
             const parts = props.endTime.split(':');
             toHour = parseInt(parts[0], 10);
