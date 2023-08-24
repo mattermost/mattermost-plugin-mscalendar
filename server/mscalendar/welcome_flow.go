@@ -108,7 +108,7 @@ func (wf *WelcomeFlow) makeSteps() {
 		FalseResponseMessage: "Great, you will not receive any notification for upcoming events.",
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
-		Message: fmt.Sprintf("Remember that you can set-up a daily summary by typing `/%s summary time 8:00AM` or using `/%s settings` to access the settings..", config.Provider.CommandTrigger, config.Provider.CommandTrigger),
+		Message: fmt.Sprintf("Remember that you can set-up a daily summary by typing `/%s summary time 8:00AM` or using `/%s settings` to access the settings.", config.Provider.CommandTrigger, config.Provider.CommandTrigger),
 	})
 
 	wf.steps = steps
