@@ -176,7 +176,7 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Location',
+            label: 'Location (optional)',
             required: false,
             component: (
                 <input
@@ -246,7 +246,7 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Link event to channel',
+            label: 'Link event to channel (optional)',
             component: (
                 <ChannelSelector
                     onChange={(selected) => setFormValue('channel_id', selected)}
