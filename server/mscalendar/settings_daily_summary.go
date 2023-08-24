@@ -23,6 +23,8 @@ type dailySummarySetting struct {
 	optionsAPM  []string
 }
 
+var _ settingspanel.Setting = (*dailySummarySetting)(nil)
+
 func NewDailySummarySetting(inStore settingspanel.SettingStore, getTimezone func(userID string) (string, error)) settingspanel.Setting {
 	os := &dailySummarySetting{
 		title:       "Daily Summary",
@@ -90,7 +92,7 @@ func (s *dailySummarySetting) GetDependency() string {
 	return s.dependsOn
 }
 
-func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+func (s *dailySummarySetting) GetSlackAttachmentWithValue(value interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 
@@ -107,11 +109,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		return &sa, nil
 	}
 
-	dsumRaw, err := s.Get(userID)
-	if err != nil {
-		return nil, err
-	}
-	dsum := dsumRaw.(*store.DailySummaryUserSettings)
+	dsum := value.(*store.DailySummaryUserSettings)
 
 	currentH := "8"
 	currentM := "00"
@@ -203,6 +201,20 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		Fallback: fmt.Sprintf("%s: %s", title, s.description),
 	}
 	return &sa, nil
+}
+
+func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	var value interface{}
+
+	if !disabled {
+		var err error
+		value, err = s.Get(userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetSlackAttachmentWithValue(value, userID, settingHandler, disabled)
 }
 
 func (s *dailySummarySetting) IsDisabled(foreignValue interface{}) bool {

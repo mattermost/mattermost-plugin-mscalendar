@@ -18,12 +18,18 @@ type Setting interface {
 	GetTitle() string
 	GetDescription() string
 	GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error)
+	GetSlackAttachmentWithValue(value interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error)
+}
+
+type SettingValue struct {
+	setting string
+	value   interface{}
 }
 
 type Panel interface {
 	Set(userID, settingID string, value interface{}) error
 	Print(userID string)
-	ToPost(userID string) (*model.Post, error)
+	ToPost(userID string, overrides ...SettingValue) (*model.Post, error)
 	Clear(userID string) error
 	URL() string
 	GetSettingIDs() []string
@@ -118,13 +124,28 @@ func (p *panel) Print(userID string) {
 	}
 }
 
-func (p *panel) ToPost(userID string) (*model.Post, error) {
+func (p *panel) ToPost(userID string, overrides ...SettingValue) (*model.Post, error) {
 	post := &model.Post{}
 
 	sas := []*model.SlackAttachment{}
 	for _, key := range p.settingKeys {
 		s := p.settings[key]
-		sa, err := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
+		var value interface{}
+
+		for _, sv := range overrides {
+			if sv.setting == key {
+				value = sv.value
+			}
+		}
+
+		var sa *model.SlackAttachment
+		var err error
+		if value != nil {
+			sa, err = s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
+		} else {
+			sa, err = s.GetSlackAttachmentWithValue(value, userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
+		}
+
 		if err != nil {
 			p.logger.Warnf("error creating the slack attachment for setting %s. err=%v", s.GetID(), err)
 			continue

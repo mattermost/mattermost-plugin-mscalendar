@@ -15,6 +15,8 @@ type readOnlySetting struct {
 	dependsOn   string
 }
 
+var _ Setting = (*readOnlySetting)(nil)
+
 func NewReadOnlySetting(id string, title string, description string, dependsOn string, store SettingStore) Setting {
 	return &readOnlySetting{
 		title:       title,
@@ -59,15 +61,24 @@ func (s *readOnlySetting) GetDependency() string {
 }
 
 func (s *readOnlySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	var currentValue interface{}
+	if !disabled {
+		var err error
+		currentValue, err = s.Get(userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetSlackAttachmentWithValue(currentValue, userID, settingHandler, disabled)
+}
+
+func (s *readOnlySetting) GetSlackAttachmentWithValue(value interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 
 	if !disabled {
-		currentValue, err := s.Get(userID)
-		if err != nil {
-			return nil, err
-		}
-		currentValueMessage = fmt.Sprintf("Current value: %s", currentValue)
+		currentValueMessage = fmt.Sprintf("Current value: %s", value)
 	}
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)

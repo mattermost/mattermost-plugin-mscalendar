@@ -16,6 +16,8 @@ type optionSetting struct {
 	options     []string
 }
 
+var _ Setting = (*optionSetting)(nil)
+
 func NewOptionSetting(id string, title string, description string, dependsOn string, options []string, store SettingStore) Setting {
 	return &optionSetting{
 		title:       title,
@@ -66,16 +68,25 @@ func (s *optionSetting) GetDependency() string {
 }
 
 func (s *optionSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	var currentValue interface{} = ""
+	if !disabled {
+		var err error
+		currentValue, err = s.Get(userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetSlackAttachmentWithValue(currentValue, userID, settingHandler, disabled)
+}
+
+func (s *optionSetting) GetSlackAttachmentWithValue(value interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 
 	actions := []*model.PostAction{}
 	if !disabled {
-		currentTextValue, err := s.Get(userID)
-		if err != nil {
-			return nil, err
-		}
-		currentValueMessage = fmt.Sprintf("**Current value:** %s", currentTextValue)
+		currentValueMessage = fmt.Sprintf("**Current value:** %s", value)
 
 		actionOptions := model.PostAction{
 			Name: "Select an option:",

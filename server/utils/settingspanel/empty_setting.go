@@ -12,6 +12,8 @@ type emptySetting struct {
 	id          string
 }
 
+var _ Setting = (*emptySetting)(nil)
+
 func NewEmptySetting(id, title, description string) Setting {
 	return &emptySetting{
 		id:          id,
@@ -23,25 +25,36 @@ func NewEmptySetting(id, title, description string) Setting {
 func (s *emptySetting) Set(userID string, value interface{}) error {
 	return nil
 }
+
 func (s *emptySetting) Get(userID string) (interface{}, error) {
 	return "", nil
 }
+
 func (s *emptySetting) GetID() string {
 	return s.id
 }
+
 func (s *emptySetting) GetDependency() string {
 	return ""
 }
+
 func (s *emptySetting) IsDisabled(foreignValue interface{}) bool {
 	return false
 }
+
 func (s *emptySetting) GetTitle() string {
 	return s.title
 }
+
 func (s *emptySetting) GetDescription() string {
 	return s.description
 }
+
 func (s *emptySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	return s.GetSlackAttachmentWithValue(nil, userID, settingHandler, disabled)
+}
+
+func (s *emptySetting) GetSlackAttachmentWithValue(_ interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	sa := model.SlackAttachment{
 		Title:    title,

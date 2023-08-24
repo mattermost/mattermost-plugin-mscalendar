@@ -64,7 +64,10 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := model.PostActionIntegrationResponse{}
-	post, err := sh.panel.ToPost(mattermostUserID)
+	post, err := sh.panel.ToPost(mattermostUserID, SettingValue{
+		setting: idString,
+		value:   value,
+	})
 	if err == nil {
 		response.Update = post
 	}

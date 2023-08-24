@@ -15,6 +15,8 @@ type boolSetting struct {
 	dependsOn   string
 }
 
+var _ Setting = (*boolSetting)(nil)
+
 func NewBoolSetting(id string, title string, description string, dependsOn string, store SettingStore) Setting {
 	return &boolSetting{
 		title:       title,
@@ -81,18 +83,26 @@ func (s *boolSetting) getActionStyle(actionValue, currentValue string) string {
 }
 
 func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	var currentValue interface{} = "false"
+	if !disabled {
+		var err error
+		currentValue, err = s.Get(userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetSlackAttachmentWithValue(currentValue, userID, settingHandler, disabled)
+}
+
+func (s *boolSetting) GetSlackAttachmentWithValue(value interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 
 	actions := []*model.PostAction{}
 	if !disabled {
-		currentValue, err := s.Get(userID)
-		if err != nil {
-			return nil, err
-		}
-
 		actionTrue := model.PostAction{
 			Name:  "Yes",
-			Style: s.getActionStyle("true", currentValue.(string)),
+			Style: s.getActionStyle("true", value.(string)),
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler,
 				Context: map[string]interface{}{
@@ -104,7 +114,7 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 
 		actionFalse := model.PostAction{
 			Name:  "No",
-			Style: s.getActionStyle("false", currentValue.(string)),
+			Style: s.getActionStyle("false", value.(string)),
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler,
 				Context: map[string]interface{}{

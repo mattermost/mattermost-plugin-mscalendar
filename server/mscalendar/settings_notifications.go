@@ -80,7 +80,7 @@ func (s *notificationSetting) GetDependency() string {
 	return s.dependsOn
 }
 
-func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+func (s *notificationSetting) GetSlackAttachmentWithValue(value interface{}, userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 
@@ -130,6 +130,19 @@ func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string,
 	}
 
 	return &sa, nil
+}
+
+func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+	var value interface{}
+	if !disabled {
+		var err error
+		value, err = s.Get(userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetSlackAttachmentWithValue(value, userID, settingHandler, disabled)
 }
 
 func (s *notificationSetting) IsDisabled(foreignValue interface{}) bool {
