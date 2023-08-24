@@ -102,6 +102,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		MattermostDisplayName: user.GetDisplayName(model.ShowFullName),
 		Remote:                me,
 		OAuth2Token:           tok,
+		Settings:              store.DefaultSettings,
 	}
 
 	mailboxSettings, err := client.GetMailboxSettings(me.ID)

@@ -55,33 +55,36 @@ func (wf *WelcomeFlow) FlowDone(userID string) {
 }
 
 func (wf *WelcomeFlow) makeSteps() {
-	steps := []flow.Step{}
-	steps = append(steps, &flow.SimpleStep{
-		Title:                "Update Status",
-		Message:              "Would you like your Mattermost status to be automatically updated at the time of your events?",
-		PropertyName:         store.UpdateStatusPropertyName,
-		TrueButtonMessage:    "Yes - Update my status",
-		FalseButtonMessage:   "No - Don't update my status",
-		TrueResponseMessage:  ":thumbsup: Got it! We'll automatically update your status in Mattermost.",
-		FalseResponseMessage: ":thumbsup: Got it! We won't update your status in Mattermost.",
-		FalseSkip:            2,
-	}, &flow.SimpleStep{
-		Title:                "Confirm status change",
-		Message:              "Do you want to receive confirmations before we update your status for each event?",
-		PropertyName:         store.GetConfirmationPropertyName,
-		TrueButtonMessage:    "Yes - I would like to get confirmations",
-		FalseButtonMessage:   "No - Update my status automatically",
-		TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
-		FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
-	}, &flow.SimpleStep{
-		Title:                "Status during meetings",
-		Message:              "Do you want to set your status to `Away` or to `Do not Disturb` while you are on a meeting? Setting to `Do Not Disturb` will silence notifications.",
-		PropertyName:         store.ReceiveNotificationsDuringMeetingName,
-		TrueButtonMessage:    "Away",
-		FalseButtonMessage:   "Do not Disturb",
-		TrueResponseMessage:  "Great, your status will be set to Away.",
-		FalseResponseMessage: "Great, your status will be set to Do not Disturb.",
-	})
+	steps := []flow.Step{
+		&flow.SimpleStep{
+			Title:                "Update Status",
+			Message:              "Would you like your Mattermost status to be automatically updated at the time of your events?",
+			PropertyName:         store.UpdateStatusPropertyName,
+			TrueButtonMessage:    "Yes - Update my status",
+			FalseButtonMessage:   "No - Don't update my status",
+			TrueResponseMessage:  ":thumbsup: Got it! We'll automatically update your status in Mattermost.",
+			FalseResponseMessage: ":thumbsup: Got it! We won't update your status in Mattermost.",
+			FalseSkip:            2,
+		},
+		// &flow.SimpleStep{
+		// 	Title:                "Confirm status change",
+		// 	Message:              "Do you want to receive confirmations before we update your status for each event?",
+		// 	PropertyName:         store.GetConfirmationPropertyName,
+		// 	TrueButtonMessage:    "Yes - I would like to get confirmations",
+		// 	FalseButtonMessage:   "No - Update my status automatically",
+		// 	TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
+		// 	FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
+		// },
+		// &flow.SimpleStep{
+		// 	Title:                "Status during meetings",
+		// 	Message:              "Do you want to set your status to `Away` or to `Do not Disturb` while you are on a meeting? Setting to `Do Not Disturb` will silence notifications.",
+		// 	PropertyName:         store.ReceiveNotificationsDuringMeetingName,
+		// 	TrueButtonMessage:    "Away",
+		// 	FalseButtonMessage:   "Do not Disturb",
+		// 	TrueResponseMessage:  "Great, your status will be set to Away.",
+		// 	FalseResponseMessage: "Great, your status will be set to Do not Disturb.",
+		// },
+	}
 
 	if wf.providerFeatures.EventNotifications {
 		steps = append(steps, &flow.SimpleStep{
@@ -105,7 +108,7 @@ func (wf *WelcomeFlow) makeSteps() {
 		FalseResponseMessage: "Great, you will not receive any notification for upcoming events.",
 	}, &flow.EmptyStep{
 		Title:   "Daily Summary",
-		Message: fmt.Sprintf("Remember that you can set-up a daily summary by typing `/%s summary time 8:00AM`.", config.Provider.CommandTrigger),
+		Message: fmt.Sprintf("Remember that you can set-up a daily summary by typing `/%s summary time 8:00AM` or using `/%s settings` to access the settings.", config.Provider.CommandTrigger, config.Provider.CommandTrigger),
 	})
 
 	wf.steps = steps
