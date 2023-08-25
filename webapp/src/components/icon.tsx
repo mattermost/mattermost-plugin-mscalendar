@@ -18,12 +18,12 @@ export default class Icon extends PureComponent<Props> {
             <i
                 className='icon fa'
                 style={{
-                    width: "18px",
-                    height: "18px",
+                    width: '18px',
+                    height: '18px',
                     backgroundImage: `url(${this.props.image})`,
-                    backgroundPosition: "50% 50%",
-                    backgroundRepeat: "no-repeat",
-                    verticalAlign: "middle",
+                    backgroundPosition: '50% 50%',
+                    backgroundRepeat: 'no-repeat',
+                    verticalAlign: 'middle',
                 }}
             />
         );
