@@ -141,11 +141,6 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	return fmt.Sprintf(format, start, end, subjectReplacer.Replace(subject), link), nil
 }
 
-func isKnownMeetingURL(location string) bool {
-	_, err := url.ParseRequestURI(location)
-	return err == nil
-}
-
 func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
 	var actions []*model.PostAction
 	fields := []*model.SlackAttachmentField{}
