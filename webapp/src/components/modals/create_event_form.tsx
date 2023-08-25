@@ -22,6 +22,8 @@ import {capitalizeFirstCharacter} from '@/utils/text';
 import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
 import {getTodayString} from '@/utils/datetime';
 
+import './create_event_form.css';
+
 type Props = {
     close: (e?: Event) => void;
 };
@@ -257,7 +259,7 @@ const ActualForm = (props: ActualFormProps) => {
     ];
 
     return (
-        <div>
+        <div class="create-event-form">
             {components.map((c) => (
                 <Setting
                     key={c.label}
