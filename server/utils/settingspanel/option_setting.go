@@ -75,7 +75,7 @@ func (s *optionSetting) GetSlackAttachments(userID, settingHandler string, disab
 		if err != nil {
 			return nil, err
 		}
-		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
+		currentValueMessage = fmt.Sprintf("**Current value:** %s", currentTextValue)
 
 		actionOptions := model.PostAction{
 			Name: "Select an option:",

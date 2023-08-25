@@ -19,6 +19,86 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
 )
 
+func TestGetDaySummaryForUser(t *testing.T) {
+	t.Run("declined events are excluded", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockStore := mock_store.NewMockStore(ctrl)
+		poster := mock_bot.NewMockPoster(ctrl)
+		mockRemote := mock_remote.NewMockRemote(ctrl)
+		mockClient := mock_remote.NewMockClient(ctrl)
+		mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+
+		logger := mock_bot.NewMockLogger(ctrl)
+		env := Env{
+			Dependencies: &Dependencies{
+				Store:     mockStore,
+				Logger:    logger,
+				Poster:    poster,
+				Remote:    mockRemote,
+				PluginAPI: mockPluginAPI,
+				Tracker:   tracker.New(telemetry.NewTracker(nil, "", "", "", "", "", telemetry.TrackerConfig{}, nil)),
+			},
+		}
+
+		loc, err := time.LoadLocation("EST")
+		require.Nil(t, err)
+		hour, minute := 9, 0 // Time is "9:00AM"
+		moment := makeTime(hour, minute, loc)
+
+		user := NewUser("user1_mm_id")
+
+		mockStore.EXPECT().LoadUser(user.MattermostUserID).Return(&store.User{
+			MattermostUserID: user.MattermostUserID,
+			Remote:           &remote.User{ID: "user1_remote_id"},
+			Settings: store.Settings{
+				DailySummary: &store.DailySummaryUserSettings{
+					Enable:       true,
+					PostTime:     "9:00AM",
+					Timezone:     "Pacific Standard Time",
+					LastPostTime: "",
+				},
+			},
+		}, nil).Times(2)
+
+		mockPluginAPI.EXPECT().GetMattermostUser(user.MattermostUserID)
+
+		mockRemote.EXPECT().MakeClient(context.Background(), nil).Return(mockClient)
+
+		mockClient.EXPECT().GetMailboxSettings("user1_remote_id").Return(&remote.MailboxSettings{
+			TimeZone: "Pacific Standard Time",
+		}, nil)
+
+		mockClient.EXPECT().GetDefaultCalendarView("user1_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{
+			{
+				Subject: "The subject",
+				Start:   remote.NewDateTime(moment, "Pacific Standard Time"),
+				End:     remote.NewDateTime(moment.Add(2*time.Hour), "Pacific Standard Time"),
+			},
+			{
+				Subject: "The subject for declined event",
+				Start:   remote.NewDateTime(moment, "Pacific Standard Time"),
+				End:     remote.NewDateTime(moment.Add(2*time.Hour), "Pacific Standard Time"),
+				ResponseStatus: &remote.EventResponseStatus{
+					Response: remote.EventResponseStatusDeclined,
+				},
+			},
+		}, nil)
+
+		mscalendar := New(env, "user1_mm_id")
+		result, err := mscalendar.GetDaySummaryForUser(moment, user)
+		require.NoError(t, err)
+
+		require.Equal(t, result, `Times are shown in Pacific Standard Time
+Wednesday February 12, 2020
+
+| Time | Subject |
+| :-- | :-- |
+| 9:00AM - 11:00AM | [The subject]() |`)
+	})
+}
+
 func TestProcessAllDailySummary(t *testing.T) {
 	for _, tc := range []struct {
 		runAssertions func(deps *Dependencies, client remote.Client)
@@ -243,7 +323,7 @@ Wednesday February 12, 2020
 					TimeZone: "Pacific Standard Time",
 				}, nil)
 
-				mockRemote.EXPECT().MakeClient(context.TODO(), gomock.Any()).Return(mockClient).Times(2)
+				mockRemote.EXPECT().MakeClient(context.Background(), gomock.Any()).Return(mockClient).Times(2)
 
 				mockClient.EXPECT().GetDefaultCalendarView("user1_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{}, nil)
 				mockClient.EXPECT().GetDefaultCalendarView("user2_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{

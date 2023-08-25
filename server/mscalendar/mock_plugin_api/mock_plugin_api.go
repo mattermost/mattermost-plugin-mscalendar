@@ -34,6 +34,20 @@ func (m *MockPluginAPI) EXPECT() *MockPluginAPIMockRecorder {
 	return m.recorder
 }
 
+// CanLinkEventToChannel mocks base method.
+func (m *MockPluginAPI) CanLinkEventToChannel(arg0, arg1 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CanLinkEventToChannel", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CanLinkEventToChannel indicates an expected call of CanLinkEventToChannel.
+func (mr *MockPluginAPIMockRecorder) CanLinkEventToChannel(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanLinkEventToChannel", reflect.TypeOf((*MockPluginAPI)(nil).CanLinkEventToChannel), arg0, arg1)
+}
+
 // GetMattermostUser mocks base method.
 func (m *MockPluginAPI) GetMattermostUser(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -94,6 +108,21 @@ func (mr *MockPluginAPIMockRecorder) GetMattermostUserStatusesByIds(arg0 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserStatusesByIds", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserStatusesByIds), arg0)
 }
 
+// GetMattermostUserTeams mocks base method.
+func (m *MockPluginAPI) GetMattermostUserTeams(arg0 string) ([]*model.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMattermostUserTeams", arg0)
+	ret0, _ := ret[0].([]*model.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMattermostUserTeams indicates an expected call of GetMattermostUserTeams.
+func (mr *MockPluginAPIMockRecorder) GetMattermostUserTeams(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserTeams", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserTeams), arg0)
+}
+
 // GetPost mocks base method.
 func (m *MockPluginAPI) GetPost(arg0 string) (*model.Post, error) {
 	m.ctrl.T.Helper()
@@ -122,6 +151,33 @@ func (m *MockPluginAPI) IsSysAdmin(arg0 string) (bool, error) {
 func (mr *MockPluginAPIMockRecorder) IsSysAdmin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSysAdmin", reflect.TypeOf((*MockPluginAPI)(nil).IsSysAdmin), arg0)
+}
+
+// PublishWebsocketEvent mocks base method.
+func (m *MockPluginAPI) PublishWebsocketEvent(arg0, arg1 string, arg2 map[string]interface{}) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PublishWebsocketEvent", arg0, arg1, arg2)
+}
+
+// PublishWebsocketEvent indicates an expected call of PublishWebsocketEvent.
+func (mr *MockPluginAPIMockRecorder) PublishWebsocketEvent(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishWebsocketEvent", reflect.TypeOf((*MockPluginAPI)(nil).PublishWebsocketEvent), arg0, arg1, arg2)
+}
+
+// SearchLinkableChannelForUser mocks base method.
+func (m *MockPluginAPI) SearchLinkableChannelForUser(arg0, arg1, arg2 string) ([]*model.Channel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchLinkableChannelForUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*model.Channel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchLinkableChannelForUser indicates an expected call of SearchLinkableChannelForUser.
+func (mr *MockPluginAPIMockRecorder) SearchLinkableChannelForUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchLinkableChannelForUser", reflect.TypeOf((*MockPluginAPI)(nil).SearchLinkableChannelForUser), arg0, arg1, arg2)
 }
 
 // UpdateMattermostUserStatus mocks base method.

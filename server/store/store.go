@@ -58,14 +58,16 @@ type pluginStore struct {
 func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker, enableEncryption bool, encryptionKey []byte) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	oauth2KV := kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix)
+	user2KV := kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix)
 
 	if enableEncryption {
 		oauth2KV = kvstore.NewEncryptedKeyStore(oauth2KV, encryptionKey)
+		user2KV = kvstore.NewEncryptedKeyStore(user2KV, encryptionKey)
 	}
 
 	return &pluginStore{
 		basicKV:            basicKV,
-		userKV:             kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix),
+		userKV:             user2KV,
 		userIndexKV:        kvstore.NewHashedKeyStore(basicKV, UserIndexKeyPrefix),
 		mattermostUserIDKV: kvstore.NewHashedKeyStore(basicKV, MattermostUserIDKeyPrefix),
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),

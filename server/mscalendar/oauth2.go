@@ -81,8 +81,8 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	if err == nil {
 		user, userErr := app.PluginAPI.GetMattermostUser(uid)
 		if userErr == nil {
-			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, config.Provider.CommandTrigger, user.Username)
-			return fmt.Errorf(RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, config.Provider.CommandTrigger, user.Username)
+			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, user.Username, config.Provider.CommandTrigger)
+			return fmt.Errorf(RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, user.Username, config.Provider.CommandTrigger)
 		}
 
 		// Couldn't fetch connected MM account. Reject connect attempt.
@@ -102,6 +102,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		MattermostDisplayName: user.GetDisplayName(model.ShowFullName),
 		Remote:                me,
 		OAuth2Token:           tok,
+		Settings:              store.DefaultSettings,
 	}
 
 	mailboxSettings, err := client.GetMailboxSettings(me.ID)

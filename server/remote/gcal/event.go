@@ -40,7 +40,10 @@ func (c *client) CreateEvent(_ string, in *remote.Event) (*remote.Event, error) 
 
 	evt := convertRemoteEventToGcalEvent(in)
 
-	resultEvent, err := service.Events.Insert(defaultCalendarName, evt).Do()
+	resultEvent, err := service.Events.
+		Insert(defaultCalendarName, evt).
+		SendUpdates("all"). // Send notifications to all attendees.
+		Do()
 	if err != nil {
 		return nil, errors.Wrap(err, "gcal CreateEvent")
 	}
@@ -98,8 +101,9 @@ func (c *client) GetEventsBetweenDates(_ string, start, end time.Time) (events [
 		List(defaultCalendarName).
 		TimeMin(start.Format(time.RFC3339)).
 		TimeMax(end.Format(time.RFC3339)).
-		SingleEvents(true).
 		OrderBy("startTime").
+		SingleEvents(true).
+		ShowDeleted(false).
 		ShowHiddenInvitations(false).
 		Context(ctx).
 		Do()
@@ -119,15 +123,22 @@ func convertRemoteEventToGcalEvent(in *remote.Event) *calendar.Event {
 	out.Summary = in.Subject
 	out.Start = convertRemoteDateTimeToGcalEventDateTime(in.Start)
 	out.End = convertRemoteDateTimeToGcalEventDateTime(in.End)
-	out.Description = in.Body.Content
+	if in.Body != nil {
+		out.Description = in.Body.Content
+	}
+
 	if in.Location != nil {
 		out.Location = in.Location.DisplayName
 	}
 
 	for _, attendee := range in.Attendees {
-		out.Attendees = append(out.Attendees, &calendar.EventAttendee{
-			Email: attendee.EmailAddress.Address,
-		})
+		outAttendee := &calendar.EventAttendee{
+			Id: attendee.RemoteID,
+		}
+		if attendee.EmailAddress != nil {
+			outAttendee.Email = attendee.EmailAddress.Address
+		}
+		out.Attendees = append(out.Attendees, outAttendee)
 	}
 
 	return out

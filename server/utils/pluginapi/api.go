@@ -22,6 +22,22 @@ func New(api plugin.API) *API {
 	}
 }
 
+func (a *API) SearchLinkableChannelForUser(teamID, mattemostUserID, search string) ([]*model.Channel, error) {
+	channels, err := a.api.SearchChannels(teamID, search)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*model.Channel
+	for _, ch := range channels {
+		if a.CanLinkEventToChannel(ch.Id, mattemostUserID) {
+			result = append(result, ch)
+		}
+	}
+
+	return result, nil
+}
+
 func (a *API) GetMattermostUserStatus(mattermostUserID string) (*model.Status, error) {
 	st, err := a.api.GetUserStatus(mattermostUserID)
 	if err != nil {
@@ -82,6 +98,19 @@ func (a *API) GetMattermostUser(mattermostUserID string) (*model.User, error) {
 	return mmuser, nil
 }
 
+func (a *API) GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error) {
+	teams, err := a.api.GetTeamsForUser(mattermostUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return teams, nil
+}
+
+func (a *API) CanLinkEventToChannel(channelID, userID string) bool {
+	return a.api.HasPermissionToChannel(userID, channelID, model.PermissionCreatePost)
+}
+
 func (a *API) CleanKVStore() error {
 	appErr := a.api.KVDeleteAll()
 	if appErr != nil {
@@ -105,4 +134,8 @@ func (a *API) GetPost(postID string) (*model.Post, error) {
 		return nil, appErr
 	}
 	return p, nil
+}
+
+func (a *API) PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any) {
+	a.api.PublishWebSocketEvent(event, payload, &model.WebsocketBroadcast{UserId: mattermostUserID})
 }

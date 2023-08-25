@@ -5,7 +5,6 @@ package api
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
@@ -23,6 +22,7 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 		Env:                   env,
 		NotificationProcessor: notificationProcessor,
 	}
+
 	apiRouter := h.Router.PathPrefix(config.PathAPI).Subrouter()
 	apiRouter.HandleFunc("/authorized", api.getAuthorized).Methods("GET")
 
@@ -37,24 +37,15 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	postActionRouter.HandleFunc(config.PathConfirmStatusChange, api.postActionConfirmStatusChange).Methods("POST")
 
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
-	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteUsers)
+	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers)
 
-	notificationRouter.HandleFunc("/{fname}", func(w http.ResponseWriter, r *http.Request) {
-		if api.GoogleDomainVerifyKey == "" {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Domain verify key is not set"))
-			return
-		}
+	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
+	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()
+	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods("POST")
+	apiRoutes.HandleFunc(config.PathConnectedUser, api.connectedUserHandler)
 
-		parts := strings.Split(r.URL.Path, "/")
-		fname := parts[len(parts)-1]
-		if fname != api.GoogleDomainVerifyKey {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Incorrect file name requested"))
-			return
-		}
-
-		resp := "google-site-verification: " + api.GoogleDomainVerifyKey
-		w.Write([]byte(resp))
+	// Returns provider information for the plugin to use
+	apiRoutes.HandleFunc(config.PathProvider, func(w http.ResponseWriter, r *http.Request) {
+		httputils.WriteJSONResponse(w, config.Provider, 200)
 	})
 }
