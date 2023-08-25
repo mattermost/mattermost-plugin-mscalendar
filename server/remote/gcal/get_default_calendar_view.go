@@ -5,7 +5,6 @@ package gcal
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
 )
 
 const (
@@ -65,10 +63,6 @@ func (c *client) GetDefaultCalendarView(_ string, start, end time.Time) ([]*remo
 	events := []*remote.Event{}
 	for _, event := range result.Items {
 		if event.ICalUID != "" {
-			b, _ := json.Marshal(event)
-			c.Logger.With(bot.LogContext{
-				"event": string(b),
-			}).Warnf("event")
 			events = append(events, convertGCalEventToRemoteEvent(event))
 		}
 	}
