@@ -17,6 +17,9 @@ func (c *Command) findMeetings(parameters ...string) (string, bool, error) {
 	var attendees []remote.Attendee
 	for a := range parameters {
 		s := strings.Split(parameters[a], ":")
+		if len(s) != 2 {
+			return "", false, fmt.Errorf("error in parameter %s", parameters[a])
+		}
 		t, email := s[0], s[1]
 		// REVIEW: very small struct being used to fetch meeting times. FindMeetingTimesParameters is a large struct, but only attendees being filled here
 		attendee := remote.Attendee{
