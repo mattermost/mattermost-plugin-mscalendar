@@ -13,11 +13,11 @@ func createMinimalCalendarEvent() calendar.Event {
 	return calendar.Event{
 		Summary: "test summary",
 		Start: &calendar.EventDateTime{
-			DateTime: "2023-08-01T00:01:02Z",
+			DateTime: "2023-08-01T00:05:00Z",
 			TimeZone: "UTC",
 		},
 		End: &calendar.EventDateTime{
-			DateTime: "2023-08-01T00:01:02Z",
+			DateTime: "2023-08-01T00:10:00Z",
 			TimeZone: "UTC",
 		},
 		Organizer: &calendar.EventOrganizer{
@@ -37,8 +37,8 @@ func TestConvertGCalEventToRemoteEvent(t *testing.T) {
 			In:   createMinimalCalendarEvent,
 			Check: func(t *testing.T, event *remote.Event) {
 				require.Equal(t, "test summary", event.Subject)
-				require.Equal(t, "2023-08-01T00:01:02", event.Start.DateTime)
-				require.Equal(t, "2023-08-01T00:01:02", event.End.DateTime)
+				require.Equal(t, "2023-08-01T00:05:00", event.Start.DateTime)
+				require.Equal(t, "2023-08-01T00:10:00", event.End.DateTime)
 				require.Equal(t, "gcal-plugin@mattermost.com", event.Organizer.EmailAddress.Address)
 			},
 		},
