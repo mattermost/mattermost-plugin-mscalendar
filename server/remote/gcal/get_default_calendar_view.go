@@ -89,8 +89,10 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 
 	if event.ConferenceData != nil && len(event.ConferenceData.EntryPoints) > 0 {
 		conference = &remote.Conference{
-			Application: event.ConferenceData.ConferenceSolution.Name,
-			URL:         event.ConferenceData.EntryPoints[0].Uri,
+			URL: event.ConferenceData.EntryPoints[0].Uri,
+		}
+		if event.ConferenceData.ConferenceSolution != nil {
+			conference.Application = event.ConferenceData.ConferenceSolution.Name
 		}
 	} else if utils.IsURL(event.Location) {
 		conference = &remote.Conference{
