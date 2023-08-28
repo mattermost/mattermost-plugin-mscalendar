@@ -116,7 +116,7 @@ func TestConvertGCalEventToRemoteEvent(t *testing.T) {
 			},
 		},
 		{
-			Name: "location url used as conference if not conference data is present",
+			Name: "location url used as conference if no conference data is present",
 			In: func() calendar.Event {
 				evt := createMinimalCalendarEvent()
 				evt.Location = "https://example.com"
