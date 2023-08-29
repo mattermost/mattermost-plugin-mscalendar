@@ -392,8 +392,43 @@ func TestReminders(t *testing.T) {
 func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 	concurrency := 2
 
+	t.Run("context is cancelled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		testUser := newTestUser()
+		testUser.Settings.UpdateStatus = true
+		testUser.Settings.ReceiveReminders = true
+		userIndex := []*store.UserShort{
+			{
+				MattermostUserID: testUser.MattermostUserID,
+				RemoteID:         testUser.Remote.ID,
+				Email:            testUser.Remote.Mail,
+			},
+		}
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		e, client := makeStatusSyncTestEnv(ctrl)
+
+		c, s, p, r := client.(*mock_remote.MockClient), e.Store.(*mock_store.MockStore), e.PluginAPI.(*mock_plugin_api.MockPluginAPI), e.Remote.(*mock_remote.MockRemote)
+		p.EXPECT().GetMattermostUser(testUser.MattermostUserID).Return(&model.User{Id: testUser.MattermostUserID}, nil).AnyTimes()
+		s.EXPECT().LoadUser(testUser.MattermostUserID).Return(testUser, nil).AnyTimes()
+		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token).Return(client).AnyTimes()
+		c.EXPECT().GetEventsBetweenDates(testUser.Remote.ID, gomock.Any(), gomock.Any()).Return([]*remote.Event{}, nil).AnyTimes()
+
+		e.Logger.(*mock_bot.MockLogger).EXPECT().Errorf(gomock.Any()).AnyTimes()
+
+		m := New(e, "").(*mscalendar)
+		jobSummary := &StatusSyncJobSummary{}
+
+		_, _, err := m.retrieveUsersToSyncUsingGoroutines(ctx, userIndex, jobSummary, concurrency)
+		require.ErrorIs(t, err, context.Canceled)
+	})
+
 	t.Run("no users to sync", func(t *testing.T) {
-		ctx := context.TODO()
+		ctx := context.Background()
 
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -408,7 +443,7 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 	})
 
 	t.Run("user reminders and status disabled", func(t *testing.T) {
-		ctx := context.TODO()
+		ctx := context.Background()
 
 		testUser := newTestUser()
 		testUser.Settings.UpdateStatus = false
@@ -438,7 +473,7 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 	})
 
 	t.Run("one user should be synced", func(t *testing.T) {
-		ctx := context.TODO()
+		ctx := context.Background()
 
 		testUser := newTestUser()
 		testUser.Settings.UpdateStatus = true
@@ -477,7 +512,7 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 	})
 
 	t.Run("one user should be synced, one user shouldn't", func(t *testing.T) {
-		ctx := context.TODO()
+		ctx := context.Background()
 
 		testUser := newTestUserNumbered(1)
 		testUser.Settings.UpdateStatus = true
@@ -524,7 +559,7 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 	})
 
 	t.Run("two users should be synced", func(t *testing.T) {
-		ctx := context.TODO()
+		ctx := context.Background()
 
 		testUser := newTestUserNumbered(1)
 		testUser.Settings.UpdateStatus = true
