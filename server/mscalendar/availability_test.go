@@ -504,8 +504,8 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 
 		users, responses, err := m.retrieveUsersToSyncUsingGoroutines(ctx, userIndex, jobSummary, concurrency)
 		require.NoError(t, err)
-		require.Equal(t, []*store.User{testUser}, users)
-		require.Equal(t, []*remote.ViewCalendarResponse{{
+		require.ElementsMatch(t, []*store.User{testUser}, users)
+		require.ElementsMatch(t, []*remote.ViewCalendarResponse{{
 			RemoteUserID: testUser.Remote.ID,
 			Events:       events,
 		}}, responses)
@@ -551,8 +551,8 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 
 		users, responses, err := m.retrieveUsersToSyncUsingGoroutines(ctx, userIndex, jobSummary, concurrency)
 		require.NoError(t, err)
-		require.Equal(t, []*store.User{testUser}, users)
-		require.Equal(t, []*remote.ViewCalendarResponse{{
+		require.ElementsMatch(t, []*store.User{testUser}, users)
+		require.ElementsMatch(t, []*remote.ViewCalendarResponse{{
 			RemoteUserID: testUser.Remote.ID,
 			Events:       events,
 		}}, responses)
@@ -604,8 +604,8 @@ func TestRetrieveUsersToSyncUsingGoroutines(t *testing.T) {
 
 		users, responses, err := m.retrieveUsersToSyncUsingGoroutines(ctx, userIndex, jobSummary, concurrency)
 		require.NoError(t, err)
-		require.Equal(t, []*store.User{testUser, testUser2}, users)
-		require.Equal(t, []*remote.ViewCalendarResponse{{
+		require.ElementsMatch(t, []*store.User{testUser, testUser2}, users)
+		require.ElementsMatch(t, []*remote.ViewCalendarResponse{{
 			RemoteUserID: testUser.Remote.ID,
 			Events:       eventsUser1,
 		}, {
