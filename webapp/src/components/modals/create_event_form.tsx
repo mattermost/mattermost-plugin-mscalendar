@@ -22,7 +22,7 @@ import {capitalizeFirstCharacter} from '@/utils/text';
 import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
 import {getTodayString} from '@/utils/datetime';
 
-import './create_event_form.css';
+import './create_event_form.scss';
 
 type Props = {
     close: (e?: Event) => void;
