@@ -25,11 +25,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "experimentalDecorators": true,
-    "jsx": "react"
+    "jsx": "react",
+    "typeRoots": [
+      "./types"
+    ],
   },
-  "files": [
-    "src/custom.d.ts"
-  ],
   "include": [
     "src",
     "tests"
@@ -38,5 +38,5 @@
     "dist",
     "node_modules",
     "!node_modules/@types"
-  ]
+  ],
 }
