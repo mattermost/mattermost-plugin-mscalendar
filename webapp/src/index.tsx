@@ -30,7 +30,12 @@ export default class Plugin {
             await store.dispatch(getProviderConfiguration());
 
             registry.registerChannelHeaderMenuAction(
-                <span><Icon image={CalendarOutlineIcon}/>{'Create calendar event'}</span>,
+                (
+                    <span>
+                        <Icon image={CalendarOutlineIcon}/>
+                        {'Create calendar event'}
+                    </span>
+                ),
                 async (channelID) => {
                     if (await hooks.checkUserIsConnected()) {
                         store.dispatch(openCreateEventModal(channelID));
