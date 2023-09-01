@@ -259,7 +259,7 @@ const ActualForm = (props: ActualFormProps) => {
     ];
 
     return (
-        <div className='create-event-form'>
+        <div className='mscalendar-create-event-form'>
             {components.map((c) => (
                 <Setting
                     key={c.label}
