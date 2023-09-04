@@ -22,6 +22,8 @@ import {capitalizeFirstCharacter} from '@/utils/text';
 import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
 import {getTodayString} from '@/utils/datetime';
 
+import './create_event_form.scss';
+
 type Props = {
     close: (e?: Event) => void;
 };
@@ -176,7 +178,7 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Location',
+            label: 'Location (optional)',
             required: false,
             component: (
                 <input
@@ -246,7 +248,7 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Link event to channel',
+            label: 'Link event to channel (optional)',
             component: (
                 <ChannelSelector
                     onChange={(selected) => setFormValue('channel_id', selected)}
@@ -257,7 +259,7 @@ const ActualForm = (props: ActualFormProps) => {
     ];
 
     return (
-        <div>
+        <div className='mscalendar-create-event-form'>
             {components.map((c) => (
                 <Setting
                     key={c.label}

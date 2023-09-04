@@ -11,8 +11,11 @@ import {PluginId} from './plugin_id';
 import Hooks from './plugin_hooks';
 import reducer from './reducers';
 
+import CalendarOutlineIcon from './images/calendar-plus-outline.svg';
+
 import CreateEventModal from './components/modals/create_event_modal';
 import {getProviderConfiguration, handleConnectChange, openCreateEventModal} from './actions';
+import Icon from './components/icon';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export default class Plugin {
@@ -27,7 +30,12 @@ export default class Plugin {
             await store.dispatch(getProviderConfiguration());
 
             registry.registerChannelHeaderMenuAction(
-                <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
+                (
+                    <span>
+                        <Icon image={CalendarOutlineIcon}/>
+                        {'Create calendar event'}
+                    </span>
+                ),
                 async (channelID) => {
                     if (await hooks.checkUserIsConnected()) {
                         store.dispatch(openCreateEventModal(channelID));

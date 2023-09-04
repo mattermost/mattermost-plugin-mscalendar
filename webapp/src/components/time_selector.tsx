@@ -69,7 +69,7 @@ export default function TimeSelector(props: Props) {
         }));
     }, [props.startTime, props.endTime, props.date]);
 
-    let value = null;
+    let value: Option | undefined | null = options[0];
     if (props.value) {
         value = options.find((option: Option) => option.value === props.value);
     }

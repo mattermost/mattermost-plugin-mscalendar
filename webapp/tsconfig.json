@@ -3,7 +3,9 @@
     "target": "esnext",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": [
+        "src/*"
+      ],
     },
     "lib": [
       "dom",
@@ -23,7 +25,10 @@
     "isolatedModules": true,
     "noEmit": true,
     "experimentalDecorators": true,
-    "jsx": "react"
+    "jsx": "react",
+    "typeRoots": [
+      "./types"
+    ],
   },
   "include": [
     "src",
@@ -33,5 +38,5 @@
     "dist",
     "node_modules",
     "!node_modules/@types"
-  ]
+  ],
 }
