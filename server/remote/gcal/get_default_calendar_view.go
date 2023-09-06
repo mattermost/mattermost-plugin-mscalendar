@@ -12,6 +12,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
 const (
@@ -83,8 +84,26 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 	start := convertGCalEventDateTimeToRemoteDateTime(event.Start)
 	end := convertGCalEventDateTimeToRemoteDateTime(event.End)
 
-	location := &remote.Location{
-		DisplayName: event.Location,
+	var conference *remote.Conference
+	var location *remote.Location
+
+	if event.ConferenceData != nil && len(event.ConferenceData.EntryPoints) > 0 {
+		conference = &remote.Conference{
+			URL: event.ConferenceData.EntryPoints[0].Uri,
+		}
+		if event.ConferenceData.ConferenceSolution != nil {
+			conference.Application = event.ConferenceData.ConferenceSolution.Name
+		}
+	} else if utils.IsURL(event.Location) {
+		conference = &remote.Conference{
+			URL: event.Location,
+		}
+	}
+
+	if !utils.IsURL(event.Location) {
+		location = &remote.Location{
+			DisplayName: event.Location,
+		}
 	}
 
 	organizer := &remote.Attendee{
@@ -138,6 +157,7 @@ func convertGCalEventToRemoteEvent(event *calendar.Event) *remote.Event {
 		Start:             start,
 		End:               end,
 		Location:          location,
+		Conference:        conference,
 		Organizer:         organizer,
 		Attendees:         attendees,
 		ResponseStatus:    responseStatus,
