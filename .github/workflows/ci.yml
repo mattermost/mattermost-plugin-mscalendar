@@ -9,6 +9,9 @@ on:
       - "v*"
   pull_request:
 
+env:
+  CALENDAR_PROVIDER: msgraph
+
 permissions:
   contents: read
 
