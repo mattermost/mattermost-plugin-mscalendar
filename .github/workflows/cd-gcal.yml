@@ -1,4 +1,5 @@
-name: cd
+name: cd (gcal)
+
 on:
   workflow_run:
     workflows: ["ci"]
@@ -12,7 +13,10 @@ on:
 permissions:
   contents: read
 
+env:
+  CALENDAR_PROVIDER: gcal
+
 jobs:
-  plugin-cd:
+  plugin-cd-gcal:
     uses: mattermost/actions-workflows/.github/workflows/plugin-cd.yml@main
     secrets: inherit

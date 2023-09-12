@@ -1,0 +1,22 @@
+name: cd (mscalendar)
+
+on:
+  workflow_run:
+    workflows: ["ci"]
+    branches-ignore: ["*"]
+    types:
+      - completed
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  CALENDAR_PROVIDER: msgraph
+
+jobs:
+  plugin-cd-msgraph:
+    uses: mattermost/actions-workflows/.github/workflows/plugin-cd.yml@main
+    secrets: inherit
