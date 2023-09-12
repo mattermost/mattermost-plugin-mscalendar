@@ -127,9 +127,17 @@ func (cep createEventPayload) IsValid(loc *time.Location) error {
 		return fmt.Errorf("please use a valid start time")
 	}
 
+	if start.Before(time.Now()) {
+		return fmt.Errorf("please select a start date and time that is not prior to the current time")
+	}
+
 	end, err := cep.parseEndTime(loc)
 	if err != nil {
 		return fmt.Errorf("please use a valid end time")
+	}
+
+	if end.Before(time.Now()) {
+		return fmt.Errorf("please select an end date and time that is not prior to the current time")
 	}
 
 	if start.After(end) {

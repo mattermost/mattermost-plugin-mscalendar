@@ -20,6 +20,9 @@ import TimeSelector from '@/components/time_selector';
 import ChannelSelector from '../channel_selector';
 import {capitalizeFirstCharacter} from '@/utils/text';
 import {CreateCalendarEventResponse, createCalendarEvent} from '@/actions';
+import {getTodayString} from '@/utils/datetime';
+
+import './create_event_form.scss';
 
 type Props = {
     close: (e?: Event) => void;
@@ -36,7 +39,7 @@ export default function CreateEventForm(props: Props) {
         subject: '',
         all_day: false,
         attendees: [],
-        date: '',
+        date: getTodayString(),
         start_time: '',
         end_time: '',
         description: '',
@@ -175,7 +178,7 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Location',
+            label: 'Location (optional)',
             required: false,
             component: (
                 <input
@@ -198,7 +201,12 @@ const ActualForm = (props: ActualFormProps) => {
             required: true,
             component: (
                 <input
-                    onChange={(e) => setFormValue('date', e.target.value)}
+                    onChange={(e) => {
+                        setFormValue('date', e.target.value);
+                        setFormValue('start_time', '');
+                        setFormValue('end_time', '');
+                    }}
+                    min={getTodayString()}
                     value={formValues.date}
                     className='form-control'
                     type='date'
@@ -212,6 +220,7 @@ const ActualForm = (props: ActualFormProps) => {
                 <TimeSelector
                     value={formValues.start_time}
                     endTime={formValues.end_time}
+                    date={formValues.date}
                     onChange={(value) => setFormValue('start_time', value)}
                 />
             ),
@@ -223,6 +232,7 @@ const ActualForm = (props: ActualFormProps) => {
                 <TimeSelector
                     value={formValues.end_time}
                     startTime={formValues.start_time}
+                    date={formValues.date}
                     onChange={(value) => setFormValue('end_time', value)}
                 />
             ),
@@ -238,7 +248,7 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
-            label: 'Link event to channel',
+            label: 'Link event to channel (optional)',
             component: (
                 <ChannelSelector
                     onChange={(selected) => setFormValue('channel_id', selected)}
@@ -249,7 +259,7 @@ const ActualForm = (props: ActualFormProps) => {
     ];
 
     return (
-        <div>
+        <div className='mscalendar-create-event-form'>
             {components.map((c) => (
                 <Setting
                     key={c.label}

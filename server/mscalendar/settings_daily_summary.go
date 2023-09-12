@@ -118,7 +118,6 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 	currentAPM := "AM"
 	fullTime := "8:00AM"
 	currentEnable := false
-	currentTextValue := "Not set."
 
 	if dsum != nil {
 		fullTime = dsum.PostTime
@@ -127,11 +126,6 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		currentH = splitted[0]
 		currentM = splitted[1][:2]
 		currentAPM = splitted[1][2:]
-		enableText := "Disabled"
-		if currentEnable {
-			enableText = "Enabled"
-		}
-		currentTextValue = fmt.Sprintf("%s (%s) (%s)", dsum.PostTime, dsum.Timezone, enableText)
 	}
 
 	timezone, err := s.getTimezone(userID)
@@ -139,8 +133,6 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		return nil, fmt.Errorf("could not load the timezone. err=%v", err)
 	}
 	fullTime = fullTime + " " + timezone
-
-	currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
 
 	actionOptionsH := model.PostAction{
 		Name: "H:",
@@ -181,7 +173,9 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 		DefaultOption: fullTime,
 	}
 
-	actions = []*model.PostAction{&actionOptionsH, &actionOptionsM, &actionOptionsAPM}
+	if currentEnable {
+		actions = []*model.PostAction{&actionOptionsH, &actionOptionsM, &actionOptionsAPM}
+	}
 
 	buttonText := "Enable"
 	enable := "true"
@@ -202,12 +196,11 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 	actions = append(actions, &actionToggle)
 
-	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
 		Title:    title,
-		Text:     text,
+		Text:     s.description,
 		Actions:  actions,
-		Fallback: fmt.Sprintf("%s: %s", title, text),
+		Fallback: fmt.Sprintf("%s: %s", title, s.description),
 	}
 	return &sa, nil
 }

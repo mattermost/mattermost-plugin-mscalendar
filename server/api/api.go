@@ -4,6 +4,8 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
@@ -40,4 +42,10 @@ func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscale
 	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
 	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()
 	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods("POST")
+	apiRoutes.HandleFunc(config.PathConnectedUser, api.connectedUserHandler)
+
+	// Returns provider information for the plugin to use
+	apiRoutes.HandleFunc(config.PathProvider, func(w http.ResponseWriter, r *http.Request) {
+		httputils.WriteJSONResponse(w, config.Provider, 200)
+	})
 }

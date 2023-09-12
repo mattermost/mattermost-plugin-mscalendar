@@ -27,8 +27,13 @@ type Command struct {
 	ChannelID  string
 }
 
-func getNotConnectedText() string {
-	return fmt.Sprintf("It looks like your Mattermost account is not connected to a %s account. Please connect your account using `/%s connect`.", config.Provider.DisplayName, config.Provider.CommandTrigger)
+func getNotConnectedText(pluginURL string) string {
+	return fmt.Sprintf(
+		"It looks like your Mattermost account is not connected to a %s account. [Click here to connect your account](%s/oauth2/connect) or use `/%s connect`.",
+		config.Provider.DisplayName,
+		pluginURL,
+		config.Provider.CommandTrigger,
+	)
 }
 
 type handleFunc func(parameters ...string) (string, bool, error)
@@ -36,7 +41,7 @@ type handleFunc func(parameters ...string) (string, bool, error)
 var cmds = []*model.AutocompleteData{
 	model.NewAutocompleteData("connect", "", fmt.Sprintf("Connect to your %s account", config.Provider.DisplayName)),
 	model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
-	{
+	{ // Summary
 		Trigger:  "summary",
 		HelpText: "View your events for today, or edit the settings for your daily summary.",
 		SubCommands: []*model.AutocompleteData{
@@ -49,8 +54,14 @@ var cmds = []*model.AutocompleteData{
 			model.NewAutocompleteData("disable", "", "Disable your daily summary."),
 		},
 	},
-	model.NewAutocompleteData("summary", "", "View your events for today, or edit the settings for your daily summary."),
 	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+	{ // Create
+		Trigger:  "event",
+		HelpText: "Manage events.",
+		SubCommands: []*model.AutocompleteData{
+			model.NewAutocompleteData("create", "", "Creates a new event (desktop only)."),
+		},
+	},
 	model.NewAutocompleteData("today", "", "Display today's events."),
 	model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
 	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
@@ -118,6 +129,8 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.showCalendars)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
+	case "events":
+		handler = c.requireConnectedUser(c.event)
 	// Admin only
 	case "avail":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
@@ -175,7 +188,7 @@ func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
 		}
 
 		if !connected {
-			return getNotConnectedText(), false, nil
+			return getNotConnectedText(c.Config.PluginURL), false, nil
 		}
 		return handle(parameters...)
 	}

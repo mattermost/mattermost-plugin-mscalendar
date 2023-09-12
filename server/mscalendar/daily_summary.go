@@ -228,7 +228,9 @@ func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, er
 		return "Failed to get calendar events", err
 	}
 
-	messageString, err := views.RenderCalendarView(calendarData, tz)
+	events := m.excludeDeclinedEvents(calendarData)
+
+	messageString, err := views.RenderCalendarView(events, tz)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to render daily summary")
 	}

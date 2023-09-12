@@ -153,6 +153,18 @@ func (mr *MockPluginAPIMockRecorder) IsSysAdmin(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSysAdmin", reflect.TypeOf((*MockPluginAPI)(nil).IsSysAdmin), arg0)
 }
 
+// PublishWebsocketEvent mocks base method.
+func (m *MockPluginAPI) PublishWebsocketEvent(arg0, arg1 string, arg2 map[string]interface{}) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PublishWebsocketEvent", arg0, arg1, arg2)
+}
+
+// PublishWebsocketEvent indicates an expected call of PublishWebsocketEvent.
+func (mr *MockPluginAPIMockRecorder) PublishWebsocketEvent(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishWebsocketEvent", reflect.TypeOf((*MockPluginAPI)(nil).PublishWebsocketEvent), arg0, arg1, arg2)
+}
+
 // SearchLinkableChannelForUser mocks base method.
 func (m *MockPluginAPI) SearchLinkableChannelForUser(arg0, arg1, arg2 string) ([]*model.Channel, error) {
 	m.ctrl.T.Helper()

@@ -11,8 +11,11 @@ import {PluginId} from './plugin_id';
 import Hooks from './plugin_hooks';
 import reducer from './reducers';
 
+import CalendarOutlineIcon from './images/calendar-plus-outline.svg';
+
 import CreateEventModal from './components/modals/create_event_modal';
-import {openCreateEventModal} from './actions';
+import {getProviderConfiguration, handleConnectChange, openCreateEventModal} from './actions';
+import Icon from './components/icon';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export default class Plugin {
@@ -22,16 +25,31 @@ export default class Plugin {
         const hooks = new Hooks(store);
         registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
 
-        const setup = () => {
+        const setup = async () => {
+            // Retrieve provider configuration so we can access names and other options in messages to use in the frontend.
+            await store.dispatch(getProviderConfiguration());
+
+            registry.registerChannelHeaderMenuAction(
+                (
+                    <span>
+                        <Icon image={CalendarOutlineIcon}/>
+                        {'Create calendar event'}
+                    </span>
+                ),
+                async (channelID) => {
+                    if (await hooks.checkUserIsConnected()) {
+                        store.dispatch(openCreateEventModal(channelID));
+                    }
+                },
+            );
+
             registry.registerRootComponent(CreateEventModal);
+
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnectChange(store));
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleConnectChange(store));
         };
 
         registry.registerRootComponent(() => <SetupUI setup={setup}/>);
-
-        registry.registerChannelHeaderMenuAction(
-            <span><i className='icon fa fa-calendar-plus-o'/>{'Create calendar event'}</span>,
-            (channelID) => store.dispatch(openCreateEventModal(channelID)),
-        );
 
         // reminder to set up site url for any API calls
         // and i18n

@@ -1,12 +1,15 @@
 import Client4 from 'mattermost-redux/client/client4';
+import {PostTypes} from 'mattermost-redux/action_types';
 import {GlobalState} from 'mattermost-redux/types/store';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 import {haveIChannelPermission} from 'mattermost-redux/selectors/entities/roles';
 import Permissions from 'mattermost-redux/constants/permissions';
 import {Channel} from '@mattermost/types/lib/channels';
 
+import {getCurrentChannelId} from 'mattermost-redux/selectors/entities/common';
+
 import ActionTypes from './action_types';
-import {doFetchWithResponse} from './client';
+import {doFetch, doFetchWithResponse} from './client';
 import {PluginId} from './plugin_id';
 import {CreateEventPayload} from './types/calendar_api_types';
 
@@ -107,3 +110,89 @@ export const createCalendarEvent = (payload: CreateEventPayload) => async (dispa
             return {error};
         });
 };
+
+export function getConnected() {
+    return async (dispatch, getState) => {
+        let data;
+        const baseUrl = getPluginServerRoute(getState());
+        try {
+            data = await doFetch(`${baseUrl}/api/v1/me`, {
+                method: 'get',
+            });
+        } catch (error) {
+            return {error};
+        }
+
+        dispatch({
+            type: ActionTypes.RECEIVED_CONNECTED,
+            data,
+        });
+
+        return {data};
+    };
+}
+
+export function sendEphemeralPost(message: string, channelId?: string) {
+    return (dispatch, getState) => {
+        const timestamp = Date.now();
+        const post = {
+            id: 'gcalplugin_' + Date.now(),
+            user_id: getState().entities.users.currentUserId,
+            channel_id: channelId || getCurrentChannelId(getState()),
+            message,
+            type: 'system_ephemeral',
+            create_at: timestamp,
+            update_at: timestamp,
+            root_id: '',
+            parent_id: '',
+            props: {},
+        };
+
+        dispatch({
+            type: PostTypes.RECEIVED_NEW_POST,
+            data: post,
+            channelId,
+        });
+    };
+}
+
+export function handleConnectChange() {
+    return (dispatch, getState) => {
+        return (msg) => {
+            if (!msg.data) {
+                return;
+            }
+
+            let dispatchType = ActionTypes.RECEIVED_CONNECTED;
+            if (msg.data.event === 'disconnected') {
+                dispatchType = ActionTypes.RECEIVED_DISCONNECTED;
+            }
+
+            dispatch({
+                type: dispatchType,
+                data: msg.data,
+            });
+        };
+    };
+}
+
+export function getProviderConfiguration() {
+    return async (dispatch, getState): Promise<ProviderConfig | null> => {
+        let data;
+        const baseUrl = getPluginServerRoute(getState());
+        try {
+            data = await doFetch(`${baseUrl}/api/v1/provider`, {
+                method: 'get',
+            });
+
+            dispatch({
+                type: ActionTypes.RECEIVED_PROVIDER_CONFIGURATION,
+                data,
+            });
+        } catch (error) {
+            return {error};
+        }
+
+        return data;
+    };
+}

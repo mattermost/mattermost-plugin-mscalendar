@@ -48,7 +48,7 @@ func (m *mscalendar) getTodayCalendarEvents(user *User, now time.Time, timezone 
 
 func (m *mscalendar) excludeDeclinedEvents(events []*remote.Event) (result []*remote.Event) {
 	for ix, evt := range events {
-		if evt.ResponseStatus.Response != remote.EventResponseStatusDeclined {
+		if evt.ResponseStatus == nil || evt.ResponseStatus.Response != remote.EventResponseStatusDeclined {
 			result = append(result, events[ix])
 		}
 	}

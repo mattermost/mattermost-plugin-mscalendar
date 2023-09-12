@@ -1,17 +1,12 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {openCreateEventModal} from './actions';
-import {isUserConnected} from './selectors';
-
-// import {openCreateModalWithoutPost, openChannelSettings, sendEphemeralPost, openDisconnectModal, handleConnectFlow, getConnected} from '../actions';
-// import {isUserConnected, getInstalledInstances, getPluginSettings, getUserConnectedInstances, instanceIsInstalled} from '../selectors';
+import {getConnected, openCreateEventModal, sendEphemeralPost} from './actions';
+import {getProviderConfiguration, isUserConnected} from './selectors';
 
 type ContextArgs = {channel_id: string};
 
-const createEventCommand = '/z';
-
-// const createEventCommand = '/gcal createevent';
+const createEventCommand = 'event create';
 
 interface Store {
     dispatch(action: {type: string}): void;
@@ -25,7 +20,7 @@ export default class Hooks {
         this.store = store;
     }
 
-    slashCommandWillBePostedHook = (rawMessage: string, contextArgs: ContextArgs) => {
+    slashCommandWillBePostedHook = async (rawMessage: string, contextArgs: ContextArgs) => {
         let message;
         if (rawMessage) {
             message = rawMessage.trim();
@@ -35,7 +30,8 @@ export default class Hooks {
             return Promise.resolve({message, args: contextArgs});
         }
 
-        if (message.startsWith(createEventCommand)) {
+        const providerConfiguration = getProviderConfiguration(this.store.getState());
+        if (message.startsWith(`/${providerConfiguration.CommandTrigger} ` + createEventCommand)) {
             return this.handleCreateEventSlashCommand(message, contextArgs);
         }
 
@@ -52,12 +48,11 @@ export default class Hooks {
     };
 
     checkUserIsConnected = async (): Promise<boolean> => {
-        return true;
-
         if (!isUserConnected(this.store.getState())) {
             await this.store.dispatch(getConnected());
             if (!isUserConnected(this.store.getState())) {
-                this.store.dispatch(sendEphemeralPost('Your Mattermost account is not connected to Jira. Please use `/jira connect` to connect your account, then try again.'));
+                const providerConfiguration = await getProviderConfiguration(this.store.getState());
+                this.store.dispatch(sendEphemeralPost(`Your Mattermost account is not connected to ${providerConfiguration.DisplayName}. In order to create a calendar event please connect your account first using \`/${providerConfiguration.CommandTrigger} connect\`.`));
                 return false;
             }
         }

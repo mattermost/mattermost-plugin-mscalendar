@@ -90,6 +90,10 @@ const config = {
                     },
                 ],
             },
+            {
+                test: /\.svg$/,
+                type: 'asset/inline',
+            },
         ],
     },
     externals: {

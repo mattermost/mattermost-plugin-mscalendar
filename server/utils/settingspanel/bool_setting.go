@@ -73,9 +73,15 @@ func (s *boolSetting) GetDependency() string {
 	return s.dependsOn
 }
 
+func (s *boolSetting) getActionStyle(actionValue, currentValue string) string {
+	if actionValue == currentValue {
+		return "primary"
+	}
+	return "default"
+}
+
 func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
-	currentValueMessage := "Disabled"
 
 	actions := []*model.PostAction{}
 	if !disabled {
@@ -84,14 +90,9 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 			return nil, err
 		}
 
-		currentTextValue := "No"
-		if currentValue == "true" {
-			currentTextValue = "Yes"
-		}
-		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
-
 		actionTrue := model.PostAction{
-			Name: "Yes",
+			Name:  "Yes",
+			Style: s.getActionStyle("true", currentValue.(string)),
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler,
 				Context: map[string]interface{}{
@@ -102,7 +103,8 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 		}
 
 		actionFalse := model.PostAction{
-			Name: "No",
+			Name:  "No",
+			Style: s.getActionStyle("false", currentValue.(string)),
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler,
 				Context: map[string]interface{}{
@@ -114,12 +116,11 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 		actions = []*model.PostAction{&actionTrue, &actionFalse}
 	}
 
-	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
 		Title:    title,
-		Text:     text,
+		Text:     s.description,
 		Actions:  actions,
-		Fallback: fmt.Sprintf("%s: %s", title, text),
+		Fallback: fmt.Sprintf("%s: %s", title, s.description),
 	}
 
 	return &sa, nil

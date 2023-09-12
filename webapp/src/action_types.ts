@@ -9,5 +9,7 @@ export default {
     OPEN_CREATE_EVENT_MODAL_WITHOUT_POST: `${PluginId}_open_create_modal_without_post`,
 
     RECEIVED_CONNECTED: `${PluginId}_connected`,
+    RECEIVED_DISCONNECTED: `${PluginId}_disconnected`,
     RECEIVED_PLUGIN_SETTINGS: `${PluginId}_plugin_settings`,
+    RECEIVED_PROVIDER_CONFIGURATION: `${PluginId}_provider_settings`,
 };
