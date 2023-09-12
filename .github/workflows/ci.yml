@@ -9,13 +9,17 @@ on:
       - "v*"
   pull_request:
 
-env:
-  CALENDAR_PROVIDER: msgraph
 
 permissions:
   contents: read
 
 jobs:
+  set-env:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "CALENDAR_PROVIDER=msgraph" >> $GITHUB_ENV
+
   plugin-ci:
     uses: mattermost/actions-workflows/.github/workflows/plugin-ci.yml@main
     secrets: inherit
