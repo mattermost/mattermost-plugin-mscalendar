@@ -14,7 +14,7 @@ BUILD_HASH_SHORT = $(shell git rev-parse --short HEAD)
 LDFLAGS += -X "main.BuildDate=$(BUILD_DATE)"
 LDFLAGS += -X "main.BuildHash=$(BUILD_HASH)"
 LDFLAGS += -X "main.BuildHashShort=$(BUILD_HASH_SHORT)"
-LDFLAGS += -X "main.CalendarProvider=$(CALENDAR_PROVIDER)"
+LDFLAGS += -X "main.CalendarProvider=$(PLUGIN_FLAVOR)"
 
 GO_BUILD_FLAGS = -ldflags '$(LDFLAGS)'
 

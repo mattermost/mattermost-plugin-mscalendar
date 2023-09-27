@@ -3,7 +3,7 @@ NPM ?= $(shell command -v npm 2> /dev/null)
 CURL ?= $(shell command -v curl 2> /dev/null)
 GOPATH ?= $(shell go env GOPATH)
 
-CALENDAR_PROVIDER ?= gcal
+PLUGIN_FLAVOR ?= gcal
 MANIFEST_FILE ?= plugin.json
 
 GO_TEST_FLAGS ?= -race
@@ -21,10 +21,13 @@ ASSETS_DIR ?= assets
 include build/setup.mk
 
 BUNDLE_NAME ?= $(PLUGIN_ID)-$(PLUGIN_VERSION).tar.gz
+BUILD_FLAVOR_DIST_PATH ?= dist-$(PLUGIN_FLAVOR)/
+DIST_PATH := dist/
 
-ifeq ($(CALENDAR_PROVIDER),gcal)
-	MANIFEST_FILE = plugin-$(CALENDAR_PROVIDER).json
+ifeq ($(PLUGIN_FLAVOR),gcal)
+	MANIFEST_FILE = plugin-$(PLUGIN_FLAVOR).json
 endif
+
 
 # Include custom makefile, if present
 ifneq ($(wildcard build/custom.mk),)
@@ -75,13 +78,13 @@ endif
 	mkdir -p server/dist;
 ifneq ($(MM_SERVICESETTINGS_ENABLEDEVELOPER),)
 	@echo Building plugin only for $(DEFAULT_GOOS)-$(DEFAULT_GOARCH) because MM_SERVICESETTINGS_ENABLEDEVELOPER is enabled
-	cd server && env CGO_ENABLED=0 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o dist/plugin-$(DEFAULT_GOOS)-$(DEFAULT_GOARCH);
+	cd server && env CGO_ENABLED=0 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o $(BUILD_FLAVOR_DIST_PATH)plugin-$(DEFAULT_GOOS)-$(DEFAULT_GOARCH);
 else
-	cd server && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o dist/plugin-linux-amd64;
-	cd server && env CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o dist/plugin-linux-arm64;
-	cd server && env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o dist/plugin-darwin-amd64;
-	cd server && env CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o dist/plugin-darwin-arm64;
-	cd server && env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o dist/plugin-windows-amd64.exe;
+	cd server && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o $(BUILD_FLAVOR_DIST_PATH)plugin-linux-amd64;
+	cd server && env CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o $(BUILD_FLAVOR_DIST_PATH)plugin-linux-arm64;
+	cd server && env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o $(BUILD_FLAVOR_DIST_PATH)plugin-darwin-amd64;
+	cd server && env CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o $(BUILD_FLAVOR_DIST_PATH)plugin-darwin-arm64;
+	cd server && env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build $(GO_BUILD_FLAGS) $(GO_BUILD_GCFLAGS) -trimpath -o $(BUILD_FLAVOR_DIST_PATH)plugin-windows-amd64.exe;
 endif
 endif
 
@@ -117,20 +120,20 @@ server-debug-deploy: validate-go-version
 	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
 	mkdir -p server/dist
 ifeq ($(OS),Darwin)
-	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-darwin-amd64;
+	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o $(BUILD_FLAVOR_DIST_PATH)plugin-darwin-amd64;
 else ifeq ($(OS),Linux)
-	cd server && env GOOS=linux GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-linux-amd64;
+	cd server && env GOOS=linux GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o $(BUILD_FLAVOR_DIST_PATH)plugin-linux-amd64;
 else ifeq ($(OS),Windows_NT)
-	cd server && env GOOS=windows GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-windows-amd64.exe;
+	cd server && env GOOS=windows GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o $(BUILD_FLAVOR_DIST_PATH)plugin-windows-amd64.exe;
 else
 	$(error make debug depends on uname to return your OS. If it does not return 'Darwin' (meaning OSX), 'Linux', or 'Windows_NT' (all recent versions of Windows), you will need to edit the Makefile for your own OS.)
 endif
-	rm -rf dist/
-	mkdir -p dist/$(PLUGIN_ID)/server/dist
-	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
-	cp -r server/dist/* dist/$(PLUGIN_ID)/server/dist/
+	rm -rf $(BUILD_FLAVOR_DIST_PATH)
+	mkdir -p $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/server/dist
+	cp $(MANIFEST_FILE) $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/plugin.json
+	cp -r server/dist/* $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/server/dist/
 	mkdir -p ../mattermost-server/plugins
-	cp -r dist/* ../mattermost-server/plugins/
+	cp -r $(BUILD_FLAVOR_DIST_PATH)* ../mattermost-server/plugins/
 
 .PHONY: validate-go-version
 validate-go-version: ## Validates the installed version of go against Mattermost's minimum requirement.
@@ -147,30 +150,42 @@ validate-go-version: ## Validates the installed version of go against Mattermost
 ## Generates a tar bundle of the plugin for install.
 .PHONY: bundle
 bundle:
-	rm -rf dist/
-	mkdir -p dist/$(PLUGIN_ID)
-	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
+	rm -rf $(BUILD_FLAVOR_DIST_PATH)
+	mkdir -p $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)
+	cp $(MANIFEST_FILE) $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/plugin.json
 ifneq ($(wildcard $(ASSETS_DIR)/.),)
-	cp -r $(ASSETS_DIR) dist/$(PLUGIN_ID)/
+	cp -r $(ASSETS_DIR) $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/
 endif
 ifneq ($(HAS_PUBLIC),)
-	cp -r public/ dist/$(PLUGIN_ID)/
+	cp -r public/ $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/
 endif
 ifneq ($(HAS_SERVER),)
-	mkdir -p dist/$(PLUGIN_ID)/server/dist;
-	cp -r server/dist/* dist/$(PLUGIN_ID)/server/dist/;
+	mkdir -p $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/server/dist;
+	cp -r server/dist/* $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/server/dist/;
 endif
 ifneq ($(HAS_WEBAPP),)
-	mkdir -p dist/$(PLUGIN_ID)/webapp/dist;
-	cp -r webapp/dist/* dist/$(PLUGIN_ID)/webapp/dist/;
+	mkdir -p $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/webapp/dist;
+	cp -r webapp/dist/* $(BUILD_FLAVOR_DIST_PATH)$(PLUGIN_ID)/webapp/dist/;
 endif
-	cd dist && tar -cvzf $(BUNDLE_NAME) -C $(PLUGIN_ID) .
+	cd $(BUILD_FLAVOR_DIST_PATH) && tar -cvzf $(BUNDLE_NAME) -C $(PLUGIN_ID) .
 
-	@echo plugin built at: dist/$(BUNDLE_NAME)
+	@echo plugin built at: $(BUILD_FLAVOR_DIST_PATH)$(BUNDLE_NAME)
 
-## Builds and bundles the plugin.
+## Builds and bundles the plugin for an specific flavor
+.PHONY: dist-flavor
+dist-flavor:	apply server webapp bundle
+
+## Builds all the flavors
 .PHONY: dist
-dist:	apply server webapp bundle
+dist:
+	rm -rf $(DIST_PATH)
+	mkdir -p $(DIST_PATH)
+
+	PLUGIN_FLAVOR=msgraph make dist-flavor
+	cp dist-msgraph/*.tar.gz dist/
+
+	PLUGIN_FLAVOR=gcal make dist-flavor
+	cp dist-gcal/*.tar.gz dist/
 
 ## Installs the plugin to a (development) server.
 ## It uses the API if appropriate environment variables are defined,

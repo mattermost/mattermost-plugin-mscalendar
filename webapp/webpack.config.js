@@ -5,11 +5,11 @@ const path = require('path');
 const webpack = require('webpack');
 
 // eslint-disable-next-line no-process-env
-const CALENDAR_PROVIDER = process.env.CALENDAR_PROVIDER;
+const CALENDAR_PROVIDER = process.env.PLUGIN_FLAVOR;
 
 let manifestFile = '../plugin.json';
-if (CALENDAR_PROVIDER === 'gcal') {
-    manifestFile = '../plugin-gcal.json';
+if (CALENDAR_PROVIDER !== 'msgraph') {
+    manifestFile = `../plugin-${CALENDAR_PROVIDER}.json`;
 }
 
 const PLUGIN_ID = require(manifestFile).id;
