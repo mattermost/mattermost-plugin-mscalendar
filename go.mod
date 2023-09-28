@@ -12,13 +12,15 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rudderlabs/analytics-go v3.3.1+incompatible
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2
 	golang.org/x/oauth2 v0.4.0
 	google.golang.org/api v0.103.0
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	google.golang.org/grpc v1.53.0 // indirect
 )
+
+require github.com/jellydator/ttlcache/v3 v3.1.0
 
 require (
 	cloud.google.com/go/compute v1.15.1 // indirect
@@ -86,6 +88,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
