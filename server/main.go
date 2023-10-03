@@ -3,9 +3,9 @@ package main
 import (
 	mattermostplugin "github.com/mattermost/mattermost-server/v6/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/providers"
+	"github.com/mattermost/mattermost-plugin-mscalendar/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin"
 )
 
@@ -15,11 +15,11 @@ var BuildDate string
 var CalendarProvider string
 
 func main() {
-	config.Provider = *providers.GetProviderConfig(CalendarProvider)
+	config.Provider = mscalendar.GetMSCalendarProviderConfig()
 
 	mattermostplugin.ClientMain(
 		plugin.NewWithEnv(
-			mscalendar.Env{
+			engine.Env{
 				Config: &config.Config{
 					PluginID:       manifest.ID,
 					PluginVersion:  manifest.Version,
@@ -28,6 +28,6 @@ func main() {
 					BuildDate:      BuildDate,
 					Provider:       config.Provider,
 				},
-				Dependencies: &mscalendar.Dependencies{},
+				Dependencies: &engine.Dependencies{},
 			}))
 }

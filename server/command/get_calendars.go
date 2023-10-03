@@ -5,7 +5,7 @@ import (
 )
 
 func (c *Command) showCalendars(parameters ...string) (string, bool, error) {
-	resp, err := c.MSCalendar.GetCalendars(c.user())
+	resp, err := c.Engine.GetCalendars(c.user())
 	if err != nil {
 		return "", false, err
 	}

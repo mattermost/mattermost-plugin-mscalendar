@@ -22,8 +22,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/command"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/jobs"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
@@ -37,10 +37,10 @@ import (
 )
 
 type Env struct {
-	mscalendar.Env
+	engine.Env
 	bot                   bot.Bot
 	jobManager            *jobs.JobManager
-	notificationProcessor mscalendar.NotificationProcessor
+	notificationProcessor engine.NotificationProcessor
 	httpHandler           *httputils.Handler
 	configError           error
 }
@@ -54,7 +54,7 @@ type Plugin struct {
 	telemetryClient telemetry.Client
 }
 
-func NewWithEnv(env mscalendar.Env) *Plugin {
+func NewWithEnv(env engine.Env) *Plugin {
 	return &Plugin{
 		env: Env{
 			Env: env,
@@ -173,7 +173,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Remote = remote.Makers[config.Provider.Name](e.Config, e.bot)
 
 		// REVIEW: need to make this provider agnostic terminology
-		mscalendarBot := mscalendar.NewMSCalendarBot(e.bot, e.Env, pluginURL)
+		mscalendarBot := engine.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		e.Dependencies.Logger = e.bot
 
@@ -185,31 +185,31 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.Features.EncryptedStore, []byte(e.EncryptionKey))
-		e.Dependencies.SettingsPanel = mscalendar.NewSettingsPanel(
+		e.Dependencies.SettingsPanel = engine.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
 			e.Dependencies.Store,
 			"/settings",
 			pluginURL,
-			func(userID string) mscalendar.MSCalendar {
-				return mscalendar.New(e.Env, userID)
+			func(userID string) engine.Engine {
+				return engine.New(e.Env, userID)
 			},
 			e.Provider.Features,
 		)
 
-		welcomeFlow := mscalendar.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer, e.Provider.Features)
+		welcomeFlow := engine.NewWelcomeFlow(e.bot, e.Dependencies.Welcomer, e.Provider.Features)
 		e.bot.RegisterFlow(welcomeFlow, mscalendarBot)
 
 		if e.Provider.Features.EventNotifications {
 			if e.notificationProcessor == nil {
-				e.notificationProcessor = mscalendar.NewNotificationProcessor(e.Env)
+				e.notificationProcessor = engine.NewNotificationProcessor(e.Env)
 			} else {
 				e.notificationProcessor.Configure(e.Env)
 			}
 		}
 
 		e.httpHandler = httputils.NewHandler()
-		oauth2connect.Init(e.httpHandler, mscalendar.NewOAuth2App(e.Env), config.Provider)
+		oauth2connect.Init(e.httpHandler, engine.NewOAuth2App(e.Env), config.Provider)
 		flow.Init(e.httpHandler, welcomeFlow, mscalendarBot)
 		settingspanel.Init(e.httpHandler, e.Dependencies.SettingsPanel)
 		api.Init(e.httpHandler, e.Env, e.notificationProcessor)
@@ -233,11 +233,11 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 
 	command := command.Command{
-		Context:    c,
-		Args:       args,
-		ChannelID:  args.ChannelId,
-		Config:     env.Config,
-		MSCalendar: mscalendar.New(env.Env, args.UserId),
+		Context:   c,
+		Args:      args,
+		ChannelID: args.ChannelId,
+		Config:    env.Config,
+		Engine:    engine.New(env.Env, args.UserId),
 	}
 	out, mustRedirectToDM, err := command.Handle()
 	if err != nil {

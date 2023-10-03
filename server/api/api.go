@@ -7,17 +7,17 @@ import (
 	"net/http"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
 type api struct {
-	mscalendar.Env
-	mscalendar.NotificationProcessor
+	engine.Env
+	engine.NotificationProcessor
 }
 
 // Init initializes the router.
-func Init(h *httputils.Handler, env mscalendar.Env, notificationProcessor mscalendar.NotificationProcessor) {
+func Init(h *httputils.Handler, env engine.Env, notificationProcessor engine.NotificationProcessor) {
 	api := &api{
 		Env:                   env,
 		NotificationProcessor: notificationProcessor,

@@ -11,7 +11,7 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"

@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine/mock_engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
 )
 
@@ -20,15 +20,15 @@ func TestConnect(t *testing.T) {
 	tcs := []struct {
 		name           string
 		command        string
-		setup          func(m mscalendar.MSCalendar)
+		setup          func(m engine.Engine)
 		expectedOutput string
 		expectedError  string
 	}{
 		{
 			name:    "user already connected",
 			command: "connect",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
+			setup: func(m engine.Engine) {
+				mscal := m.(*mock_engine.MockEngine)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(&remote.User{Mail: "user@email.com"}, nil).Times(1)
 			},
 			expectedOutput: fmt.Sprintf(
@@ -40,8 +40,8 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "user not connected",
 			command: "connect",
-			setup: func(m mscalendar.MSCalendar) {
-				mscal := m.(*mock_mscalendar.MockMSCalendar)
+			setup: func(m engine.Engine) {
+				mscal := m.(*mock_engine.MockEngine)
 				mscal.EXPECT().GetRemoteUser("user_id").Return(nil, errors.New("remote user not found")).Times(1)
 				mscal.EXPECT().Welcome("user_id").Return(nil)
 			},
@@ -59,16 +59,16 @@ func TestConnect(t *testing.T) {
 				PluginURL: "http://localhost",
 			}
 
-			mscal := mock_mscalendar.NewMockMSCalendar(ctrl)
+			mscal := mock_engine.NewMockEngine(ctrl)
 			command := Command{
 				Context: &plugin.Context{},
 				Args: &model.CommandArgs{
 					Command: fmt.Sprintf("/%s %s", config.Provider.CommandTrigger, tc.command),
 					UserId:  "user_id",
 				},
-				ChannelID:  "channel_id",
-				Config:     conf,
-				MSCalendar: mscal,
+				ChannelID: "channel_id",
+				Config:    conf,
+				Engine:    mscal,
 			}
 
 			if tc.setup != nil {

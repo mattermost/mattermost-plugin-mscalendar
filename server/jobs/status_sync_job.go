@@ -3,9 +3,7 @@
 
 package jobs
 
-import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-)
+import "github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 
 // Unique id for the status sync job
 const statusSyncJobID = "status_sync"
@@ -14,16 +12,16 @@ const statusSyncJobID = "status_sync"
 func NewStatusSyncJob() RegisteredJob {
 	return RegisteredJob{
 		id:       statusSyncJobID,
-		interval: mscalendar.StatusSyncJobInterval,
+		interval: engine.StatusSyncJobInterval,
 		work:     runSyncJob,
 	}
 }
 
 // runSyncJob synchronizes all users' statuses between mscalendar and Mattermost.
-func runSyncJob(env mscalendar.Env) {
+func runSyncJob(env engine.Env) {
 	env.Logger.Debugf("User status sync job beginning")
 
-	_, syncJobSummary, err := mscalendar.New(env, "").SyncAll()
+	_, syncJobSummary, err := engine.New(env, "").SyncAll()
 	if err != nil {
 		env.Logger.Errorf("Error during user status sync job. err=%v", err)
 	}

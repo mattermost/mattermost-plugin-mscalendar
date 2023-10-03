@@ -26,7 +26,7 @@ func TestMakeSingleRequestForGetSchedule(t *testing.T) {
 	}
 
 	out := makeSingleRequestForGetSchedule(req, params)
-	require.Equal(t, "/Users/remote_user_id/calendar/getSchedule", out.URL)
+	require.Equal(t, "/Users/remote_user_id/getSchedule", out.URL)
 	require.Equal(t, "POST", out.Method)
 	require.Equal(t, 1, len(out.Headers))
 	require.Equal(t, "application/json", out.Headers["Content-Type"])

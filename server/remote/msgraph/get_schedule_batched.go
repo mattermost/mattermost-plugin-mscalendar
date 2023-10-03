@@ -81,7 +81,7 @@ func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, end
 }
 
 func makeSingleRequestForGetSchedule(request *remote.ScheduleUserInfo, params *getScheduleRequestParams) *singleRequest {
-	u := "/Users/" + request.RemoteUserID + "/calendar/getSchedule"
+	u := "/Users/" + request.RemoteUserID + "/getSchedule"
 	req := &singleRequest{
 		URL:    u,
 		Method: http.MethodPost,

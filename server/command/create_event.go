@@ -35,7 +35,7 @@ func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 		return getCreateEventFlagSet().FlagUsages(), false, nil
 	}
 
-	tz, err := c.MSCalendar.GetTimezone(c.user())
+	tz, err := c.Engine.GetTimezone(c.user())
 	if err != nil {
 		return "", false, nil
 	}
@@ -56,7 +56,7 @@ func (c *Command) createEvent(parameters ...string) (string, bool, error) {
 		return "", false, err
 	}
 
-	calEvent, err := c.MSCalendar.CreateEvent(c.user(), event, mattermostUserIDs)
+	calEvent, err := c.Engine.CreateEvent(c.user(), event, mattermostUserIDs)
 	if err != nil {
 		return "", false, err
 	}

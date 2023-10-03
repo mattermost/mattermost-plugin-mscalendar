@@ -32,12 +32,12 @@ func (c *Command) findMeetings(parameters ...string) (string, bool, error) {
 	}
 	meetingParams.Attendees = attendees
 
-	meetings, err := c.MSCalendar.FindMeetingTimes(c.user(), meetingParams)
+	meetings, err := c.Engine.FindMeetingTimes(c.user(), meetingParams)
 	if err != nil {
 		return "", false, err
 	}
 
-	timeZone, _ := c.MSCalendar.GetTimezone(c.user())
+	timeZone, _ := c.Engine.GetTimezone(c.user())
 	resp := ""
 	for _, m := range meetings.MeetingTimeSuggestions {
 		if timeZone != "" {

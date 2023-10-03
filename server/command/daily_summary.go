@@ -28,13 +28,13 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 
 	switch parameters[0] {
 	case "view", "today":
-		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now(), c.user())
+		postStr, err := c.Engine.GetDaySummaryForUser(time.Now(), c.user())
 		if err != nil {
 			return err.Error(), false, err
 		}
 		return postStr, false, nil
 	case "tomorrow":
-		postStr, err := c.MSCalendar.GetDaySummaryForUser(time.Now().Add(time.Hour*24), c.user())
+		postStr, err := c.Engine.GetDaySummaryForUser(time.Now().Add(time.Hour*24), c.user())
 		if err != nil {
 			return err.Error(), false, err
 		}
@@ -45,28 +45,28 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 		}
 		val := parameters[1]
 
-		dsum, err := c.MSCalendar.SetDailySummaryPostTime(c.user(), val)
+		dsum, err := c.Engine.SetDailySummaryPostTime(c.user(), val)
 		if err != nil {
 			return err.Error() + "\n" + getDailySummarySetTimeErrorMessage(), false, nil
 		}
 
 		return dailySummaryResponse(dsum), false, nil
 	case "settings":
-		dsum, err := c.MSCalendar.GetDailySummarySettingsForUser(c.user())
+		dsum, err := c.Engine.GetDailySummarySettingsForUser(c.user())
 		if err != nil {
 			return err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + getDailySummaryHelp(), false, nil
 		}
 
 		return dailySummaryResponse(dsum), false, nil
 	case "enable":
-		dsum, err := c.MSCalendar.SetDailySummaryEnabled(c.user(), true)
+		dsum, err := c.Engine.SetDailySummaryEnabled(c.user(), true)
 		if err != nil {
 			return err.Error(), false, err
 		}
 
 		return dailySummaryResponse(dsum), false, nil
 	case "disable":
-		dsum, err := c.MSCalendar.SetDailySummaryEnabled(c.user(), false)
+		dsum, err := c.Engine.SetDailySummaryEnabled(c.user(), false)
 		if err != nil {
 			return err.Error(), false, err
 		}

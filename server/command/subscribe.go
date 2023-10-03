@@ -14,12 +14,12 @@ func (c *Command) subscribe(parameters ...string) (string, bool, error) {
 		return c.debugList()
 	}
 
-	_, err := c.MSCalendar.LoadMyEventSubscription()
+	_, err := c.Engine.LoadMyEventSubscription()
 	if err == nil {
 		return "You are already subscribed to events.", false, nil
 	}
 
-	_, err = c.MSCalendar.CreateMyEventSubscription()
+	_, err = c.Engine.CreateMyEventSubscription()
 	if err != nil {
 		return "", false, err
 	}
@@ -27,7 +27,7 @@ func (c *Command) subscribe(parameters ...string) (string, bool, error) {
 }
 
 func (c *Command) debugList() (string, bool, error) {
-	subs, err := c.MSCalendar.ListRemoteSubscriptions()
+	subs, err := c.Engine.ListRemoteSubscriptions()
 	if err != nil {
 		return "", false, err
 	}

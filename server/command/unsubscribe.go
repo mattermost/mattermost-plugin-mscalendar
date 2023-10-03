@@ -4,12 +4,12 @@
 package command
 
 func (c *Command) unsubscribe(parameters ...string) (string, bool, error) {
-	_, err := c.MSCalendar.LoadMyEventSubscription()
+	_, err := c.Engine.LoadMyEventSubscription()
 	if err != nil {
 		return "You are not subscribed to events.", false, nil
 	}
 
-	err = c.MSCalendar.DeleteMyEventSubscription()
+	err = c.Engine.DeleteMyEventSubscription()
 	if err != nil {
 		return "", false, err
 	}

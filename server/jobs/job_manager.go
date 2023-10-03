@@ -10,20 +10,19 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-api/cluster"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 	"github.com/pkg/errors"
-
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 type JobManager struct {
-	env            mscalendar.Env
+	env            engine.Env
 	papi           cluster.JobPluginAPI
 	registeredJobs sync.Map
 	activeJobs     sync.Map
 }
 
 type RegisteredJob struct {
-	work     func(env mscalendar.Env)
+	work     func(env engine.Env)
 	id       string
 	interval time.Duration
 }
@@ -47,7 +46,7 @@ func newActiveJob(ctx context.Context, rj RegisteredJob, sched io.Closer) *activ
 }
 
 // NewJobManager creates a JobManager for to let plugin.go coordinate with the scheduled jobs.
-func NewJobManager(papi cluster.JobPluginAPI, env mscalendar.Env) *JobManager {
+func NewJobManager(papi cluster.JobPluginAPI, env engine.Env) *JobManager {
 	return &JobManager{
 		papi: papi,
 		env:  env,
@@ -110,7 +109,7 @@ func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	return nil
 }
 
-// getEnv returns the mscalendar.Env stored on the job manager
-func (jm *JobManager) getEnv() mscalendar.Env {
+// getEnv returns the engine.Env stored on the job manager
+func (jm *JobManager) getEnv() engine.Env {
 	return jm.env
 }

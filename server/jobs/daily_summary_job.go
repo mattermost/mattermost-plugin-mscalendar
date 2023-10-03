@@ -6,13 +6,13 @@ package jobs
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 )
 
 // Unique id for the daily summary job
 const dailySummaryJobID = "daily_summary"
 
-const dailySummaryJobInterval = mscalendar.DailySummaryJobInterval
+const dailySummaryJobInterval = engine.DailySummaryJobInterval
 
 // NewDailySummaryJob creates a RegisteredJob with the parameters specific to the DailySummaryJob
 func NewDailySummaryJob() RegisteredJob {
@@ -24,10 +24,10 @@ func NewDailySummaryJob() RegisteredJob {
 }
 
 // runDailySummaryJob delivers the daily calendar summary to all users who have their settings configured to receive it now
-func runDailySummaryJob(env mscalendar.Env) {
+func runDailySummaryJob(env engine.Env) {
 	env.Logger.Debugf("Daily summary job beginning")
 
-	err := mscalendar.New(env, "").ProcessAllDailySummary(time.Now())
+	err := engine.New(env, "").ProcessAllDailySummary(time.Now())
 	if err != nil {
 		env.Logger.Errorf("Error during daily summary job. err=%v", err)
 	}

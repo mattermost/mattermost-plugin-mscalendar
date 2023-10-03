@@ -6,7 +6,7 @@ package jobs
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 )
 
 const ditherRenew = 50 * time.Millisecond
@@ -20,7 +20,7 @@ func NewRenewJob() RegisteredJob {
 }
 
 // runRenewJob calls renews the event subscription for each connected user
-func runRenewJob(env mscalendar.Env) {
+func runRenewJob(env engine.Env) {
 	uindex, err := env.Store.LoadUserIndex()
 	if err != nil {
 		env.Logger.Errorf("Renew job failed to load user index. err=%v", err)
@@ -29,7 +29,7 @@ func runRenewJob(env mscalendar.Env) {
 	env.Logger.Debugf("Renew job: %v users", len(uindex))
 
 	for _, u := range uindex {
-		asUser := mscalendar.New(env, u.MattermostUserID)
+		asUser := engine.New(env, u.MattermostUserID)
 
 		// REVIEW: logging here is probably overkill
 		env.Logger.Debugf("Renewing for user: %s", u.MattermostUserID)

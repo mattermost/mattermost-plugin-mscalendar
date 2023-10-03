@@ -6,16 +6,16 @@ package command
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine/views"
 )
 
 func (c *Command) viewCalendar(_ ...string) (string, bool, error) {
-	tz, err := c.MSCalendar.GetTimezone(c.user())
+	tz, err := c.Engine.GetTimezone(c.user())
 	if err != nil {
 		return "Error: No timezone found", false, err
 	}
 
-	events, err := c.MSCalendar.ViewCalendar(c.user(), time.Now().Add(-24*time.Hour), time.Now().Add(14*24*time.Hour))
+	events, err := c.Engine.ViewCalendar(c.user(), time.Now().Add(-24*time.Hour), time.Now().Add(14*24*time.Hour))
 	if err != nil {
 		return "", false, err
 	}

@@ -14,12 +14,12 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
 )
 
-func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscal mscalendar.MSCalendar, user *mscalendar.User, eventID string, option string, postID string) {
+func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (mscal engine.Engine, user *engine.User, eventID string, option string, postID string) {
 	mattermostUserID := req.Header.Get("Mattermost-User-ID")
 	if mattermostUserID == "" {
 		utils.SlackAttachmentError(w, "Error: not authorized")
@@ -38,17 +38,17 @@ func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (msca
 		return nil, nil, "", "", ""
 	}
 	option, _ = request.Context["selected_option"].(string)
-	mscal = mscalendar.New(api.Env, mattermostUserID)
+	mscal = engine.New(api.Env, mattermostUserID)
 
-	return mscal, mscalendar.NewUser(mattermostUserID), eventID, option, request.PostId
+	return mscal, engine.NewUser(mattermostUserID), eventID, option, request.PostId
 }
 
 func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, _, _ := api.preprocessAction(w, req)
+	localEngine, user, eventID, _, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := mscalendar.AcceptEvent(user, eventID)
+	err := localEngine.AcceptEvent(user, eventID)
 	if err != nil {
 		api.Logger.Warnf("Failed to accept event. err=%v", err)
 		utils.SlackAttachmentError(w, "Error: Failed to accept event: "+err.Error())
@@ -57,11 +57,11 @@ func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, _, _ := api.preprocessAction(w, req)
+	localEngine, user, eventID, _, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := mscalendar.DeclineEvent(user, eventID)
+	err := localEngine.DeclineEvent(user, eventID)
 	if err != nil {
 		utils.SlackAttachmentError(w, "Error: Failed to decline event: "+err.Error())
 		return
@@ -69,11 +69,11 @@ func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionTentative(w http.ResponseWriter, req *http.Request) {
-	mscalendar, user, eventID, _, _ := api.preprocessAction(w, req)
+	localEngine, user, eventID, _, _ := api.preprocessAction(w, req)
 	if eventID == "" {
 		return
 	}
-	err := mscalendar.TentativelyAcceptEvent(user, eventID)
+	err := localEngine.TentativelyAcceptEvent(user, eventID)
 	if err != nil {
 		utils.SlackAttachmentError(w, "Error: Failed to tentatively accept event: "+err.Error())
 		return
@@ -135,11 +135,11 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 func prettyOption(option string) string {
 	switch option {
-	case mscalendar.OptionYes:
+	case engine.OptionYes:
 		return "accepted"
-	case mscalendar.OptionNo:
+	case engine.OptionNo:
 		return "declined"
-	case mscalendar.OptionMaybe:
+	case engine.OptionMaybe:
 		return "tentatively accepted"
 	default:
 		return ""

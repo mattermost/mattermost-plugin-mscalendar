@@ -14,17 +14,17 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
 )
 
 // Handler handles commands
 type Command struct {
-	MSCalendar mscalendar.MSCalendar
-	Context    *plugin.Context
-	Args       *model.CommandArgs
-	Config     *config.Config
-	ChannelID  string
+	Engine    engine.Engine
+	Context   *plugin.Context
+	Args      *model.CommandArgs
+	Config    *config.Config
+	ChannelID string
 }
 
 func getNotConnectedText(pluginURL string) string {
@@ -176,8 +176,8 @@ func (c *Command) isValid() (subcommand string, parameters []string, err error) 
 	return subcommand, parameters, nil
 }
 
-func (c *Command) user() *mscalendar.User {
-	return mscalendar.NewUser(c.Args.UserId)
+func (c *Command) user() *engine.User {
+	return engine.NewUser(c.Args.UserId)
 }
 
 func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
@@ -196,7 +196,7 @@ func (c *Command) requireConnectedUser(handle handleFunc) handleFunc {
 
 func (c *Command) requireAdminUser(handle handleFunc) handleFunc {
 	return func(parameters ...string) (string, bool, error) {
-		authorized, err := c.MSCalendar.IsAuthorizedAdmin(c.Args.UserId)
+		authorized, err := c.Engine.IsAuthorizedAdmin(c.Args.UserId)
 		if err != nil {
 			return "", false, err
 		}
@@ -209,7 +209,7 @@ func (c *Command) requireAdminUser(handle handleFunc) handleFunc {
 }
 
 func (c *Command) isConnected() (bool, error) {
-	_, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
+	_, err := c.Engine.GetRemoteUser(c.Args.UserId)
 	if err == store.ErrNotFound {
 		return false, nil
 	}
