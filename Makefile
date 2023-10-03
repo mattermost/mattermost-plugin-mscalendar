@@ -19,7 +19,7 @@ GO_PACKAGES ?= ./server/... ./calendar/... ./msgraph/...
 ASSETS_DIR ?= assets
 
 # Repository URL
-REPO_URL ?= github.com/mattermost/mattermost-plugin-mscalendar
+REPOSITORY_URL ?= github.com/mattermost/mattermost-plugin-mscalendar
 
 # Verify environment, and define PLUGIN_ID, PLUGIN_VERSION, HAS_SERVER and HAS_WEBAPP as needed.
 include build/setup.mk
