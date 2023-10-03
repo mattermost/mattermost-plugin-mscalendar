@@ -13,6 +13,8 @@ DEFAULT_GOARCH := $(shell go env GOARCH)
 
 export GO111MODULE=on
 
+GO_PACKAGES ?= ./server/... ./calendar/... ./msgraph/...
+
 # You can include assets this directory into the bundle. This can be e.g. used to include profile pictures.
 ASSETS_DIR ?= assets
 
@@ -187,7 +189,7 @@ debug-dist: apply server webapp-debug bundle
 .PHONY: test
 test: webapp/.npminstall
 ifneq ($(HAS_SERVER),)
-	$(GO) test -v $(GO_TEST_FLAGS) ./server/...
+	$(GO) test -v $(GO_TEST_FLAGS) $(GO_PACKAGES)
 endif
 ifneq ($(HAS_WEBAPP),)
 	cd webapp && $(NPM) run fix && $(NPM) run test;
@@ -197,7 +199,7 @@ endif
 .PHONY: coverage
 coverage: webapp/.npminstall
 ifneq ($(HAS_SERVER),)
-	$(GO) test $(GO_TEST_FLAGS) -coverprofile=server/coverage.txt ./server/...
+	$(GO) test $(GO_TEST_FLAGS) -coverprofile=server/coverage.txt $(GO_PACKAGES)
 	$(GO) tool cover -html=server/coverage.txt
 endif
 

@@ -3,10 +3,10 @@ package main
 import (
 	mattermostplugin "github.com/mattermost/mattermost-server/v6/plugin"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/plugin"
 	"github.com/mattermost/mattermost-plugin-mscalendar/msgraph"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin"
 )
 
 var BuildHash string
