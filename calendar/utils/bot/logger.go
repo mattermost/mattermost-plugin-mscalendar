@@ -109,12 +109,12 @@ func (bot *bot) logToAdmins(level, message string) {
 
 type NilLogger struct{}
 
-func (l *NilLogger) With(logContext LogContext) Logger         { return l }
-func (l *NilLogger) Timed() Logger                             { return l }
-func (l *NilLogger) Debugf(format string, args ...interface{}) {}
-func (l *NilLogger) Errorf(format string, args ...interface{}) {}
-func (l *NilLogger) Infof(format string, args ...interface{})  {}
-func (l *NilLogger) Warnf(format string, args ...interface{})  {}
+func (l *NilLogger) With(_ LogContext) Logger          { return l }
+func (l *NilLogger) Timed() Logger                     { return l }
+func (l *NilLogger) Debugf(_ string, _ ...interface{}) {}
+func (l *NilLogger) Errorf(_ string, _ ...interface{}) {}
+func (l *NilLogger) Infof(_ string, _ ...interface{})  {}
+func (l *NilLogger) Warnf(_ string, _ ...interface{})  {}
 
 type TestLogger struct {
 	testing.TB

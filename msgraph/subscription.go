@@ -23,7 +23,7 @@ func newRandomString() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
-func (c *client) CreateMySubscription(notificationURL, remoteUserID string) (*remote.Subscription, error) {
+func (c *client) CreateMySubscription(notificationURL, _ string) (*remote.Subscription, error) {
 	sub := &remote.Subscription{
 		Resource:           "me/events",
 		ChangeType:         "created,updated,deleted",
@@ -59,7 +59,7 @@ func (c *client) DeleteSubscription(sub *remote.Subscription) error {
 	return nil
 }
 
-func (c *client) RenewSubscription(notificationURL, remoteUserID string, oldSub *remote.Subscription) (*remote.Subscription, error) {
+func (c *client) RenewSubscription(_, _ string, oldSub *remote.Subscription) (*remote.Subscription, error) {
 	expires := time.Now().Add(subscribeTTL)
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
