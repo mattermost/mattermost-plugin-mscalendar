@@ -3,7 +3,7 @@ package main
 import (
 	mattermostplugin "github.com/mattermost/mattermost-server/v6/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/mscalendar"
+	"github.com/mattermost/mattermost-plugin-mscalendar/msgraph"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin"
@@ -15,7 +15,7 @@ var BuildDate string
 var CalendarProvider string
 
 func main() {
-	config.Provider = mscalendar.GetMSCalendarProviderConfig()
+	config.Provider = msgraph.GetMSCalendarProviderConfig()
 
 	mattermostplugin.ClientMain(
 		plugin.NewWithEnv(

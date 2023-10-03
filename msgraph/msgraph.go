@@ -1,12 +1,11 @@
-package mscalendar
+package msgraph
 
 import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
 )
 
 const (
-	ProviderMSCalendar            = msgraph.Kind
+	ProviderMSCalendar            = Kind
 	ProviderMSCalendarDisplayName = "Microsoft Calendar"
 	ProviderMSCalendarRepository  = "mattermost-plugin-mscalendar"
 )
