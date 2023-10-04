@@ -21,25 +21,25 @@ GO_BUILD_FLAGS = -ldflags '$(LDFLAGS)'
 mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen@v1.6.0
-	mockgen -destination server/jobs/mock_cluster/mock_cluster.go github.com/mattermost/mattermost-plugin-api/cluster JobPluginAPI
-	mockgen -destination server/engine/mock_engine/mock_engine.go $(REPOSITORY_URL)/server/engine Engine
-	mockgen -destination server/engine/mock_welcomer/mock_welcomer.go -package mock_welcomer $(REPOSITORY_URL)/server/engine Welcomer
-	mockgen -destination server/engine/mock_plugin_api/mock_plugin_api.go -package mock_plugin_api $(REPOSITORY_URL)/server/engine PluginAPI
-	mockgen -destination server/remote/mock_remote/mock_remote.go $(REPOSITORY_URL)/server/remote Remote
-	mockgen -destination server/remote/mock_remote/mock_client.go $(REPOSITORY_URL)/server/remote Client
-	mockgen -destination server/utils/bot/mock_bot/mock_poster.go $(REPOSITORY_URL)/server/utils/bot Poster
-	mockgen -destination server/utils/bot/mock_bot/mock_admin.go $(REPOSITORY_URL)/server/utils/bot Admin
-	mockgen -destination server/utils/bot/mock_bot/mock_logger.go $(REPOSITORY_URL)/server/utils/bot Logger
-	mockgen -destination server/store/mock_store/mock_store.go $(REPOSITORY_URL)/server/store Store
+	mockgen -destination calendar/jobs/mock_cluster/mock_cluster.go github.com/mattermost/mattermost-plugin-api/cluster JobPluginAPI
+	mockgen -destination calendar/engine/mock_engine/mock_engine.go $(REPOSITORY_URL)/calendar/engine Engine
+	mockgen -destination calendar/engine/mock_welcomer/mock_welcomer.go -package mock_welcomer $(REPOSITORY_URL)/calendar/engine Welcomer
+	mockgen -destination calendar/engine/mock_plugin_api/mock_plugin_api.go -package mock_plugin_api $(REPOSITORY_URL)/calendar/engine PluginAPI
+	mockgen -destination calendar/remote/mock_remote/mock_remote.go $(REPOSITORY_URL)/calendar/remote Remote
+	mockgen -destination calendar/remote/mock_remote/mock_client.go $(REPOSITORY_URL)/calendar/remote Client
+	mockgen -destination calendar/utils/bot/mock_bot/mock_poster.go $(REPOSITORY_URL)/calendar/utils/bot Poster
+	mockgen -destination calendar/utils/bot/mock_bot/mock_admin.go $(REPOSITORY_URL)/calendar/utils/bot Admin
+	mockgen -destination calendar/utils/bot/mock_bot/mock_logger.go $(REPOSITORY_URL)/calendar/utils/bot Logger
+	mockgen -destination calendar/store/mock_store/mock_store.go $(REPOSITORY_URL)/calendar/store Store
 endif
 
 clean_mock:
 ifneq ($(HAS_SERVER),)
-	rm -rf ./server/jobs/mock_cluster
-	rm -rf ./server/engine/mock_engine
-	rm -rf ./server/engine/mock_welcomer
-	rm -rf ./server/engine/mock_plugin_api
-	rm -rf ./server/remote/mock_remote
-	rm -rf ./server/utils/bot/mock_bot
-	rm -rf ./server/store/mock_store
+	rm -rf ./calendar/jobs/mock_cluster
+	rm -rf ./calendar/engine/mock_engine
+	rm -rf ./calendar/engine/mock_welcomer
+	rm -rf ./calendar/engine/mock_plugin_api
+	rm -rf ./calendar/remote/mock_remote
+	rm -rf ./calendar/utils/bot/mock_bot
+	rm -rf ./calendar/store/mock_store
 endif
