@@ -1,0 +1,23 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See License for license information.
+
+package msgraph
+
+import (
+	"net/http"
+
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+)
+
+// FindMeetingTimes finds meeting time suggestions for a calendar event
+func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+	meetingsOut := &remote.MeetingTimeSuggestionResults{}
+	req := c.rbuilder.Users().ID(remoteUserID).FindMeetingTimes(nil).Request()
+	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
+	if err != nil {
+		return nil, errors.Wrap(err, "msgraph FindMeetingTimes")
+	}
+	return meetingsOut, nil
+}
