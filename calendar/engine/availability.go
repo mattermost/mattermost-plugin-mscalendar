@@ -114,8 +114,6 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 			continue
 		}
 
-		users = append(users, user)
-
 		if fetchIndividually {
 			engine, err := m.FilterCopy(withActingUser(user.MattermostUserID))
 			if err != nil {
@@ -133,9 +131,13 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 				}).Errorf("error getting calendar events")
 				continue
 			}
+
 			calendarViews = append(calendarViews, calendarEvents)
 		}
+
+		users = append(users, user)
 	}
+
 	if len(users) == 0 {
 		return users, calendarViews, errNoUsersNeedToBeSynced
 	}
