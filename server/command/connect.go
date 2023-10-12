@@ -16,7 +16,7 @@ const (
 	ConnectErrorMessage                = "There has been a problem while trying to connect. err="
 )
 
-func (c *Command) connect(parameters ...string) (string, bool, error) {
+func (c *Command) connect(_ ...string) (string, bool, error) {
 	ru, err := c.MSCalendar.GetRemoteUser(c.Args.UserId)
 	if err == nil {
 		return fmt.Sprintf(ConnectAlreadyConnectedTemplate, config.ApplicationName, ru.Mail, config.CommandTrigger), false, nil
