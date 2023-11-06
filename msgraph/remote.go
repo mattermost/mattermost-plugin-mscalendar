@@ -18,7 +18,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 )
 
-const Kind = "msgraph"
+const Kind = "mscalendar"
 
 type impl struct {
 	conf   *config.Config
