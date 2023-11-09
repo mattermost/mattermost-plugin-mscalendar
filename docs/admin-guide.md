@@ -1,6 +1,8 @@
 # Admin Guide
 
 - [Configuration](#configuration)
+     - [Step 1: Create Mattermost App in Azure](#step-1-create-mattermost-app-in-azure)
+     - [Step 2: Configure Plugin Settings](#step-2-configure-plugin-settings)
 
 ## Configuration
 

@@ -14,7 +14,7 @@
 
 - [Overview](#overview)
 - [Features](#features)
-- [Admin Guide](#admin-guide)
+- [Admin Guide](./docs/admin-guide.md)
 
 ## Overview
 
