@@ -18,7 +18,7 @@
 
 ## Overview
 
-This plugin supports a two-way integration between Mattermost and Microsoft Outlook Calendar. For a stable production release, please download the latest version from the Plugin Marketplace and follow [these instructions](./docs/admin-guide.md#configuration) to install and configure the plugin.
+This plugin supports a two-way integration between Mattermost and Microsoft Outlook Calendar. For a stable production release, please download the latest version from the [releases page](https://github.com/mattermost/mattermost-plugin-mscalendar/releases) and follow [these instructions](./docs/admin-guide.md#configuration) to install and configure the plugin.
 
 ## Features
 
