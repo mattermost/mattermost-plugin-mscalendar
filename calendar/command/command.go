@@ -121,7 +121,7 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.settings)
 	case "events":
 		handler = c.requireConnectedUser(c.event)
-		// Admin only
+	// Admin only
 	case "showcals":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.showCalendars))
 	case "avail":
