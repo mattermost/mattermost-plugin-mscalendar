@@ -117,21 +117,13 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.dailySummary)
 	case "viewcal":
 		handler = c.requireConnectedUser(c.viewCalendar)
-	case "createcal":
-		handler = c.requireConnectedUser(c.createCalendar)
-	case "createevent":
-		handler = c.requireConnectedUser(c.createEvent)
-	case "deletecal":
-		handler = c.requireConnectedUser(c.deleteCalendar)
-	case "findmeetings":
-		handler = c.requireConnectedUser(c.findMeetings)
-	case "showcals":
-		handler = c.requireConnectedUser(c.showCalendars)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	case "events":
 		handler = c.requireConnectedUser(c.event)
 	// Admin only
+	case "showcals":
+		handler = c.requireConnectedUser(c.requireAdminUser(c.showCalendars))
 	case "avail":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.debugAvailability))
 	case "subscribe":

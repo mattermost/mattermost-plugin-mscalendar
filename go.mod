@@ -11,7 +11,6 @@ require (
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/rudderlabs/analytics-go v3.3.1+incompatible
-	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2
 	golang.org/x/oauth2 v0.4.0
