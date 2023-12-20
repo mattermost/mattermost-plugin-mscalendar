@@ -4,7 +4,7 @@
 package jobs
 
 import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 // Unique id for the status sync job

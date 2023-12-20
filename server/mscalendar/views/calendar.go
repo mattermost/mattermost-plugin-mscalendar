@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
 )
 
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {

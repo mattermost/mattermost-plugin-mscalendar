@@ -6,7 +6,7 @@ package mscalendar
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
 )
 
 type Calendar interface {

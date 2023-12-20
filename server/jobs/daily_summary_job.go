@@ -6,7 +6,7 @@ package jobs
 import (
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 // Unique id for the daily summary job

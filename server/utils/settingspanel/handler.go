@@ -6,8 +6,8 @@ import (
 
 	"github.com/mattermost/mattermost-server/v6/model"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
 const (

@@ -12,16 +12,16 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/mock_welcomer"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote/msgraph"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store/mock_store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/oauth2connect"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar/mock_plugin_api"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar/mock_welcomer"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote/msgraph"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store/mock_store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/bot/mock_bot"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/oauth2connect"
 )
 
 const (

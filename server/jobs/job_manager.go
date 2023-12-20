@@ -12,7 +12,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-api/cluster"
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar"
 )
 
 type JobManager struct {

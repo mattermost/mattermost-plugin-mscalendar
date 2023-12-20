@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store"
 )
 
 type API struct {

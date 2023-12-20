@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
 )
 
 func (c *client) GetEvent(remoteUserID, eventID string) (*remote.Event, error) {

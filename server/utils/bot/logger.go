@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils"
 )
 
 const timed = "__since"

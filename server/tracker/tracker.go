@@ -3,7 +3,7 @@ package tracker
 import (
 	"github.com/mattermost/mattermost-server/v6/model"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/telemetry"
 )
 
 const (

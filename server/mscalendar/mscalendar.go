@@ -6,12 +6,12 @@ package mscalendar
 import (
 	"github.com/mattermost/mattermost-server/v6/model"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/tracker"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 type MSCalendar interface {

@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store"
 )
 
 const dailySummaryHelp = "### Daily summary commands:\n" +

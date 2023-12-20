@@ -1,6 +1,6 @@
 package bot
 
-import "github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
+import "github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/flow"
 
 type FlowController interface {
 	Start(userID string) error

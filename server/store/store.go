@@ -8,11 +8,11 @@ import (
 
 	"github.com/mattermost/mattermost-server/v6/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/tracker"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/bot"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/settingspanel"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/tracker"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/bot"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/flow"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/kvstore"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/settingspanel"
 )
 
 const (

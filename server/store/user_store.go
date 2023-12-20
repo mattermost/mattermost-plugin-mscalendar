@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/kvstore"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/kvstore"
 )
 
 type UserStore interface {
