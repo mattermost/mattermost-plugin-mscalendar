@@ -6,7 +6,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
 func (api *api) notification(w http.ResponseWriter, req *http.Request) {

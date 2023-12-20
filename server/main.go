@@ -3,9 +3,9 @@ package main
 import (
 	mattermostplugin "github.com/mattermost/mattermost-server/v6/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/plugin"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/plugin"
 )
 
 var BuildHash string

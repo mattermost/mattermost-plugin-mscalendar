@@ -8,9 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/remote"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/remote"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store"
 )
 
 type Subscriptions interface {

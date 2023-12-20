@@ -13,9 +13,9 @@ import (
 	"github.com/mattermost/mattermost-server/v6/plugin"
 	"github.com/pkg/errors"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/store"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/store"
 )
 
 // Handler handles commands

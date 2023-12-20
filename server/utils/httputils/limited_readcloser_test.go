@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils"
 )
 
 func TestLimitReadCloser(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/plugin"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/flow"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/flow"
 )
 
 type Bot interface {

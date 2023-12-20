@@ -6,7 +6,7 @@ package command
 import (
 	"fmt"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
 )
 
 func (c *Command) help(parameters ...string) (string, bool, error) {

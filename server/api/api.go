@@ -4,9 +4,9 @@
 package api
 
 import (
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar"
-	"github.com/mattermost/mattermost-plugin-mscalendar/server/utils/httputils"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/config"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/mscalendar"
+	"github.com/firstfoundry/ff-mattermost-plugin-mscalendar/server/utils/httputils"
 )
 
 type api struct {
