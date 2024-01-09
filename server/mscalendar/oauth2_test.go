@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/jarcoal/httpmock"
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
@@ -186,7 +186,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
 			},
-			expectError: "cannot fetch token: 400",
+			expectError: "invalid request",
 		},
 		{
 			name:              "Remote user already connected",

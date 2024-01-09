@@ -15,6 +15,7 @@
 1. [Overview](#overview)
 2. [Features](#features)
 3. [Configuration](#configuration)
+4. [Development](#development)
 
 ## Overview
 
@@ -100,3 +101,7 @@ You're all set for configuration inside of Azure.
 - `tenantID` - Copy from Azure App.
 - `clientID` - Copy from Azure App.
 - `Client Secret` - Copy from Azure App (Generated in **Certificates & secrets**, earlier in these instructions).
+
+## Development
+
+This plugin contains a server portion. Read our documentation about the [Developer Workflow](https://developers.mattermost.com/integrate/plugins/developer-workflow/) and [Developer Setup](https://developers.mattermost.com/integrate/plugins/developer-setup/) for more information about developing and extending plugins.
