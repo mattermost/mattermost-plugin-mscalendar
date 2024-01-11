@@ -3,7 +3,7 @@
 
 package command
 
-func (c *Command) settings(_ ...string) (string, bool, error) {
+func (c *Command) settings(parameters ...string) (string, bool, error) {
 	c.MSCalendar.PrintSettings(c.Args.UserId)
 	return "", true, nil
 }

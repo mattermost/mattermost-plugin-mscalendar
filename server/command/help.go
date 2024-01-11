@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
-func (c *Command) help(_ ...string) (string, bool, error) {
+func (c *Command) help(parameters ...string) (string, bool, error) {
 	resp := ""
 	for _, cmd := range cmds {
 		desc := cmd.Trigger

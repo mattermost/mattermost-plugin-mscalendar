@@ -3,7 +3,7 @@
 
 package command
 
-func (c *Command) disconnect(_ ...string) (string, bool, error) {
+func (c *Command) disconnect(parameters ...string) (string, bool, error) {
 	err := c.MSCalendar.DisconnectUser(c.Args.UserId)
 	if err != nil {
 		return "", false, err

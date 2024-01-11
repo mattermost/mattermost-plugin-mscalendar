@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/config"
 )
 
-func (c *Command) info(_ ...string) (string, bool, error) {
+func (c *Command) info(parameters ...string) (string, bool, error) {
 	resp := fmt.Sprintf("Mattermost Microsoft Calendar plugin version: %s, "+
 		"[%s](https://github.com/mattermost/%s/commit/%s), built %s\n",
 		c.Config.PluginVersion,

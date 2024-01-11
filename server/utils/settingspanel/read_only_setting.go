@@ -25,7 +25,7 @@ func NewReadOnlySetting(id string, title string, description string, dependsOn s
 	}
 }
 
-func (s *readOnlySetting) Set(_ string, _ interface{}) error {
+func (s *readOnlySetting) Set(userID string, value interface{}) error {
 	return nil
 }
 
@@ -58,7 +58,7 @@ func (s *readOnlySetting) GetDependency() string {
 	return s.dependsOn
 }
 
-func (s *readOnlySetting) GetSlackAttachments(userID, _ string, disabled bool) (*model.SlackAttachment, error) {
+func (s *readOnlySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 

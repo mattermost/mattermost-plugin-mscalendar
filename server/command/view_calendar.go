@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/mscalendar/views"
 )
 
-func (c *Command) viewCalendar(_ ...string) (string, bool, error) {
+func (c *Command) viewCalendar(parameters ...string) (string, bool, error) {
 	tz, err := c.MSCalendar.GetTimezone(c.user())
 	if err != nil {
 		return "Error: No timezone found", false, err

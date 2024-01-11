@@ -20,10 +20,10 @@ func NewEmptySetting(id, title, description string) Setting {
 	}
 }
 
-func (s *emptySetting) Set(_ string, _ interface{}) error {
+func (s *emptySetting) Set(userID string, value interface{}) error {
 	return nil
 }
-func (s *emptySetting) Get(_ string) (interface{}, error) {
+func (s *emptySetting) Get(userID string) (interface{}, error) {
 	return "", nil
 }
 func (s *emptySetting) GetID() string {
@@ -32,7 +32,7 @@ func (s *emptySetting) GetID() string {
 func (s *emptySetting) GetDependency() string {
 	return ""
 }
-func (s *emptySetting) IsDisabled(_ interface{}) bool {
+func (s *emptySetting) IsDisabled(foreignValue interface{}) bool {
 	return false
 }
 func (s *emptySetting) GetTitle() string {
@@ -41,7 +41,7 @@ func (s *emptySetting) GetTitle() string {
 func (s *emptySetting) GetDescription() string {
 	return s.description
 }
-func (s *emptySetting) GetSlackAttachments(_, _ string, _ bool) (*model.SlackAttachment, error) {
+func (s *emptySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	sa := model.SlackAttachment{
 		Title:    title,

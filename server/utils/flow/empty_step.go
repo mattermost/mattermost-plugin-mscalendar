@@ -11,7 +11,7 @@ type EmptyStep struct {
 	Message string
 }
 
-func (s *EmptyStep) PostSlackAttachment(_ string, _ int) *model.SlackAttachment {
+func (s *EmptyStep) PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment {
 	sa := model.SlackAttachment{
 		Title:    s.Title,
 		Text:     s.Message,
@@ -21,7 +21,7 @@ func (s *EmptyStep) PostSlackAttachment(_ string, _ int) *model.SlackAttachment 
 	return &sa
 }
 
-func (s *EmptyStep) ResponseSlackAttachment(_ bool) *model.SlackAttachment {
+func (s *EmptyStep) ResponseSlackAttachment(value bool) *model.SlackAttachment {
 	return nil
 }
 
@@ -29,7 +29,7 @@ func (s *EmptyStep) GetPropertyName() string {
 	return ""
 }
 
-func (s *EmptyStep) ShouldSkip(_ bool) int {
+func (s *EmptyStep) ShouldSkip(value bool) int {
 	return 0
 }
 

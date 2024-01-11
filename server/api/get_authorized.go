@@ -5,7 +5,7 @@ package api
 
 import "net/http"
 
-func (api *api) getAuthorized(w http.ResponseWriter, _ *http.Request) {
+func (api *api) getAuthorized(w http.ResponseWriter, r *http.Request) {
 	// if we've made it here, we're authorized.
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"is_authorized": true}`))

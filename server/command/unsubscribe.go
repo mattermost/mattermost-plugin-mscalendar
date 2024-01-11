@@ -3,7 +3,7 @@
 
 package command
 
-func (c *Command) unsubscribe(_ ...string) (string, bool, error) {
+func (c *Command) unsubscribe(parameters ...string) (string, bool, error) {
 	_, err := c.MSCalendar.LoadMyEventSubscription()
 	if err != nil {
 		return "You are not subscribed to events.", false, nil
