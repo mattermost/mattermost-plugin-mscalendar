@@ -17,7 +17,7 @@ func main() {
 		plugin.NewWithEnv(
 			mscalendar.Env{
 				Config: &config.Config{
-					PluginID:       manifest.ID,
+					PluginID:       manifest.Id,
 					PluginVersion:  manifest.Version,
 					BuildHash:      BuildHash,
 					BuildHashShort: BuildHashShort,
