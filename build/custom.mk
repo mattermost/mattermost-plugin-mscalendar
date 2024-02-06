@@ -21,7 +21,7 @@ GO_BUILD_FLAGS = -ldflags '$(LDFLAGS)'
 mock:
 ifneq ($(HAS_SERVER),)
 	go install github.com/golang/mock/mockgen@v1.6.0
-	mockgen -destination calendar/jobs/mock_cluster/mock_cluster.go github.com/mattermost/mattermost-plugin-api/cluster JobPluginAPI
+	mockgen -destination calendar/jobs/mock_cluster/mock_cluster.go github.com/mattermost/mattermost/server/public/pluginapi/cluster JobPluginAPI
 	mockgen -destination calendar/engine/mock_engine/mock_engine.go $(REPOSITORY_URL)/calendar/engine Engine
 	mockgen -destination calendar/engine/mock_welcomer/mock_welcomer.go -package mock_welcomer $(REPOSITORY_URL)/calendar/engine Welcomer
 	mockgen -destination calendar/engine/mock_plugin_api/mock_plugin_api.go -package mock_plugin_api $(REPOSITORY_URL)/calendar/engine PluginAPI
