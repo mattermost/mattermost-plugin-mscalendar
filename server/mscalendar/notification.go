@@ -48,6 +48,12 @@ const (
 	ResponseNone  = "notResponded"
 )
 
+const (
+	AwayStatusOption    = "Away"
+	DNDStatusOption     = "Do Not Disturb"
+	DefaultStatusOption = "Don't set status for me"
+)
+
 var importantNotificationChanges = []string{FieldSubject, FieldWhen}
 
 var notificationFieldOrder = []string{

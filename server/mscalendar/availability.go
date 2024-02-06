@@ -5,6 +5,7 @@ package mscalendar
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
@@ -88,7 +89,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 			// In case of error in loading, skip this user and continue with the next user
 			continue
 		}
-		if user.Settings.UpdateStatus || user.Settings.ReceiveReminders {
+		if user.Settings.UpdateStatusFromOptions != DefaultStatusOption || user.Settings.ReceiveReminders || user.Settings.SetCustomStatus {
 			users = append(users, user)
 		}
 	}
@@ -100,6 +101,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 	if err != nil {
 		return "", syncJobSummary, errors.Wrap(err, "not able to get calendar views for connected users")
 	}
+
 	if len(calendarViews) == 0 {
 		return "No calendar views found", syncJobSummary, nil
 	}
@@ -157,7 +159,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	numberOfLogs, numberOfUserStatusChange, numberOfUserErrorInStatusChange := 0, 0, 0
 	toUpdate := []*store.User{}
 	for _, u := range users {
-		if u.Settings.UpdateStatus {
+		if u.Settings.UpdateStatusFromOptions != DefaultStatusOption || u.Settings.SetCustomStatus {
 			toUpdate = append(toUpdate, u)
 		}
 	}
@@ -206,20 +208,41 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		}
 
 		var err error
-		res, isStatusChanged, err = m.setStatusFromCalendarView(user, status, view)
-		if err != nil {
-			if numberOfLogs < logTruncateLimit {
-				m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
-			} else if numberOfLogs == logTruncateLimit {
-				m.Logger.Warnf(logTruncateMsg)
+		if user.Settings.UpdateStatusFromOptions != DefaultStatusOption {
+			res, isStatusChanged, err = m.setStatusFromCalendarView(user, status, view)
+			if err != nil {
+				if numberOfLogs < logTruncateLimit {
+					m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
+				} else if numberOfLogs == logTruncateLimit {
+					m.Logger.Warnf(logTruncateMsg)
+				}
+				numberOfLogs++
+				numberOfUserErrorInStatusChange++
 			}
-			numberOfLogs++
-			numberOfUserErrorInStatusChange++
+			if isStatusChanged {
+				numberOfUserStatusChange++
+			}
 		}
-		if isStatusChanged {
-			numberOfUserStatusChange++
+
+		if user.Settings.SetCustomStatus {
+			res, isStatusChanged, err = m.setCustomStatusFromCalendarView(user, view)
+			if err != nil {
+				if numberOfLogs < logTruncateLimit {
+					m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
+				} else if numberOfLogs == logTruncateLimit {
+					m.Logger.Warnf(logTruncateMsg)
+				}
+				numberOfLogs++
+				numberOfUserErrorInStatusChange++
+			}
+
+			// Increment count only when we have not updated the status of the user from the options to have status change count per user.
+			if isStatusChanged && user.Settings.UpdateStatusFromOptions == DefaultStatusOption {
+				numberOfUserStatusChange++
+			}
 		}
 	}
+
 	if res != "" {
 		return res, numberOfUserStatusChange, numberOfUserErrorInStatusChange, nil
 	}
@@ -227,16 +250,80 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	return utils.JSONBlock(calendarViews), numberOfUserStatusChange, numberOfUserErrorInStatusChange, nil
 }
 
+func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, res *remote.ViewCalendarResponse) (string, bool, error) {
+	isStatusChanged := false
+	events := filterBusyEvents(res.Events)
+	if len(events) == 0 {
+		if user.IsCustomStatusSet {
+			if err := m.PluginAPI.RemoveMattermostUserCustomStatus(user.MattermostUserID); err != nil {
+				return "", isStatusChanged, err
+			}
+
+			if err := m.Store.StoreUserCustomStatusUpdates(user.MattermostUserID, false); err != nil {
+				return "", isStatusChanged, err
+			}
+		}
+
+		return "No event present to set custom status", isStatusChanged, nil
+	}
+
+	if checkOverlappingEvents(events) {
+		return "Overlapping events, not setting a custom status", isStatusChanged, nil
+	}
+
+	if events[0].IsCancelled {
+		return "Event cancelled, not setting custom status", isStatusChanged, nil
+	}
+
+	if len(events[0].Attendees) < 1 {
+		return "No attendee present, not setting custom status", isStatusChanged, nil
+	}
+
+	if !user.Settings.SetCustomStatus {
+		return "User don't want to set custom status", isStatusChanged, nil
+	}
+
+	currentUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
+	if err != nil {
+		return "", isStatusChanged, err
+	}
+
+	currentCustomStatus := currentUser.GetCustomStatus()
+	if currentCustomStatus != nil && !user.IsCustomStatusSet {
+		return "User already have a custom status set, ignoring custom status change", isStatusChanged, nil
+	}
+
+	if appErr := m.PluginAPI.UpdateMattermostUserCustomStatus(user.MattermostUserID, &model.CustomStatus{
+		Emoji:     "calendar",
+		Text:      "In a meeting",
+		ExpiresAt: events[0].End.Time(),
+		Duration:  "date_and_time",
+	}); appErr != nil {
+		return "", isStatusChanged, appErr
+	}
+
+	isStatusChanged = true
+	if err := m.Store.StoreUserCustomStatusUpdates(user.MattermostUserID, true); err != nil {
+		return "", isStatusChanged, err
+	}
+
+	return "", isStatusChanged, nil
+}
+
 func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse) (string, bool, error) {
 	isStatusChanged := false
 	currentStatus := status.Status
+	if user.Settings.UpdateStatusFromOptions == "" {
+		return "No value set from options to update status", isStatusChanged, nil
+	}
+
 	if currentStatus == model.StatusOffline && !user.Settings.GetConfirmation {
 		return "User offline and does not want status change confirmations. No status change", isStatusChanged, nil
 	}
 
 	events := filterBusyEvents(res.Events)
 	busyStatus := model.StatusDnd
-	if user.Settings.ReceiveNotificationsDuringMeeting {
+	if user.Settings.UpdateStatusFromOptions == AwayStatusOption {
 		busyStatus = model.StatusAway
 	}
 
@@ -263,6 +350,14 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			return "", isStatusChanged, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
 		return message, isStatusChanged, nil
+	}
+
+	if checkOverlappingEvents(events) {
+		return "Overlapping events, not updating status", isStatusChanged, nil
+	}
+
+	if len(events[0].Attendees) < 1 {
+		return "No attendee present, not updating status", isStatusChanged, nil
 	}
 
 	remoteHashes := []string{}
@@ -351,7 +446,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 
 	if !isFree {
 		toSet = model.StatusDnd
-		if user.Settings.ReceiveNotificationsDuringMeeting {
+		if user.Settings.UpdateStatusFromOptions == AwayStatusOption {
 			toSet = model.StatusAway
 		}
 		if !user.Settings.GetConfirmation {
@@ -446,4 +541,23 @@ func filterBusyEvents(events []*remote.Event) []*remote.Event {
 		}
 	}
 	return result
+}
+
+// Function to check for overlapping events.
+func checkOverlappingEvents(events []*remote.Event) bool {
+	if len(events) <= 1 {
+		return false
+	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Start.Time().UnixMicro() < events[j].Start.Time().UnixMicro()
+	})
+
+	for i := 1; i < len(events); i++ {
+		if events[i-1].End.Time().UnixMicro() > events[i].Start.Time().UnixMicro() {
+			return true
+		}
+	}
+
+	return false
 }

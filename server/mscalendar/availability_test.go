@@ -24,7 +24,11 @@ import (
 func TestSyncStatusAll(t *testing.T) {
 	moment := time.Now().UTC()
 	eventHash := "event_id " + moment.Format(time.RFC3339)
-	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{
+		EmailAddress: &remote.EmailAddress{
+			Address: "mock-attendee.gmail.com",
+		},
+	}}}
 
 	for name, tc := range map[string]struct {
 		apiError            *remote.APIError
@@ -124,7 +128,11 @@ func TestSyncStatusAll(t *testing.T) {
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
-				Settings:     store.Settings{UpdateStatus: true, GetConfirmation: tc.getConfirmation},
+				Settings: store.Settings{
+					UpdateStatusFromOptions: DNDStatusOption,
+					GetConfirmation:         tc.getConfirmation,
+					SetCustomStatus:         false,
+				},
 				ActiveEvents: tc.activeEvents,
 			}
 			s.EXPECT().LoadUser("user_mm_id").Return(mockUser, nil).Times(1)
@@ -173,24 +181,24 @@ func TestSyncStatusUserConfig(t *testing.T) {
 		runAssertions func(deps *Dependencies, client remote.Client)
 		settings      store.Settings
 	}{
-		"UpdateStatus disabled": {
+		"UpdateStatusFromOptions default": {
 			settings: store.Settings{
-				UpdateStatus: false,
+				UpdateStatusFromOptions: DefaultStatusOption,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c := client.(*mock_remote.MockClient)
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(0)
 			},
 		},
-		"UpdateStatus enabled and GetConfirmation enabled": {
+		"UpdateStatusFromOptions away and GetConfirmation enabled": {
 			settings: store.Settings{
-				UpdateStatus:    true,
-				GetConfirmation: true,
+				UpdateStatusFromOptions: AwayStatusOption,
+				GetConfirmation:         true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, poster, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee.gmail.com"}}}}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
@@ -200,6 +208,43 @@ func TestSyncStatusUserConfig(t *testing.T) {
 				s.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
 				s.EXPECT().StoreUserActiveEvents("user_mm_id", []string{"event_id " + moment.Format(time.RFC3339)})
 				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(1)
+				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
+			},
+		},
+		"UpdateStatusFromOptions do not disturb, GetConfirmation enabled and no attendee present": {
+			settings: store.Settings{
+				UpdateStatusFromOptions: DNDStatusOption,
+				GetConfirmation:         true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
+				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
+			},
+		},
+		"UpdateStatusFromOptions do not disturb, GetConfirmation enabled and overlapping events present": {
+			settings: store.Settings{
+				UpdateStatusFromOptions: DNDStatusOption,
+				GetConfirmation:         true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), ShowAs: "busy"}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(5*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
 				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
 			},
 		},
@@ -299,7 +344,7 @@ func TestReminders(t *testing.T) {
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
-				Settings: store.Settings{ReceiveReminders: true},
+				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: DefaultStatusOption},
 			}, nil)
 			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
 				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},

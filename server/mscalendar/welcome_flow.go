@@ -51,15 +51,9 @@ func (wf *WelcomeFlow) FlowDone(userID string) {
 
 func (wf *WelcomeFlow) makeSteps() {
 	steps := []flow.Step{}
-	steps = append(steps, &flow.SimpleStep{
-		Title:                "Update Status",
-		Message:              "Would you like your Mattermost status to be automatically updated at the time of your Microsoft Calendar events?",
-		PropertyName:         store.UpdateStatusPropertyName,
-		TrueButtonMessage:    "Yes - Update my status",
-		FalseButtonMessage:   "No - Don't update my status",
-		TrueResponseMessage:  ":thumbsup: Got it! We'll automatically update your status in Mattermost.",
-		FalseResponseMessage: ":thumbsup: Got it! We won't update your status in Mattermost.",
-		FalseSkip:            2,
+	steps = append(steps, &flow.EmptyStep{
+		Title:   "Update Status",
+		Message: "You can update your status to Away or Do not disturb when you are in a meeting by typing `/mscalendar settings`.",
 	}, &flow.SimpleStep{
 		Title:                "Confirm status change",
 		Message:              "Do you want to receive confirmations before we update your status for each event?",
@@ -69,13 +63,13 @@ func (wf *WelcomeFlow) makeSteps() {
 		TrueResponseMessage:  "Cool, we'll also send you confirmations before updating your status.",
 		FalseResponseMessage: "Cool, we'll update your status automatically with no confirmation.",
 	}, &flow.SimpleStep{
-		Title:                "Status during meetings",
-		Message:              "Do you want to set your status to `Away` or to `Do not Disturb` while you are on a meeting? Setting to `Do Not Disturb` will silence notifications.",
-		PropertyName:         store.ReceiveNotificationsDuringMeetingName,
-		TrueButtonMessage:    "Away",
-		FalseButtonMessage:   "Do not Disturb",
-		TrueResponseMessage:  "Great, your status will be set to Away.",
-		FalseResponseMessage: "Great, your status will be set to Do not Disturb.",
+		Title:                "Set Custom Status",
+		Message:              "Do you want to set custom status automatically on Mattermost when you are in a meeting?",
+		PropertyName:         store.SetCustomStatusPropertyName,
+		TrueButtonMessage:    "Yes - I would like to set custom status automatically",
+		FalseButtonMessage:   "No - Don't set custom status",
+		TrueResponseMessage:  "Cool, we'll set custom status automatically when you are in a meeting.",
+		FalseResponseMessage: "Cool, we'll not set custom status when you are in a meeting.",
 	}, &flow.SimpleStep{
 		Title:                "Subscribe to events",
 		Message:              "Do you want to receive notifications when you are invited to an event?",

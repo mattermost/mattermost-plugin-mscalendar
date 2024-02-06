@@ -24,6 +24,7 @@ type UserStore interface {
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
 	StoreUserActiveEvents(mattermostUserID string, events []string) error
+	StoreUserCustomStatusUpdates(mattermostUserID string, values bool) error
 }
 
 type UserIndex []*UserShort
@@ -41,17 +42,18 @@ type User struct {
 	PluginVersion     string
 	MattermostUserID  string
 	LastStatus        string
+	IsCustomStatusSet bool
 	WelcomeFlowStatus WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 	ActiveEvents      []string          `json:"events"`
 }
 
 type Settings struct {
-	DailySummary                      *DailySummaryUserSettings
-	EventSubscriptionID               string
-	UpdateStatus                      bool
-	GetConfirmation                   bool
-	ReceiveReminders                  bool
-	ReceiveNotificationsDuringMeeting bool
+	DailySummary            *DailySummaryUserSettings
+	EventSubscriptionID     string
+	UpdateStatusFromOptions string
+	GetConfirmation         bool
+	ReceiveReminders        bool
+	SetCustomStatus         bool
 }
 
 type DailySummaryUserSettings struct {
@@ -236,6 +238,16 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 		return err
 	}
 	u.ActiveEvents = events
+	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
+}
+
+func (s *pluginStore) StoreUserCustomStatusUpdates(mattermostUserID string, value bool) error {
+	u, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	u.IsCustomStatusSet = value
 	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
 }
 

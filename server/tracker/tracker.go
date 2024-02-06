@@ -19,7 +19,7 @@ type Tracker interface {
 	TrackUserAuthenticated(userID string)
 	TrackUserDeauthenticated(userID string)
 	TrackDailySummarySent(userID string)
-	TrackAutomaticStatusUpdate(userID string, value bool, location string)
+	TrackAutomaticStatusUpdate(userID, value, location string)
 	ReloadConfig(config *model.Config)
 }
 
@@ -55,7 +55,7 @@ func (t *tracker) TrackDailySummarySent(userID string) {
 	t.tracker.TrackUserEvent(dailySummarySentEvent, userID, map[string]interface{}{})
 }
 
-func (t *tracker) TrackAutomaticStatusUpdate(userID string, value bool, location string) {
+func (t *tracker) TrackAutomaticStatusUpdate(userID, value, location string) {
 	properties := map[string]interface{}{
 		"value":    value,
 		"location": location,

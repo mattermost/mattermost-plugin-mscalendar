@@ -6,26 +6,28 @@ const (
 	UpdateStatusPropertyName              = "update_status"
 	GetConfirmationPropertyName           = "get_confirmation"
 	ReceiveNotificationsDuringMeetingName = "receive_notifications_during_meetings"
+	SetCustomStatusPropertyName           = "set_custom_status"
 	SubscribePropertyName                 = "subscribe"
 	ReceiveUpcomingEventReminderName      = "receive_reminder"
 )
 
-func (s *pluginStore) SetProperty(userID, propertyName string, value bool) error {
+func (s *pluginStore) SetProperty(userID, propertyName string, value interface{}) error {
 	user, err := s.LoadUser(userID)
 	if err != nil {
 		return err
 	}
 
+	boolValue := value.(bool)
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		user.Settings.UpdateStatus = value
-		s.Tracker.TrackAutomaticStatusUpdate(userID, value, "flow")
+		user.Settings.UpdateStatusFromOptions = value.(string)
+		s.Tracker.TrackAutomaticStatusUpdate(userID, value.(string), "flow")
 	case GetConfirmationPropertyName:
-		user.Settings.GetConfirmation = value
+		user.Settings.GetConfirmation = boolValue
+	case SetCustomStatusPropertyName:
+		user.Settings.SetCustomStatus = boolValue
 	case ReceiveUpcomingEventReminderName:
-		user.Settings.ReceiveReminders = value
-	case ReceiveNotificationsDuringMeetingName:
-		user.Settings.ReceiveNotificationsDuringMeeting = value
+		user.Settings.ReceiveReminders = boolValue
 	default:
 		return fmt.Errorf("property %s not found", propertyName)
 	}

@@ -182,6 +182,19 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		// reload tracker behavior looking to some key config changes
 		if e.Dependencies.Tracker != nil {
 			e.Dependencies.Tracker.ReloadConfig(p.API.GetConfig())
+		} else {
+			e.Dependencies.Tracker = tracker.New(
+				telemetry.NewTracker(
+					p.telemetryClient,
+					p.API.GetDiagnosticId(),
+					p.API.GetServerVersion(),
+					e.PluginID,
+					e.PluginVersion,
+					config.TelemetryShortName,
+					telemetry.NewTrackerConfig(p.API.GetConfig()),
+					telemetry.NewLogger(p.API),
+				),
+			)
 		}
 
 		e.Dependencies.Poster = e.bot

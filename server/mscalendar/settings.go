@@ -24,25 +24,27 @@ func (m *mscalendar) ClearSettingsPosts(userID string) {
 
 func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingStore settingspanel.SettingStore, settingsHandler, pluginURL string, getCal func(userID string) MSCalendar) settingspanel.Panel {
 	settings := []settingspanel.Setting{}
-	settings = append(settings, settingspanel.NewBoolSetting(
-		store.UpdateStatusSettingID,
+	settings = append(settings, settingspanel.NewOptionSetting(
+		store.UpdateStatusFromOptionsSettingID,
 		"Update Status",
 		"Do you want to update your status on Mattermost when you are in a meeting?",
 		"",
+		DefaultStatusOption,
+		[]string{AwayStatusOption, DNDStatusOption, DefaultStatusOption},
 		settingStore,
 	))
 	settings = append(settings, settingspanel.NewBoolSetting(
 		store.GetConfirmationSettingID,
 		"Get Confirmation",
 		"Do you want to get a confirmation before automatically updating your status?",
-		store.UpdateStatusSettingID,
+		store.UpdateStatusFromOptionsSettingID,
 		settingStore,
 	))
 	settings = append(settings, settingspanel.NewBoolSetting(
-		store.ReceiveNotificationsDuringMeetingID,
-		"Receive notifications while on meetings",
-		"Do you want to still receive Mattermost notifications while you are on a meeting?\nIf you want notifications, you will be set as \"Away\" during meetings. If not, you will be set as \"Do Not Disturb\".",
-		store.UpdateStatusSettingID,
+		store.SetCustomStatusSettingID,
+		"Set Custom Status",
+		"Do you want to set custom status automatically on Mattermost when you are in a meeting?",
+		"",
 		settingStore,
 	))
 	settings = append(settings, settingspanel.NewBoolSetting(
