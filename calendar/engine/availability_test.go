@@ -296,6 +296,140 @@ func TestSyncStatusUserConfig(t *testing.T) {
 	}
 }
 
+func TestSyncCustomStatusUserConfig(t *testing.T) {
+	for name, tc := range map[string]struct {
+		runAssertions func(deps *Dependencies, client remote.Client)
+		settings      store.Settings
+	}{
+		"SetCustomStatus disabled": {
+			settings: store.Settings{
+				SetCustomStatus: false,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee.gmail.com"}}}}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+			},
+		},
+		"SetCustomStatus enabled but no event present": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+				papi.EXPECT().RemoveMattermostUserCustomStatus("user_mm_id").Return(nil)
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", false).Return(nil)
+			},
+		},
+		"SetCustomStatus enabled but overlapping events": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), ShowAs: "busy"}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(5*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+			},
+		},
+		"SetCustomStatus enabled but event cancelled": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", IsCancelled: true}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+			},
+		},
+		"SetCustomStatus enabled but no attendee present": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", IsCancelled: true}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+			},
+		},
+		"SetCustomStatus enabled": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee.gmail.com"}}}, End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC")}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+				papi.EXPECT().GetMattermostUser("user_mm_id").Return(&model.User{
+					Id: "user_mm_id",
+				}, nil)
+				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
+					Emoji:     "calendar",
+					Text:      "In a meeting",
+					ExpiresAt: busyEvent.End.Time(),
+					Duration:  "date_and_time",
+				}).Return(nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			env, client := makeStatusSyncTestEnv(ctrl)
+
+			s := env.Dependencies.Store.(*mock_store.MockStore)
+			s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
+				MattermostUserID: "user_mm_id",
+				Remote: &remote.User{
+					ID:   "user_remote_id",
+					Mail: "user_email@example.com",
+				},
+				IsCustomStatusSet: true,
+				Settings:          tc.settings,
+			}, nil).Times(1)
+
+			tc.runAssertions(env.Dependencies, client)
+
+			mscalendar := New(env, "")
+			_, _, err := mscalendar.SyncAll()
+			require.Nil(t, err)
+		})
+	}
+}
+
 func TestReminders(t *testing.T) {
 	for name, tc := range map[string]struct {
 		apiError       *remote.APIError

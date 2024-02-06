@@ -324,6 +324,10 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 
 func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, res *remote.ViewCalendarResponse) (string, bool, error) {
 	isStatusChanged := false
+	if !user.Settings.SetCustomStatus {
+		return "User don't want to set custom status", isStatusChanged, nil
+	}
+
 	events := filterBusyEvents(res.Events)
 	if len(events) == 0 {
 		if user.IsCustomStatusSet {
