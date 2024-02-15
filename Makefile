@@ -49,11 +49,6 @@ endif
 .PHONY: all
 all: check-style test dist
 
-## Propagates plugin manifest information into the server/ and webapp/ folders as required.
-.PHONY: apply
-apply:
-	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
-
 ## Runs golangci-lint and eslint.
 .PHONY: check-style
 check-style: webapp/node_modules
@@ -124,7 +119,6 @@ server-debug: server-debug-deploy reset
 
 .PHONY: server-debug-deploy
 server-debug-deploy: validate-go-version
-	MANIFEST_FILE=$(MANIFEST_FILE) ./build/bin/manifest apply
 	mkdir -p server/dist
 ifeq ($(OS),Darwin)
 	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-darwin-amd64;
