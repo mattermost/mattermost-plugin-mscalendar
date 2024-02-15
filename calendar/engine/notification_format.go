@@ -10,7 +10,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/fields"
 
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost/server/public/model"
 )
 
 func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
