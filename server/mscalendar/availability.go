@@ -89,7 +89,7 @@ func (m *mscalendar) syncUsers(userIndex store.UserIndex) (string, *StatusSyncJo
 			// In case of error in loading, skip this user and continue with the next user
 			continue
 		}
-		if user.Settings.UpdateStatusFromOptions != DefaultStatusOption || user.Settings.ReceiveReminders || user.Settings.SetCustomStatus {
+		if user.Settings.UpdateStatusFromOptions != NotSetStatusOption || user.Settings.ReceiveReminders || user.Settings.SetCustomStatus {
 			users = append(users, user)
 		}
 	}
@@ -159,7 +159,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	numberOfLogs, numberOfUserStatusChange, numberOfUserErrorInStatusChange := 0, 0, 0
 	toUpdate := []*store.User{}
 	for _, u := range users {
-		if u.Settings.UpdateStatusFromOptions != DefaultStatusOption || u.Settings.SetCustomStatus {
+		if u.Settings.UpdateStatusFromOptions != NotSetStatusOption || u.Settings.SetCustomStatus {
 			toUpdate = append(toUpdate, u)
 		}
 	}
@@ -208,7 +208,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 		}
 
 		var err error
-		if user.Settings.UpdateStatusFromOptions != DefaultStatusOption {
+		if user.Settings.UpdateStatusFromOptions != NotSetStatusOption {
 			res, isStatusChanged, err = m.setStatusFromCalendarView(user, status, view)
 			if err != nil {
 				if numberOfLogs < logTruncateLimit {
@@ -237,7 +237,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			}
 
 			// Increment count only when we have not updated the status of the user from the options to have status change count per user.
-			if isStatusChanged && user.Settings.UpdateStatusFromOptions == DefaultStatusOption {
+			if isStatusChanged && user.Settings.UpdateStatusFromOptions == NotSetStatusOption {
 				numberOfUserStatusChange++
 			}
 		}
@@ -279,12 +279,9 @@ func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, res *remo
 		return "Event cancelled, not setting custom status", isStatusChanged, nil
 	}
 
+	// Not setting custom status for events without attendees since those are unlikely to be meetings.
 	if len(events[0].Attendees) < 1 {
 		return "No attendee present, not setting custom status", isStatusChanged, nil
-	}
-
-	if !user.Settings.SetCustomStatus {
-		return "User don't want to set custom status", isStatusChanged, nil
 	}
 
 	currentUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
@@ -360,6 +357,7 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 		return "Overlapping events, not updating status", isStatusChanged, nil
 	}
 
+	// Not setting custom status for events without attendees since those are unlikely to be meetings.
 	if len(events[0].Attendees) < 1 {
 		return "No attendee present, not updating status", isStatusChanged, nil
 	}

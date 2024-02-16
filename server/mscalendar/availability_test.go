@@ -183,7 +183,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 	}{
 		"UpdateStatusFromOptions default": {
 			settings: store.Settings{
-				UpdateStatusFromOptions: DefaultStatusOption,
+				UpdateStatusFromOptions: NotSetStatusOption,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c := client.(*mock_remote.MockClient)
@@ -478,7 +478,7 @@ func TestReminders(t *testing.T) {
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
-				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: DefaultStatusOption},
+				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: NotSetStatusOption},
 			}, nil)
 			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
 				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},

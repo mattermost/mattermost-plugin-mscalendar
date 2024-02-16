@@ -49,9 +49,9 @@ const (
 )
 
 const (
-	AwayStatusOption    = "Away"
-	DNDStatusOption     = "Do Not Disturb"
-	DefaultStatusOption = "Don't set status for me"
+	AwayStatusOption   = "Away"
+	DNDStatusOption    = "Do Not Disturb"
+	NotSetStatusOption = "Don't set status for me"
 )
 
 var importantNotificationChanges = []string{FieldSubject, FieldWhen}
