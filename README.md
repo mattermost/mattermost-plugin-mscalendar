@@ -18,6 +18,7 @@
 - [Overview](#overview)
 - [Features](#features)
 - [Admin Guide](./docs/admin-guide.md)
+- [Development](#development)
 
 ## Overview
 
@@ -32,3 +33,7 @@ This plugin supports a two-way integration between Mattermost and Microsoft Outl
 ## Admin Guide
 
 The Admin Guide docs for the Mattermost Microsoft Calender Plugin can be found [here](./docs/admin-guide.md)
+
+## Development
+
+This plugin contains a server portion. Read our documentation about the [Developer Workflow](https://developers.mattermost.com/integrate/plugins/developer-workflow/) and [Developer Setup](https://developers.mattermost.com/integrate/plugins/developer-setup/) for more information about developing and extending plugins.

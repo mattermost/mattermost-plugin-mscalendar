@@ -1,7 +1,7 @@
 package tracker
 
 import (
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/server/telemetry"
 )
