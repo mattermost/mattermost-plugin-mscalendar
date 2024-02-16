@@ -192,7 +192,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 	}{
 		"UpdateStatusFromOptions default": {
 			settings: store.Settings{
-				UpdateStatusFromOptions: DefaultStatusOption,
+				UpdateStatusFromOptions: NotSetStatusOption,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, r := client.(*mock_remote.MockClient), deps.Remote.(*mock_remote.MockRemote)
@@ -552,7 +552,7 @@ func TestReminders(t *testing.T) {
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
-				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: DefaultStatusOption},
+				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: NotSetStatusOption},
 			}, nil)
 			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
 				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},
@@ -608,7 +608,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 	t.Run("user reminders and status disabled", func(t *testing.T) {
 		testUser := newTestUser()
-		testUser.Settings.UpdateStatusFromOptions = DefaultStatusOption
+		testUser.Settings.UpdateStatusFromOptions = NotSetStatusOption
 		testUser.Settings.ReceiveReminders = false
 
 		userIndex := []*store.UserShort{
@@ -677,7 +677,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		testUser.Settings.ReceiveReminders = true
 
 		testUser2 := newTestUserNumbered(1)
-		testUser2.Settings.UpdateStatusFromOptions = DefaultStatusOption
+		testUser2.Settings.UpdateStatusFromOptions = NotSetStatusOption
 
 		userIndex := []*store.UserShort{
 			{
