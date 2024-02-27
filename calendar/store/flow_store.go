@@ -17,11 +17,12 @@ func (s *pluginStore) SetProperty(userID, propertyName string, value interface{}
 		return err
 	}
 
-	boolValue := value.(bool)
+	boolValue, _ := value.(bool)
 	switch propertyName {
 	case UpdateStatusPropertyName:
-		user.Settings.UpdateStatusFromOptions = value.(string)
-		s.Tracker.TrackAutomaticStatusUpdate(userID, value.(string), "flow")
+		stringValue, _ := value.(string)
+		user.Settings.UpdateStatusFromOptions = stringValue
+		s.Tracker.TrackAutomaticStatusUpdate(userID, stringValue, "flow")
 	case GetConfirmationPropertyName:
 		user.Settings.GetConfirmation = boolValue
 	case SetCustomStatusPropertyName:

@@ -158,7 +158,7 @@ func (bot *mscBot) cleanWelcomePost(mattermostUserID string) error {
 
 func (bot *mscBot) SetProperty(userID, propertyName string, value interface{}) error {
 	if propertyName == store.SubscribePropertyName {
-		if value.(bool) {
+		if boolValue, _ := value.(bool); boolValue {
 			m := New(bot.Env, userID)
 			_, err := m.LoadMyEventSubscription()
 			if err == nil { // Subscription found

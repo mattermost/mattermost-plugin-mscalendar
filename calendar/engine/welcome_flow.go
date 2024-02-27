@@ -58,16 +58,16 @@ func (wf *WelcomeFlow) makeSteps() {
 	steps := []flow.Step{
 		&flow.EmptyStep{
 			Title:   "Update Status",
-			Message: "You can update your status to Away or Do not disturb when you are in a meeting by typing `/mscalendar settings`.",
+			Message: "You can update your status to \"Away\" or \"Do not disturb\" when you're in a meeting by typing `/mscalendar settings`.",
 		},
 		&flow.SimpleStep{
 			Title:                "Set Custom Status",
-			Message:              "Do you want to set custom status automatically on Mattermost when you are in a meeting?",
+			Message:              "Do you want to set a Mattermost custom status automatically when you're in a meeting?",
 			PropertyName:         store.SetCustomStatusPropertyName,
-			TrueButtonMessage:    "Yes - I would like to set custom status automatically",
-			FalseButtonMessage:   "No - Don't set custom status",
-			TrueResponseMessage:  "Cool, we'll set custom status automatically when you are in a meeting.",
-			FalseResponseMessage: "Cool, we'll not set custom status when you are in a meeting.",
+			TrueButtonMessage:    "Yes - set my Mattermost custom status (:calendar:) automatically",
+			FalseButtonMessage:   "No, don't set a custom status",
+			TrueResponseMessage:  "We'll set a Mattermost custom status automatically when you're in a meeting.",
+			FalseResponseMessage: "We won't set a Mattermost custom status when you're in a meeting.",
 		},
 		// &flow.SimpleStep{
 		// 	Title:                "Confirm status change",
