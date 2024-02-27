@@ -26,7 +26,7 @@ func TestSyncStatusAll(t *testing.T) {
 	eventHash := "event_id " + moment.Format(time.RFC3339)
 	busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{
 		EmailAddress: &remote.EmailAddress{
-			Address: "mock-attendee.gmail.com",
+			Address: "mock-attendee@gmail.com",
 		},
 	}}}
 
@@ -198,7 +198,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, poster, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee.gmail.com"}}}}
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
@@ -286,7 +286,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, _, _ := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee.gmail.com"}}}}
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
@@ -362,7 +362,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, _, s := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee.gmail.com"}}}, End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC")}
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC")}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
