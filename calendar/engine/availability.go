@@ -332,7 +332,7 @@ func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, res *remo
 	if len(events) == 0 {
 		if user.IsCustomStatusSet {
 			if err := m.PluginAPI.RemoveMattermostUserCustomStatus(user.MattermostUserID); err != nil {
-				return "", isStatusChanged, err
+				m.Logger.Warnf("Error removing user %s custom status. err=%v", user.MattermostUserID, err)
 			}
 
 			if err := m.Store.StoreUserCustomStatusUpdates(user.MattermostUserID, false); err != nil {
@@ -345,10 +345,6 @@ func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, res *remo
 
 	if checkOverlappingEvents(events) {
 		return "Overlapping events, not setting a custom status", isStatusChanged, nil
-	}
-
-	if events[0].IsCancelled {
-		return "Event cancelled, not setting custom status", isStatusChanged, nil
 	}
 
 	// Not setting custom status for events without attendees since those are unlikely to be meetings.
@@ -395,6 +391,11 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 	}
 
 	events := filterBusyEvents(res.Events)
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Start.Time().UnixMicro() < events[j].Start.Time().UnixMicro()
+	})
+
 	busyStatus := model.StatusDnd
 	if user.Settings.UpdateStatusFromOptions == AwayStatusOption {
 		busyStatus = model.StatusAway
@@ -662,7 +663,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 func filterBusyEvents(events []*remote.Event) []*remote.Event {
 	result := []*remote.Event{}
 	for _, e := range events {
-		if e.ShowAs == "busy" {
+		if e.ShowAs == "busy" && !e.IsCancelled {
 			result = append(result, e)
 		}
 	}
@@ -674,10 +675,6 @@ func checkOverlappingEvents(events []*remote.Event) bool {
 	if len(events) <= 1 {
 		return false
 	}
-
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].Start.Time().UnixMicro() < events[j].Start.Time().UnixMicro()
-	})
 
 	for i := 1; i < len(events); i++ {
 		if events[i-1].End.Time().UnixMicro() > events[i].Start.Time().UnixMicro() {

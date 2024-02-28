@@ -358,7 +358,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				SetCustomStatus: true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
-				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				c, papi, _, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
 				moment := time.Now().UTC()
 				busyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", IsCancelled: true}
 
@@ -366,6 +366,9 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
 				}, nil)
 				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
+				papi.EXPECT().RemoveMattermostUserCustomStatus("user_mm_id").Return(nil)
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", false).Return(nil)
 
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 			},
@@ -377,7 +380,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
 				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", IsCancelled: true}
+				busyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
