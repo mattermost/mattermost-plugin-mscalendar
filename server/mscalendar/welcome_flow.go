@@ -66,7 +66,7 @@ func (wf *WelcomeFlow) makeSteps() {
 		Title:                "Set Custom Status",
 		Message:              "Do you want to set a Mattermost custom status automatically when you're in a meeting?",
 		PropertyName:         store.SetCustomStatusPropertyName,
-		TrueButtonMessage:    "Yes - set my Mattermost custom status (:calendar:) automatically",
+		TrueButtonMessage:    "Yes - set my Mattermost custom status to :calendar: automatically",
 		FalseButtonMessage:   "No, don't set a custom status",
 		TrueResponseMessage:  "We'll set a Mattermost custom status automatically when you're in a meeting.",
 		FalseResponseMessage: "We won't set a Mattermost custom status when you're in a meeting.",
