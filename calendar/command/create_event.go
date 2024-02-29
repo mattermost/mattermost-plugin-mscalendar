@@ -13,8 +13,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils"
 )
 
-// REVIEW: No autocomplete for this command
-
 func getCreateEventFlagSet() *flag.FlagSet {
 	flagSet := flag.NewFlagSet("create", flag.ContinueOnError)
 	flagSet.Bool("help", false, "show help")

@@ -14,7 +14,6 @@ type EventResponder interface {
 	RespondToEvent(user *User, eventID, response string) error
 }
 
-// REVIEW: See if this is still necessary. I believe RespondToEvent handles all cases already
 func (m *mscalendar) AcceptEvent(user *User, eventID string) error {
 	err := m.Filter(
 		withClient,

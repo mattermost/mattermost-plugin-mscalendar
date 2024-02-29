@@ -88,7 +88,6 @@ func DefaultDailySummaryUserSettings() *DailySummaryUserSettings {
 	return &DailySummaryUserSettings{
 		PostTime: "8:00AM",
 
-		// REVIEW: hardcoding timezone seems bad. I think we replace it with the user's timezone right afterwards though
 		Timezone: "Eastern Standard Time",
 		Enable:   false,
 	}

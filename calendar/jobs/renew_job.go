@@ -31,7 +31,6 @@ func runRenewJob(env engine.Env) {
 	for _, u := range uindex {
 		asUser := engine.New(env, u.MattermostUserID)
 
-		// REVIEW: logging here is probably overkill
 		env.Logger.Debugf("Renewing for user: %s", u.MattermostUserID)
 		_, err = asUser.RenewMyEventSubscription()
 		if err != nil {

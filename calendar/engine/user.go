@@ -87,7 +87,6 @@ func (m *mscalendar) ExpandMattermostUser(user *User) error {
 	return nil
 }
 
-// REVIEW: the timezone is the only thing used from the mailbox settings
 func (m *mscalendar) GetTimezone(user *User) (string, error) {
 	err := m.Filter(
 		withClient,
@@ -159,7 +158,6 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 
 	eventSubscriptionID := storedUser.Settings.EventSubscriptionID
 	if eventSubscriptionID != "" {
-		// REVIEW: deleting local notification subscription during disconnect
 		sub, errLoad := m.Store.LoadSubscription(eventSubscriptionID)
 		if errLoad != nil {
 			return errors.Wrap(errLoad, "error loading subscription")

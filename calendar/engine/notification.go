@@ -138,7 +138,6 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 
 	client := processor.Remote.MakeClient(context.Background(), creator.OAuth2Token)
 
-	// REVIEW: depends on lifecycle of subscriptions. its always false for gcal. set to true in msgraph client here https://github.com/mattermost/mattermost-plugin-mscalendar/blob/9ed5ee6e2141e7e6f32a5a80d7a20ab0881c8586/server/remote/msgraph/handle_webhook.go#L77-L80
 	if n.RecommendRenew {
 		var renewed *remote.Subscription
 		renewed, err = client.RenewSubscription(processor.Config.GetNotificationURL(), sub.Remote.CreatorID, n.Subscription)
@@ -161,7 +160,6 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		}).Debugf("webhook notification: renewed user subscription.")
 	}
 
-	// REVIEW: this seems to be implemented for gcal's case already
 	if n.IsBare {
 		n, err = client.GetNotificationData(n)
 		if err != nil {

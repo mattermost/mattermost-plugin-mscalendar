@@ -3,8 +3,6 @@
 
 package config
 
-// REVIEW: need an interface for returning bot info
-// probably good to have a struct to capture the data clump
 const (
 	BotDescription = "Created by the %s Plugin."
 

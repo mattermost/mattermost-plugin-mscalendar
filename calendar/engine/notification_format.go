@@ -191,7 +191,6 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 	case e.IsAllDay:
 		dur = "all-day"
 
-		// REVIEW: would be good to extract some of this stuff out into separate functions. different file too
 	default:
 		switch hours {
 		case 0:
@@ -220,7 +219,6 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 		attendees = append(attendees, fields.NewStringValue("None"))
 	}
 
-	// REVIEW: some good stuff here. gotta make sure they are all filled in for gcal's case
 	ff := fields.Fields{
 		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
