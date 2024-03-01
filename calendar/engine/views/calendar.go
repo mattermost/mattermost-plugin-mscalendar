@@ -176,6 +176,7 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 		Fields:    fields,
 		Actions:   actions,
+		Fallback:  fmt.Sprintf("%s\n%s - %s", event.Subject, event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 	}
 
 	for _, opt := range options {
