@@ -77,7 +77,7 @@ type User struct {
 }
 
 var DefaultSettings = Settings{
-	GetConfirmation:                   false,
+	GetConfirmation: false,
 }
 
 type Settings struct {
