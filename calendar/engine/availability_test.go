@@ -353,6 +353,66 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 			},
 		},
+		"SetCustomStatus enabled with back-to-back events": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				moment := time.Now().UTC()
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, ShowAs: "busy"}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: firstBusyEvent.End, End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+
+				papi.EXPECT().GetMattermostUser("user_mm_id").Return(&model.User{
+					Id: "user_mm_id",
+				}, nil)
+				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
+					Emoji:     "calendar",
+					Text:      "In a meeting",
+					ExpiresAt: firstBusyEvent.End.Time(),
+					Duration:  "date_and_time",
+				}).Return(nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
+			},
+		},
+		"SetCustomStatus enabled with non overlapping events": {
+			settings: store.Settings{
+				SetCustomStatus: true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				moment := time.Now().UTC()
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, ShowAs: "busy"}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(20*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(30*time.Minute), "UTC"), Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+
+				papi.EXPECT().GetMattermostUser("user_mm_id").Return(&model.User{
+					Id: "user_mm_id",
+				}, nil)
+				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
+					Emoji:     "calendar",
+					Text:      "In a meeting",
+					ExpiresAt: firstBusyEvent.End.Time(),
+					Duration:  "date_and_time",
+				}).Return(nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
+			},
+		},
 		"SetCustomStatus enabled but event cancelled": {
 			settings: store.Settings{
 				SetCustomStatus: true,
