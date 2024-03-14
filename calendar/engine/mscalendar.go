@@ -45,6 +45,8 @@ type PluginAPI interface {
 	GetMattermostUserStatusesByIds(mattermostUserIDs []string) ([]*model.Status, error)
 	IsSysAdmin(mattermostUserID string) (bool, error)
 	UpdateMattermostUserStatus(mattermostUserID, status string) (*model.Status, error)
+	UpdateMattermostUserCustomStatus(mattermostUserID string, customStatus *model.CustomStatus) *model.AppError
+	RemoveMattermostUserCustomStatus(mattermostUserID string) *model.AppError
 	GetPost(postID string) (*model.Post, error)
 	CanLinkEventToChannel(channelID, userID string) bool
 	SearchLinkableChannelForUser(teamID, mattemostUserID, search string) ([]*model.Channel, error)

@@ -64,6 +64,14 @@ func (a *API) UpdateMattermostUserStatus(mattermostUserID, status string) (*mode
 	return s, nil
 }
 
+func (a *API) UpdateMattermostUserCustomStatus(mattermostUserID string, customStatus *model.CustomStatus) *model.AppError {
+	return a.api.UpdateUserCustomStatus(mattermostUserID, customStatus)
+}
+
+func (a *API) RemoveMattermostUserCustomStatus(mattermostUserID string) *model.AppError {
+	return a.api.RemoveUserCustomStatus(mattermostUserID)
+}
+
 // IsSysAdmin returns true if the user is authorized to use the workflow plugin's admin-level APIs/commands.
 func (a *API) IsSysAdmin(mattermostUserID string) (bool, error) {
 	user, err := a.api.GetUser(mattermostUserID)
