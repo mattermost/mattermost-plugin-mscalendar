@@ -1,2 +1,7 @@
 dist
+<<<<<<< HEAD
 server/manifest.go
+=======
+.DS_Store
+.npminstall
+>>>>>>> d1fce7adf22bf4442b80818ecd1e0daff87f7678

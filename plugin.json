@@ -4,7 +4,7 @@
     "description": "Microsoft Calendar Integration",
     "homepage_url": "https://mattermost.com/pl/mattermost-plugin-mscalendar",
     "support_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/issues",
-    "icon_path": "assets/profile.svg",
+    "icon_path": "assets/profile-mscalendar.svg",
     "min_server_version": "6.3.0",
     "server": {
         "executables": {
