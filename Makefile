@@ -15,13 +15,10 @@ DEFAULT_GOARCH := $(shell go env GOARCH)
 
 export GO111MODULE=on
 
-<<<<<<< HEAD
 # We need to export GOBIN to allow it to be set
 # for processes spawned from the Makefile
 export GOBIN ?= $(PWD)/bin
-=======
 GO_PACKAGES ?= ./server/... ./calendar/... ./msgraph/...
->>>>>>> d1fce7adf22bf4442b80818ecd1e0daff87f7678
 
 # You can include assets this directory into the bundle. This can be e.g. used to include profile pictures.
 ASSETS_DIR ?= assets
@@ -53,7 +50,6 @@ endif
 .PHONY: all
 all: check-style test dist
 
-<<<<<<< HEAD
 ## Propagates plugin manifest information into the server/ and webapp/ folders.
 .PHONY: apply
 apply:
@@ -65,10 +61,7 @@ install-go-tools:
 	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1
 	$(GO) install gotest.tools/gotestsum@v1.7.0
 
-## Runs eslint and golangci-lint
-=======
 ## Runs golangci-lint and eslint.
->>>>>>> d1fce7adf22bf4442b80818ecd1e0daff87f7678
 .PHONY: check-style
 check-style: apply webapp/node_modules install-go-tools
 	@echo Checking for style guide compliance
@@ -172,11 +165,7 @@ validate-go-version: ## Validates the installed version of go against Mattermost
 bundle:
 	rm -rf dist/
 	mkdir -p dist/$(PLUGIN_ID)
-<<<<<<< HEAD
 	./build/bin/manifest dist
-=======
-	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
->>>>>>> d1fce7adf22bf4442b80818ecd1e0daff87f7678
 ifneq ($(wildcard $(ASSETS_DIR)/.),)
 	cp -r $(ASSETS_DIR) dist/$(PLUGIN_ID)/
 endif
@@ -262,7 +251,6 @@ detach: setup-attach
 .PHONY: test
 test: apply webapp/node_modules install-go-tools
 ifneq ($(HAS_SERVER),)
-<<<<<<< HEAD
 	$(GOBIN)/gotestsum -- -v ./...
 endif
 ifneq ($(HAS_WEBAPP),)
@@ -275,9 +263,6 @@ endif
 test-ci: apply webapp/node_modules install-go-tools
 ifneq ($(HAS_SERVER),)
 	$(GOBIN)/gotestsum --format standard-verbose --junitfile report.xml -- ./...
-=======
-	$(GO) test -v $(GO_TEST_FLAGS) $(GO_PACKAGES)
->>>>>>> d1fce7adf22bf4442b80818ecd1e0daff87f7678
 endif
 ifneq ($(HAS_WEBAPP),)
 	cd webapp && $(NPM) run test;
@@ -342,7 +327,6 @@ ifneq ($(HAS_WEBAPP),)
 endif
 	rm -fr build/bin/
 
-<<<<<<< HEAD
 .PHONY: logs
 logs:
 	./build/bin/pluginctl logs $(PLUGIN_ID)
@@ -351,7 +335,6 @@ logs:
 logs-watch:
 	./build/bin/pluginctl logs-watch $(PLUGIN_ID)
 
-=======
 ## Setup dlv for attaching, identifying the plugin PID for other targets.
 .PHONY: setup-attach
 setup-attach:
@@ -401,7 +384,6 @@ kill: detach
 		echo "Killing plugin pid $$PID"; \
 		kill -9 $$PID; \
 	done; \
->>>>>>> d1fce7adf22bf4442b80818ecd1e0daff87f7678
 # Help documentation à la https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help:
 	@cat Makefile build/*.mk | grep -v '\.PHONY' |  grep -v '\help:' | grep -B1 -E '^[a-zA-Z0-9_.-]+:.*' | sed -e "s/:.*//" | sed -e "s/^## //" |  grep -v '\-\-' | sed '1!G;h;$$!d' | awk 'NR%2{printf "\033[36m%-30s\033[0m",$$0;next;}1' | sort
