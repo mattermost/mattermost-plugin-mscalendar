@@ -9,10 +9,10 @@ import (
 	http "net/http"
 	reflect "reflect"
 
-	bot "github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	gomock "github.com/golang/mock/gomock"
 	config "github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+	bot "github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	oauth2 "golang.org/x/oauth2"
 )
 

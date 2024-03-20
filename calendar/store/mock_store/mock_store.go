@@ -8,8 +8,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	oauth2 "golang.org/x/oauth2"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
+	oauth2 "golang.org/x/oauth2"
 )
 
 // MockStore is a mock of Store interface.
