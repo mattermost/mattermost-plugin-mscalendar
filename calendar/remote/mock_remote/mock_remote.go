@@ -9,6 +9,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
+	bot "github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	gomock "github.com/golang/mock/gomock"
 	config "github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 	remote "github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
@@ -66,18 +67,18 @@ func (mr *MockRemoteMockRecorder) HandleWebhook(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleWebhook", reflect.TypeOf((*MockRemote)(nil).HandleWebhook), arg0, arg1)
 }
 
-// MakeClient mocks base method.
-func (m *MockRemote) MakeClient(arg0 context.Context, arg1 *oauth2.Token) remote.Client {
+// MakeUserClient mocks base method
+func (m *MockRemote) MakeUserClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 remote.UserTokenHelpers) remote.Client {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MakeClient", arg0, arg1)
+	ret := m.ctrl.Call(m, "MakeUserClient", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(remote.Client)
 	return ret0
 }
 
-// MakeClient indicates an expected call of MakeClient.
-func (mr *MockRemoteMockRecorder) MakeClient(arg0, arg1 interface{}) *gomock.Call {
+// MakeUserClient indicates an expected call of MakeUserClient
+func (mr *MockRemoteMockRecorder) MakeUserClient(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeClient", reflect.TypeOf((*MockRemote)(nil).MakeClient), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeUserClient", reflect.TypeOf((*MockRemote)(nil).MakeUserClient), arg0, arg1, arg2, arg3, arg4)
 }
 
 // MakeSuperuserClient mocks base method.
