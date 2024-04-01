@@ -159,7 +159,6 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 
 	eventSubscriptionID := storedUser.Settings.EventSubscriptionID
 	if eventSubscriptionID != "" {
-		// REVIEW: deleting local notification subscription during disconnect
 		sub, errLoad := m.Store.LoadSubscription(eventSubscriptionID)
 		if errLoad != nil {
 			return errors.Wrap(errLoad, "error loading subscription")

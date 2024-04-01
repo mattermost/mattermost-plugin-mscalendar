@@ -49,7 +49,7 @@ endif
 .PHONY: all
 all: check-style test dist
 
-## Runs eslint and golangci-lint
+## Runs golangci-lint and eslint.
 .PHONY: check-style
 check-style: webapp/node_modules
 	@echo Checking for style guide compliance
@@ -102,10 +102,52 @@ webapp: webapp/node_modules
 ifneq ($(HAS_WEBAPP),)
 ifeq ($(MM_DEBUG),)
 	cd webapp && $(NPM) run build;
+endif
+
+## Builds the webapp in debug mode, if it exists.
+.PHONY: webapp-debug
+webapp-debug: webapp/.npminstall
+ifneq ($(HAS_WEBAPP),)
+	cd webapp && \
+	$(NPM) run debug;
+endif
+
+# server-debug builds and deploys a debug version of the plugin for your architecture.
+# Then resets the plugin to pick up the changes.
+.PHONY: server-debug
+server-debug: server-debug-deploy reset
+
+.PHONY: server-debug-deploy
+server-debug-deploy: validate-go-version
+	mkdir -p server/dist
+ifeq ($(OS),Darwin)
+	cd server && env GOOS=darwin GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-darwin-amd64;
+else ifeq ($(OS),Linux)
+	cd server && env GOOS=linux GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-linux-amd64;
+else ifeq ($(OS),Windows_NT)
+	cd server && env GOOS=windows GOARCH=amd64 $(GOBUILD) -gcflags "all=-N -l" -o dist/plugin-windows-amd64.exe;
 else
 	cd webapp && $(NPM) run debug;
 endif
 endif
+	rm -rf dist/
+	mkdir -p dist/$(PLUGIN_ID)/server/dist
+	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
+	cp -r server/dist/* dist/$(PLUGIN_ID)/server/dist/
+	mkdir -p ../mattermost-server/plugins
+	cp -r dist/* ../mattermost-server/plugins/
+
+.PHONY: validate-go-version
+validate-go-version: ## Validates the installed version of go against Mattermost's minimum requirement.
+	@if [ $(GO_MAJOR_VERSION) -gt $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION) ]; then \
+		exit 0 ;\
+	elif [ $(GO_MAJOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MAJOR_VERSION) ]; then \
+		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+		exit 1; \
+	elif [ $(GO_MINOR_VERSION) -lt $(MINIMUM_SUPPORTED_GO_MINOR_VERSION) ] ; then \
+		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+		exit 1; \
+	fi
 
 ## Generates a tar bundle of the plugin for install.
 .PHONY: bundle
@@ -263,6 +305,55 @@ ifneq ($(HAS_WEBAPP),)
 endif
 	rm -fr build/bin/
 
+## Setup dlv for attaching, identifying the plugin PID for other targets.
+.PHONY: setup-attach
+setup-attach:
+	$(eval PLUGIN_PID := $(shell ps aux | grep "plugins/${PLUGIN_ID}" | grep -v "grep" | awk -F " " '{print $$2}'))
+	$(eval NUM_PID := $(shell echo -n ${PLUGIN_PID} | wc -w))
+
+	@if [ ${NUM_PID} -gt 2 ]; then \
+		echo "** There is more than 1 plugin process running. Run 'make kill reset' to restart just one."; \
+		exit 1; \
+	fi
+
+## Check if setup-attach succeeded.
+.PHONY: check-attach
+check-attach:
+	@if [ -z ${PLUGIN_PID} ]; then \
+		echo "Could not find plugin PID; the plugin is not running. Exiting."; \
+		exit 1; \
+	else \
+		echo "Located Plugin running with PID: ${PLUGIN_PID}"; \
+	fi
+
+## Attach dlv to an existing plugin instance.
+.PHONY: attach
+attach: setup-attach check-attach
+	dlv attach ${PLUGIN_PID}
+
+## Attach dlv to an existing plugin instance, exposing a headless instance on $DLV_DEBUG_PORT.
+.PHONY: attach-headless
+attach-headless: setup-attach check-attach
+	dlv attach ${PLUGIN_PID} --listen :$(DLV_DEBUG_PORT) --headless=true --api-version=2 --accept-multiclient
+
+## Detach dlv from an existing plugin instance, if previously attached.
+.PHONY: detach
+detach: setup-attach
+	@DELVE_PID=$(shell ps aux | grep "dlv attach ${PLUGIN_PID}" | grep -v "grep" | awk -F " " '{print $$2}') && \
+	if [ "$$DELVE_PID" -gt 0 ] > /dev/null 2>&1 ; then \
+		echo "Located existing delve process running with PID: $$DELVE_PID. Killing." ; \
+		kill -9 $$DELVE_PID ; \
+	fi
+
+## Kill all instances of the plugin, detaching any existing dlv instance.
+.PHONY: kill
+kill: detach
+	$(eval PLUGIN_PID := $(shell ps aux | grep "plugins/${PLUGIN_ID}" | grep -v "grep" | awk -F " " '{print $$2}'))
+
+	@for PID in ${PLUGIN_PID}; do \
+		echo "Killing plugin pid $$PID"; \
+		kill -9 $$PID; \
+	done; \
 # Help documentation à la https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help:
 	@cat Makefile build/*.mk | grep -v '\.PHONY' |  grep -v '\help:' | grep -B1 -E '^[a-zA-Z0-9_.-]+:.*' | sed -e "s/:.*//" | sed -e "s/^## //" |  grep -v '\-\-' | sed '1!G;h;$$!d' | awk 'NR%2{printf "\033[36m%-30s\033[0m",$$0;next;}1' | sort

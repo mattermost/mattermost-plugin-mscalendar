@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost/server/public/model"
+	model "github.com/mattermost/mattermost/server/public/model"
 )
 
 // MockJobPluginAPI is a mock of JobPluginAPI interface.

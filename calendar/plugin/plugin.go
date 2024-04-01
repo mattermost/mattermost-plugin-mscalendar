@@ -172,7 +172,6 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.bot = e.bot.WithConfig(stored.Config)
 		e.Dependencies.Remote = remote.Makers[config.Provider.Name](e.Config, e.bot)
 
-		// REVIEW: need to make this provider agnostic terminology
 		mscalendarBot := engine.NewMSCalendarBot(e.bot, e.Env, pluginURL)
 
 		e.Dependencies.Logger = e.bot

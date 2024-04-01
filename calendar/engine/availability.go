@@ -23,7 +23,6 @@ const (
 	StatusSyncJobInterval         = 5 * time.Minute
 	upcomingEventNotificationTime = 10 * time.Minute
 
-	// REVIEW: This should be documented how this works. A dev has to read code to understand how the timing of these jobs and close proximity calendar events work
 	upcomingEventNotificationWindow = (StatusSyncJobInterval * 11) / 10 // 110% of the interval
 	logTruncateMsg                  = "We've truncated the logs due to too many messages"
 	logTruncateLimit                = 5
