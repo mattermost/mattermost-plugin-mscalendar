@@ -495,7 +495,6 @@ func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalend
 		})
 	}
 
-	// REVIEW: gcal batching requirement. maybe don't do batching, and instead use a channel to stream results back to here more concurrently
 	return m.client.DoBatchViewCalendarRequests(params)
 }
 

@@ -87,7 +87,6 @@ func (m *mscalendar) ExpandMattermostUser(user *User) error {
 	return nil
 }
 
-// REVIEW: the timezone is the only thing used from the mailbox settings
 func (m *mscalendar) GetTimezone(user *User) (string, error) {
 	err := m.Filter(
 		withClient,

@@ -94,7 +94,6 @@ func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUser
 	return m.client.CreateEvent(user.Remote.ID, event)
 }
 
-// REVIEW: remove all delete calendar references. dead code/feature
 func (m *mscalendar) DeleteCalendar(user *User, calendarID string) error {
 	err := m.Filter(
 		withClient,
@@ -116,7 +115,6 @@ func (m *mscalendar) FindMeetingTimes(user *User, meetingParams *remote.FindMeet
 		return nil, err
 	}
 
-	// REVIEW: need to figure out exact usages of this return value, and shorten the scope into a smaller struct, to make it so there are no missed expectations of present data between providers
 	return m.client.FindMeetingTimes(user.Remote.ID, meetingParams)
 }
 
@@ -129,6 +127,5 @@ func (m *mscalendar) GetCalendars(user *User) ([]*remote.Calendar, error) {
 		return nil, err
 	}
 
-	// REVIEW: same here. need to figure out exact usages of this return value, and shorten the scope into a smaller struct, to make it so there are no missed expectations of present data between providers
 	return m.client.GetCalendars(user.Remote.ID)
 }

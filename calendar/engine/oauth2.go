@@ -111,7 +111,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	}
 
 	u.Settings.DailySummary = &store.DailySummaryUserSettings{
-		PostTime: "8:00AM", // REVIEW: we shouls support military time for user inputs elsewhere
+		PostTime: "8:00AM",
 		Timezone: mailboxSettings.TimeZone,
 		Enable:   false,
 	}

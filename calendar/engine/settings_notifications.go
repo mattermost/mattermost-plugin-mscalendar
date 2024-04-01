@@ -35,7 +35,6 @@ func (s *notificationSetting) Set(userID string, value interface{}) error {
 	cal := s.getCal(userID)
 
 	if boolValue {
-		// REVIEW: notification subscription logic in notification settings. this seems a bit weird. what does this function/block have to do specifically with notifications?
 		_, err := cal.LoadMyEventSubscription()
 		if err != nil {
 			_, err := cal.CreateMyEventSubscription()
