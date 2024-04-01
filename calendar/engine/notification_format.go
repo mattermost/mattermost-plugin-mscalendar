@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mattermost/mattermost/server/public/model"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/fields"
-
-	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {

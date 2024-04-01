@@ -13,10 +13,10 @@ import (
 	"sync"
 	"text/template"
 
-	pluginapiclient "github.com/mattermost/mattermost-plugin-api"
+	pluginapiclient "github.com/mattermost/mattermost/server/public/pluginapi"
 
-	"github.com/mattermost/mattermost-server/v6/model"
-	"github.com/mattermost/mattermost-server/v6/plugin"
+	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/mattermost/mattermost/server/public/plugin"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/api"
