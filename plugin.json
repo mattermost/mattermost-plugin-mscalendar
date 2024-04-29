@@ -7,7 +7,7 @@
     "release_notes_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/releases/tag/v1.3.0",
     "icon_path": "assets/profile-mscalendar.svg",
     "version": "1.3.0",
-    "min_server_version": "6.3.0",
+    "min_server_version": "8.1.0",
     "server": {
         "executables": {
             "darwin-amd64": "server/dist/plugin-darwin-amd64",
