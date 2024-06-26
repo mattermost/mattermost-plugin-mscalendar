@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -212,11 +213,28 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
 					gomock.Eq("fake@mattermost.com"),
-					gomock.Eq(RemoteUserAlreadyConnected),
-					gomock.Eq(config.Provider.DisplayName),
-					gomock.Eq("mail-value"),
-					gomock.Eq("sample-username"),
-					gomock.Eq(config.Provider.CommandTrigger),
+					gomock.Eq(fmt.Sprintf(RemoteUserAlreadyConnected, config.Provider.DisplayName, "mail-value", "sample-username", config.Provider.CommandTrigger)),
+				).Return("post_id", nil).Times(1)
+			},
+		},
+		{
+			name:              "Remote user already connected to disabled account",
+			mattermostUserID:  "fake@mattermost.com",
+			code:              fakeCode,
+			state:             "user_fake@mattermost.com",
+			registerResponder: statusOKGraphAPIResponder,
+			setup: func(d *Dependencies) {
+				papi := d.PluginAPI.(*mock_plugin_api.MockPluginAPI)
+				papi.EXPECT().GetMattermostUser("fake@mattermost.com").Return(nil, store.ErrNotFound)
+
+				ss := d.Store.(*mock_store.MockStore)
+				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("fake@mattermost.com", nil)
+				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+
+				poster := d.Poster.(*mock_bot.MockPoster)
+				poster.EXPECT().DM(
+					gomock.Eq("fake@mattermost.com"),
+					gomock.Eq(fmt.Sprintf(RemoteUserAlreadyConnecteDisabled, config.Provider.DisplayName, "mail-value", config.Provider.CommandTrigger)),
 				).Return("post_id", nil).Times(1)
 			},
 		},
