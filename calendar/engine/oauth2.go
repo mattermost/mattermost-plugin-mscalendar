@@ -21,7 +21,7 @@ const BotWelcomeMessage = "Bot user connected to account %s."
 
 const (
 	RemoteUserAlreadyConnected         = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account"
-	RemoteUserAlreadyConnecteDisabled  = "%s account `%s` is already mapped to a Mattermost account, but the account is deactived. Please enable it and run `/%s disconnect`,  while logged in as the other Mattermost account, and try again"
+	RemoteUserAlreadyConnectedDisabled = "%s account `%s` is already mapped to a Mattermost account, but the account is deactived. Please enable it and run `/%s disconnect`,  while logged in as the other Mattermost account, and try again"
 	RemoteUserAlreadyConnectedNotFound = "%s account `%s` is already mapped to a Mattermost account, but the Mattermost user could not be found"
 )
 
@@ -90,7 +90,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		}
 
 		if userErr == store.ErrNotFound {
-			msg := fmt.Sprintf(RemoteUserAlreadyConnecteDisabled, config.Provider.DisplayName, me.Mail, config.Provider.CommandTrigger)
+			msg := fmt.Sprintf(RemoteUserAlreadyConnectedDisabled, config.Provider.DisplayName, me.Mail, config.Provider.CommandTrigger)
 			app.Poster.DM(authedUserID, msg)
 			return errors.New(msg)
 		}
