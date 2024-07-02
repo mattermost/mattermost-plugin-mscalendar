@@ -52,10 +52,11 @@ type pluginStore struct {
 	welcomeIndexKV     kvstore.KVStore
 	settingsPanelKV    kvstore.KVStore
 	Logger             bot.Logger
+	Poster             bot.Poster
 	Tracker            tracker.Tracker
 }
 
-func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker, enableEncryption bool, encryptionKey []byte) Store {
+func NewPluginStore(api plugin.API, logger bot.Logger, poster bot.Poster, tracker tracker.Tracker, enableEncryption bool, encryptionKey []byte) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	oauth2KV := kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix)
 	user2KV := kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix)
@@ -76,6 +77,7 @@ func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker, 
 		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
 		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
 		Logger:             logger,
+		Poster:             poster,
 		Tracker:            tracker,
 	}
 }

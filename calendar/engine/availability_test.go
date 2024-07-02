@@ -453,7 +453,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		events := []*remote.Event{newTestEvent("1", "", "test")}
 		papi.EXPECT().GetMattermostUser(testUser.MattermostUserID)
-		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token).Return(client)
+		r.EXPECT().MakeUserClient(context.Background(), testUser.OAuth2Token, gomock.Any(), gomock.Any(), gomock.Any()).Return(client)
 		c.EXPECT().GetEventsBetweenDates(testUser.Remote.ID, gomock.Any(), gomock.Any()).Return(events, nil)
 
 		m := New(e, "").(*mscalendar)
@@ -498,7 +498,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 		events := []*remote.Event{newTestEvent("1", "", "test")}
 		papi.EXPECT().GetMattermostUser(testUser.MattermostUserID)
-		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token).Return(client)
+		r.EXPECT().MakeUserClient(context.Background(), testUser.OAuth2Token, gomock.Any(), gomock.Any(), gomock.Any()).Return(client)
 		c.EXPECT().GetEventsBetweenDates(testUser.Remote.ID, gomock.Any(), gomock.Any()).Return(events, nil)
 
 		m := New(e, "").(*mscalendar)
@@ -547,8 +547,8 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 		eventsUser2 := []*remote.Event{newTestEvent("2", "", "test2")}
 		papi.EXPECT().GetMattermostUser(testUser.MattermostUserID)
 		papi.EXPECT().GetMattermostUser(testUser2.MattermostUserID)
-		r.EXPECT().MakeClient(gomock.Any(), testUser.OAuth2Token).Return(client)
-		r.EXPECT().MakeClient(gomock.Any(), testUser2.OAuth2Token).Return(client)
+		r.EXPECT().MakeUserClient(context.Background(), testUser.OAuth2Token, gomock.Any(), gomock.Any(), gomock.Any()).Return(client)
+		r.EXPECT().MakeUserClient(context.Background(), testUser2.OAuth2Token, gomock.Any(), gomock.Any(), gomock.Any()).Return(client)
 		c.EXPECT().GetEventsBetweenDates(testUser.Remote.ID, gomock.Any(), gomock.Any()).Return(eventsUser1, nil)
 		c.EXPECT().GetEventsBetweenDates(testUser2.Remote.ID, gomock.Any(), gomock.Any()).Return(eventsUser2, nil)
 
