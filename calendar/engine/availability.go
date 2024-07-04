@@ -286,7 +286,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			continue
 		}
 
-		events := filterBusyEvents(view.Events)
+		events := filterBusyAndAttendeeEvents(view.Events)
 		events = getMergedEvents(events)
 
 		var err error
@@ -350,11 +350,6 @@ func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, events []
 		}
 
 		return "No event present to set custom status", isStatusChanged, nil
-	}
-
-	// Not setting custom status for events without attendees since those are unlikely to be meetings.
-	if len(events[0].Attendees) < 1 {
-		return "No attendee present, not setting custom status", isStatusChanged, nil
 	}
 
 	currentUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
@@ -423,10 +418,6 @@ func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.S
 			return "", isStatusChanged, errors.Wrapf(err, "error in storing active events for user %s", user.MattermostUserID)
 		}
 		return message, isStatusChanged, nil
-	}
-	// Not setting custom status for events without attendees since those are unlikely to be meetings.
-	if len(events[0].Attendees) < 1 {
-		return "No attendee present, not updating status", isStatusChanged, nil
 	}
 
 	remoteHashes := []string{}
@@ -654,10 +645,11 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 	}
 }
 
-func filterBusyEvents(events []*remote.Event) []*remote.Event {
+func filterBusyAndAttendeeEvents(events []*remote.Event) []*remote.Event {
 	result := []*remote.Event{}
 	for _, e := range events {
-		if e.ShowAs == "busy" && !e.IsCancelled {
+		// Not setting custom status for events without attendees since those are unlikely to be meetings.
+		if e.ShowAs == "busy" && !e.IsCancelled && len(e.Attendees) >= 1 {
 			result = append(result, e)
 		}
 	}

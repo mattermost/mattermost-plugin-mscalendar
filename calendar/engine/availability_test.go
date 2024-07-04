@@ -378,10 +378,10 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				SetCustomStatus: true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
-				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				c, papi, _, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
 				moment := time.Now().UTC()
-				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), ShowAs: "busy"}
-				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(5*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), ShowAs: "busy"}
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(5*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}}
 
 				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
 					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
@@ -389,6 +389,18 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
 
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+
+				papi.EXPECT().GetMattermostUser("user_mm_id").Return(&model.User{
+					Id: "user_mm_id",
+				}, nil)
+				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
+					Emoji:     "calendar",
+					Text:      "In a meeting",
+					ExpiresAt: secondBusyEvent.End.Time(),
+					Duration:  "date_and_time",
+				}).Return(nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
 			},
 		},
 		"SetCustomStatus enabled with back-to-back events": {
@@ -476,7 +488,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				SetCustomStatus: true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
-				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				c, papi, _, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
 				moment := time.Now().UTC()
 				busyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy"}
 
@@ -484,8 +496,11 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
 				}, nil)
 				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+				papi.EXPECT().RemoveMattermostUserCustomStatus("user_mm_id").Return(nil)
 
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", false).Return(nil)
 			},
 		},
 		"SetCustomStatus enabled": {
