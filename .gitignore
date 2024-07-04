@@ -1,3 +1,4 @@
 dist
+server/manifest.go
 .DS_Store
 .npminstall
