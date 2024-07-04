@@ -30,8 +30,8 @@ func NewSettingsPanel(bot bot.Bot, panelStore settingspanel.PanelStore, settingS
 		"Update Status",
 		"Do you want to update your status on Mattermost when you are in a meeting?",
 		"",
-		NotSetStatusOption,
-		[]string{AwayStatusOption, DNDStatusOption, NotSetStatusOption},
+		store.NotSetStatusOption,
+		[]string{store.AwayStatusOption, store.DNDStatusOption, store.NotSetStatusOption},
 		settingStore,
 	))
 	settings = append(settings, settingspanel.NewBoolSetting(

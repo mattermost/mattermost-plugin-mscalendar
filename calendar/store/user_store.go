@@ -87,6 +87,10 @@ type Settings struct {
 	GetConfirmation         bool
 	ReceiveReminders        bool
 	SetCustomStatus         bool
+
+	// Legacy settings
+	UpdateStatus                      bool
+	ReceiveNotificationsDuringMeeting bool
 }
 
 type DailySummaryUserSettings struct {
@@ -100,6 +104,12 @@ type WelcomeFlowStatus struct {
 	PostIDs map[string]string
 	Step    int
 }
+
+const (
+	AwayStatusOption   = "Away"
+	DNDStatusOption    = "Do Not Disturb"
+	NotSetStatusOption = "Don't set status for me"
+)
 
 func (settings Settings) String() string {
 	sub := "no subscription"
@@ -366,4 +376,27 @@ func (index UserIndex) GetMattermostUserIDs() []string {
 	}
 
 	return result
+}
+
+func (user *User) IsConfiguredForStatusUpdates() bool {
+	if user.Settings.UpdateStatusFromOptions == AwayStatusOption || user.Settings.UpdateStatusFromOptions == DNDStatusOption {
+		return true
+	}
+
+	if user.Settings.UpdateStatusFromOptions == "" {
+		if user.Settings.UpdateStatus {
+			user.Settings.UpdateStatusFromOptions = DNDStatusOption
+			if user.Settings.ReceiveNotificationsDuringMeeting {
+				user.Settings.UpdateStatusFromOptions = AwayStatusOption
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func (user *User) IsConfiguredForCustomStatusUpdates() bool {
+	return user.Settings.SetCustomStatus
 }

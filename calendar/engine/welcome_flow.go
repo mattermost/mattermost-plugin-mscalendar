@@ -58,7 +58,7 @@ func (wf *WelcomeFlow) makeSteps() {
 	steps := []flow.Step{
 		&flow.EmptyStep{
 			Title:   "Update Status",
-			Message: "You can update your status to \"Away\" or \"Do not disturb\" when you're in a meeting by typing `/mscalendar settings`.",
+			Message: fmt.Sprintf("You can type `/%s` to configure the plugin to update your status to \"Away\" or \"Do not disturb\" when you're in a meeting.", config.Provider.CommandTrigger),
 		},
 		&flow.SimpleStep{
 			Title:                "Set Custom Status",

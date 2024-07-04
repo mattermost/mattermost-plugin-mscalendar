@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
@@ -138,7 +139,7 @@ func TestSyncStatusAll(t *testing.T) {
 					Mail: "user_email@example.com",
 				},
 				Settings: store.Settings{
-					UpdateStatusFromOptions: DNDStatusOption,
+					UpdateStatusFromOptions: store.DNDStatusOption,
 					GetConfirmation:         tc.getConfirmation,
 					SetCustomStatus:         false,
 				},
@@ -192,7 +193,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 	}{
 		"UpdateStatusFromOptions default": {
 			settings: store.Settings{
-				UpdateStatusFromOptions: NotSetStatusOption,
+				UpdateStatusFromOptions: store.NotSetStatusOption,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, r := client.(*mock_remote.MockClient), deps.Remote.(*mock_remote.MockRemote)
@@ -202,7 +203,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 		},
 		"UpdateStatusFromOptions away and GetConfirmation enabled": {
 			settings: store.Settings{
-				UpdateStatusFromOptions: AwayStatusOption,
+				UpdateStatusFromOptions: store.AwayStatusOption,
 				GetConfirmation:         true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
@@ -224,7 +225,7 @@ func TestSyncStatusUserConfig(t *testing.T) {
 		},
 		"UpdateStatusFromOptions do not disturb, GetConfirmation enabled and no attendee present": {
 			settings: store.Settings{
-				UpdateStatusFromOptions: DNDStatusOption,
+				UpdateStatusFromOptions: store.DNDStatusOption,
 				GetConfirmation:         true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
@@ -244,8 +245,52 @@ func TestSyncStatusUserConfig(t *testing.T) {
 		},
 		"UpdateStatusFromOptions do not disturb, GetConfirmation enabled and overlapping events present": {
 			settings: store.Settings{
-				UpdateStatusFromOptions: DNDStatusOption,
+				UpdateStatusFromOptions: store.DNDStatusOption,
 				GetConfirmation:         true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				moment := time.Now().UTC()
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), ShowAs: "busy"}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(5*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
+				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
+
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+			},
+		},
+		"Update status to away using legacy settings, GetConfirmation enabled and overlapping events present": {
+			settings: store.Settings{
+				UpdateStatus:                      true,
+				ReceiveNotificationsDuringMeeting: true,
+				GetConfirmation:                   true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				moment := time.Now().UTC()
+				firstBusyEvent := &remote.Event{ICalUID: "event_id-1", Start: remote.NewDateTime(moment, "UTC"), End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC"), ShowAs: "busy"}
+				secondBusyEvent := &remote.Event{ICalUID: "event_id-2", Start: remote.NewDateTime(moment.Add(5*time.Minute), "UTC"), End: remote.NewDateTime(moment.Add(15*time.Minute), "UTC"), ShowAs: "busy"}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{firstBusyEvent, secondBusyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+
+				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
+
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+			},
+		},
+		"Update status to dnd using legacy settings, GetConfirmation enabled and overlapping events present": {
+			settings: store.Settings{
+				UpdateStatus:                      true,
+				ReceiveNotificationsDuringMeeting: false,
+				GetConfirmation:                   true,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
 				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
@@ -306,14 +351,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				SetCustomStatus: false,
 			},
 			runAssertions: func(deps *Dependencies, client remote.Client) {
-				c, papi, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
-				moment := time.Now().UTC()
-				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}}
-
-				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
-					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
-				}, nil)
-				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+				_, _, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
 
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 			},
@@ -376,7 +414,7 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
 					Emoji:     "calendar",
 					Text:      "In a meeting",
-					ExpiresAt: firstBusyEvent.End.Time(),
+					ExpiresAt: secondBusyEvent.End.Time(),
 					Duration:  "date_and_time",
 				}).Return(nil)
 
@@ -474,6 +512,122 @@ func TestSyncCustomStatusUserConfig(t *testing.T) {
 				}).Return(nil)
 
 				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
+
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			env, client := makeStatusSyncTestEnv(ctrl)
+
+			s := env.Dependencies.Store.(*mock_store.MockStore)
+			s.EXPECT().LoadUserIndex().Return(store.UserIndex{
+				&store.UserShort{
+					MattermostUserID: "user_mm_id",
+					RemoteID:         "user_remote_id",
+					Email:            "user_email@example.com",
+				},
+			}, nil).Times(1)
+			s.EXPECT().LoadUser("user_mm_id").Return(&store.User{
+				MattermostUserID: "user_mm_id",
+				Remote: &remote.User{
+					ID:   "user_remote_id",
+					Mail: "user_email@example.com",
+				},
+				IsCustomStatusSet: true,
+				Settings:          tc.settings,
+			}, nil).Times(1)
+
+			tc.runAssertions(env.Dependencies, client)
+
+			mscalendar := New(env, "")
+			_, _, err := mscalendar.SyncAll()
+			require.Nil(t, err)
+		})
+	}
+}
+
+func TestSyncCustomStatusAndUserStatusConfig(t *testing.T) {
+	for name, tc := range map[string]struct {
+		runAssertions func(deps *Dependencies, client remote.Client)
+		settings      store.Settings
+	}{
+		"Both SetCustomStatus and SetUserStatus enabled": {
+			settings: store.Settings{
+				SetCustomStatus:         true,
+				UpdateStatusFromOptions: store.AwayStatusOption,
+				GetConfirmation:         true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, poster, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC")}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+				papi.EXPECT().GetMattermostUser("user_mm_id").Return(&model.User{
+					Id: "user_mm_id",
+				}, nil)
+				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
+					Emoji:     "calendar",
+					Text:      "In a meeting",
+					ExpiresAt: busyEvent.End.Time(),
+					Duration:  "date_and_time",
+				}).Return(nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+
+				s.EXPECT().StoreUserActiveEvents("user_mm_id", []string{"event_id " + moment.Format(time.RFC3339)})
+				s.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
+				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(1)
+				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
+			},
+		},
+		"Both SetCustomStatus and SetUserStatus enabled using legacy settings": {
+			settings: store.Settings{
+				SetCustomStatus:                   true,
+				UpdateStatus:                      true,
+				ReceiveNotificationsDuringMeeting: true,
+				GetConfirmation:                   true,
+			},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				c, papi, poster, s, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
+				moment := time.Now().UTC()
+				busyEvent := &remote.Event{ICalUID: "event_id", Start: remote.NewDateTime(moment, "UTC"), ShowAs: "busy", Attendees: []*remote.Attendee{{EmailAddress: &remote.EmailAddress{Address: "mock-attendee@gmail.com"}}}, End: remote.NewDateTime(moment.Add(10*time.Minute), "UTC")}
+
+				c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Times(1).Return([]*remote.ViewCalendarResponse{
+					{Events: []*remote.Event{busyEvent}, RemoteUserID: "user_remote_id"},
+				}, nil)
+				papi.EXPECT().GetMattermostUserStatusesByIds([]string{"user_mm_id"}).Return([]*model.Status{{Status: "online", Manual: true, UserId: "user_mm_id"}}, nil)
+				papi.EXPECT().GetMattermostUser("user_mm_id").Return(&model.User{
+					Id: "user_mm_id",
+				}, nil)
+				papi.EXPECT().UpdateMattermostUserCustomStatus("user_mm_id", &model.CustomStatus{
+					Emoji:     "calendar",
+					Text:      "In a meeting",
+					ExpiresAt: busyEvent.End.Time(),
+					Duration:  "date_and_time",
+				}).Return(nil)
+
+				s.EXPECT().StoreUserCustomStatusUpdates("user_mm_id", true).Return(nil)
+				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
+
+				s.EXPECT().StoreUserActiveEvents("user_mm_id", []string{"event_id " + moment.Format(time.RFC3339)})
+				s.EXPECT().StoreUser(gomock.Any()).Return(nil).Times(1)
+				poster.EXPECT().DMWithAttachments("user_mm_id", gomock.Any()).Times(1)
+				papi.EXPECT().UpdateMattermostUserStatus("user_mm_id", gomock.Any()).Times(0)
+			},
+		},
+		"Both SetCustomStatus and SetUserStatus disabled": {
+			settings: store.Settings{},
+			runAssertions: func(deps *Dependencies, client remote.Client) {
+				_, _, _, _, r := client.(*mock_remote.MockClient), deps.PluginAPI.(*mock_plugin_api.MockPluginAPI), deps.Poster.(*mock_bot.MockPoster), deps.Store.(*mock_store.MockStore), deps.Remote.(*mock_remote.MockRemote)
 
 				r.EXPECT().MakeSuperuserClient(context.Background()).Return(client, nil)
 			},
@@ -615,7 +769,7 @@ func TestReminders(t *testing.T) {
 					ID:   "user_remote_id",
 					Mail: "user_email@example.com",
 				},
-				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: NotSetStatusOption},
+				Settings: store.Settings{ReceiveReminders: true, UpdateStatusFromOptions: store.NotSetStatusOption},
 			}, nil)
 			c.EXPECT().DoBatchViewCalendarRequests(gomock.Any()).Return([]*remote.ViewCalendarResponse{
 				{Events: tc.remoteEvents, RemoteUserID: "user_remote_id", Error: tc.apiError},
@@ -671,7 +825,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 	t.Run("user reminders and status disabled", func(t *testing.T) {
 		testUser := newTestUser()
-		testUser.Settings.UpdateStatusFromOptions = NotSetStatusOption
+		testUser.Settings.UpdateStatusFromOptions = store.NotSetStatusOption
 		testUser.Settings.ReceiveReminders = false
 
 		userIndex := []*store.UserShort{
@@ -699,7 +853,7 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 	t.Run("one user should be synced", func(t *testing.T) {
 		testUser := newTestUser()
-		testUser.Settings.UpdateStatusFromOptions = AwayStatusOption
+		testUser.Settings.UpdateStatusFromOptions = store.AwayStatusOption
 		testUser.Settings.ReceiveReminders = true
 
 		userIndex := []*store.UserShort{
@@ -736,11 +890,11 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 	t.Run("one user should be synced, one user shouldn't", func(t *testing.T) {
 		testUser := newTestUser()
-		testUser.Settings.UpdateStatusFromOptions = AwayStatusOption
+		testUser.Settings.UpdateStatusFromOptions = store.AwayStatusOption
 		testUser.Settings.ReceiveReminders = true
 
 		testUser2 := newTestUserNumbered(1)
-		testUser2.Settings.UpdateStatusFromOptions = NotSetStatusOption
+		testUser2.Settings.UpdateStatusFromOptions = store.NotSetStatusOption
 
 		userIndex := []*store.UserShort{
 			{
@@ -782,11 +936,11 @@ func TestRetrieveUsersToSyncIndividually(t *testing.T) {
 
 	t.Run("two users should be synced", func(t *testing.T) {
 		testUser := newTestUserNumbered(1)
-		testUser.Settings.UpdateStatusFromOptions = AwayStatusOption
+		testUser.Settings.UpdateStatusFromOptions = store.AwayStatusOption
 		testUser.Settings.ReceiveReminders = true
 
 		testUser2 := newTestUserNumbered(2)
-		testUser.Settings.UpdateStatusFromOptions = AwayStatusOption
+		testUser.Settings.UpdateStatusFromOptions = store.AwayStatusOption
 		testUser2.Settings.ReceiveReminders = true
 
 		userIndex := []*store.UserShort{
@@ -855,4 +1009,162 @@ func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 	}
 
 	return env, mockClient
+}
+
+func TestGetMergedEvents(t *testing.T) {
+	moment := time.Now().UTC()
+	timezone := "UTC"
+	for name, tc := range map[string]struct {
+		events         []*remote.Event
+		expectedResult []*remote.Event
+	}{
+		"No overlapping event or duration is greater than StatusSyncJobInterval": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(30*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(40*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(60*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(30*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(40*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(60*time.Minute), timezone),
+				},
+			},
+		},
+		"Overlapping events": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(30*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(20*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(60*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(60*time.Minute), timezone),
+				},
+			},
+		},
+		"No overlapping events but duration is less than StatusSyncJobInterval": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(1*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(5*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(5*time.Minute), timezone),
+				},
+			},
+		},
+		"Overlapping events, duration is less than StatusSyncJobInterval in current event and next event": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(5*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(5*time.Minute), timezone),
+				},
+			},
+		},
+		"No overlapping events, duration is less than StatusSyncJobInterval for current event but not for next event": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(30*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(50*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(30*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(50*time.Minute), timezone),
+				},
+			},
+		},
+		"Overlapping events, duration is less than StatusSyncJobInterval for current event but not for next event": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(50*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(50*time.Minute), timezone),
+				},
+			},
+		},
+		"Overlapping events, duration is less than StatusSyncJobInterval with multiple events": {
+			events: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(3*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(50*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(51*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(53*time.Minute), timezone),
+				},
+			},
+			expectedResult: []*remote.Event{
+				{
+					Start: remote.NewDateTime(moment, timezone),
+					End:   remote.NewDateTime(moment.Add(50*time.Minute), timezone),
+				},
+				{
+					Start: remote.NewDateTime(moment.Add(51*time.Minute), timezone),
+					End:   remote.NewDateTime(moment.Add(53*time.Minute), timezone),
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			res := getMergedEvents(tc.events)
+			assert.Equal(tc.expectedResult, res)
+		})
+	}
 }
