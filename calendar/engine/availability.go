@@ -480,7 +480,7 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, exclude
 func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error withClient in GetCalendarViews: %w", err)
 	}
 
 	start := time.Now().UTC()
