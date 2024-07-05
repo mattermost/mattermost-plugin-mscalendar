@@ -127,7 +127,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 				m.Logger.With(bot.LogContext{
 					"user": u.MattermostUserID,
 					"err":  err,
-				}).Errorf("error getting calendar events")
+				}).Warnf("could not get calendar events")
 				continue
 			}
 
