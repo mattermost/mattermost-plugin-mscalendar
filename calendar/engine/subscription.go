@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -24,7 +25,7 @@ type Subscriptions interface {
 func (m *mscalendar) CreateMyEventSubscription() (*store.Subscription, error) {
 	err := m.Filter(withClient)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error withClient in CreateMyEventSubscription: %w", err)
 	}
 
 	sub, err := m.client.CreateMySubscription(m.Config.GetNotificationURL(), m.actingUser.Remote.ID)
@@ -63,7 +64,7 @@ func (m *mscalendar) LoadMyEventSubscription() (*store.Subscription, error) {
 func (m *mscalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
 	err := m.Filter(withClient)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error withClient in ListRemoteSubscriptions: %w", err)
 	}
 	subs, err := m.client.ListSubscriptions()
 	if err != nil {
@@ -75,7 +76,7 @@ func (m *mscalendar) ListRemoteSubscriptions() ([]*remote.Subscription, error) {
 func (m *mscalendar) RenewMyEventSubscription() (*store.Subscription, error) {
 	err := m.Filter(withClient)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error withClient in RenewMyEventSubscription: %w", err)
 	}
 
 	subscriptionID := m.actingUser.Settings.EventSubscriptionID
@@ -144,7 +145,7 @@ func (m *mscalendar) DeleteMyEventSubscription() error {
 func (m *mscalendar) DeleteOrphanedSubscription(sub *store.Subscription) error {
 	err := m.Filter(withClient)
 	if err != nil {
-		return err
+		return fmt.Errorf("error withClient in DeleteOrphanedSubscription: %w", err)
 	}
 	err = m.client.DeleteSubscription(sub.Remote)
 	if err != nil {

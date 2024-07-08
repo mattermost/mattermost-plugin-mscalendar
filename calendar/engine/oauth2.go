@@ -103,7 +103,7 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 
 	user, userErr := app.PluginAPI.GetMattermostUser(mattermostUserID)
 	if userErr != nil {
-		return fmt.Errorf("error retrieving mattermost user (%s)", mattermostUserID)
+		return fmt.Errorf("error retrieving mattermost user (%s): %w", mattermostUserID, userErr)
 	}
 
 	u := &store.User{
