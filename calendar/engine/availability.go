@@ -154,10 +154,11 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 		return users, calendarViews, fmt.Errorf("no calendar views found")
 	}
 
+	// Sort events for all fetched calendar views
 	for _, view := range calendarViews {
-		event := view.Events
-		sort.Slice(event, func(i, j int) bool {
-			return event[i].Start.Time().UnixMicro() < event[j].Start.Time().UnixMicro()
+		events := view.Events
+		sort.Slice(events, func(i, j int) bool {
+			return events[i].Start.Time().UnixMicro() < events[j].Start.Time().UnixMicro()
 		})
 	}
 
@@ -664,7 +665,7 @@ func getMergedEvents(events []*remote.Event) []*remote.Event {
 
 	idx := 0
 	for i := 1; i < len(events); i++ {
-		if (events[idx].End.Time().UnixMicro() >= events[i].Start.Time().UnixMicro()) || (events[idx].End.Time().Sub(events[idx].Start.Time()) <= StatusSyncJobInterval && events[i].Start.Time().Sub(events[idx].End.Time()) <= StatusSyncJobInterval) {
+		if areEventsMergeable(events[idx], events[i]) {
 			events[idx].End = events[i].End
 		} else {
 			idx++
@@ -673,4 +674,18 @@ func getMergedEvents(events []*remote.Event) []*remote.Event {
 	}
 
 	return events[0 : idx+1]
+}
+
+/*
+areEventsMergeable function checks if two events can be merged into a single event.
+There are two conditions that are being checked in the function:
+  - If two events overlap, the end time of event1 will be
+    greater than or equal to event2 and we can merge those events into a single event.
+    For e.g.- event1: 1:01–1:04, event2: 1:03–1:05. Final event: 1:01–1:05.
+  - If the difference between event1 end time and event1 start time isor equal to StatusSyncJobInterval and the difference between event2 start time and event1 end time is less than or equal to StatusSyncJobInterval. This is done to merge those events that occur within the time span of StatusSyncJobInterval.
+    For e.g.- event1: 1:01–1:02, event2: 1:03–1:05, StatusSyncJobInterval: 5 mins. Final event: 1:01–1:05.
+    This is done to avoid skipping of event2 as both events are fetched together in a single API call when the job runs every 5 minutes.
+*/
+func areEventsMergeable(event1, event2 *remote.Event) bool {
+	return (event1.End.Time().UnixMicro() >= event2.Start.Time().UnixMicro()) || (event1.End.Time().Sub(event1.Start.Time()) <= StatusSyncJobInterval && event2.Start.Time().Sub(event1.End.Time()) <= StatusSyncJobInterval)
 }
