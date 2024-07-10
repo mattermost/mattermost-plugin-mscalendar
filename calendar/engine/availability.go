@@ -128,7 +128,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 				m.Logger.With(bot.LogContext{
 					"user": u.MattermostUserID,
 					"err":  err,
-				}).Errorf("error getting calendar events")
+				}).Warnf("could not get calendar events")
 				continue
 			}
 
@@ -541,7 +541,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, excludeDeclined bool) (*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
-		return nil, errors.Wrap(err, "errror withClient")
+		return nil, errors.Wrap(err, "error withClient in GetCalendarEvents")
 	}
 
 	events, err := m.client.GetEventsBetweenDates(user.Remote.ID, start, end)
@@ -562,7 +562,7 @@ func (m *mscalendar) GetCalendarEvents(user *User, start, end time.Time, exclude
 func (m *mscalendar) GetCalendarViews(users []*store.User) ([]*remote.ViewCalendarResponse, error) {
 	err := m.Filter(withClient)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error withClient in GetCalendarViews: %w", err)
 	}
 
 	start := time.Now().UTC()
