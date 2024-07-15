@@ -71,6 +71,11 @@ func (p *Plugin) OnActivate() error {
 		return errors.WithMessage(err, "failed to load plugin configuration")
 	}
 
+	mattermostSiteURL := pluginAPIClient.Configuration.GetConfig().ServiceSettings.SiteURL
+	if mattermostSiteURL == nil {
+		return errors.New("please configure the Mattermost server's SiteURL, then restart the plugin.")
+	}
+
 	if errConfig := p.env.Remote.CheckConfiguration(stored); errConfig != nil {
 		return errors.Wrap(errConfig, "failed to configure")
 	}
