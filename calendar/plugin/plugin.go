@@ -73,7 +73,7 @@ func (p *Plugin) OnActivate() error {
 
 	mattermostSiteURL := pluginAPIClient.Configuration.GetConfig().ServiceSettings.SiteURL
 	if mattermostSiteURL == nil {
-		return errors.New("please configure the Mattermost server's SiteURL, then restart the plugin.")
+		return errors.New("please configure the Mattermost server's SiteURL, then restart the plugin")
 	}
 
 	if errConfig := p.env.Remote.CheckConfiguration(stored); errConfig != nil {
