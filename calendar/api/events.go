@@ -22,6 +22,7 @@ import (
 const (
 	createEventDateTimeFormat = "2006-01-02 15:04"
 	createEventDateFormat     = "2006-01-02"
+	HeaderMattermostUserID = "Mattermost-User-Id"
 )
 
 type createEventPayload struct {
@@ -271,4 +272,32 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httputils.WriteJSONResponse(w, `{"ok": true}`, http.StatusCreated)
+}
+
+func (api *api) listCalendars(w http.ResponseWriter, r *http.Request) {
+	mattermostUserID := r.Header.Get(HeaderMattermostUserID)
+	if mattermostUserID == "" {
+		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
+		return
+	}
+
+	user, errStore := api.Store.LoadUser(mattermostUserID)
+	if errStore != nil && !errors.Is(errStore, store.ErrNotFound) {
+		httputils.WriteInternalServerError(w, errStore)
+		return
+	}
+	if errors.Is(errStore, store.ErrNotFound) {
+		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
+		return
+	}
+
+	client := api.Remote.MakeClient(context.Background(), user.OAuth2Token)
+
+	calendars, errMailbox := client.GetCalendars(user.Remote.ID)
+	if errMailbox != nil {
+		httputils.WriteInternalServerError(w, errMailbox)
+		return
+	}
+
+	httputils.WriteJSONResponse(w, calendars, http.StatusCreated)
 }
