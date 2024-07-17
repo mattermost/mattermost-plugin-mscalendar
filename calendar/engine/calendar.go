@@ -91,7 +91,7 @@ func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUser
 		}
 	}
 
-	return m.client.CreateEvent(user.Remote.ID, event)
+	return m.client.CreateEvent("", user.Remote.ID, event)
 }
 
 func (m *mscalendar) DeleteCalendar(user *User, calendarID string) error {

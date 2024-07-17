@@ -12,7 +12,7 @@ import (
 )
 
 // CreateEvent creates a calendar event
-func (c *client) CreateEvent(remoteUserID string, in *remote.Event) (*remote.Event, error) {
+func (c *client) CreateEvent(calendarID, remoteUserID string, in *remote.Event) (*remote.Event, error) {
 	var out = remote.Event{}
 	err := c.rbuilder.Users().ID(remoteUserID).Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
 	if err != nil {

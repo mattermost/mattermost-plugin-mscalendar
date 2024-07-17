@@ -36,6 +36,7 @@ type createEventPayload struct {
 	Subject     string `json:"subject"`
 	Location    string `json:"location,omitempty"`
 	ChannelID   string `json:"channel_id"`
+	CalendarID string `json:"calendar_id"`
 }
 
 func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, error) {
@@ -227,7 +228,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	event, err := client.CreateEvent(user.Remote.ID, event)
+	event, err := client.CreateEvent("", user.Remote.ID, event)
 	if err != nil {
 		httputils.WriteInternalServerError(w, err)
 		return
