@@ -22,7 +22,7 @@ import (
 const (
 	createEventDateTimeFormat = "2006-01-02 15:04"
 	createEventDateFormat     = "2006-01-02"
-	HeaderMattermostUserID = "Mattermost-User-Id"
+	HeaderMattermostUserID    = "Mattermost-User-Id"
 )
 
 type createEventPayload struct {
@@ -36,7 +36,7 @@ type createEventPayload struct {
 	Subject     string `json:"subject"`
 	Location    string `json:"location,omitempty"`
 	ChannelID   string `json:"channel_id"`
-	CalendarID string `json:"calendar_id"`
+	CalendarID  string `json:"calendar_id"`
 }
 
 func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, error) {
@@ -300,5 +300,5 @@ func (api *api) listCalendars(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httputils.WriteJSONResponse(w, calendars, http.StatusCreated)
+	httputils.WriteJSONResponse(w, calendars, http.StatusOK)
 }
