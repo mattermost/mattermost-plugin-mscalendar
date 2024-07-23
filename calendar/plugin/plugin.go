@@ -159,7 +159,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	}
 	pluginURLPath := "/plugins/" + env.Config.PluginID
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
-	oldEncryptionKey :=p.getEnv().EncryptionKey
+	fmt.Println("\n\n line 162 \n\n", p.getEnv())
 	p.updateEnv(func(e *Env) {
 		p.initEnv(e, pluginURL)
 
@@ -181,7 +181,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.Dependencies.Tracker.ReloadConfig(p.API.GetConfig())
 		}
 
-		fmt.Println("\n\n line 184 \n\n", oldEncryptionKey, "\n\n", e.EncryptionKey)
+		fmt.Println("\n\n line 184,\n\n", e.EncryptionKey)
 
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
