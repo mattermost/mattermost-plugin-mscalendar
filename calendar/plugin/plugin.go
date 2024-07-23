@@ -181,6 +181,8 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 			e.Dependencies.Tracker.ReloadConfig(p.API.GetConfig())
 		}
 
+		fmt.Println(e.EncryptionKey)
+
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.Features.EncryptedStore, []byte(e.EncryptionKey))
