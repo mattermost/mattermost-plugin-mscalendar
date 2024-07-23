@@ -284,6 +284,7 @@ func (api *api) listCalendars(w http.ResponseWriter, r *http.Request) {
 
 	user, errStore := api.Store.LoadUser(mattermostUserID)
 	if errStore != nil && !errors.Is(errStore, store.ErrNotFound) {
+		api.Logger.With(bot.LogContext{"err": errStore}).Errorf("error loading user from store")
 		httputils.WriteInternalServerError(w, errStore)
 		return
 	}
@@ -296,6 +297,7 @@ func (api *api) listCalendars(w http.ResponseWriter, r *http.Request) {
 
 	calendars, errMailbox := client.GetCalendars(user.Remote.ID)
 	if errMailbox != nil {
+		api.Logger.With(bot.LogContext{"err": errMailbox}).Errorf("error fetching calendar list")
 		httputils.WriteInternalServerError(w, errMailbox)
 		return
 	}
