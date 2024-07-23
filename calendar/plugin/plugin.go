@@ -159,7 +159,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	}
 	pluginURLPath := "/plugins/" + env.Config.PluginID
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
-	fmt.Println("\n\n line 162 \n\n", env.EncryptionKey)
+	fmt.Println("\n\n line 162 \n\n", env)
 	p.updateEnv(func(e *Env) {
 		p.initEnv(e, pluginURL)
 
