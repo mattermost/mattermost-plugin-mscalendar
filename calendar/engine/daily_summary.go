@@ -115,7 +115,7 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 	for _, user := range userIndex {
 		storeUser, storeErr := m.Store.LoadUser(user.MattermostUserID)
 		if storeErr != nil {
-			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", storeUser.MattermostUserID, storeErr)
+			m.Logger.Warnf("Error loading user %s for daily summary. err=%v", user.MattermostUserID, storeErr)
 			continue
 		}
 		byRemoteID[storeUser.Remote.ID] = storeUser
