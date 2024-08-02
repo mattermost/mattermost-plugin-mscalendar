@@ -151,15 +151,20 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 				continue
 			}
 
-			tz, err := engine.GetTimezone(u)
+			timezone, err := engine.GetTimezone(u)
 			if err != nil {
 				m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "err": err}).Errorf("Error getting timezone for user.")
 				continue
 			}
 
-			events, err := engine.getTodayCalendarEvents(u, now, tz)
+			events, err := engine.getTodayCalendarEvents(u, now, timezone)
 			if err != nil {
-				m.Logger.With(bot.LogContext{"mm_user_id": storeUser.MattermostUserID, "now": now.String(), "tz": tz, "err": err}).Errorf("Error getting calendar events for user")
+				m.Logger.With(bot.LogContext{
+					"mm_user_id": storeUser.MattermostUserID,
+					"now":        now.String(),
+					"tz":         timezone,
+					"err":        err,
+				}).Errorf("Error getting calendar events for user")
 				continue
 			}
 
@@ -217,19 +222,19 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 }
 
 func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, error) {
-	tz, err := m.GetTimezone(user)
+	timezone, err := m.GetTimezone(user)
 	if err != nil {
 		return "", err
 	}
 
-	calendarData, err := m.getTodayCalendarEvents(user, day, tz)
+	calendarData, err := m.getTodayCalendarEvents(user, day, timezone)
 	if err != nil {
 		return "Failed to get calendar events", err
 	}
 
 	events := m.excludeDeclinedEvents(calendarData)
 
-	messageString, err := views.RenderCalendarView(events, tz)
+	messageString, err := views.RenderCalendarView(events, timezone)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to render daily summary")
 	}
@@ -273,7 +278,7 @@ func shouldPostDailySummary(dsum *store.DailySummaryUserSettings, now time.Time)
 	}
 
 	t = time.Date(now.Year(), now.Month(), now.Day(), t.Hour(), t.Minute(), 0, 0, loc)
-	diff := now.Sub((t))
+	diff := now.Sub(t)
 	if diff >= 0 {
 		return diff < dailySummaryTimeWindow, nil
 	}

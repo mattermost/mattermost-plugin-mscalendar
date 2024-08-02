@@ -40,7 +40,7 @@ type Tracker interface {
 	TrackEvent(event string, properties map[string]interface{}) error
 	// TrackUserEvent registers an event through the configured telemetry client associated to a user
 	TrackUserEvent(event string, userID string, properties map[string]interface{}) error
-	// Reload Config re-evaluates tracker config to determine if tracking behavior should change
+	// ReloadConfig re-evaluates tracker config to determine if tracking behavior should change
 	ReloadConfig(config TrackerConfig)
 }
 
@@ -79,7 +79,7 @@ type tracker struct {
 // - pluginID: The plugin ID.
 // - pluginVersion: The plugin version.
 // - telemetryShortName: Short name for the plugin to use in telemetry. Used to avoid dot separated names like `com.company.pluginName`.
-// If a empty string is provided, it will use the pluginID.
+// If an empty string is provided, it will use the pluginID.
 // - config: Whether the system has enabled sending telemetry data. If false, the tracker will not track any event.
 // - l Logger: A logger to debug event tracking and some important changes (it won't log if nil is passed as logger).
 func NewTracker(
@@ -148,7 +148,7 @@ func (t *tracker) TrackEvent(event string, properties map[string]interface{}) er
 	properties["PluginVersion"] = t.pluginVersion
 	properties["ServerVersion"] = t.serverVersion
 
-	// if we are part of a cloud installation, add it's ID to the tracked event's context.
+	// if we are part of a cloud installation, add its ID to the tracked event's context.
 	installationID := os.Getenv("MM_CLOUD_INSTALLATION_ID")
 
 	err := t.client.Enqueue(Track{
