@@ -32,7 +32,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/flow"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/httputils"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/oauth2connect"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/pluginapi"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/settingspanel"
 )
 
@@ -104,6 +103,7 @@ func (p *Plugin) OnActivate() error {
 	// Get config values
 	p.updateEnv(func(e *Env) {
 		e.Dependencies.Tracker = tracker.New(
+
 			telemetry.NewTracker(
 				p.telemetryClient,
 				p.API.GetDiagnosticId(),
@@ -118,6 +118,8 @@ func (p *Plugin) OnActivate() error {
 		e.bot = e.bot.WithConfig(stored.Config)
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.Dependencies.Tracker, e.Provider.Features.EncryptedStore, []byte(e.EncryptionKey))
 	})
+
+	//initializing mscalendar with a reference to the plugin
 
 	return nil
 }
@@ -321,7 +323,6 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 }
 
 func (p *Plugin) initEnv(e *Env, pluginURL string) error {
-	e.Dependencies.PluginAPI = pluginapi.New(p.API)
 
 	if e.bot == nil {
 		e.bot = bot.New(p.API, pluginURL)
@@ -339,4 +340,21 @@ func (p *Plugin) initEnv(e *Env, pluginURL string) error {
 	}
 
 	return nil
+}
+
+// adding a helper function to fetch the preference of the user
+func (p *Plugin) GetUserTimeFormat(userID string) (bool, error) {
+	preferences, err := p.API.GetPreferencesForUser(userID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, pref := range preferences {
+		if pref.Category == model.PreferenceCategoryDisplaySettings && pref.Name == model.PreferenceNameUseMilitaryTime {
+			return pref.Value == "true", nil
+		}
+	}
+
+	// If the preference is not found, default to 24 hours format
+	return false, nil // Assuming false is for 12-hour format and true is for 24-hour format
 }
