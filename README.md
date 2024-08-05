@@ -32,7 +32,7 @@ This plugin supports a two-way integration between Mattermost and Microsoft Outl
 
 ## Admin Guide
 
-The Admin Guide docs for the Mattermost Microsoft Calender Plugin can be found [here](./docs/admin-guide.md)
+The Admin Guide docs for the Mattermost Microsoft Calendar Plugin can be found [here](./docs/admin-guide.md)
 
 ## Development
 
