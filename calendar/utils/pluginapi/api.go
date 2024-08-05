@@ -22,7 +22,7 @@ func New(api plugin.API) *API {
 	}
 }
 
-func (a *API) SearchLinkableChannelForUser(teamID, mattemostUserID, search string) ([]*model.Channel, error) {
+func (a *API) SearchLinkableChannelForUser(teamID, mattermostUserID, search string) ([]*model.Channel, error) {
 	channels, err := a.api.SearchChannels(teamID, search)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (a *API) SearchLinkableChannelForUser(teamID, mattemostUserID, search strin
 
 	var result []*model.Channel
 	for _, ch := range channels {
-		if a.CanLinkEventToChannel(ch.Id, mattemostUserID) {
+		if a.CanLinkEventToChannel(ch.Id, mattermostUserID) {
 			result = append(result, ch)
 		}
 	}

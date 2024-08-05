@@ -49,7 +49,7 @@ type PluginAPI interface {
 	RemoveMattermostUserCustomStatus(mattermostUserID string) *model.AppError
 	GetPost(postID string) (*model.Post, error)
 	CanLinkEventToChannel(channelID, userID string) bool
-	SearchLinkableChannelForUser(teamID, mattemostUserID, search string) ([]*model.Channel, error)
+	SearchLinkableChannelForUser(teamID, mattermostUserID, search string) ([]*model.Channel, error)
 	GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error)
 	PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any)
 }
