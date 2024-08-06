@@ -35,7 +35,7 @@ type ProviderConfig struct {
 	Features           ProviderFeatures
 }
 
-// Config represents the the metadata handed to all request runners (command,
+// Config represents the metadata handed to all request runners (command,
 // http).
 type Config struct {
 	PluginID               string
