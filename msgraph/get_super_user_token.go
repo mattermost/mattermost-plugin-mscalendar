@@ -17,7 +17,7 @@ type AuthResponse struct {
 }
 
 func (c *client) GetSuperuserToken() (string, error) {
-	u := "https://login.microsoftonline.com/" + c.conf.OAuth2Authority + "/oauth2/v2.0/token"
+	u := "https://login.microsoftonline.com/" + url.PathEscape(c.conf.OAuth2Authority) + "/oauth2/v2.0/token"
 	res := AuthResponse{}
 
 	data := url.Values{}
