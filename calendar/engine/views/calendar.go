@@ -155,7 +155,7 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	}
 
 	if event.Conference != nil {
-		// Use conference URL as title link if theres conference data present
+		// Use conference URL as title link if there's conference data present
 		titleLink = event.Conference.URL
 
 		title := "Meeting URL"
