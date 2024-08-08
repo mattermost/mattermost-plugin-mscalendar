@@ -15,6 +15,7 @@ func (api *api) autocompleteConnectedUsers(w http.ResponseWriter, r *http.Reques
 	mattermostUserID := r.Header.Get("Mattermost-User-Id")
 	_, err := api.Store.LoadUser(mattermostUserID)
 	if mattermostUserID == "" || errors.Is(err, store.ErrNotFound) {
+		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("user unauthorized")
 		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
 		return
 	}
@@ -22,6 +23,7 @@ func (api *api) autocompleteConnectedUsers(w http.ResponseWriter, r *http.Reques
 	searchString := r.URL.Query().Get("search")
 	results, err := api.Store.SearchInUserIndex(searchString, 10)
 	if err != nil {
+		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("unable to search in user index")
 		utils.SlackAttachmentError(w, "unable to search in user index: "+err.Error())
 		httputils.WriteInternalServerError(w, err)
 		return
