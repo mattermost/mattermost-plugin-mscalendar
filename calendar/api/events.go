@@ -244,7 +244,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 
 	attachment, err := views.RenderEventAsAttachment(event, mailbox.TimeZone, views.ShowTimezoneOption(mailbox.TimeZone))
 	if err != nil {
-		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error rendering event as slack attachment")
+		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error rendering event as attachment")
 	}
 
 	// Event linking
