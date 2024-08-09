@@ -9,7 +9,6 @@ require (
 	github.com/mattermost/mattermost/server/public v0.0.12
 	github.com/pkg/errors v0.9.1
 	github.com/rudderlabs/analytics-go v3.3.3+incompatible
-	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2
 	golang.org/x/oauth2 v0.15.0
