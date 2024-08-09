@@ -79,6 +79,13 @@ func (s *notificationSetting) GetDependency() string {
 	return s.dependsOn
 }
 
+func (s *notificationSetting) getActionStyle(actionValue, currentValue string) string {
+	if actionValue == currentValue {
+		return "primary"
+	}
+	return "default"
+}
+
 func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
@@ -97,7 +104,8 @@ func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string,
 		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
 
 		actionTrue := model.PostAction{
-			Name: "Yes",
+			Name:  "Yes",
+			Style: s.getActionStyle("true", currentValue.(string)),
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler,
 				Context: map[string]interface{}{
@@ -108,7 +116,8 @@ func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string,
 		}
 
 		actionFalse := model.PostAction{
-			Name: "No",
+			Name:  "No",
+			Style: s.getActionStyle("false", currentValue.(string)),
 			Integration: &model.PostActionIntegration{
 				URL: settingHandler,
 				Context: map[string]interface{}{
