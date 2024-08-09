@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -123,7 +124,7 @@ func TestInitOAuth2(t *testing.T) {
 				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
 				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
 			},
-			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&prompt=consent&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
+			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
 		},
 	}
 
@@ -219,11 +220,28 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
 					gomock.Eq("fake@mattermost.com"),
-					gomock.Eq(RemoteUserAlreadyConnected),
-					gomock.Eq(config.Provider.DisplayName),
-					gomock.Eq("mail-value"),
-					gomock.Eq("sample-username"),
-					gomock.Eq(config.Provider.CommandTrigger),
+					gomock.Eq(fmt.Sprintf(RemoteUserAlreadyConnected, config.Provider.DisplayName, "mail-value", "sample-username", config.Provider.CommandTrigger)),
+				).Return("post_id", nil).Times(1)
+			},
+		},
+		{
+			name:              "Remote user already connected to disabled account",
+			mattermostUserID:  "fake@mattermost.com",
+			code:              fakeCode,
+			state:             "user_fake@mattermost.com",
+			registerResponder: statusOKGraphAPIResponder,
+			setup: func(d *Dependencies) {
+				papi := d.PluginAPI.(*mock_plugin_api.MockPluginAPI)
+				papi.EXPECT().GetMattermostUser("fake@mattermost.com").Return(nil, store.ErrNotFound)
+
+				ss := d.Store.(*mock_store.MockStore)
+				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("fake@mattermost.com", nil)
+				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+
+				poster := d.Poster.(*mock_bot.MockPoster)
+				poster.EXPECT().DM(
+					gomock.Eq("fake@mattermost.com"),
+					gomock.Eq(fmt.Sprintf(RemoteUserAlreadyConnectedDisabled, config.Provider.DisplayName, "mail-value", config.Provider.CommandTrigger)),
 				).Return("post_id", nil).Times(1)
 			},
 		},

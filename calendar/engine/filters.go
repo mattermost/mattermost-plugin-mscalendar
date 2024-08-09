@@ -57,7 +57,6 @@ func withClient(m *mscalendar) error {
 	}
 
 	client, err := m.MakeClient()
-
 	if err != nil {
 		return err
 	}

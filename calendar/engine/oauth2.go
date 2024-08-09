@@ -19,8 +19,11 @@ import (
 
 const BotWelcomeMessage = "Bot user connected to account %s."
 
-const RemoteUserAlreadyConnected = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account"
-const RemoteUserAlreadyConnectedNotFound = "%s account `%s` is already mapped to a Mattermost account, but the Mattermost user could not be found"
+const (
+	RemoteUserAlreadyConnected         = "%s account `%s` is already mapped to Mattermost account `%s`. Please run `/%s disconnect`, while logged in as the Mattermost account"
+	RemoteUserAlreadyConnectedDisabled = "%s account `%s` is already mapped to a Mattermost account, but the account is deactivated. Please enable it and run `/%s disconnect`,  while logged in as the other Mattermost account, and try again"
+	RemoteUserAlreadyConnectedNotFound = "%s account `%s` is already mapped to a Mattermost account, but the Mattermost user could not be found"
+)
 
 type oauth2App struct {
 	Env
@@ -45,7 +48,7 @@ func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error
 		return "", err
 	}
 
-	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent")), nil
+	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
 }
 
 func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
@@ -81,18 +84,26 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 	if err == nil {
 		user, userErr := app.PluginAPI.GetMattermostUser(uid)
 		if userErr == nil {
-			app.Poster.DM(authedUserID, RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, user.Username, config.Provider.CommandTrigger)
-			return fmt.Errorf(RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, user.Username, config.Provider.CommandTrigger)
+			msg := fmt.Sprintf(RemoteUserAlreadyConnected, config.Provider.DisplayName, me.Mail, user.Username, config.Provider.CommandTrigger)
+			app.Poster.DM(authedUserID, msg)
+			return errors.New(msg)
+		}
+
+		if userErr == store.ErrNotFound {
+			msg := fmt.Sprintf(RemoteUserAlreadyConnectedDisabled, config.Provider.DisplayName, me.Mail, config.Provider.CommandTrigger)
+			app.Poster.DM(authedUserID, msg)
+			return errors.New(msg)
 		}
 
 		// Couldn't fetch connected MM account. Reject connect attempt.
-		app.Poster.DM(authedUserID, RemoteUserAlreadyConnectedNotFound, config.Provider.DisplayName, me.Mail)
-		return fmt.Errorf(RemoteUserAlreadyConnectedNotFound, config.Provider.DisplayName, me.Mail)
+		msg := fmt.Sprintf(RemoteUserAlreadyConnectedNotFound, config.Provider.DisplayName, me.Mail)
+		app.Poster.DM(authedUserID, msg)
+		return errors.New(msg)
 	}
 
 	user, userErr := app.PluginAPI.GetMattermostUser(mattermostUserID)
 	if userErr != nil {
-		return fmt.Errorf("error retrieving mattermost user (%s)", mattermostUserID)
+		return fmt.Errorf("error retrieving mattermost user (%s): %w", mattermostUserID, userErr)
 	}
 
 	u := &store.User{

@@ -31,7 +31,7 @@ type Notification struct {
 	RecommendRenew bool
 
 	// Set if there is no data pre-filled from processing the webhook. The
-	// handler is to call GetNofiticationData(), with the appropriate user
+	// handler is to call GetNotificationData(), with the appropriate user
 	// credentials.
 	IsBare bool
 }

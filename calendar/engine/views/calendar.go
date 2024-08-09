@@ -155,7 +155,7 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	}
 
 	if event.Conference != nil {
-		// Use conference URL as title link if theres conference data present
+		// Use conference URL as title link if there's conference data present
 		titleLink = event.Conference.URL
 
 		title := "Meeting URL"
@@ -176,6 +176,7 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 		Fields:    fields,
 		Actions:   actions,
+		Fallback:  fmt.Sprintf("%s\n%s - %s", event.Subject, event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 	}
 
 	for _, opt := range options {

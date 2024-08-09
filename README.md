@@ -32,8 +32,48 @@ This plugin supports a two-way integration between Mattermost and Microsoft Outl
 
 ## Admin Guide
 
-The Admin Guide docs for the Mattermost Microsoft Calender Plugin can be found [here](./docs/admin-guide.md)
+The Admin Guide docs for the Mattermost Microsoft Calendar Plugin can be found [here](./docs/admin-guide.md)
 
 ## Development
 
 This plugin contains a server portion. Read our documentation about the [Developer Workflow](https://developers.mattermost.com/integrate/plugins/developer-workflow/) and [Developer Setup](https://developers.mattermost.com/integrate/plugins/developer-setup/) for more information about developing and extending plugins.
+
+## How to Release
+
+To trigger a release of the Mattermost Microsoft Calendar Plugin, follow these steps:
+
+1. **For Patch Release:** Run the following command:
+    ```
+    make patch
+    ```
+   This will release a patch change.
+
+2. **For Minor Release:** Run the following command:
+    ```
+    make minor
+    ```
+   This will release a minor change.
+
+3. **For Major Release:** Run the following command:
+    ```
+    make major
+    ```
+   This will release a major change.
+
+4. **For Patch Release Candidate (RC):** Run the following command:
+    ```
+    make patch-rc
+    ```
+   This will release a patch release candidate.
+
+5. **For Minor Release Candidate (RC):** Run the following command:
+    ```
+    make minor-rc
+    ```
+   This will release a minor release candidate.
+
+6. **For Major Release Candidate (RC):** Run the following command:
+    ```
+    make major-rc
+    ```
+   This will release a major release candidate.

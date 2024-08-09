@@ -17,21 +17,14 @@ type AuthResponse struct {
 }
 
 func (c *client) GetSuperuserToken() (string, error) {
-	params := map[string]string{
-		"client_id":     c.conf.OAuth2ClientID,
-		"scope":         "https://graph.microsoft.com/.default",
-		"client_secret": c.conf.OAuth2ClientSecret,
-		"grant_type":    "client_credentials",
-	}
-
-	u := "https://login.microsoftonline.com/" + c.conf.OAuth2Authority + "/oauth2/v2.0/token"
+	u := "https://login.microsoftonline.com/" + url.PathEscape(c.conf.OAuth2Authority) + "/oauth2/v2.0/token"
 	res := AuthResponse{}
 
 	data := url.Values{}
-	data.Set("client_id", params["client_id"])
-	data.Set("scope", params["scope"])
-	data.Set("client_secret", params["client_secret"])
-	data.Set("grant_type", params["grant_type"])
+	data.Set("client_id", c.conf.OAuth2ClientID)
+	data.Set("scope", "https://graph.microsoft.com/.default")
+	data.Set("client_secret", c.conf.OAuth2ClientSecret)
+	data.Set("grant_type", "client_credentials")
 
 	_, err := c.CallFormPost(http.MethodPost, u, data, &res)
 	if err != nil {
