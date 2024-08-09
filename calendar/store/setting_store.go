@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	UpdateStatusSettingID               = "update_status"
-	GetConfirmationSettingID            = "get_confirmation"
-	ReceiveNotificationsDuringMeetingID = "receive_notification"
-	ReceiveRemindersSettingID           = "get_reminders"
-	DailySummarySettingID               = "summary_setting"
+	UpdateStatusFromOptionsSettingID = "update_status_from_options"
+	GetConfirmationSettingID         = "get_confirmation"
+	SetCustomStatusSettingID         = "set_custom_status"
+	ReceiveRemindersSettingID        = "get_reminders"
+	DailySummarySettingID            = "summary_setting"
 )
 
 func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) error {
@@ -20,12 +20,13 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 	}
 
 	switch settingID {
-	case UpdateStatusSettingID:
-		storableValue, ok := value.(bool)
+	case UpdateStatusFromOptionsSettingID:
+		storableValue, ok := value.(string)
 		if !ok {
-			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
+			return fmt.Errorf("cannot read value %v for setting %s (expecting string)", value, settingID)
 		}
-		user.Settings.UpdateStatus = storableValue
+
+		user.Settings.UpdateStatusFromOptions = storableValue
 		if s.Tracker != nil {
 			s.Tracker.TrackAutomaticStatusUpdate(userID, storableValue, "settings")
 		}
@@ -35,12 +36,12 @@ func (s *pluginStore) SetSetting(userID, settingID string, value interface{}) er
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
 		user.Settings.GetConfirmation = storableValue
-	case ReceiveNotificationsDuringMeetingID:
+	case SetCustomStatusSettingID:
 		storableValue, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("cannot read value %v for setting %s (expecting bool)", value, settingID)
 		}
-		user.Settings.ReceiveNotificationsDuringMeeting = storableValue
+		user.Settings.SetCustomStatus = storableValue
 	case ReceiveRemindersSettingID:
 		storableValue, ok := value.(bool)
 		if !ok {
@@ -68,12 +69,12 @@ func (s *pluginStore) GetSetting(userID, settingID string) (interface{}, error) 
 	}
 
 	switch settingID {
-	case UpdateStatusSettingID:
-		return user.Settings.UpdateStatus, nil
+	case UpdateStatusFromOptionsSettingID:
+		return user.Settings.UpdateStatusFromOptions, nil
 	case GetConfirmationSettingID:
 		return user.Settings.GetConfirmation, nil
-	case ReceiveNotificationsDuringMeetingID:
-		return user.Settings.ReceiveNotificationsDuringMeeting, nil
+	case SetCustomStatusSettingID:
+		return user.Settings.SetCustomStatus, nil
 	case ReceiveRemindersSettingID:
 		return user.Settings.ReceiveReminders, nil
 	case DailySummarySettingID:

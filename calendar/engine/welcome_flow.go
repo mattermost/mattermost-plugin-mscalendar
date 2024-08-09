@@ -56,15 +56,18 @@ func (wf *WelcomeFlow) FlowDone(userID string) {
 
 func (wf *WelcomeFlow) makeSteps() {
 	steps := []flow.Step{
+		&flow.EmptyStep{
+			Title:   "Update Status",
+			Message: fmt.Sprintf("You can type `/%s` to configure the plugin to update your status to \"Away\" or \"Do not disturb\" when you're in a meeting.", config.Provider.CommandTrigger),
+		},
 		&flow.SimpleStep{
-			Title:                "Update Status",
-			Message:              "Would you like your Mattermost status to be automatically updated at the time of your events?",
-			PropertyName:         store.UpdateStatusPropertyName,
-			TrueButtonMessage:    "Yes - Update my status",
-			FalseButtonMessage:   "No - Don't update my status",
-			TrueResponseMessage:  ":thumbsup: Got it! We'll automatically update your status in Mattermost.",
-			FalseResponseMessage: ":thumbsup: Got it! We won't update your status in Mattermost.",
-			FalseSkip:            2,
+			Title:                "Set Custom Status",
+			Message:              "Do you want to set a Mattermost custom status automatically when you're in a meeting?",
+			PropertyName:         store.SetCustomStatusPropertyName,
+			TrueButtonMessage:    "Yes - set my Mattermost custom status to :calendar: automatically",
+			FalseButtonMessage:   "No, don't set a custom status",
+			TrueResponseMessage:  "We'll set a Mattermost custom status automatically when you're in a meeting.",
+			FalseResponseMessage: "We won't set a Mattermost custom status when you're in a meeting.",
 		},
 		// &flow.SimpleStep{
 		// 	Title:                "Confirm status change",
