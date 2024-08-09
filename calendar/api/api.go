@@ -40,6 +40,8 @@ func Init(h *httputils.Handler, env engine.Env, notificationProcessor engine.Not
 	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers)
 
 	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
+	calendarsRouter := apiRoutes.PathPrefix(config.PathCalendar).Subrouter()
+	calendarsRouter.HandleFunc(config.PathList, api.listCalendars).Methods(http.MethodGet)
 	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()
 	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods(http.MethodPost)
 	apiRoutes.HandleFunc(config.PathConnectedUser, api.connectedUserHandler)
