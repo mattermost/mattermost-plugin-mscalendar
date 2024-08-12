@@ -232,7 +232,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	env := p.getEnv()
 	if env.configError != nil {
-		p.API.LogError(env.configError.Error())
+		p.API.LogError("Error occurred while getting env", "err", env.configError.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, env.configError.Error(), http.StatusInternalServerError)
 	}
 
@@ -245,7 +245,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 	out, mustRedirectToDM, err := cmd.Handle()
 	if err != nil {
-		p.API.LogError(err.Error())
+		p.API.LogError("Error occurred while running the command", "args", args, "err", err.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -269,7 +269,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 func (p *Plugin) ServeHTTP(_ *plugin.Context, w http.ResponseWriter, req *http.Request) {
 	env := p.getEnv()
 	if env.configError != nil {
-		p.API.LogError(env.configError.Error())
+		p.API.LogError("Error occurred while getting env", "err", env.configError.Error())
 		http.Error(w, env.configError.Error(), http.StatusInternalServerError)
 		return
 	}
