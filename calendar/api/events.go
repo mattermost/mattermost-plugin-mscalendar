@@ -9,14 +9,13 @@ import (
 	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/httputils"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -151,22 +150,26 @@ func (cep createEventPayload) IsValid(loc *time.Location) error {
 func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	mattermostUserID := r.Header.Get("Mattermost-User-Id")
 	if mattermostUserID == "" {
+		api.Logger.Errorf("createEvent, unauthorized user")
 		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
 		return
 	}
 
 	user, errStore := api.Store.LoadUser(mattermostUserID)
 	if errStore != nil && !errors.Is(errStore, store.ErrNotFound) {
+		api.Logger.With(bot.LogContext{"err": errStore}).Errorf("createEvent, error occurred while loading user from store")
 		httputils.WriteInternalServerError(w, errStore)
 		return
 	}
 	if errors.Is(errStore, store.ErrNotFound) {
+		api.Logger.With(bot.LogContext{"err": errStore.Error()}).Errorf("createEvent, user not found in store")
 		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
 		return
 	}
 
 	var payload createEventPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error occurred while decoding event payload")
 		httputils.WriteBadRequestError(w, err)
 		return
 	}
@@ -174,6 +177,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 
 	if payload.ChannelID != "" {
 		if !api.PluginAPI.CanLinkEventToChannel(payload.ChannelID, user.MattermostUserID) {
+			api.Logger.With(bot.LogContext{"userID": mattermostUserID, "channelID": payload.ChannelID}).Errorf("createEvent, user don't have permission to link events in the selected channel")
 			httputils.WriteBadRequestError(w, fmt.Errorf("you don't have permission to link events in the selected channel"))
 			return
 		}
@@ -183,23 +187,27 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 
 	mailbox, errMailbox := client.GetMailboxSettings(user.Remote.ID)
 	if errMailbox != nil {
+		api.Logger.With(bot.LogContext{"err": errMailbox.Error(), "userID": mattermostUserID}).Errorf("createEvent, error occurred while getting mailbox settings for user")
 		httputils.WriteInternalServerError(w, errMailbox)
 		return
 	}
 
 	loc, errLocation := time.LoadLocation(mailbox.TimeZone)
 	if errLocation != nil {
+		api.Logger.With(bot.LogContext{"err": errLocation.Error(), "timezone": mailbox.TimeZone}).Errorf("createEvent, error occurred while loading mailbox timezone location")
 		httputils.WriteInternalServerError(w, errLocation)
 		return
 	}
 
 	if err := payload.IsValid(loc); err != nil {
+		api.Logger.Errorf("createEvent, invalid payload")
 		httputils.WriteBadRequestError(w, err)
 		return
 	}
 
 	event, errParse := payload.ToRemoteEvent(loc)
 	if errParse != nil {
+		api.Logger.With(bot.LogContext{"err": errParse.Error()}).Errorf("createEvent, error occurred while creating remote event from payload")
 		httputils.WriteBadRequestError(w, errParse)
 		return
 	}
@@ -212,7 +220,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		} else {
 			attendeeUser, err := api.Store.LoadUser(pa)
 			if err != nil {
-				api.Logger.With(bot.LogContext{"attendee_mm_id": pa}).Errorf("error loading attendee from mattermost user id")
+				api.Logger.With(bot.LogContext{"err": err.Error(), "attendee_mm_id": pa}).Errorf("error loading attendee from mattermost user id")
 				continue
 			}
 
@@ -228,19 +236,21 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 
 	event, err := client.CreateEvent(user.Remote.ID, event)
 	if err != nil {
+		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error occurred while creating event")
 		httputils.WriteInternalServerError(w, err)
 		return
 	}
 
 	attachment, err := views.RenderEventAsAttachment(event, mailbox.TimeZone, views.ShowTimezoneOption(mailbox.TimeZone))
 	if err != nil {
-		api.Logger.With(bot.LogContext{"err": err}).Errorf("error rendering event as slack attachment")
+		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error rendering event as attachment")
 	}
 
 	// Event linking
 	if payload.ChannelID != "" {
 		if err := api.Store.StoreUserLinkedEvent(user.MattermostUserID, event.ICalUID, payload.ChannelID); err != nil {
 			api.Poster.DM(mattermostUserID, "Your event **%s** could not be linked to a channel. Please contact an administrator for more details.", event.Subject)
+			api.Logger.With(bot.LogContext{"err": err.Error(), "userID": user.MattermostUserID}).Errorf("createEvent, error occurred while storing user linked event")
 			httputils.WriteInternalServerError(w, err)
 			return
 		}
