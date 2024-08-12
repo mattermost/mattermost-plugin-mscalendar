@@ -237,6 +237,9 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("fake@mattermost.com", nil)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+				ss.EXPECT().RefreshAndStoreToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(&oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, nil)
 
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
