@@ -8,22 +8,24 @@ import (
 )
 
 type optionSetting struct {
-	store       SettingStore
-	title       string
-	description string
-	id          string
-	dependsOn   string
-	options     []string
+	store         SettingStore
+	title         string
+	description   string
+	id            string
+	dependsOn     string
+	defaultOption string
+	options       []string
 }
 
-func NewOptionSetting(id string, title string, description string, dependsOn string, options []string, store SettingStore) Setting {
+func NewOptionSetting(id, title, description, dependsOn, defaultOption string, options []string, store SettingStore) Setting {
 	return &optionSetting{
-		title:       title,
-		description: description,
-		id:          id,
-		dependsOn:   dependsOn,
-		options:     options,
-		store:       store,
+		title:         title,
+		description:   description,
+		id:            id,
+		dependsOn:     dependsOn,
+		options:       options,
+		store:         store,
+		defaultOption: defaultOption,
 	}
 }
 
@@ -75,6 +77,11 @@ func (s *optionSetting) GetSlackAttachments(userID, settingHandler string, disab
 		if err != nil {
 			return nil, err
 		}
+
+		if currentTextValue == "" {
+			currentTextValue = s.defaultOption
+		}
+
 		currentValueMessage = fmt.Sprintf("**Current value:** %s", currentTextValue)
 
 		actionOptions := model.PostAction{
