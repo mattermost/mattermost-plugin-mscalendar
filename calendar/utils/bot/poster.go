@@ -24,7 +24,7 @@ type Poster interface {
 	// Ephemeral sends an ephemeral message to a user
 	Ephemeral(mattermostUserID, channelID, format string, args ...interface{})
 
-	// DMPUpdate updates the postID with the formatted message
+	// DMUpdate updates the postID with the formatted message
 	DMUpdate(postID, format string, args ...interface{}) error
 
 	// CreatePost creates a post
@@ -33,7 +33,7 @@ type Poster interface {
 	// DeletePost deletes a single post
 	DeletePost(postID string) error
 
-	// DMUpdatePost substitute one post with another
+	// UpdatePost substitute one post with another
 	UpdatePost(post *model.Post) error
 }
 
