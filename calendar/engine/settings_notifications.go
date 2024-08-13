@@ -101,7 +101,7 @@ func (s *notificationSetting) GetSlackAttachments(userID, settingHandler string,
 		if currentValue == "true" {
 			currentTextValue = "Yes"
 		}
-		currentValueMessage = fmt.Sprintf("Current value: %s", currentTextValue)
+		currentValueMessage = fmt.Sprintf("**Current value:** %s", currentTextValue)
 
 		actionTrue := model.PostAction{
 			Name:  "Yes",
