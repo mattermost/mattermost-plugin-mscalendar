@@ -245,20 +245,20 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	env := p.getEnv()
 	if env.configError != nil {
-		p.API.LogError(env.configError.Error())
+		p.API.LogError("Error occurred while getting env", "err", env.configError.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, env.configError.Error(), http.StatusInternalServerError)
 	}
 
-	command := command.Command{
+	cmd := command.Command{
 		Context:   c,
 		Args:      args,
 		ChannelID: args.ChannelId,
 		Config:    env.Config,
 		Engine:    engine.New(env.Env, args.UserId),
 	}
-	out, mustRedirectToDM, err := command.Handle()
+	out, mustRedirectToDM, err := cmd.Handle()
 	if err != nil {
-		p.API.LogError(err.Error())
+		p.API.LogError("Error occurred while running the command", "args", args, "err", err.Error())
 		return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -282,7 +282,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 func (p *Plugin) ServeHTTP(_ *plugin.Context, w http.ResponseWriter, req *http.Request) {
 	env := p.getEnv()
 	if env.configError != nil {
-		p.API.LogError(env.configError.Error())
+		p.API.LogError("Error occurred while getting env", "err", env.configError.Error())
 		http.Error(w, env.configError.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -318,12 +318,12 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 		if info.IsDir() {
 			return nil
 		}
-		template, err := template.ParseFiles(path)
+		tmpl, err := template.ParseFiles(path)
 		if err != nil {
 			return nil
 		}
 		key := path[len(templatesPath):]
-		templates[key] = template
+		templates[key] = tmpl
 		return nil
 	})
 	if err != nil {
