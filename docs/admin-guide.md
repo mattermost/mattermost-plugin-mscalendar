@@ -8,7 +8,7 @@
 
 ### Step 1: Create Mattermost App in Azure
 
-1. Sign into [portal.azure.com](https://portal.azure.com) using an admin Azure account.
+1. Sign in to [portal.azure.com](https://portal.azure.com) using an admin Azure account.
 2. Navigate to [App Registrations](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps)
 3. Click **New registration** at the top of the page.
 
@@ -28,7 +28,7 @@ Replace `(MM_SITE_URL)` with your Mattermost server's Site URL. Select **Registe
 
 <img width="500" src="https://user-images.githubusercontent.com/6913320/76348833-3d116280-62df-11ea-8b13-d39a0a2f2024.png"/>
 
-6. Click **New client secret**. Then click **Add**, and copy the new secret on the bottom right corner of the screen. We'll use this value later in the Mattermost admin console.
+6. Click **New client secret**. Then click **Add**, and copy the new secret in the bottom right corner of the screen. We'll use this value later in the Mattermost admin console.
 
 <img width="500" src="https://user-images.githubusercontent.com/6913320/76349025-9da09f80-62df-11ea-8c8f-0b39cad4597e.png"/>
 
