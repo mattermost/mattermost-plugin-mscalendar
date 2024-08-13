@@ -483,7 +483,7 @@ func (mr *MockStoreMockRecorder) SetPostID(arg0, arg1, arg2 interface{}) *gomock
 }
 
 // SetProperty mocks base method.
-func (m *MockStore) SetProperty(arg0, arg1 string, arg2 bool) error {
+func (m *MockStore) SetProperty(arg0, arg1 string, arg2 interface{}) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetProperty", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -564,6 +564,20 @@ func (m *MockStore) StoreUserActiveEvents(arg0 string, arg1 []string) error {
 func (mr *MockStoreMockRecorder) StoreUserActiveEvents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserActiveEvents", reflect.TypeOf((*MockStore)(nil).StoreUserActiveEvents), arg0, arg1)
+}
+
+// StoreUserCustomStatusUpdates mocks base method.
+func (m *MockStore) StoreUserCustomStatusUpdates(arg0 string, arg1 bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreUserCustomStatusUpdates", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreUserCustomStatusUpdates indicates an expected call of StoreUserCustomStatusUpdates.
+func (mr *MockStoreMockRecorder) StoreUserCustomStatusUpdates(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreUserCustomStatusUpdates", reflect.TypeOf((*MockStore)(nil).StoreUserCustomStatusUpdates), arg0, arg1)
 }
 
 // StoreUserEvent mocks base method.

@@ -40,6 +40,7 @@ type UserStore interface {
 	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
 	CheckUserConnected(mattermostUserID string) bool
 	DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string)
+	StoreUserCustomStatusUpdates(mattermostUserID string, values bool) error
 }
 
 type UserIndex []*UserShort
@@ -82,19 +83,23 @@ type User struct {
 	WelcomeFlowStatus     WelcomeFlowStatus `json:"mattermostFlags,omitempty"`
 	ActiveEvents          []string          `json:"events"`
 	ChannelEvents         ChannelEventLink  `json:"linkedEvents,omitempty"`
+	IsCustomStatusSet     bool
 }
 
 var DefaultSettings = Settings{
-	GetConfirmation:                   false,
-	ReceiveNotificationsDuringMeeting: true,
+	GetConfirmation: false,
 }
 
 type Settings struct {
-	DailySummary                      *DailySummaryUserSettings
-	EventSubscriptionID               string
+	DailySummary            *DailySummaryUserSettings
+	EventSubscriptionID     string
+	UpdateStatusFromOptions string
+	GetConfirmation         bool
+	ReceiveReminders        bool
+	SetCustomStatus         bool
+
+	// Legacy settings
 	UpdateStatus                      bool
-	GetConfirmation                   bool
-	ReceiveReminders                  bool
 	ReceiveNotificationsDuringMeeting bool
 }
 
@@ -109,6 +114,12 @@ type WelcomeFlowStatus struct {
 	PostIDs map[string]string
 	Step    int
 }
+
+const (
+	AwayStatusOption   = "Away"
+	DNDStatusOption    = "Do Not Disturb"
+	NotSetStatusOption = "Don't set status for me"
+)
 
 func (settings Settings) String() string {
 	sub := "no subscription"
@@ -400,6 +411,15 @@ func (index UserIndex) ToDTO() (result []UserShortDTO) {
 
 	return
 }
+func (s *pluginStore) StoreUserCustomStatusUpdates(mattermostUserID string, value bool) error {
+	u, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		return err
+	}
+
+	u.IsCustomStatusSet = value
+	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
+}
 
 func (index UserIndex) ByMattermostID() map[string]*UserShort {
 	result := map[string]*UserShort{}
@@ -439,4 +459,27 @@ func (index UserIndex) GetMattermostUserIDs() []string {
 	}
 
 	return result
+}
+
+func (user *User) IsConfiguredForStatusUpdates() bool {
+	if user.Settings.UpdateStatusFromOptions == AwayStatusOption || user.Settings.UpdateStatusFromOptions == DNDStatusOption {
+		return true
+	}
+
+	if user.Settings.UpdateStatusFromOptions == "" {
+		if user.Settings.UpdateStatus {
+			user.Settings.UpdateStatusFromOptions = DNDStatusOption
+			if user.Settings.ReceiveNotificationsDuringMeeting {
+				user.Settings.UpdateStatusFromOptions = AwayStatusOption
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func (user *User) IsConfiguredForCustomStatusUpdates() bool {
+	return user.Settings.SetCustomStatus
 }
