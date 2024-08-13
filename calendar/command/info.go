@@ -5,6 +5,7 @@ package command
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 )
@@ -15,8 +16,8 @@ func (c *Command) info(_ ...string) (string, bool, error) {
 		c.Config.Provider.DisplayName,
 		c.Config.PluginVersion,
 		c.Config.BuildHashShort,
-		config.Provider.Repository,
-		c.Config.BuildHash,
+		url.PathEscape(config.Provider.Repository),
+		url.PathEscape(c.Config.BuildHash),
 		c.Config.BuildDate)
 	return resp, false, nil
 }
