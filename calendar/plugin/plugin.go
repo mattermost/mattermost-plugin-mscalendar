@@ -162,7 +162,7 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	if err != nil {
 		return err
 	}
-	pluginURLPath := "/plugins/" + env.Config.PluginID
+	pluginURLPath := "/plugins/" + url.PathEscape(env.Config.PluginID)
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
 	p.updateEnv(func(e *Env) {
