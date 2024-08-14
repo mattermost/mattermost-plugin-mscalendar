@@ -272,7 +272,10 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		if appErr != nil {
 			return nil, model.NewAppError("mscalendarplugin.ExecuteCommand", "Unable to execute command.", nil, appErr.Error(), http.StatusInternalServerError)
 		}
-		dmURL := fmt.Sprintf("%s/%s/messages/@%s", env.MattermostSiteURL, t.Name, config.Provider.BotUsername)
+		dmURL := fmt.Sprintf("%s/%s/messages/@%s",
+			env.MattermostSiteURL,
+			url.PathEscape(t.Name),
+			url.PathEscape(config.Provider.BotUsername))
 		response.GotoLocation = dmURL
 	}
 
