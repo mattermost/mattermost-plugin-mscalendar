@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
@@ -51,7 +52,9 @@ func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Clien
 
 // MakeSuperuserClient creates a new client used for app-only permissions.
 func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
-	httpClient := &http.Client{}
+	httpClient := &http.Client{
+		Timeout: time.Second * 5,
+	}
 	c := &client{
 		conf:       r.conf,
 		ctx:        ctx,
