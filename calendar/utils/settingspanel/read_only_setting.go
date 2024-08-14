@@ -67,7 +67,7 @@ func (s *readOnlySetting) GetSlackAttachments(userID, _ string, disabled bool) (
 		if err != nil {
 			return nil, err
 		}
-		currentValueMessage = fmt.Sprintf("Current value: %s", currentValue)
+		currentValueMessage = fmt.Sprintf("**Current value:** %s", currentValue)
 	}
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
