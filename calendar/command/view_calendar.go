@@ -15,7 +15,8 @@ func (c *Command) viewCalendar(_ ...string) (string, bool, error) {
 		return "Error: No timezone found", false, err
 	}
 
-	events, err := c.Engine.ViewCalendar(c.user(), time.Now().Add(-24*time.Hour), time.Now().Add(14*24*time.Hour))
+	startOfCurrentDay := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.Now().Location())
+	events, err := c.Engine.ViewCalendar(c.user(), startOfCurrentDay, time.Now().Add(14*24*time.Hour))
 	if err != nil {
 		return "", false, err
 	}

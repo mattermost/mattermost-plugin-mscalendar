@@ -54,7 +54,7 @@ var cmds = []*model.AutocompleteData{
 			model.NewAutocompleteData("disable", "", "Disable your daily summary."),
 		},
 	},
-	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming week."),
+	model.NewAutocompleteData("viewcal", "", "View your events for the current and upcoming week."),
 	{ // Create
 		Trigger:  "event",
 		HelpText: "Manage events.",
