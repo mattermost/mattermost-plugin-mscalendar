@@ -82,6 +82,7 @@ func (s *boolSetting) getActionStyle(actionValue, currentValue string) string {
 
 func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
+	currentValueMessage := "Disabled"
 
 	actions := []*model.PostAction{}
 	if !disabled {
@@ -89,6 +90,12 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 		if err != nil {
 			return nil, err
 		}
+
+		currentTextValue := "No"
+		if currentValue == "true" {
+			currentTextValue = "Yes"
+		}
+		currentValueMessage = fmt.Sprintf("**Current value:** %s", currentTextValue)
 
 		actionTrue := model.PostAction{
 			Name:  "Yes",
@@ -116,9 +123,10 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 		actions = []*model.PostAction{&actionTrue, &actionFalse}
 	}
 
+	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
 	sa := model.SlackAttachment{
 		Title:    title,
-		Text:     s.description,
+		Text:     text,
 		Actions:  actions,
 		Fallback: fmt.Sprintf("%s: %s", title, s.description),
 	}
