@@ -75,7 +75,7 @@ func (c *client) DoBatchViewCalendarRequests(allParams []*remote.ViewCalendarPar
 
 func getCalendarViewURL(params *remote.ViewCalendarParams) string {
 	paramStr := getQueryParamStringForCalendarView(params.StartTime, params.EndTime)
-	return "/Users/" + params.RemoteUserID + "/calendarView" + paramStr
+	return "/Users/" + url.PathEscape(params.RemoteUserID) + "/calendarView" + paramStr
 }
 
 func getQueryParamStringForCalendarView(start, end time.Time) string {
