@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
-	"github.com/microcosm-cc/bluemonday"
 )
 
 const renewSubscriptionBeforeExpiration = 12 * time.Hour
