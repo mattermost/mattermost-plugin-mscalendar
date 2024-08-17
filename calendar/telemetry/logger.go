@@ -85,7 +85,7 @@ func toKeyValuePairs(in map[string]interface{}) (out []interface{}) {
 }
 
 /*
-New creates a new logger.
+NewLogger creates a new logger.
 
 - api: LogAPI implementation
 */
