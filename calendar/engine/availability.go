@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -109,7 +110,7 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 		}
 
 		// If user does not have the proper features enabled, just go to the next one
-		if !(user.Settings.UpdateStatus || user.Settings.ReceiveReminders) {
+		if !(user.IsConfiguredForStatusUpdates() || user.IsConfiguredForCustomStatusUpdates() || user.Settings.ReceiveReminders) {
 			continue
 		}
 
@@ -151,6 +152,14 @@ func (m *mscalendar) retrieveUsersToSync(userIndex store.UserIndex, syncJobSumma
 
 	if len(calendarViews) == 0 {
 		return users, calendarViews, fmt.Errorf("no calendar views found")
+	}
+
+	// Sort events for all fetched calendar views
+	for _, view := range calendarViews {
+		events := view.Events
+		sort.Slice(events, func(i, j int) bool {
+			return events[i].Start.Time().UnixMicro() < events[j].Start.Time().UnixMicro()
+		})
 	}
 
 	return users, calendarViews, nil
@@ -230,7 +239,7 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	numberOfLogs, numberOfUserStatusChange, numberOfUserErrorInStatusChange := 0, 0, 0
 	toUpdate := []*store.User{}
 	for _, u := range users {
-		if u.Settings.UpdateStatus {
+		if u.IsConfiguredForStatusUpdates() || u.IsConfiguredForCustomStatusUpdates() {
 			toUpdate = append(toUpdate, u)
 		}
 	}
@@ -278,21 +287,45 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 			continue
 		}
 
+		events := filterBusyAndAttendeeEvents(view.Events)
+		events = getMergedEvents(events)
+
 		var err error
-		res, isStatusChanged, err = m.setStatusFromCalendarView(user, status, view)
-		if err != nil {
-			if numberOfLogs < logTruncateLimit {
-				m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
-			} else if numberOfLogs == logTruncateLimit {
-				m.Logger.Warnf(logTruncateMsg)
+		if user.IsConfiguredForStatusUpdates() {
+			res, isStatusChanged, err = m.setStatusFromCalendarView(user, status, events)
+			if err != nil {
+				if numberOfLogs < logTruncateLimit {
+					m.Logger.Warnf("Error setting user %s status. err=%v", user.MattermostUserID, err)
+				} else if numberOfLogs == logTruncateLimit {
+					m.Logger.Warnf(logTruncateMsg)
+				}
+				numberOfLogs++
+				numberOfUserErrorInStatusChange++
 			}
-			numberOfLogs++
-			numberOfUserErrorInStatusChange++
+			if isStatusChanged {
+				numberOfUserStatusChange++
+			}
 		}
-		if isStatusChanged {
-			numberOfUserStatusChange++
+
+		if user.IsConfiguredForCustomStatusUpdates() {
+			res, isStatusChanged, err = m.setCustomStatusFromCalendarView(user, events)
+			if err != nil {
+				if numberOfLogs < logTruncateLimit {
+					m.Logger.Warnf("Error setting user %s custom status. err=%v", user.MattermostUserID, err)
+				} else if numberOfLogs == logTruncateLimit {
+					m.Logger.Warnf(logTruncateMsg)
+				}
+				numberOfLogs++
+				numberOfUserErrorInStatusChange++
+			}
+
+			// Increment count only when we have not updated the status of the user from the options to have status change count per user.
+			if isStatusChanged && user.Settings.UpdateStatusFromOptions == store.NotSetStatusOption {
+				numberOfUserStatusChange++
+			}
 		}
 	}
+
 	if res != "" {
 		return res, numberOfUserStatusChange, numberOfUserErrorInStatusChange, nil
 	}
@@ -300,16 +333,66 @@ func (m *mscalendar) setUserStatuses(users []*store.User, calendarViews []*remot
 	return utils.JSONBlock(calendarViews), numberOfUserStatusChange, numberOfUserErrorInStatusChange, nil
 }
 
-func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, res *remote.ViewCalendarResponse) (string, bool, error) {
+func (m *mscalendar) setCustomStatusFromCalendarView(user *store.User, events []*remote.Event) (string, bool, error) {
+	isStatusChanged := false
+	if !user.IsConfiguredForCustomStatusUpdates() {
+		return "User doesn't want to set custom status", isStatusChanged, nil
+	}
+
+	if len(events) == 0 {
+		if user.IsCustomStatusSet {
+			if err := m.PluginAPI.RemoveMattermostUserCustomStatus(user.MattermostUserID); err != nil {
+				m.Logger.Warnf("Error removing user %s custom status. err=%v", user.MattermostUserID, err)
+			}
+
+			if err := m.Store.StoreUserCustomStatusUpdates(user.MattermostUserID, false); err != nil {
+				return "", isStatusChanged, err
+			}
+		}
+
+		return "No event present to set custom status", isStatusChanged, nil
+	}
+
+	currentUser, err := m.PluginAPI.GetMattermostUser(user.MattermostUserID)
+	if err != nil {
+		return "", isStatusChanged, err
+	}
+
+	currentCustomStatus := currentUser.GetCustomStatus()
+	if currentCustomStatus != nil && !user.IsCustomStatusSet {
+		return "User already has a custom status set, ignoring custom status change", isStatusChanged, nil
+	}
+
+	if appErr := m.PluginAPI.UpdateMattermostUserCustomStatus(user.MattermostUserID, &model.CustomStatus{
+		Emoji:     "calendar",
+		Text:      "In a meeting",
+		ExpiresAt: events[0].End.Time(),
+		Duration:  "date_and_time",
+	}); appErr != nil {
+		return "", isStatusChanged, appErr
+	}
+
+	isStatusChanged = true
+	if err := m.Store.StoreUserCustomStatusUpdates(user.MattermostUserID, true); err != nil {
+		return "", isStatusChanged, err
+	}
+
+	return "", isStatusChanged, nil
+}
+
+func (m *mscalendar) setStatusFromCalendarView(user *store.User, status *model.Status, events []*remote.Event) (string, bool, error) {
 	isStatusChanged := false
 	currentStatus := status.Status
+	if !user.IsConfiguredForStatusUpdates() {
+		return "No value set from options to update status", isStatusChanged, nil
+	}
+
 	if currentStatus == model.StatusOffline && !user.Settings.GetConfirmation {
 		return "User offline and does not want status change confirmations. No status change", isStatusChanged, nil
 	}
 
-	events := filterBusyEvents(res.Events)
 	busyStatus := model.StatusDnd
-	if user.Settings.ReceiveNotificationsDuringMeeting {
+	if user.Settings.UpdateStatusFromOptions == store.AwayStatusOption {
 		busyStatus = model.StatusAway
 	}
 
@@ -424,7 +507,7 @@ func (m *mscalendar) setStatusOrAskUser(user *store.User, currentStatus *model.S
 
 	if !isFree {
 		toSet = model.StatusDnd
-		if user.Settings.ReceiveNotificationsDuringMeeting {
+		if user.Settings.UpdateStatusFromOptions == store.AwayStatusOption {
 			toSet = model.StatusAway
 		}
 		if !user.Settings.GetConfirmation {
@@ -563,12 +646,46 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 	}
 }
 
-func filterBusyEvents(events []*remote.Event) []*remote.Event {
+func filterBusyAndAttendeeEvents(events []*remote.Event) []*remote.Event {
 	result := []*remote.Event{}
 	for _, e := range events {
-		if e.ShowAs == "busy" {
+		// Not setting custom status for events without attendees since those are unlikely to be meetings.
+		if e.ShowAs == "busy" && !e.IsCancelled && len(e.Attendees) >= 1 {
 			result = append(result, e)
 		}
 	}
 	return result
+}
+
+// getMergedEvents accepts a sorted array of events, and returns events after merging them, if overlapping or if the meeting duration is less than StatusSyncJobInterval.
+func getMergedEvents(events []*remote.Event) []*remote.Event {
+	if len(events) <= 1 {
+		return events
+	}
+
+	idx := 0
+	for i := 1; i < len(events); i++ {
+		if areEventsMergeable(events[idx], events[i]) {
+			events[idx].End = events[i].End
+		} else {
+			idx++
+			events[idx] = events[i]
+		}
+	}
+
+	return events[0 : idx+1]
+}
+
+/*
+areEventsMergeable function checks if two events can be merged into a single event.
+There are two conditions that are being checked in the function:
+  - If two events overlap, the end time of event1 will be
+    greater than or equal to event2 and we can merge those events into a single event.
+    For e.g.- event1: 1:01–1:04, event2: 1:03–1:05. Final event: 1:01–1:05.
+  - If the difference between event1 end time and event1 start time isor equal to StatusSyncJobInterval and the difference between event2 start time and event1 end time is less than or equal to StatusSyncJobInterval. This is done to merge those events that occur within the time span of StatusSyncJobInterval.
+    For e.g.- event1: 1:01–1:02, event2: 1:03–1:05, StatusSyncJobInterval: 5 mins. Final event: 1:01–1:05.
+    This is done to avoid skipping of event2 as both events are fetched together in a single API call when the job runs every 5 minutes.
+*/
+func areEventsMergeable(event1, event2 *remote.Event) bool {
+	return (event1.End.Time().UnixMicro() >= event2.Start.Time().UnixMicro()) || (event1.End.Time().Sub(event1.Start.Time()) <= StatusSyncJobInterval && event2.Start.Time().Sub(event1.End.Time()) <= StatusSyncJobInterval)
 }
