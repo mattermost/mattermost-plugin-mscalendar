@@ -2,6 +2,7 @@ package msgraph
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 
@@ -81,7 +82,7 @@ func (c *client) GetSchedule(requests []*remote.ScheduleUserInfo, startTime, end
 }
 
 func makeSingleRequestForGetSchedule(request *remote.ScheduleUserInfo, params *getScheduleRequestParams) *singleRequest {
-	u := "/Users/" + request.RemoteUserID + "/getSchedule"
+	u := "/Users/" + url.PathEscape(request.RemoteUserID) + "/getSchedule"
 	req := &singleRequest{
 		URL:    u,
 		Method: http.MethodPost,

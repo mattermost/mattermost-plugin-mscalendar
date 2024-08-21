@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 )
@@ -28,8 +30,15 @@ type webhook struct {
 
 func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote.Notification {
 	// Microsoft graph requires webhook endpoint validation, see
-	// https://docs.microsoft.com/en-us/graph/webhooks#notification-endpoint-validation
+	// https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks?tabs=go#notificationurl-validation
 	vtok := req.FormValue("validationToken")
+	var policy = bluemonday.StrictPolicy()
+	if vtok != policy.Sanitize(vtok) {
+		w.WriteHeader(http.StatusBadRequest)
+		r.logger.Debugf("msgraph: validation token is invalid.")
+		return nil
+	}
+
 	if vtok != "" {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
