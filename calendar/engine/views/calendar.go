@@ -116,7 +116,7 @@ func renderTableHeader() string {
 }
 
 // Converts reserved Markdown characters to their HTML entity equivalents
-func markdownToHTMLEntities(input string) string {
+func MarkdownToHTMLEntities(input string) string {
 	replacements := map[rune]string{
 		'*':  "&#42;",  // Asterisk
 		'_':  "&#95;",  // Underscore
@@ -162,7 +162,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, markdownToHTMLEntities(subject), link), nil
+	return fmt.Sprintf(format, start, end, MarkdownToHTMLEntities(subject), link), nil
 }
 
 func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
