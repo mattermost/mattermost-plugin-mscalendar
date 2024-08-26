@@ -115,24 +115,27 @@ func renderTableHeader() string {
 | :-- | :-- |`
 }
 
-// Converts reserved Markdown characters to their HTML entity equivalents
+// MarkdownToHTMLEntities converts reserved Markdown characters to their HTML entity equivalents
 func MarkdownToHTMLEntities(input string) string {
 	replacements := map[rune]string{
-		'*':  "&#42;",  // Asterisk
-		'_':  "&#95;",  // Underscore
+		'!':  "&#33;",  // Exclamation Mark
 		'#':  "&#35;",  // Hash
-		'[':  "&#91;",  // Left Square Bracket
-		']':  "&#93;",  // Right Square Bracket
 		'(':  "&#40;",  // Left Parenthesis
 		')':  "&#41;",  // Right Parenthesis
-		'!':  "&#33;",  // Exclamation Mark
-		'`':  "&#96;",  // Backtick
-		'>':  "&#62;",  // Greater Than
-		'<':  "&#60;",  // Less than
-		'-':  "&#45;",  // Dash
+		'*':  "&#42;",  // Asterisk
 		'+':  "&#43;",  // Plus Sign
+		'-':  "&#45;",  // Dash
+		'.':  "&#46;",  // Period
+		'/':  "&#47;",  // Forward slash
+		':':  "&#58;",  // Colon
+		'<':  "&#60;",  // Less than
+		'>':  "&#62;",  // Greater Than
+		'[':  "&#91;",  // Left Square Bracket
+		'\\': "&#92;",  // Back slash
+		']':  "&#93;",  // Right Square Bracket
+		'`':  "&#96;",  // Backtick
+		'_':  "&#95;",  // Underscore
 		'|':  "&#124;", // Vertical Bar
-		'\\': "&#92;",  // Backslash
 	}
 
 	var builder strings.Builder
