@@ -1,7 +1,3 @@
-# Disclaimer
-
-**This repository is community supported and not maintained by Mattermost. Mattermost disclaims liability for integrations, including Third Party Integrations and Mattermost Integrations. Integrations may be modified or discontinued at any time.**
-
 # Mattermost Microsoft Calendar Plugin
 
 [![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-mscalendar/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-mscalendar)
@@ -17,12 +13,13 @@
 
 - [Overview](#overview)
 - [Features](#features)
-- [Admin Guide](./docs/admin-guide.md)
+- [Admin Guide](#admin-guide)
+- [Configuration, setup, and usage](#configuration-setup-and-usage)
 - [Development](#development)
 
 ## Overview
 
-This plugin supports a two-way integration between Mattermost and Microsoft Outlook Calendar. For a stable production release, please download the latest version from the [releases page](https://github.com/mattermost/mattermost-plugin-mscalendar/releases) and follow [these instructions](./docs/admin-guide.md#configuration) to install and configure the plugin.
+This plugin supports a two-way integration between Mattermost and Microsoft Outlook Calendar.
 
 ## Features
 
@@ -30,9 +27,17 @@ This plugin supports a two-way integration between Mattermost and Microsoft Outl
 - Automatic user status synchronization into Mattermost.
 - Accept or decline calendar event invites from Mattermost.
 
-## Admin Guide
+## Admin guide
 
-The Admin Guide docs for the Mattermost Microsoft Calendar Plugin can be found [here](./docs/admin-guide.md)
+### Installation
+
+From Mattermost v10, this plugin is pre-packaged with the Mattermost Server.
+
+If your Mattermost deployment is on a release prior to v10, download the latest [plugin binary release](https://github.com/mattermost/mattermost-plugin-mscalendar/releases), and upload it to your server via **System Console > Plugin Management**.
+
+## Configuration, Setup, and Usage
+
+See the Mattermost Product Documentation for details on [setting up](https://docs.mattermost.com/integrate/microsoft-calendar-interoperability.html#setup), [configuring](https://docs.mattermost.com/integrate/microsoft-calendar-interoperability.html#enable-and-configure-the-microsoft-teams-meetings-integration-in-mattermost), and [using](https://docs.mattermost.com/integrate/microsoft-calendar-interoperability.html#usage) the Mattermost for Microsoft Calendar integration.
 
 ## Development
 
