@@ -133,8 +133,8 @@ func MarkdownToHTMLEntities(input string) string {
 		'[':  "&#91;",  // Left Square Bracket
 		'\\': "&#92;",  // Back slash
 		']':  "&#93;",  // Right Square Bracket
-		'`':  "&#96;",  // Backtick
 		'_':  "&#95;",  // Underscore
+		'`':  "&#96;",  // Backtick
 		'|':  "&#124;", // Vertical Bar
 	}
 
