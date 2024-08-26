@@ -48,6 +48,6 @@ func Init(h *httputils.Handler, env engine.Env, notificationProcessor engine.Not
 
 	// Returns provider information for the plugin to use
 	apiRoutes.HandleFunc(config.PathProvider, func(w http.ResponseWriter, r *http.Request) {
-		httputils.WriteJSONResponse(w, config.Provider, 200)
+		httputils.WriteJSONResponse(w, config.Provider, http.StatusOK)
 	})
 }

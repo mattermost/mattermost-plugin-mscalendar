@@ -92,7 +92,7 @@ func (jm *JobManager) activateJob(job RegisteredJob) error {
 	return nil
 }
 
-// deactivateJob closes the job, releasing the cluster mutex, then remoes the job from the job manager.
+// deactivateJob closes the job, releasing the cluster mutex, then removes the job from the job manager.
 func (jm *JobManager) deactivateJob(job RegisteredJob) error {
 	v, ok := jm.activeJobs.Load(job.id)
 	if !ok {
