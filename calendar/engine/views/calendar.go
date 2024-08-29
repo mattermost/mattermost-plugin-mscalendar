@@ -39,13 +39,6 @@ func ShowTimezoneOption(timezone string) Option {
 	}
 }
 
-var subjectReplacer = strings.NewReplacer(
-	"|", `\|`,
-	"[", `\[`,
-	"]", `\]`,
-	">", `\>`,
-)
-
 func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
@@ -122,6 +115,41 @@ func renderTableHeader() string {
 | :-- | :-- |`
 }
 
+// MarkdownToHTMLEntities converts reserved Markdown characters to their HTML entity equivalents
+func MarkdownToHTMLEntities(input string) string {
+	replacements := map[rune]string{
+		'!':  "&#33;",  // Exclamation Mark
+		'#':  "&#35;",  // Hash
+		'(':  "&#40;",  // Left Parenthesis
+		')':  "&#41;",  // Right Parenthesis
+		'*':  "&#42;",  // Asterisk
+		'+':  "&#43;",  // Plus Sign
+		'-':  "&#45;",  // Dash
+		'.':  "&#46;",  // Period
+		'/':  "&#47;",  // Forward slash
+		':':  "&#58;",  // Colon
+		'<':  "&#60;",  // Less than
+		'>':  "&#62;",  // Greater Than
+		'[':  "&#91;",  // Left Square Bracket
+		'\\': "&#92;",  // Back slash
+		']':  "&#93;",  // Right Square Bracket
+		'_':  "&#95;",  // Underscore
+		'`':  "&#96;",  // Backtick
+		'|':  "&#124;", // Vertical Bar
+		'~':  "&#126;", // Tilde
+	}
+
+	var builder strings.Builder
+	for _, char := range input {
+		if replacement, exists := replacements[char]; exists {
+			builder.WriteString(replacement)
+		} else {
+			builder.WriteRune(char)
+		}
+	}
+	return builder.String()
+}
+
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
 	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
 	end := event.End.In(timeZone).Time().Format(time.Kitchen)
@@ -138,7 +166,7 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 
 	subject := EnsureSubject(event.Subject)
 
-	return fmt.Sprintf(format, start, end, subjectReplacer.Replace(subject), link), nil
+	return fmt.Sprintf(format, start, end, MarkdownToHTMLEntities(subject), link), nil
 }
 
 func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
