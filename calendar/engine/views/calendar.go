@@ -136,6 +136,7 @@ func MarkdownToHTMLEntities(input string) string {
 		'_':  "&#95;",  // Underscore
 		'`':  "&#96;",  // Backtick
 		'|':  "&#124;", // Vertical Bar
+		'~':  "&#126;", // Tilde
 	}
 
 	var builder strings.Builder

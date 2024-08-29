@@ -57,6 +57,11 @@ func TestMarkdownToHTMLEntities(t *testing.T) {
 			inputstring:    "https://example.com",
 			expectedOutput: "https&#58;&#47;&#47;example&#46;com",
 		},
+		{
+			description:    "strike through",
+			inputstring:    "~~strike~~",
+			expectedOutput: "&#126;&#126;strike&#126;&#126;",
+		},
 	} {
 		t.Run(testCase.description, func(t *testing.T) {
 			res := MarkdownToHTMLEntities(testCase.inputstring)
