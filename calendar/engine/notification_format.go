@@ -82,7 +82,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: strings.Join(newFields[k].Strings(), ", "),
+			Value: views.MarkdownToHTMLEntities(strings.Join(newFields[k].Strings(), ", ")),
 			Short: true,
 		})
 	}
@@ -92,7 +92,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: fmt.Sprintf("~~%s~~ \u2192 %s", strings.Join(priorFields[k].Strings(), ", "), strings.Join(newFields[k].Strings(), ", ")),
+			Value: fmt.Sprintf("~~%s~~ \u2192 %s", views.MarkdownToHTMLEntities(strings.Join(priorFields[k].Strings(), ", ")), views.MarkdownToHTMLEntities(strings.Join(newFields[k].Strings(), ", "))),
 			Short: true,
 		})
 	}
@@ -102,7 +102,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		}
 		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
 			Title: k,
-			Value: fmt.Sprintf("~~%s~~", strings.Join(priorFields[k].Strings(), ", ")),
+			Value: fmt.Sprintf("~~%s~~", views.MarkdownToHTMLEntities(strings.Join(priorFields[k].Strings(), ", "))),
 			Short: true,
 		})
 	}
