@@ -129,3 +129,4 @@ func (m *mscalendar) GetCalendars(user *User) ([]*remote.Calendar, error) {
 
 	return m.client.GetCalendars(user.Remote.ID)
 }
+

@@ -21,8 +21,6 @@ func main() {
 		plugin.NewWithEnv(
 			engine.Env{
 				Config: &config.Config{
-					PluginID:       manifest.Id,
-					PluginVersion:  manifest.Version,
 					BuildHash:      BuildHash,
 					BuildHashShort: BuildHashShort,
 					BuildDate:      BuildDate,
