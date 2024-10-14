@@ -70,7 +70,6 @@ func TestLoadUserWelcomePost(t *testing.T) {
 		{
 			name: "Success loading user welcome post",
 			setup: func(mockAPI *MockPluginAPI) {
-				mockAPI.ExpectedCalls = nil
 				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
 			},
 			assertions: func(t *testing.T, resp string, err error) {
@@ -81,6 +80,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockAPI.ExpectedCalls = nil
 			tt.setup(mockAPI)
 
 			resp, err := store.LoadUserWelcomePost("mockMMUserID")
@@ -117,7 +117,6 @@ func TestStoreUserWelcomePost(t *testing.T) {
 		{
 			name: "Success storing user welcome post",
 			setup: func(mockAPI *MockPluginAPI) {
-				mockAPI.ExpectedCalls = nil
 				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
@@ -127,6 +126,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockAPI.ExpectedCalls = nil
 			tt.setup(mockAPI)
 
 			err := store.StoreUserWelcomePost("mockMMUserID", "mockPostID")
@@ -165,7 +165,6 @@ func TestDeleteUserWelcomePost(t *testing.T) {
 		{
 			name: "Success deleting user welcome post",
 			setup: func(mockAPI *MockPluginAPI) {
-				mockAPI.ExpectedCalls = nil
 				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
 				mockAPI.On("KVDelete", mock.Anything, mock.Anything).Return(nil)
 			},
@@ -177,6 +176,7 @@ func TestDeleteUserWelcomePost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockAPI.ExpectedCalls = nil
 			tt.setup(mockAPI)
 
 			resp, err := store.DeleteUserWelcomePost("mockMMUserID")
