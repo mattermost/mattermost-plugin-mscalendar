@@ -16,10 +16,17 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 	var v struct {
 		Value []*remote.Calendar `json:"value"`
 	}
+
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	req := c.rbuilder.Users().ID(remoteUserID).Calendars().Request()
 	req.Expand("children")
 	err := req.JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph GetCalendars")
 	}
 	c.Logger.With(bot.LogContext{
