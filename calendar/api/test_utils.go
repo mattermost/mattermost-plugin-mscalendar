@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote/mock_remote"
@@ -21,6 +22,7 @@ const (
 	MockRemoteUserID = "mockRemoteUserID"
 )
 
+// revive:disable-next-line:unexported-return
 func GetMockSetup(t *testing.T) (*api, *mock_store.MockStore, *mock_bot.MockPoster, *mock_remote.MockRemote, *mock_plugin_api.MockPluginAPI, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_remote.MockClient) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
