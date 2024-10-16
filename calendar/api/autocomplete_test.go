@@ -9,9 +9,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
-	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
+
+	"github.com/mattermost/mattermost/server/public/model"
 )
 
 func TestAutocompleteConnectedUsers(t *testing.T) {
