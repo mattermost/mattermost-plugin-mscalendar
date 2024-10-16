@@ -7,6 +7,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
@@ -21,6 +22,22 @@ const (
 	MockEventID      = "mockEventID"
 	MockRemoteUserID = "mockRemoteUserID"
 )
+
+type MockNotificationProcessor struct {
+	queue []*remote.Notification
+	err   error
+}
+
+func (m *MockNotificationProcessor) Enqueue(notifications ...*remote.Notification) error {
+	if m.err != nil {
+		return m.err
+	}
+	m.queue = append(m.queue, notifications...)
+	return nil
+}
+
+func (m *MockNotificationProcessor) Configure(env engine.Env) {}
+func (m *MockNotificationProcessor) Quit()                    {}
 
 // revive:disable-next-line:unexported-return
 func GetMockSetup(t *testing.T) (*api, *mock_store.MockStore, *mock_bot.MockPoster, *mock_remote.MockRemote, *mock_plugin_api.MockPluginAPI, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_remote.MockClient) {
