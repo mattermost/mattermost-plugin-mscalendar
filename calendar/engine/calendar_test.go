@@ -146,7 +146,7 @@ func TestCreateCalendar(t *testing.T) {
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
-			assertions: func(t *testing.T, createdCalendar *remote.Calendar, err error) {
+			assertions: func(t *testing.T, _ *remote.Calendar, err error) {
 				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
@@ -157,7 +157,7 @@ func TestCreateCalendar(t *testing.T) {
 			setupMock: func() {
 				mockClient.EXPECT().CreateCalendar(MockRemoteUserID, &remote.Calendar{Name: MockCalendarName}).Return(nil, fmt.Errorf("error creating calendar")).Times(1)
 			},
-			assertions: func(t *testing.T, createdCalendar *remote.Calendar, err error) {
+			assertions: func(t *testing.T, _ *remote.Calendar, err error) {
 				require.EqualError(t, err, "error creating calendar")
 			},
 		},
