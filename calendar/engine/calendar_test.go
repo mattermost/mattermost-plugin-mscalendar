@@ -33,8 +33,7 @@ func TestViewCalendar(t *testing.T) {
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
-			assertions: func(t *testing.T, events []*remote.Event, err error) {
-				require.Error(t, err)
+			assertions: func(t *testing.T, _ []*remote.Event, err error) {
 				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
@@ -44,8 +43,7 @@ func TestViewCalendar(t *testing.T) {
 			setupMock: func() {
 				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return(nil, fmt.Errorf("error getting calendar view")).Times(1)
 			},
-			assertions: func(t *testing.T, events []*remote.Event, err error) {
-				require.Error(t, err)
+			assertions: func(t *testing.T, _ []*remote.Event, err error) {
 				require.EqualError(t, err, "error getting calendar view")
 			},
 		},
@@ -92,8 +90,7 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
-			assertions: func(t *testing.T, events []*remote.Event, err error) {
-				require.Error(t, err)
+			assertions: func(t *testing.T, _ []*remote.Event, err error) {
 				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
@@ -103,8 +100,7 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 			setupMock: func() {
 				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return(nil, fmt.Errorf("error getting calendar view")).Times(1)
 			},
-			assertions: func(t *testing.T, events []*remote.Event, err error) {
-				require.Error(t, err)
+			assertions: func(t *testing.T, _ []*remote.Event, err error) {
 				require.EqualError(t, err, "error getting calendar view")
 			},
 		},
@@ -151,7 +147,6 @@ func TestCreateCalendar(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, createdCalendar *remote.Calendar, err error) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
@@ -163,7 +158,6 @@ func TestCreateCalendar(t *testing.T) {
 				mockClient.EXPECT().CreateCalendar(MockRemoteUserID, &remote.Calendar{Name: MockCalendarName}).Return(nil, fmt.Errorf("error creating calendar")).Times(1)
 			},
 			assertions: func(t *testing.T, createdCalendar *remote.Calendar, err error) {
-				require.Error(t, err)
 				require.EqualError(t, err, "error creating calendar")
 			},
 		},
@@ -209,7 +203,6 @@ func TestCreateEvent(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
@@ -241,7 +234,6 @@ func TestCreateEvent(t *testing.T) {
 				mockClient.EXPECT().CreateEvent(MockRemoteUserID, &remote.Event{Subject: "Test Event"}).Return(nil, fmt.Errorf("error creating event")).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
-				require.Error(t, err)
 				require.EqualError(t, err, "error creating event")
 			},
 		},
@@ -298,7 +290,6 @@ func TestDeleteCalendar(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error loading the user")
 			},
 		},
@@ -310,7 +301,6 @@ func TestDeleteCalendar(t *testing.T) {
 				mockClient.EXPECT().DeleteCalendar(user.User.Remote.ID, MockCalendarID).Return(errors.New("deletion error")).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
-				require.Error(t, err)
 				require.EqualError(t, err, "deletion error")
 			},
 		},
@@ -353,7 +343,6 @@ func TestFindMeetingTimes(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, err error, results *remote.MeetingTimeSuggestionResults) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error loading the user")
 				require.Nil(t, results)
 			},
@@ -366,7 +355,6 @@ func TestFindMeetingTimes(t *testing.T) {
 				mockClient.EXPECT().FindMeetingTimes(user.User.Remote.ID, meetingParams).Return(nil, errors.New("finding times error")).Times(1)
 			},
 			assertions: func(t *testing.T, err error, results *remote.MeetingTimeSuggestionResults) {
-				require.Error(t, err)
 				require.EqualError(t, err, "finding times error")
 				require.Nil(t, results)
 			},
@@ -410,7 +398,6 @@ func TestGetCalendars(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
 			assertions: func(t *testing.T, err error, calendars []*remote.Calendar) {
-				require.Error(t, err)
 				require.ErrorContains(t, err, "error loading the user")
 				require.Nil(t, calendars)
 			},
@@ -423,7 +410,6 @@ func TestGetCalendars(t *testing.T) {
 				mockClient.EXPECT().GetCalendars(user.User.Remote.ID).Return(nil, errors.New("getting calendars error")).Times(1)
 			},
 			assertions: func(t *testing.T, err error, calendars []*remote.Calendar) {
-				require.Error(t, err)
 				require.EqualError(t, err, "getting calendars error")
 				require.Nil(t, calendars)
 			},
