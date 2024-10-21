@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/url"
 	"testing"
 	"time"
@@ -23,6 +24,18 @@ const (
 	MockOption       = "mockOption"
 	MockEventID      = "mockEventID"
 	MockRemoteUserID = "mockRemoteUserID"
+	MockChannelID    = "mockChannelID"
+
+	ValidRequestBodyJSON = `{
+		"all_day": false,
+		"attendees": ["user1", "user2"],
+		"date": "2024-10-17",
+		"start_time": "10:00AM",
+		"end_time": "11:00AM",
+		"description": "Team sync meeting",
+		"subject": "Team Sync",
+		"channel_id": "mockChannelID"
+	}`
 )
 
 type MockNotificationProcessor struct {
@@ -128,4 +141,38 @@ func GetMockSetup(t *testing.T) (*api, *mock_store.MockStore, *mock_bot.MockPost
 	}
 
 	return api, mockStore, mockPoster, mockRemote, mockPluginAPI, mockLogger, mockLoggerWith, mockClient
+}
+
+// revive:disable-next-line:unexported-return
+func GetMockCreateEventPayload(allDay bool, attendees []string, date, startTime, endTime, description, subject, location, channelID string) createEventPayload {
+	return createEventPayload{
+		AllDay:      allDay,
+		Attendees:   attendees,
+		Date:        date,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Description: description,
+		Subject:     subject,
+		Location:    location,
+		ChannelID:   channelID,
+	}
+}
+
+func GetCurrentTimeRequestBodyJSON() string {
+	currentTime := time.Now()
+	date := currentTime.Format("2006-01-02")
+	startTime := currentTime.Add(time.Hour).Format("15:04")
+	endTime := currentTime.Add(2 * time.Hour).Format("15:04")
+
+	return fmt.Sprintf(`{
+					"all_day": false,
+					"attendees": [],
+					"date": "%s",
+					"start_time": "%s",
+					"end_time": "%s",
+					"description": "Discuss the quarterly results.",
+					"subject": "Meeting with team",
+					"location": "Conference Room",
+					"channel_id": "mockChannelID"
+				}`, date, startTime, endTime)
 }
