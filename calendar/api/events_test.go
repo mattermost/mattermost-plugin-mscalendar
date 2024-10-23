@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -200,7 +199,7 @@ func TestCreateEvent(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-				mockLogger.EXPECT().Errorf("createEvent, unauthorized user")
+				mockLogger.EXPECT().Errorf("createEvent, unauthorized user").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
@@ -221,9 +220,9 @@ func TestCreateEvent(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-				mockStore.EXPECT().LoadUser(MockUserID).Return(nil, errors.New("internal error"))
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading user from store")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(nil, errors.New("internal error")).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading user from store").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
@@ -244,9 +243,9 @@ func TestCreateEvent(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-				mockStore.EXPECT().LoadUser(MockUserID).Return(nil, store.ErrNotFound)
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, user not found in store")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(nil, store.ErrNotFound).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, user not found in store").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
@@ -261,9 +260,9 @@ func TestCreateEvent(t *testing.T) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				malformedJSON := `{"all_day": true, "attendees": ["user1", "user2"], "date": "2024-10-17", "start_time": "10:00AM", "end_time": }`
 				req.Body = io.NopCloser(bytes.NewBufferString(malformedJSON))
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{}, nil)
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while decoding event payload")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{}, nil).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while decoding event payload").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
@@ -277,10 +276,10 @@ func TestCreateEvent(t *testing.T) {
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(false)
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, user don't have permission to link events in the selected channel")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(false).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, user don't have permission to link events in the selected channel").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
@@ -294,12 +293,12 @@ func TestCreateEvent(t *testing.T) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(nil, errors.New("error getting mailbox settings"))
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while getting mailbox settings for user")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(nil, errors.New("error getting mailbox settings")).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while getting mailbox settings for user").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				responseBody, _ := io.ReadAll(rec.Body)
@@ -313,12 +312,12 @@ func TestCreateEvent(t *testing.T) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "Invalid/TimeZone"}, nil)
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading mailbox timezone location")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "Invalid/TimeZone"}, nil).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading mailbox timezone location").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
@@ -332,10 +331,10 @@ func TestCreateEvent(t *testing.T) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockLogger.EXPECT().Errorf("createEvent, invalid payload").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
@@ -348,16 +347,16 @@ func TestCreateEvent(t *testing.T) {
 			name: "Error creating event",
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				validJSON := GetCurrentTimeRequestBodyJSON()
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(nil, errors.New("failed to create event"))
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while creating event", gomock.Any())
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
+				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(nil, errors.New("failed to create event")).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while creating event", gomock.Any()).Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
@@ -369,39 +368,19 @@ func TestCreateEvent(t *testing.T) {
 			name: "Error storing the linked user event",
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				currentTime := time.Now()
-				validJSON := GetCurrentTimeRequestBodyJSON()
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				mockEvent := &remote.Event{
-					Start: &remote.DateTime{
-						DateTime: currentTime.Add(time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					End: &remote.DateTime{
-						DateTime: currentTime.Add(2 * time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					Subject:  "Meeting with team",
-					Location: &remote.Location{DisplayName: "Conference Room"},
-					Conference: &remote.Conference{
-						URL:         "https://example.com/conference",
-						Application: "Zoom",
-					},
-					Attendees: []*remote.Attendee{
-						{EmailAddress: &remote.EmailAddress{Name: "John Doe", Address: "john.doe@example.com"}},
-						{EmailAddress: &remote.EmailAddress{Name: "Jane Smith", Address: "jane.smith@example.com"}},
-					},
-				}
-				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil)
-				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(errors.New("error storing the user linked event"))
-				mockPoster.EXPECT().DM(MockUserID, gomock.Any(), gomock.Any())
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while storing user linked event")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
+				mockEvent := GetMockRemoteEvent()
+				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil).Times(1)
+				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(errors.New("error storing the user linked event")).Times(1)
+				mockPoster.EXPECT().DM(MockUserID, gomock.Any(), gomock.Any()).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while storing user linked event").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
@@ -413,40 +392,20 @@ func TestCreateEvent(t *testing.T) {
 			name: "Error linking event to channel",
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				currentTime := time.Now()
-				validJSON := GetCurrentTimeRequestBodyJSON()
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				mockEvent := &remote.Event{
-					Start: &remote.DateTime{
-						DateTime: currentTime.Add(time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					End: &remote.DateTime{
-						DateTime: currentTime.Add(2 * time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					Subject:  "Meeting with team",
-					Location: &remote.Location{DisplayName: "Conference Room"},
-					Conference: &remote.Conference{
-						URL:         "https://example.com/conference",
-						Application: "Zoom",
-					},
-					Attendees: []*remote.Attendee{
-						{EmailAddress: &remote.EmailAddress{Name: "John Doe", Address: "john.doe@example.com"}},
-						{EmailAddress: &remote.EmailAddress{Name: "Jane Smith", Address: "jane.smith@example.com"}},
-					},
-				}
-				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil)
-				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(nil)
-				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(errors.New("error linking event to channel"))
-				mockPoster.EXPECT().DM(MockUserID, gomock.Any(), gomock.Any())
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("error linking event to channel")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
+				mockEvent := GetMockRemoteEvent()
+				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil).Times(1)
+				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(nil).Times(1)
+				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(errors.New("error linking event to channel")).Times(1)
+				mockPoster.EXPECT().DM(MockUserID, gomock.Any(), gomock.Any()).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("error linking event to channel").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
@@ -458,40 +417,20 @@ func TestCreateEvent(t *testing.T) {
 			name: "Error creating post",
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				currentTime := time.Now()
-				validJSON := GetCurrentTimeRequestBodyJSON()
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				mockEvent := &remote.Event{
-					Start: &remote.DateTime{
-						DateTime: currentTime.Add(time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					End: &remote.DateTime{
-						DateTime: currentTime.Add(2 * time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					Subject:  "Meeting with team",
-					Location: &remote.Location{DisplayName: "Conference Room"},
-					Conference: &remote.Conference{
-						URL:         "https://example.com/conference",
-						Application: "Zoom",
-					},
-					Attendees: []*remote.Attendee{
-						{EmailAddress: &remote.EmailAddress{Name: "John Doe", Address: "john.doe@example.com"}},
-						{EmailAddress: &remote.EmailAddress{Name: "Jane Smith", Address: "jane.smith@example.com"}},
-					},
-				}
-				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil)
-				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(nil)
-				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(nil)
-				mockPoster.EXPECT().CreatePost(gomock.Any()).Return(errors.New("error occurred creating post"))
-				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith)
-				mockLoggerWith.EXPECT().Errorf("error sending post to channel about linked event")
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
+				mockEvent := GetMockRemoteEvent()
+				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil).Times(1)
+				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(nil).Times(1)
+				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(nil).Times(1)
+				mockPoster.EXPECT().CreatePost(gomock.Any()).Return(errors.New("error occurred creating post")).Times(1)
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Errorf("error sending post to channel about linked event").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
@@ -503,38 +442,18 @@ func TestCreateEvent(t *testing.T) {
 			name: "Successfully create event with channelID",
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				currentTime := time.Now()
-				validJSON := GetCurrentTimeRequestBodyJSON()
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				mockEvent := &remote.Event{
-					Start: &remote.DateTime{
-						DateTime: currentTime.Add(time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					End: &remote.DateTime{
-						DateTime: currentTime.Add(2 * time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					Subject:  "Meeting with team",
-					Location: &remote.Location{DisplayName: "Conference Room"},
-					Conference: &remote.Conference{
-						URL:         "https://example.com/conference",
-						Application: "Zoom",
-					},
-					Attendees: []*remote.Attendee{
-						{EmailAddress: &remote.EmailAddress{Name: "John Doe", Address: "john.doe@example.com"}},
-						{EmailAddress: &remote.EmailAddress{Name: "Jane Smith", Address: "jane.smith@example.com"}},
-					},
-				}
-				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil)
-				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(nil)
-				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(nil)
-				mockPoster.EXPECT().CreatePost(gomock.Any()).Return(nil)
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
+				mockEvent := GetMockRemoteEvent()
+				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil).Times(1)
+				mockStore.EXPECT().StoreUserLinkedEvent(MockUserID, gomock.Any(), MockChannelID).Return(nil).Times(1)
+				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(nil).Times(1)
+				mockPoster.EXPECT().CreatePost(gomock.Any()).Return(nil).Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
@@ -546,49 +465,15 @@ func TestCreateEvent(t *testing.T) {
 			name: "Event created successfully without channelID",
 			setup: func(req *http.Request) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				currentTime := time.Now()
-				date := currentTime.Format("2006-01-02")
-				startTime := currentTime.Add(time.Hour).Format("15:04")
-				endTime := currentTime.Add(2 * time.Hour).Format("15:04")
-				validJSON := fmt.Sprintf(`{
-					"all_day": false,
-					"attendees": [],
-					"date": "%s",
-					"start_time": "%s",
-					"end_time": "%s",
-					"description": "Discuss the quarterly results.",
-					"subject": "Meeting with team",
-					"location": "Conference Room",
-					"channel_id": ""
-				}`, date, startTime, endTime)
-
+				validJSON := GetCurrentTimeRequestBodyJSON("")
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil)
-				mockEvent := &remote.Event{
-					Start: &remote.DateTime{
-						DateTime: currentTime.Add(time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					End: &remote.DateTime{
-						DateTime: currentTime.Add(2 * time.Hour).Format("2006-01-02T15:04:05Z"),
-						TimeZone: "UTC",
-					},
-					Subject:  "Meeting with team",
-					Location: &remote.Location{DisplayName: "Conference Room"},
-					Conference: &remote.Conference{
-						URL:         "https://example.com/conference",
-						Application: "Zoom",
-					},
-					Attendees: []*remote.Attendee{
-						{EmailAddress: &remote.EmailAddress{Name: "John Doe", Address: "john.doe@example.com"}},
-						{EmailAddress: &remote.EmailAddress{Name: "Jane Smith", Address: "jane.smith@example.com"}},
-					},
-				}
-				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil)
-				mockPoster.EXPECT().DMWithMessageAndAttachments(MockUserID, "Your event was created successfully.", gomock.Any())
+				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
+				mockRemote.EXPECT().MakeClient(gomock.Any(), &mockOAauthToken).Return(mockRemoteClient).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
+				mockEvent := GetMockRemoteEvent()
+				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil).Times(1)
+				mockPoster.EXPECT().DMWithMessageAndAttachments(MockUserID, "Your event was created successfully.", gomock.Any()).Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)

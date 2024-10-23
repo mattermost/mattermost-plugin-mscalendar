@@ -158,7 +158,7 @@ func GetMockCreateEventPayload(allDay bool, attendees []string, date, startTime,
 	}
 }
 
-func GetCurrentTimeRequestBodyJSON() string {
+func GetCurrentTimeRequestBodyJSON(channelID string) string {
 	currentTime := time.Now()
 	date := currentTime.Format("2006-01-02")
 	startTime := currentTime.Add(time.Hour).Format("15:04")
@@ -173,6 +173,30 @@ func GetCurrentTimeRequestBodyJSON() string {
 					"description": "Discuss the quarterly results.",
 					"subject": "Meeting with team",
 					"location": "Conference Room",
-					"channel_id": "mockChannelID"
-				}`, date, startTime, endTime)
+					"channel_id": "%s"
+				}`, date, startTime, endTime, channelID)
+}
+
+func GetMockRemoteEvent() *remote.Event {
+	currentTime := time.Now()
+	return &remote.Event{
+		Start: &remote.DateTime{
+			DateTime: currentTime.Add(time.Hour).Format("2006-01-02T15:04:05Z"),
+			TimeZone: "UTC",
+		},
+		End: &remote.DateTime{
+			DateTime: currentTime.Add(2 * time.Hour).Format("2006-01-02T15:04:05Z"),
+			TimeZone: "UTC",
+		},
+		Subject:  "Meeting with team",
+		Location: &remote.Location{DisplayName: "Conference Room"},
+		Conference: &remote.Conference{
+			URL:         "https://example.com/conference",
+			Application: "Zoom",
+		},
+		Attendees: []*remote.Attendee{
+			{EmailAddress: &remote.EmailAddress{Name: "John Doe", Address: "john.doe@example.com"}},
+			{EmailAddress: &remote.EmailAddress{Name: "Jane Smith", Address: "jane.smith@example.com"}},
+		},
+	}
 }
