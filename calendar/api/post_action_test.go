@@ -116,7 +116,7 @@ func TestPreprocessAction(t *testing.T) {
 }
 
 func TestPostActionAccept(t *testing.T) {
-	api, mockStore, _, mockRemote, mockPluginAPI, _, _, _ := GetMockSetup(t)
+	api, mockStore, _, mockRemote, mockPluginAPI, _, _, mockClient := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -140,10 +140,10 @@ func TestPostActionAccept(t *testing.T) {
 		{
 			name: "Accept event successfully",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
+				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -173,7 +173,7 @@ func TestPostActionAccept(t *testing.T) {
 }
 
 func TestPostDeclineAccept(t *testing.T) {
-	api, mockStore, _, mockRemote, mockPluginAPI, _, _, _ := GetMockSetup(t)
+	api, mockStore, _, mockRemote, mockPluginAPI, _, _, mockClient := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -197,10 +197,10 @@ func TestPostDeclineAccept(t *testing.T) {
 		{
 			name: "Decline event successfully",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
+				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -230,7 +230,7 @@ func TestPostDeclineAccept(t *testing.T) {
 }
 
 func TestPostActionTentative(t *testing.T) {
-	api, mockStore, _, mockRemote, mockPluginAPI, _, _, _ := GetMockSetup(t)
+	api, mockStore, _, mockRemote, mockPluginAPI, _, _, mockClient := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -254,10 +254,10 @@ func TestPostActionTentative(t *testing.T) {
 		{
 			name: "Tentatively accept event successfully",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
+				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -287,7 +287,7 @@ func TestPostActionTentative(t *testing.T) {
 }
 
 func TestPostActionRespond(t *testing.T) {
-	api, mockStore, _, mockRemote, mockPluginAPI, _, _, _ := GetMockSetup(t)
+	api, mockStore, _, mockRemote, mockPluginAPI, _, _, mockClient := GetMockSetup(t)
 
 	tests := []struct {
 		name       string
@@ -311,10 +311,10 @@ func TestPostActionRespond(t *testing.T) {
 		{
 			name: "Error responding to event",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
+				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -337,11 +337,11 @@ func TestPostActionRespond(t *testing.T) {
 		{
 			name: "Error updating post",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetPost("").Return(nil, &model.AppError{Message: "error getting post"})
+				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -364,11 +364,11 @@ func TestPostActionRespond(t *testing.T) {
 		{
 			name: "No attachment found",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{}, nil)
+				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -391,10 +391,10 @@ func TestPostActionRespond(t *testing.T) {
 		{
 			name: "Action responded successfully",
 			setup: func(req *http.Request) {
-				mockClient := &mockClient{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
+				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 				attachment := model.SlackAttachment{
 					Title: "Example Title",
 					Text:  "This is an example attachment.",
