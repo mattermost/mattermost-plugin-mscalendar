@@ -30,9 +30,7 @@ func TestNotification(t *testing.T) {
 					Return([]*remote.Notification{{}}).Times(1)
 
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
-				mockLoggerWith.EXPECT().
-					Errorf("notification, error occurred while adding webhook event to notification queue").
-					Times(1)
+				mockLoggerWith.EXPECT().Errorf("notification, error occurred while adding webhook event to notification queue").Times(1)
 			},
 			assertions: func(rec *httptest.ResponseRecorder, mockProcessor *MockNotificationProcessor) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
