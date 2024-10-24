@@ -64,7 +64,7 @@ func TestGetDaySummaryForUser(t *testing.T) {
 
 		mockPluginAPI.EXPECT().GetMattermostUser(user.MattermostUserID)
 
-		mockRemote.EXPECT().MakeClient(context.Background(), nil).Return(mockClient)
+		mockRemote.EXPECT().MakeUserClient(context.Background(), nil, gomock.Any(), poster, gomock.Any()).Return(mockClient)
 
 		mockClient.EXPECT().GetMailboxSettings("user1_remote_id").Return(&remote.MailboxSettings{
 			TimeZone: "Pacific Standard Time",
@@ -323,7 +323,7 @@ Wednesday February 12, 2020
 					TimeZone: "Pacific Standard Time",
 				}, nil)
 
-				mockRemote.EXPECT().MakeClient(context.Background(), gomock.Any()).Return(mockClient).Times(2)
+				mockRemote.EXPECT().MakeUserClient(context.Background(), nil, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient).Times(2)
 
 				mockClient.EXPECT().GetDefaultCalendarView("user1_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{}, nil)
 				mockClient.EXPECT().GetDefaultCalendarView("user2_remote_id", gomock.Any(), gomock.Any()).Return([]*remote.Event{
