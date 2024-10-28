@@ -29,7 +29,7 @@ func TestViewCalendar(t *testing.T) {
 	}{
 		{
 			name: "error filtering with client",
-			user: GetMockUser(nil, model.NewString(MockMMModelUserID), MockMMUserID), nil,
+			user: GetMockUser(nil, model.NewString(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
