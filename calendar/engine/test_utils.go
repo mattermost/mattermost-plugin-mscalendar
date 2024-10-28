@@ -17,9 +17,11 @@ import (
 )
 
 const (
-	MockRemoteUserID  = "testRemoteUserID"
-	MockMMModelUserID = "testMMModelUserID"
-	MockMMUserID      = "testMMUserID"
+	MockRemoteUserID      = "testRemoteUserID"
+	MockMMModelUserID     = "testMMModelUserID"
+	MockMMUserID          = "testMMUserID"
+	MockMMUsername        = "testMMUsername"
+	MockMMUserDisplayName = "testMMUserDisplayName"
 
 	MockCalendarName = "Test Calendar"
 	MockCalendarID   = "testCalendarID"
@@ -30,6 +32,10 @@ const (
 
 	MockActingUserID       = "testActingUserID"
 	MockActingUserRemoteID = "testActingUserRemoteID"
+
+	MockTimeZone = "testTimeZone"
+
+	mockChannelID = "testChannelID"
 )
 
 // revive:disable:unexported-return
