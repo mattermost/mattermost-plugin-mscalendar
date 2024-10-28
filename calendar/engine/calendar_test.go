@@ -51,13 +51,13 @@ func TestViewCalendar(t *testing.T) {
 			name: "successful calendar view",
 			user: GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
-				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return([]*remote.Event{{Subject: "Test Event"}}, nil).Times(1)
+				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return([]*remote.Event{{Subject: MockEventName}}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, events []*remote.Event, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, events)
 				require.Len(t, events, 1)
-				require.Equal(t, "Test Event", events[0].Subject, "Expected first event's subject to be %s, but got %s", "Test Event", events[0].Subject)
+				require.Equal(t, MockEventName, events[0].Subject, "Expected first event's subject to be %s, but got %s", MockEventName, events[0].Subject)
 			},
 		},
 	}
@@ -231,7 +231,7 @@ func TestCreateEvent(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("not found")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockPoster.EXPECT().DM(MockMMUserID, gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
-				mockClient.EXPECT().CreateEvent(MockRemoteUserID, &remote.Event{Subject: "Test Event"}).Return(nil, fmt.Errorf("error creating event")).Times(1)
+				mockClient.EXPECT().CreateEvent(MockRemoteUserID, &remote.Event{Subject: MockEventName}).Return(nil, fmt.Errorf("error creating event")).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
 				require.EqualError(t, err, "error creating event")
@@ -252,7 +252,7 @@ func TestCreateEvent(t *testing.T) {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockPoster.EXPECT().DM(MockMMUserID, gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
 				mockClient.EXPECT().CreateEvent(MockRemoteUserID, &remote.Event{
-					Subject:   "Test Event",
+					Subject:   MockEventName,
 					Location:  &remote.Location{DisplayName: "Test Location"},
 					Start:     &remote.DateTime{DateTime: "2024-10-01T09:00:00", TimeZone: "UTC"},
 					End:       &remote.DateTime{DateTime: "2024-10-01T10:00:00", TimeZone: "UTC"},

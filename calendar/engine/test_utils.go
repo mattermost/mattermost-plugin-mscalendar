@@ -24,8 +24,12 @@ const (
 	MockCalendarName = "Test Calendar"
 	MockCalendarID   = "testCalendarID"
 
-	MockEventName = "Test Event"
-	MockEventID   = "testEventID"
+	MockEventName           = "Test Event"
+	MockEventID             = "testEventID"
+	MockEventSubscriptionID = "testEventSubscriptionID"
+
+	MockActingUserID       = "testActingUserID"
+	MockActingUserRemoteID = "testActingUserRemoteID"
 )
 
 // revive:disable:unexported-return
@@ -131,4 +135,12 @@ func GetMockEvent(subject string, location *remote.Location, start, end *remote.
 
 func GetMockStoreSettings() *store.Settings {
 	return &store.Settings{}
+}
+
+func GetMockSubscription() *store.Subscription {
+	return &store.Subscription{
+		Remote:              &remote.Subscription{},
+		MattermostCreatorID: MockActingUserID,
+		PluginVersion:       "1.0.0",
+	}
 }
