@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rudderlabs/analytics-go v3.3.3+incompatible
 	github.com/stretchr/testify v1.9.0
-	github.com/yaegashi/msgraph.go v0.0.0-20191104022859-3f9096c750b2
+	github.com/yaegashi/msgraph.go v0.1.4
 	golang.org/x/oauth2 v0.21.0
 	google.golang.org/grpc v1.65.0 // indirect
 )
@@ -51,6 +51,8 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240612014219-fbbf4953d986 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/rickb777/date v1.12.4 // indirect
+	github.com/rickb777/plural v1.2.0 // indirect
 	github.com/segmentio/backo-go v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
