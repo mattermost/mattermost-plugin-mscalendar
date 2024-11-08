@@ -22,6 +22,7 @@ type ChannelEventLink map[string]string
 const (
 	ErrorUserInactive        = "You have been marked inactive because your refresh token is expired. Please disconnect and reconnect your account again."
 	ErrorRefreshTokenExpired = "The refresh token has expired due to inactivity"
+	ErrorRefreshTokenNotSet  = "oauth2: token expired and refresh token is not set"
 )
 
 type UserStore interface {
