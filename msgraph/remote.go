@@ -38,16 +38,33 @@ func NewRemote(conf *config.Config, logger bot.Logger) remote.Remote {
 }
 
 // MakeClient creates a new client for user-delegated permissions.
-func (r *impl) MakeClient(ctx context.Context, token *oauth2.Token) remote.Client {
+func (r *impl) makeClient(ctx context.Context, token *oauth2.Token, mattermostUserID string, poster bot.Poster, userTokenHelpers remote.UserTokenHelpers) remote.Client {
 	httpClient := r.NewOAuth2Config().Client(ctx, token)
 	c := &client{
-		conf:       r.conf,
-		ctx:        ctx,
-		httpClient: httpClient,
-		Logger:     r.logger,
-		rbuilder:   msgraph.NewClient(httpClient),
+		conf:             r.conf,
+		ctx:              ctx,
+		httpClient:       httpClient,
+		Logger:           r.logger,
+		rbuilder:         msgraph.NewClient(httpClient),
+		tokenHelpers:     userTokenHelpers,
+		mattermostUserID: mattermostUserID,
+		Poster:           poster,
 	}
+
 	return c
+}
+
+// MakeUserClient creates a new client having user-delegated permissions with refreshed token.
+func (r *impl) MakeUserClient(ctx context.Context, oauthToken *oauth2.Token, mattermostUserID string, poster bot.Poster, userTokenHelpers remote.UserTokenHelpers) remote.Client {
+	config := r.NewOAuth2Config()
+
+	token, err := userTokenHelpers.RefreshAndStoreToken(oauthToken, config, mattermostUserID)
+	if err != nil {
+		r.logger.Warnf("Not able to refresh or store the token", "error", err.Error())
+		return &client{}
+	}
+
+	return r.makeClient(ctx, token, mattermostUserID, poster, userTokenHelpers)
 }
 
 // MakeSuperuserClient creates a new client used for app-only permissions.
@@ -71,7 +88,7 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		AccessToken: token,
 		TokenType:   "Bearer",
 	}
-	return r.MakeClient(ctx, o), nil
+	return r.makeClient(ctx, o, "", nil, nil), nil
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {
