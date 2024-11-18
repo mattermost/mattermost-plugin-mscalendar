@@ -94,6 +94,7 @@ func (s *pluginStore) GetCurrentStep(userID string) (int, error) {
 
 	return user.WelcomeFlowStatus.Step, nil
 }
+
 func (s *pluginStore) SetCurrentStep(userID string, step int) error {
 	user, err := s.LoadUser(userID)
 	if err != nil {

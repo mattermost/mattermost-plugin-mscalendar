@@ -66,6 +66,14 @@ func GetMockUser() *User {
 
 func GetMockUserWithSettings() *User {
 	return &User{
+		MattermostUserID: MockMMUserID,
+		Remote:           &remote.User{ID: MockRemoteUserID},
+		WelcomeFlowStatus: WelcomeFlowStatus{
+			Step: 3,
+			PostIDs: map[string]string{
+				"welcomePost": "mockPostID",
+			},
+		},
 		Settings: Settings{
 			DailySummary: &DailySummaryUserSettings{
 				PostTime: "10:00AM",
