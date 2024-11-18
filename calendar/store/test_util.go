@@ -14,6 +14,9 @@ import (
 )
 
 const (
+	MockEventSubscriptionID      = "mockEventSubscriptionID"
+	MockSubscriptionID           = "mockSubscriptionID"
+	MockCreatorID                = "mockCreatorID"
 	MockMMUsername               = "mockMMUsername"
 	MockMMDisplayName            = "mockMMDisplayName"
 	MockMMUserID                 = "mockMMUserID"
@@ -41,6 +44,30 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 	return mockAPI, store, mockLogger, mockLoggerWith, mockTracker
 }
 
+func GetMockUser() *User {
+	return &User{
+		MattermostUserID:      MockMMUserID,
+		MattermostUsername:    MockMMUsername,
+		MattermostDisplayName: MockMMDisplayName,
+		Settings: Settings{
+			EventSubscriptionID: MockEventSubscriptionID,
+		},
+		Remote: &remote.User{
+			ID:   MockRemoteID,
+			Mail: MockRemoteMail,
+		},
+	}
+}
+
+func GetMockSubscription() *Subscription {
+	return &Subscription{
+		Remote: &remote.Subscription{
+			ID:        MockSubscriptionID,
+			CreatorID: MockCreatorID,
+		},
+	}
+}
+
 func GetRemoteUserJSON(noOfUsers int) string {
 	type RemoteUser struct {
 		MMUsername string `json:"mm_username"`
@@ -62,16 +89,4 @@ func GetRemoteUserJSON(noOfUsers int) string {
 
 	result, _ := json.Marshal(users)
 	return string(result)
-}
-
-func GetMockUser() *User {
-	return &User{
-		MattermostUserID:      MockMMUserID,
-		MattermostUsername:    MockMMUsername,
-		MattermostDisplayName: MockMMDisplayName,
-		Remote: &remote.User{
-			ID:   MockRemoteID,
-			Mail: MockRemoteMail,
-		},
-	}
 }
