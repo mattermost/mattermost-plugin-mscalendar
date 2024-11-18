@@ -27,6 +27,7 @@ const (
 	MockRemoteUserID             = "mockRemoteUserID"
 	MockRemoteMail               = "mock@remote.com"
 	MockEventID                  = "mockEventID"
+	MockICalUID                  = "mockICalUID"
 	MockChannelID                = "mockChannelID"
 	MockUserIndexJSON            = `[{"mm_id": "mockMMUserID"}]`
 	InvalidMockUserIndexJSON     = `[{"mm_id": "invalidMockMMUserID"}]`
@@ -119,4 +120,13 @@ func GetRemoteUserJSON(noOfUsers int) string {
 
 	result, _ := json.Marshal(users)
 	return string(result)
+}
+
+func GetMockEvent() *Event {
+	return &Event{
+		Remote: &remote.Event{
+			ICalUID: MockICalUID,
+			ID:      MockEventID,
+		},
+	}
 }
