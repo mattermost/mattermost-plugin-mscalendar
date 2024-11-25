@@ -9,6 +9,12 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 )
 
+const (
+	ErrorUserInactive        = "You have been marked inactive because your refresh token is expired. Please disconnect and reconnect your account again."
+	LogUserInactive          = "User %s is inactive. Please disconnect and reconnect your account."
+	ErrorRefreshTokenExpired = "The refresh token has expired due to inactivity"
+)
+
 func (c *client) GetMe() (*remote.User, error) {
 	graphUser, err := c.rbuilder.Me().Request().Get(c.ctx)
 	if err != nil {
