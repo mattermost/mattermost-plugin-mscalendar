@@ -45,7 +45,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, err
 	}
 
-	t, err := time.Parse(time.Kitchen, convertToUpperCaseTime(timeStr))
+	t, err := time.Parse(time.Kitchen, convertMeridiemToUpperCase(timeStr))
 	if err != nil {
 		return nil, errors.New("Invalid time value: " + timeStr)
 	}
@@ -293,7 +293,7 @@ func getTodayHoursForTimezone(now time.Time, timezone string) (start, end time.T
 	return start, end
 }
 
-func convertToUpperCaseTime(timeStr string) string {
+func convertMeridiemToUpperCase(timeStr string) string {
 	if len(timeStr) < 2 {
 		return timeStr
 	}
