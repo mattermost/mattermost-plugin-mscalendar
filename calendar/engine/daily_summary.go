@@ -298,10 +298,10 @@ func convertMeridiemToUpperCase(timeStr string) string {
 		return timeStr
 	}
 
-	period := timeStr[len(timeStr)-2:]
+	meridiem := strings.ToUpper(timeStr[len(timeStr)-2:])
 
-	if strings.ToLower(period) == "am" || strings.ToLower(period) == "pm" {
-		return timeStr[:len(timeStr)-2] + strings.ToUpper(period)
+	if meridiem == "AM" || meridiem == "PM" {
+		return timeStr[:len(timeStr)-2] + meridiem
 	}
 
 	return timeStr
