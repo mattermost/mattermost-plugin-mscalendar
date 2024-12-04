@@ -207,7 +207,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			name: "no subscriptions present",
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), nil)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = ""
 			},
@@ -220,7 +220,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			name: "error loading the subscription",
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), nil)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
 				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(nil, errors.New("some error occurred while loading the subscription"))
