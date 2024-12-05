@@ -33,8 +33,7 @@ const (
 	MockActingUserID       = "testActingUserID"
 	MockActingUserRemoteID = "testActingUserRemoteID"
 
-	MockTimeZone = "testTimeZone"
-
+	MockTimeZone  = "testTimeZone"
 	mockChannelID = "testChannelID"
 )
 
