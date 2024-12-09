@@ -24,7 +24,12 @@ const (
 	MockCalendarName = "Test Calendar"
 	MockCalendarID   = "testCalendarID"
 
-	MockEventName = "Test Event"
+	MockEventName           = "Test Event"
+	MockEventID             = "testEventID"
+	MockEventSubscriptionID = "testEventSubscriptionID"
+
+	MockActingUserID       = "testActingUserID"
+	MockActingUserRemoteID = "testActingUserRemoteID"
 )
 
 // revive:disable:unexported-return
@@ -65,10 +70,22 @@ func GetMockSetup(t *testing.T) (*mscalendar, *mock_store.MockStore, *mock_bot.M
 	return mscalendar, mockStore, mockPoster, mockRemote, mockPluginAPI, mockClient, mockLogger
 }
 
-func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string) *User {
+func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string, storeUserSetting *store.Settings) *User {
 	user := (*store.User)(nil)
-	if remoteUserID != nil {
-		user = &store.User{Remote: &remote.User{ID: *remoteUserID}}
+	switch {
+	case remoteUserID != nil && storeUserSetting != nil:
+		user = &store.User{
+			Remote:   &remote.User{ID: *remoteUserID},
+			Settings: *storeUserSetting,
+		}
+	case remoteUserID != nil:
+		user = &store.User{
+			Remote: &remote.User{ID: *remoteUserID},
+		}
+	case storeUserSetting != nil:
+		user = &store.User{
+			Settings: *storeUserSetting,
+		}
 	}
 
 	mmUser := (*model.User)(nil)
@@ -80,6 +97,23 @@ func GetMockUser(remoteUserID, mmModelUserID *string, mmUserID string) *User {
 		User:             user,
 		MattermostUser:   mmUser,
 		MattermostUserID: mmUserID,
+	}
+}
+
+func GetMockUserWithDefaultDailySummaryUserSettings() *User {
+	return &User{
+		MattermostUserID: MockMMUserID,
+		MattermostUser: &model.User{
+			Id: MockMMModelUserID,
+		},
+		User: &store.User{
+			Remote: &remote.User{
+				ID: MockRemoteUserID,
+			},
+			Settings: store.Settings{
+				DailySummary: store.DefaultDailySummaryUserSettings(),
+			},
+		},
 	}
 }
 
@@ -96,5 +130,17 @@ func GetMockEvent(subject string, location *remote.Location, start, end *remote.
 		Start:     start,
 		End:       end,
 		Attendees: attendees,
+	}
+}
+
+func GetMockStoreSettings() *store.Settings {
+	return &store.Settings{}
+}
+
+func GetMockSubscription() *store.Subscription {
+	return &store.Subscription{
+		Remote:              &remote.Subscription{},
+		MattermostCreatorID: MockActingUserID,
+		PluginVersion:       "1.0.0",
 	}
 }
