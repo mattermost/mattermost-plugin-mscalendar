@@ -14,10 +14,11 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := mock_bot.NewMockLogger(ctrl)
+	mockPoster := mock_bot.NewMockPoster(ctrl)
 	mockLoggerWith := mock_bot.NewMockLogger(ctrl)
 	mockTracker := mock_tracker.NewMockTracker(ctrl)
 	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	store := NewPluginStore(mockAPI, mockLogger, mockPoster, mockTracker, false, nil)
 
 	return mockAPI, store, mockLogger, mockLoggerWith, mockTracker
 }
