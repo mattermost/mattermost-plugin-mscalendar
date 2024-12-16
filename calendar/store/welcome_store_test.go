@@ -3,7 +3,6 @@ package store
 import (
 	"testing"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -65,10 +64,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 		{
 			name: "Error storing user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", MockString, mock.MatchedBy(func(arg interface{}) bool {
-					_, ok := arg.([]byte)
-					return ok
-				})).Return(&model.AppError{Message: "KVSet failed"})
+				mockAPI.On("KVSet", MockString, MockByteValue).Return(&model.AppError{Message: "KVSet failed"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContainsf(t, err, "failed plugin KVSet (ttl: 0s)", `"mockMMUserID": KVSet failed`)
@@ -77,10 +73,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 		{
 			name: "Success storing user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", MockString, mock.MatchedBy(func(arg interface{}) bool {
-					_, ok := arg.([]byte)
-					return ok
-				})).Return(nil)
+				mockAPI.On("KVSet", MockString, MockByteValue).Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)

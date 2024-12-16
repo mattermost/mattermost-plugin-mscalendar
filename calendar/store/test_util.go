@@ -12,6 +12,10 @@ import (
 )
 
 var MockString = mock.AnythingOfType("string")
+var MockByteValue = mock.MatchedBy(func(arg interface{}) bool {
+	_, ok := arg.([]byte)
+	return ok
+})
 
 func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_tracker.MockTracker) {
 	ctrl := gomock.NewController(t)
