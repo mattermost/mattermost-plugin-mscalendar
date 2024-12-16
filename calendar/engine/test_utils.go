@@ -17,9 +17,12 @@ import (
 )
 
 const (
-	MockRemoteUserID  = "testRemoteUserID"
-	MockMMModelUserID = "testMMModelUserID"
-	MockMMUserID      = "testMMUserID"
+	MockRemoteUserID      = "testRemoteUserID"
+	MockMMModelUserID     = "testMMModelUserID"
+	MockMMUserID          = "testMMUserID"
+	MockMMUsername        = "testMMUsername"
+	MockMMUserDisplayName = "testMMUserDisplayName"
+	MockRemoteID          = "testRemoteID"
 
 	MockCalendarName = "Test Calendar"
 	MockCalendarID   = "testCalendarID"
@@ -30,6 +33,9 @@ const (
 
 	MockActingUserID       = "testActingUserID"
 	MockActingUserRemoteID = "testActingUserRemoteID"
+
+	MockTimeZone  = "testTimeZone"
+	mockChannelID = "testChannelID"
 )
 
 // revive:disable:unexported-return
@@ -104,7 +110,8 @@ func GetMockUserWithDefaultDailySummaryUserSettings() *User {
 	return &User{
 		MattermostUserID: MockMMUserID,
 		MattermostUser: &model.User{
-			Id: MockMMModelUserID,
+			Id:       MockMMModelUserID,
+			Username: MockMMUsername,
 		},
 		User: &store.User{
 			Remote: &remote.User{
