@@ -22,6 +22,7 @@ const (
 	MockMMUserID          = "testMMUserID"
 	MockMMUsername        = "testMMUsername"
 	MockMMUserDisplayName = "testMMUserDisplayName"
+	MockRemoteID          = "testRemoteID"
 
 	MockCalendarName = "Test Calendar"
 	MockCalendarID   = "testCalendarID"
@@ -109,7 +110,8 @@ func GetMockUserWithDefaultDailySummaryUserSettings() *User {
 	return &User{
 		MattermostUserID: MockMMUserID,
 		MattermostUser: &model.User{
-			Id: MockMMModelUserID,
+			Id:       MockMMModelUserID,
+			Username: MockMMUsername,
 		},
 		User: &store.User{
 			Remote: &remote.User{
