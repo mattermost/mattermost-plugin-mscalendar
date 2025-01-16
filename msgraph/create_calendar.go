@@ -15,8 +15,13 @@ import (
 // CreateCalendar creates a calendar
 func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*remote.Calendar, error) {
 	var calOut = remote.Calendar{}
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
 	err := c.rbuilder.Users().ID(remoteUserID).Calendars().Request().JSONRequest(c.ctx, http.MethodPost, "", &calIn, &calOut)
 	if err != nil {
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph CreateCalendar")
 	}
 	c.Logger.With(bot.LogContext{

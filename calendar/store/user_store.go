@@ -4,9 +4,11 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -16,6 +18,12 @@ import (
 )
 
 type ChannelEventLink map[string]string
+
+const (
+	ErrorUserInactive        = "You have been marked inactive because your refresh token is expired. Please disconnect and reconnect your account again."
+	ErrorRefreshTokenExpired = "The refresh token has expired due to inactivity"
+	ErrorRefreshTokenNotSet  = "oauth2: token expired and refresh token is not set"
+)
 
 type UserStore interface {
 	LoadUser(mattermostUserID string) (*User, error)
@@ -30,6 +38,9 @@ type UserStore interface {
 	DeleteUserFromIndex(mattermostUserID string) error
 	StoreUserActiveEvents(mattermostUserID string, events []string) error
 	StoreUserLinkedEvent(mattermostUserID, eventID, channelID string) error
+	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
+	CheckUserConnected(mattermostUserID string) bool
+	DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string)
 	StoreUserCustomStatusUpdates(mattermostUserID string, values bool) error
 }
 
@@ -304,6 +315,79 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 	}
 	u.ActiveEvents = events
 	return kvstore.StoreJSON(s.userKV, mattermostUserID, u)
+}
+
+// RefreshAndStoreToken checks whether the current access token is expired or not. If it is,
+// then it refreshes the token and stores the new pair of access and refresh tokens in kv store.
+func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error) {
+	// If there are only five minutes left for the token to expire, we are refreshing the token.
+	// We don't want the token to expire between the time when we decide that the old token is valid
+	// and the time at which we create the request. We are handling that by not letting the token expire.
+	if token != nil && time.Until(token.Expiry) > 5*time.Minute {
+		return token, nil
+	}
+
+	src := oconf.TokenSource(context.Background(), token)
+	newToken, err := src.Token() // this actually goes and renews the tokens
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get the new refreshed token")
+	}
+
+	if newToken.AccessToken != token.AccessToken || newToken.RefreshToken != token.RefreshToken {
+		user, err := s.LoadUser(mattermostUserID)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to load the user")
+		}
+
+		user.OAuth2Token = newToken
+
+		if err := s.StoreUser(user); err != nil {
+			return nil, errors.Wrap(err, "unable to store the user")
+		}
+
+		return newToken, nil
+	}
+
+	return token, nil
+}
+
+func (s *pluginStore) CheckUserConnected(mattermostUserID string) bool {
+	user, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		s.Logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
+		return false
+	}
+
+	// Check if the user is marked as inactive
+	return user.OAuth2Token != nil
+}
+
+func (s *pluginStore) DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string) {
+	if err == nil {
+		return
+	}
+
+	if !strings.Contains(err.Error(), ErrorRefreshTokenExpired) {
+		return
+	}
+
+	user, err := s.LoadUser(mattermostUserID)
+	if err != nil {
+		s.Logger.Errorf("Not able to load the user %s. error: %s", mattermostUserID, err.Error())
+		return
+	}
+
+	// Mark the user as inactive
+	user.OAuth2Token = nil
+	if err = s.StoreUser(user); err != nil {
+		s.Logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())
+		return
+	}
+
+	if _, err := s.Poster.DM(mattermostUserID, ErrorUserInactive); err != nil {
+		s.Logger.Errorf("Not able to DM the user %s. error: %s", mattermostUserID, err.Error())
+		return
+	}
 }
 
 func (s *pluginStore) StoreUserLinkedEvent(mattermostUserID, eventID, channelID string) error {
