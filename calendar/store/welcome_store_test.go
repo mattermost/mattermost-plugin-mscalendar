@@ -3,6 +3,7 @@ package store
 import (
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -21,7 +22,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 		{
 			name: "Error loading user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", MockString).Return(nil, &model.AppError{Message: "KVGet failed"})
+				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return(nil, &model.AppError{Message: "KVGet failed"})
 			},
 			assertions: func(t *testing.T, resp string, err error) {
 				require.Equal(t, resp, "")
@@ -31,7 +32,7 @@ func TestLoadUserWelcomePost(t *testing.T) {
 		{
 			name: "Success loading user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", MockString).Return([]byte(`"mockPostID"`), nil)
+				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
 			},
 			assertions: func(t *testing.T, resp string, err error) {
 				require.NoError(t, err)
@@ -64,7 +65,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 		{
 			name: "Error storing user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", MockString, MockByteValue).Return(&model.AppError{Message: "KVSet failed"})
+				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(&model.AppError{Message: "KVSet failed"})
 			},
 			assertions: func(t *testing.T, err error) {
 				require.ErrorContainsf(t, err, "failed plugin KVSet (ttl: 0s)", `"mockMMUserID": KVSet failed`)
@@ -73,7 +74,7 @@ func TestStoreUserWelcomePost(t *testing.T) {
 		{
 			name: "Success storing user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVSet", MockString, MockByteValue).Return(nil)
+				mockAPI.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -105,8 +106,8 @@ func TestDeleteUserWelcomePost(t *testing.T) {
 		{
 			name: "Error deleting user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", MockString).Return([]byte(`"mockPostID"`), nil)
-				mockAPI.On("KVDelete", MockString).Return(&model.AppError{Message: "KVDelete failed"})
+				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
+				mockAPI.On("KVDelete", mock.Anything, mock.Anything).Return(&model.AppError{Message: "KVDelete failed"})
 			},
 			assertions: func(t *testing.T, resp string, err error) {
 				require.Equal(t, "", resp)
@@ -116,8 +117,8 @@ func TestDeleteUserWelcomePost(t *testing.T) {
 		{
 			name: "Success deleting user welcome post",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", MockString).Return([]byte(`"mockPostID"`), nil)
-				mockAPI.On("KVDelete", MockString).Return(nil)
+				mockAPI.On("KVGet", mock.AnythingOfType("string")).Return([]byte(`"mockPostID"`), nil)
+				mockAPI.On("KVDelete", mock.Anything, mock.Anything).Return(nil)
 			},
 			assertions: func(t *testing.T, resp string, err error) {
 				require.Equal(t, "mockPostID", resp)
