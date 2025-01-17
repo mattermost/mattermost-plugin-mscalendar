@@ -96,9 +96,9 @@ func (mr *MockClientMockRecorder) CreateCalendar(arg0, arg1 interface{}) *gomock
 }
 
 // CreateEvent mocks base method.
-func (m *MockClient) CreateEvent(arg0 string, arg1 *remote.Event) (*remote.Event, error) {
+func (m *MockClient) CreateEvent(arg0, arg1 string, arg2 *remote.Event) (*remote.Event, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEvent", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateEvent", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*remote.Event)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
