@@ -13,15 +13,12 @@ func EntraIDEndpoint(tenant string, tenantType string) oauth2.Endpoint {
 		tenant = "common"
 	}
 
-	if tenantType == "commercial" {
-		tenantLoginEndpoint = "https://login.microsoftonline.com/"
-	} else if tenantType == "gcch" {
+	switch tenantType {
+	case "gcch", "usgov":
 		tenantLoginEndpoint = "https://login.microsoftonline.us/"
-	} else if tenantType == "usgov" {
-		tenantLoginEndpoint = "https://login.microsoftonline.us/"
-	} else if tenantType == "china" {
+	case "china":
 		tenantLoginEndpoint = "https://login.chinacloudapi.cn/"
-	} else {
+	default:
 		tenantLoginEndpoint = "https://login.microsoftonline.com/"
 	}
 
@@ -32,17 +29,17 @@ func EntraIDEndpoint(tenant string, tenantType string) oauth2.Endpoint {
 	}
 }
 
+// nolint:revive
 // Returns the Microsoft Graph endpoint for the given tenant type.
 func MSGraphEndpoint(tenantType string) string {
-	if tenantType == "commercial" {
-		tenantMSGraphEndpoint = "https://graph.microsoft.com"
-	} else if tenantType == "gcch" {
+	switch tenantType {
+	case "gcch":
 		tenantMSGraphEndpoint = "https://graph.microsoft.us"
-	} else if tenantType == "usgov" {
+	case "usgov":
 		tenantMSGraphEndpoint = "https://dod-graph.microsoft.us"
-	} else if tenantType == "china" {
+	case "china":
 		tenantMSGraphEndpoint = "https://microsoftgraph.chinacloudapi.cn"
-	} else {
+	default:
 		tenantMSGraphEndpoint = "https://graph.microsoft.com"
 	}
 
