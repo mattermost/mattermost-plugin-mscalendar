@@ -15,6 +15,7 @@ type SubscriptionStore interface {
 	LoadSubscription(subscriptionID string) (*Subscription, error)
 	StoreUserSubscription(user *User, subscription *Subscription) error
 	DeleteUserSubscription(user *User, subscriptionID string) error
+	GetSubscriptionCount() (uint64, error)
 }
 
 type Subscription struct {
@@ -75,4 +76,27 @@ func (s *pluginStore) DeleteUserSubscription(user *User, subscriptionID string) 
 		"subscriptionID":   subscriptionID,
 	}).Debugf("store: deleted mattermost user subscription.")
 	return nil
+}
+
+func (s *pluginStore) GetSubscriptionCount() (uint64, error) {
+	const perPage = 200
+
+	var count uint64
+	page := 0
+
+	for {
+		keys, err := s.subscriptionKV.List(page, perPage)
+		if err != nil {
+			return 0, fmt.Errorf("failed to count subscriptions: %w", err)
+		}
+
+		if len(keys) == 0 {
+			break
+		}
+
+		count += uint64(len(keys))
+		page++
+	}
+
+	return count, nil
 }

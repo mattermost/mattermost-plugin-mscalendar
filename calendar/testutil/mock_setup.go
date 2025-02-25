@@ -56,3 +56,12 @@ func (m *MockPluginAPI) KVDelete(key string) *model.AppError {
 	}
 	return nil
 }
+
+func (m *MockPluginAPI) KVList(page, perPage int) ([]string, *model.AppError) {
+	args := m.Called(page, perPage)
+	keys, _ := args.Get(0).([]string)
+	if err := args.Get(1); err != nil {
+		return nil, err.(*model.AppError)
+	}
+	return keys, nil
+}

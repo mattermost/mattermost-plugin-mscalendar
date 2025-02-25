@@ -20,6 +20,10 @@ type StoredConfig struct {
 	EncryptionKey string
 }
 
+func (c *StoredConfig) IsOAuthConfigured() bool {
+	return c.OAuth2ClientID != "" && c.OAuth2ClientSecret != ""
+}
+
 type ProviderFeatures struct {
 	EncryptedStore     bool
 	EventNotifications bool
