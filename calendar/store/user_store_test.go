@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/kvstore"
 
 	"github.com/mattermost/mattermost/server/public/model"
 )
@@ -321,6 +322,79 @@ func TestDeleteUser(t *testing.T) {
 			err := store.DeleteUser(MockMMUserID)
 
 			tt.assertions(t, err)
+			mockAPI.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetConnectedUserCount(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(*testutil.MockPluginAPI)
+		expectedCount uint64
+		expectedErr   string
+	}{
+		{
+			name: "Error getting first page",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return(nil, &model.AppError{Message: "KVList failed"})
+			},
+			expectedCount: 0,
+			expectedErr:   "failed to count connected users: failed plugin KVList: KVList failed",
+		},
+		{
+			name: "No users",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{}, nil)
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "Single page of users",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"user1", "user2", "user3"}, nil)
+				mockAPI.On("KVList", 1, 200).Return([]string{}, nil)
+			},
+			expectedCount: 3,
+		},
+		{
+			name: "Multiple pages of users",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"user1", "user2"}, nil)
+				mockAPI.On("KVList", 1, 200).Return([]string{"user3", "user4"}, nil)
+				mockAPI.On("KVList", 2, 200).Return([]string{}, nil)
+			},
+			expectedCount: 4,
+		},
+		{
+			name: "Error on subsequent page",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"user1", "user2"}, nil)
+				mockAPI.On("KVList", 1, 200).Return(nil, &model.AppError{Message: "KVList failed"})
+			},
+			expectedCount: 0,
+			expectedErr:   "failed to count connected users: failed plugin KVList: KVList failed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockAPI := new(testutil.MockPluginAPI)
+			store := &pluginStore{
+				userKV: kvstore.NewPluginStore(mockAPI),
+			}
+			tt.setup(mockAPI)
+
+			count, err := store.GetConnectedUserCount()
+
+			if tt.expectedErr != "" {
+				require.Error(t, err)
+				require.ErrorContains(t, err, tt.expectedErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedCount, count)
+			}
+
 			mockAPI.AssertExpectations(t)
 		})
 	}
