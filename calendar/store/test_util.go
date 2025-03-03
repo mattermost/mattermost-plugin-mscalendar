@@ -21,6 +21,9 @@ const (
 	MockMMUsername               = "mockMMUsername"
 	MockMMDisplayName            = "mockMMDisplayName"
 	MockMMUserID                 = "mockMMUserID"
+	MockUserID                   = "mockUserID"
+	MockSettingID                = "mockSettingID"
+	MockPostID                   = "mockPostID"
 	MockRemoteID                 = "mockRemoteID"
 	MockRemoteUserID             = "mockRemoteUserID"
 	MockRemoteMail               = "mock@remote.com"
@@ -32,6 +35,7 @@ const (
 	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
 	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
 	MockState                    = "mockState"
+	MockDailySummarySetting      = "mockDailySummarySetting"
 )
 
 var MockString = mock.AnythingOfType("string")
