@@ -1,5 +1,5 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// See LICENSE.txt for license information.
 
 package msgraph
 
@@ -15,11 +15,16 @@ import (
 func (c *client) GetNotificationData(orig *remote.Notification) (*remote.Notification, error) {
 	n := *orig
 	wh := n.Webhook.(*webhook)
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
 	switch wh.ResourceData.DataType {
 	case "#Microsoft.Graph.Event":
 		event := remote.Event{}
 		_, err := c.CallJSON(http.MethodGet, wh.Resource, nil, &event)
 		if err != nil {
+			c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 			c.Logger.With(bot.LogContext{
 				"Resource":       wh.Resource,
 				"subscriptionID": wh.SubscriptionID,
