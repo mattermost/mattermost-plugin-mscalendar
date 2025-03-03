@@ -154,6 +154,22 @@ func MarkdownToHTMLEntities(input string) string {
 }
 
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
+	link, err := url.QueryUnescape(event.Weblink)
+	if err != nil {
+		return "", err
+	}
+
+	subject := EnsureSubject(event.Subject)
+
+	if event.IsAllDay {
+		format := "(All day event) [%s](%s)"
+		if asRow {
+			format = "| All day event | [%s](%s) |"
+		}
+
+		return fmt.Sprintf(format, MarkdownToHTMLEntities(subject), link), nil
+	}
+
 	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
 	end := event.End.In(timeZone).Time().Format(time.Kitchen)
 
@@ -161,13 +177,6 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	if asRow {
 		format = "| %s - %s | [%s](%s) |"
 	}
-
-	link, err := url.QueryUnescape(event.Weblink)
-	if err != nil {
-		return "", err
-	}
-
-	subject := EnsureSubject(event.Subject)
 
 	return fmt.Sprintf(format, start, end, MarkdownToHTMLEntities(subject), link), nil
 }
