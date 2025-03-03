@@ -1,5 +1,5 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// See LICENSE.txt for license information.
 
 package engine
 
@@ -158,9 +158,9 @@ func TestProcessNotification(t *testing.T) {
 			mockStore.EXPECT().LoadUser("creator_mm_id").Return(user, nil).Times(1)
 
 			if tc.notification.ClientState == subscription.Remote.ClientState {
-				mockRemote.EXPECT().MakeClient(context.Background(), &oauth2.Token{
+				mockRemote.EXPECT().MakeUserClient(context.Background(), &oauth2.Token{
 					AccessToken: "creator_oauth_token",
-				}).Return(mockClient).Times(1)
+				}, "creator_mm_id", mockPoster, gomock.Any()).Return(mockClient).Times(1)
 				mockClient.EXPECT().GetMailboxSettings(user.Remote.ID).Return(&remote.MailboxSettings{TimeZone: "Eastern Standard Time"}, nil)
 
 				if tc.notification.RecommendRenew {

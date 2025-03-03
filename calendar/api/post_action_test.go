@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package api
 
 import (
@@ -141,7 +144,7 @@ func TestPostActionAccept(t *testing.T) {
 			name: "Accept event successfully",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
@@ -198,7 +201,7 @@ func TestPostDeclineAccept(t *testing.T) {
 			name: "Decline event successfully",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
 				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(nil)
 
@@ -255,7 +258,7 @@ func TestPostActionTentative(t *testing.T) {
 			name: "Tentatively accept event successfully",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
 				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
@@ -312,7 +315,7 @@ func TestPostActionRespond(t *testing.T) {
 			name: "Error responding to event",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
@@ -338,7 +341,7 @@ func TestPostActionRespond(t *testing.T) {
 			name: "Error updating post",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetPost("").Return(nil, &model.AppError{Message: "error getting post"})
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
@@ -365,7 +368,7 @@ func TestPostActionRespond(t *testing.T) {
 			name: "No attachment found",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{}, nil)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
@@ -392,7 +395,7 @@ func TestPostActionRespond(t *testing.T) {
 			name: "Action responded successfully",
 			setup: func(req *http.Request) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeClient(gomock.Any(), gomock.Any()).Return(mockClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 				attachment := model.SlackAttachment{
