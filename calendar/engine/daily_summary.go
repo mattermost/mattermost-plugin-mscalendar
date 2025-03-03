@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -44,7 +45,7 @@ func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store
 		return nil, err
 	}
 
-	t, err := time.Parse(time.Kitchen, timeStr)
+	t, err := time.Parse(time.Kitchen, convertMeridiemToUpperCase(timeStr))
 	if err != nil {
 		return nil, errors.New("Invalid time value: " + timeStr)
 	}
@@ -290,4 +291,18 @@ func getTodayHoursForTimezone(now time.Time, timezone string) (start, end time.T
 	start = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	end = start.Add(24 * time.Hour)
 	return start, end
+}
+
+func convertMeridiemToUpperCase(timeStr string) string {
+	if len(timeStr) < 2 {
+		return timeStr
+	}
+
+	meridiem := strings.ToUpper(timeStr[len(timeStr)-2:])
+
+	if meridiem == "AM" || meridiem == "PM" {
+		return timeStr[:len(timeStr)-2] + meridiem
+	}
+
+	return timeStr
 }
