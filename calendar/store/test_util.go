@@ -34,6 +34,7 @@ const (
 	MockRemoteJSON               = `{"remote": {"id": "mockRemoteID"}}`
 	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
 	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
+	MockState                    = "mockState"
 )
 
 var MockString = mock.AnythingOfType("string")
