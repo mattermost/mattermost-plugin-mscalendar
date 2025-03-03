@@ -1,6 +1,10 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -31,9 +35,9 @@ func TestLoadSubscription(t *testing.T) {
 			},
 		},
 		{
-			name: "Successful Load",
+			name: "Subscription successfully loaded",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
-				mockAPI.On("KVGet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return([]byte(`{"PluginVersion":"1.0","Remote":{"ID":"mockRemoteUserID","CreatorID":"mockCreatorID"}}`), nil).Times(1)
+				mockAPI.On("KVGet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return([]byte(fmt.Sprintf(`{"PluginVersion":"1.0","Remote":{"ID":"%s","CreatorID":"%s"}}`, MockRemoteUserID, MockCreatorID)), nil).Times(1)
 			},
 			assertions: func(t *testing.T, sub *Subscription, err error) {
 				require.NoError(t, err)
@@ -98,7 +102,7 @@ func TestStoreUserSubscription(t *testing.T) {
 			},
 		},
 		{
-			name: "Successful Store",
+			name: "Subscription successfully stored",
 			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger) {
 				mockAPI.ExpectedCalls = nil
 				mockAPI.On("KVSet", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e", mock.Anything).Return(nil).Times(1)
@@ -153,7 +157,7 @@ func TestDeleteUserSubscription(t *testing.T) {
 			},
 		},
 		{
-			name: "Successful Delete",
+			name: "Subscription successfully deleted",
 			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger) {
 				mockAPI.ExpectedCalls = nil
 				mockAPI.On("KVDelete", "sub_0c47c5b7e2a88ec9256c8ac0e71b0f6e").Return(nil).Times(1)

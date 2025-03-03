@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package api
 
 import (
@@ -183,7 +186,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	client := api.Remote.MakeClient(context.Background(), user.OAuth2Token)
+	client := api.Remote.MakeUserClient(context.Background(), user.OAuth2Token, mattermostUserID, api.Poster, api.Store)
 
 	mailbox, errMailbox := client.GetMailboxSettings(user.Remote.ID)
 	if errMailbox != nil {

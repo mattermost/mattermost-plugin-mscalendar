@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
@@ -20,9 +21,6 @@ const (
 	MockMMUsername               = "mockMMUsername"
 	MockMMDisplayName            = "mockMMDisplayName"
 	MockMMUserID                 = "mockMMUserID"
-	MockUserID                   = "mockUserID"
-	MockSettingID                = "mockSettingID"
-	MockPostID                   = "mockPostID"
 	MockRemoteID                 = "mockRemoteID"
 	MockRemoteUserID             = "mockRemoteUserID"
 	MockRemoteMail               = "mock@remote.com"
@@ -34,8 +32,13 @@ const (
 	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
 	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
 	MockState                    = "mockState"
-	MockDailySummarySetting      = "mockDailySummarySetting"
 )
+
+var MockString = mock.AnythingOfType("string")
+var MockByteValue = mock.MatchedBy(func(arg interface{}) bool {
+	_, ok := arg.([]byte)
+	return ok
+})
 
 func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_tracker.MockTracker) {
 	ctrl := gomock.NewController(t)
@@ -43,8 +46,9 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 	mockLogger := mock_bot.NewMockLogger(ctrl)
 	mockLoggerWith := mock_bot.NewMockLogger(ctrl)
 	mockTracker := mock_tracker.NewMockTracker(ctrl)
+	mockPoster := mock_bot.NewMockPoster(ctrl)
 	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	store := NewPluginStore(mockAPI, mockLogger, mockPoster, mockTracker, false, nil)
 
 	return mockAPI, store, mockLogger, mockLoggerWith, mockTracker
 }
