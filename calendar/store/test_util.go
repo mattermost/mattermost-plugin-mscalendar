@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package store
 
 import (
@@ -6,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
@@ -38,14 +42,21 @@ const (
 	MockDailySummarySetting      = "mockDailySummarySetting"
 )
 
+var MockString = mock.AnythingOfType("string")
+var MockByteValue = mock.MatchedBy(func(arg interface{}) bool {
+	_, ok := arg.([]byte)
+	return ok
+})
+
 func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_tracker.MockTracker) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockLogger := mock_bot.NewMockLogger(ctrl)
 	mockLoggerWith := mock_bot.NewMockLogger(ctrl)
 	mockTracker := mock_tracker.NewMockTracker(ctrl)
+	mockPoster := mock_bot.NewMockPoster(ctrl)
 	mockAPI := &testutil.MockPluginAPI{}
-	store := NewPluginStore(mockAPI, mockLogger, mockTracker, false, nil)
+	store := NewPluginStore(mockAPI, mockLogger, mockPoster, mockTracker, false, nil)
 
 	return mockAPI, store, mockLogger, mockLoggerWith, mockTracker
 }

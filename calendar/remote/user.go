@@ -1,7 +1,9 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// See LICENSE.txt for license information.
 
 package remote
+
+import "golang.org/x/oauth2"
 
 type User struct {
 	ID                string `json:"id"`
@@ -22,4 +24,10 @@ type WorkingHours struct {
 type MailboxSettings struct {
 	TimeZone     string       `json:"timeZone"`
 	WorkingHours WorkingHours `json:"workingHours"`
+}
+
+type UserTokenHelpers interface {
+	CheckUserConnected(mattermostUserID string) bool
+	DisconnectUserFromStoreIfNecessary(err error, mattermostUserID string)
+	RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error)
 }
