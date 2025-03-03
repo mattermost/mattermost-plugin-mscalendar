@@ -24,6 +24,9 @@ const (
 	MockMMUsername               = "mockMMUsername"
 	MockMMDisplayName            = "mockMMDisplayName"
 	MockMMUserID                 = "mockMMUserID"
+	MockUserID                   = "mockUserID"
+	MockSettingID                = "mockSettingID"
+	MockPostID                   = "mockPostID"
 	MockRemoteID                 = "mockRemoteID"
 	MockRemoteUserID             = "mockRemoteUserID"
 	MockRemoteMail               = "mock@remote.com"
@@ -35,6 +38,7 @@ const (
 	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
 	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
 	MockState                    = "mockState"
+	MockDailySummarySetting      = "mockDailySummarySetting"
 )
 
 var MockString = mock.AnythingOfType("string")
@@ -67,6 +71,23 @@ func GetMockUser() *User {
 		Remote: &remote.User{
 			ID:   MockRemoteID,
 			Mail: MockRemoteMail,
+		},
+	}
+}
+
+func GetMockUserWithSettings() *User {
+	return &User{
+		Settings: Settings{
+			DailySummary: &DailySummaryUserSettings{
+				PostTime: "10:00AM",
+			},
+			EventSubscriptionID:               MockEventSubscriptionID,
+			UpdateStatusFromOptions:           "available",
+			GetConfirmation:                   true,
+			ReceiveReminders:                  true,
+			SetCustomStatus:                   false,
+			UpdateStatus:                      false,
+			ReceiveNotificationsDuringMeeting: true,
 		},
 	}
 }
