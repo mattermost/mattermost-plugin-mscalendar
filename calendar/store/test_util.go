@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package store
 
 import (
@@ -21,16 +24,22 @@ const (
 	MockMMUsername               = "mockMMUsername"
 	MockMMDisplayName            = "mockMMDisplayName"
 	MockMMUserID                 = "mockMMUserID"
+	MockUserID                   = "mockUserID"
+	MockSettingID                = "mockSettingID"
+	MockPostID                   = "mockPostID"
 	MockRemoteID                 = "mockRemoteID"
 	MockRemoteUserID             = "mockRemoteUserID"
 	MockRemoteMail               = "mock@remote.com"
 	MockEventID                  = "mockEventID"
+	MockICalUID                  = "mockICalUID"
 	MockChannelID                = "mockChannelID"
 	MockUserIndexJSON            = `[{"mm_id": "mockMMUserID"}]`
 	InvalidMockUserIndexJSON     = `[{"mm_id": "invalidMockMMUserID"}]`
 	MockRemoteJSON               = `{"remote": {"id": "mockRemoteID"}}`
 	MockUserJSON                 = `[{"MattermostUserID":"mockMMUserID","RemoteID":"mockRemoteID"}]`
 	MockUserDetailsWithEventJSON = `{"mm_id":"mockUserID","active_events": []}`
+	MockState                    = "mockState"
+	MockDailySummarySetting      = "mockDailySummarySetting"
 )
 
 var MockString = mock.AnythingOfType("string")
@@ -67,6 +76,31 @@ func GetMockUser() *User {
 	}
 }
 
+func GetMockUserWithSettings() *User {
+	return &User{
+		MattermostUserID: MockMMUserID,
+		Remote:           &remote.User{ID: MockRemoteUserID},
+		WelcomeFlowStatus: WelcomeFlowStatus{
+			Step: 3,
+			PostIDs: map[string]string{
+				"welcomePost": "mockPostID",
+			},
+		},
+		Settings: Settings{
+			DailySummary: &DailySummaryUserSettings{
+				PostTime: "10:00AM",
+			},
+			EventSubscriptionID:               MockEventSubscriptionID,
+			UpdateStatusFromOptions:           "available",
+			GetConfirmation:                   true,
+			ReceiveReminders:                  true,
+			SetCustomStatus:                   false,
+			UpdateStatus:                      false,
+			ReceiveNotificationsDuringMeeting: true,
+		},
+	}
+}
+
 func GetMockSubscription() *Subscription {
 	return &Subscription{
 		Remote: &remote.Subscription{
@@ -97,4 +131,13 @@ func GetRemoteUserJSON(noOfUsers int) string {
 
 	result, _ := json.Marshal(users)
 	return string(result)
+}
+
+func GetMockEvent() *Event {
+	return &Event{
+		Remote: &remote.Event{
+			ICalUID: MockICalUID,
+			ID:      MockEventID,
+		},
+	}
 }

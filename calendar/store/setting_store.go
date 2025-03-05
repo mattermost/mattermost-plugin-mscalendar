@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package store
 
 import (
@@ -93,6 +96,7 @@ func DefaultDailySummaryUserSettings() *DailySummaryUserSettings {
 		Enable:   false,
 	}
 }
+
 func (s *pluginStore) updateDailySummarySettingForUser(user *User, value interface{}) error {
 	if user.Settings.DailySummary == nil {
 		user.Settings.DailySummary = DefaultDailySummaryUserSettings()

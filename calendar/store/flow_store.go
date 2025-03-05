@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package store
 
 import "fmt"
@@ -94,6 +97,7 @@ func (s *pluginStore) GetCurrentStep(userID string) (int, error) {
 
 	return user.WelcomeFlowStatus.Step, nil
 }
+
 func (s *pluginStore) SetCurrentStep(userID string, step int) error {
 	user, err := s.LoadUser(userID)
 	if err != nil {
