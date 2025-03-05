@@ -4,14 +4,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var tenantLoginEndpoint string
-var tenantMSGraphEndpoint string
-
 // Returns the Entra ID endpoint for the given tenant and tenant type.
 func EntraIDEndpoint(tenant string, tenantType string) oauth2.Endpoint {
 	if tenant == "" {
 		tenant = "common"
 	}
+
+	var tenantLoginEndpoint string
 
 	switch tenantType {
 	case "gcch", "usgov":
@@ -32,6 +31,8 @@ func EntraIDEndpoint(tenant string, tenantType string) oauth2.Endpoint {
 // nolint:revive
 // Returns the Microsoft Graph endpoint for the given tenant type.
 func MSGraphEndpoint(tenantType string) string {
+	var tenantMSGraphEndpoint string
+
 	switch tenantType {
 	case "gcch":
 		tenantMSGraphEndpoint = "https://graph.microsoft.us"
