@@ -44,6 +44,16 @@ func (s hashedKeyStore) Delete(key string) error {
 	return s.store.Delete(hashKey(s.prefix, key))
 }
 
+func (s hashedKeyStore) List(page, perPage int) ([]string, error) {
+	// List all keys with our store prefix
+	keys, err := s.store.List(page, perPage)
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}
+
 func hashKey(prefix, hashableKey string) string {
 	if hashableKey == "" {
 		return prefix

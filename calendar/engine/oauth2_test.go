@@ -306,7 +306,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 
 			err := app.CompleteOAuth2(tc.mattermostUserID, tc.code, tc.state)
 			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expectError)
+			require.ErrorContains(t, err, tc.expectError)
 		})
 	}
 }

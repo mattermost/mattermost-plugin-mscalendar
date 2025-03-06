@@ -34,7 +34,7 @@ func TestAcceptEvent(t *testing.T) {
 		},
 		{
 			name: "error accepting the event",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to accept the event")).Times(1)
@@ -46,7 +46,7 @@ func TestAcceptEvent(t *testing.T) {
 		},
 		{
 			name: "successful event acceptance",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
@@ -89,7 +89,7 @@ func TestDeclineEvent(t *testing.T) {
 		},
 		{
 			name: "error declining event",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to decline event")).Times(1)
@@ -101,7 +101,7 @@ func TestDeclineEvent(t *testing.T) {
 		},
 		{
 			name: "successful event decline",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
@@ -144,7 +144,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 		},
 		{
 			name: "error tentatively accepting the event",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to tentatively accept the event")).Times(1)
@@ -156,7 +156,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 		},
 		{
 			name: "successful tentative event acceptance",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
@@ -190,7 +190,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:      "invalid response error",
 			response:  OptionNotResponded,
-			user:      GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:      GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {},
 			assertion: func(err error) {
 				require.Error(t, err)
@@ -200,7 +200,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "invalid response string",
 			response: "InvalidResponse",
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
 			},
@@ -222,7 +222,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "success accepting the event",
 			response: OptionYes,
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
@@ -234,7 +234,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "error accepting the event",
 			response: OptionYes,
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to accept the event")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
@@ -247,7 +247,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "success declining the event",
 			response: OptionNo,
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
@@ -259,7 +259,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "error declining the event",
 			response: OptionNo,
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to decline the event")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
@@ -272,7 +272,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "success tentatively accepting the event",
 			response: OptionMaybe,
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
@@ -284,7 +284,7 @@ func TestRespondToEvent(t *testing.T) {
 		{
 			name:     "error tentatively accepting the event",
 			response: OptionMaybe,
-			user:     GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to tentatively accept the event")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)

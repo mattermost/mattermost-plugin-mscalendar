@@ -61,6 +61,76 @@ func TestLoadSubscription(t *testing.T) {
 	}
 }
 
+func TestGetSubscriptionCount(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func(*testutil.MockPluginAPI)
+		expectedCount uint64
+		expectedErr   string
+	}{
+		{
+			name: "Error getting first page",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return(nil, &model.AppError{Message: "KVList failed"})
+			},
+			expectedCount: 0,
+			expectedErr:   "failed to count subscriptions: failed plugin KVList: KVList failed",
+		},
+		{
+			name: "No subscriptions",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{}, nil)
+			},
+			expectedCount: 0,
+		},
+		{
+			name: "Single page of subscriptions",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"sub1", "sub2", "sub3"}, nil)
+				mockAPI.On("KVList", 1, 200).Return([]string{}, nil)
+			},
+			expectedCount: 3,
+		},
+		{
+			name: "Multiple pages of subscriptions",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"sub1", "sub2"}, nil)
+				mockAPI.On("KVList", 1, 200).Return([]string{"sub3", "sub4"}, nil)
+				mockAPI.On("KVList", 2, 200).Return([]string{}, nil)
+			},
+			expectedCount: 4,
+		},
+		{
+			name: "Error on subsequent page",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"sub1", "sub2"}, nil)
+				mockAPI.On("KVList", 1, 200).Return(nil, &model.AppError{Message: "KVList failed"})
+			},
+			expectedCount: 0,
+			expectedErr:   "failed to count subscriptions: failed plugin KVList: KVList failed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockAPI, store, _, _, _ := GetMockSetup(t)
+			tt.setup(mockAPI)
+
+			count, err := store.GetSubscriptionCount()
+
+			if tt.expectedErr != "" {
+				require.Error(t, err)
+				require.ErrorContains(t, err, tt.expectedErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedCount, count)
+			}
+
+			mockAPI.AssertExpectations(t)
+		})
+	}
+}
+
 func TestStoreUserSubscription(t *testing.T) {
 	mockUser := GetMockUser()
 	mockSubscription := GetMockSubscription()

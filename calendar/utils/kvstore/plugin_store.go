@@ -80,3 +80,12 @@ func (s pluginStore) Delete(key string) error {
 	}
 	return nil
 }
+
+func (s pluginStore) List(page, perPage int) ([]string, error) {
+	keys, appErr := s.api.KVList(page, perPage)
+	if appErr != nil {
+		return nil, errors.WithMessage(appErr, "failed plugin KVList")
+	}
+
+	return keys, nil
+}
