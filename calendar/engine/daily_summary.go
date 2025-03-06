@@ -40,12 +40,14 @@ func (m *mscalendar) GetDailySummarySettingsForUser(user *User) (*store.DailySum
 }
 
 func (m *mscalendar) SetDailySummaryPostTime(user *User, timeStr string) (*store.DailySummaryUserSettings, error) {
+	timeStr = convertMeridiemToUpperCase(timeStr)
+
 	err := m.Filter(withUserExpanded(user))
 	if err != nil {
 		return nil, err
 	}
 
-	t, err := time.Parse(time.Kitchen, convertMeridiemToUpperCase(timeStr))
+	t, err := time.Parse(time.Kitchen, timeStr)
 	if err != nil {
 		return nil, errors.New("Invalid time value: " + timeStr)
 	}
