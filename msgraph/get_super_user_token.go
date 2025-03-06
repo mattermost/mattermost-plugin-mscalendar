@@ -17,12 +17,12 @@ type AuthResponse struct {
 }
 
 func (c *client) GetSuperuserToken() (string, error) {
-	u := "https://login.microsoftonline.com/" + url.PathEscape(c.conf.OAuth2Authority) + "/oauth2/v2.0/token"
+	u := EntraIDEndpoint(c.conf.OAuth2Authority, c.conf.OAuth2TenantType).TokenURL
 	res := AuthResponse{}
 
 	data := url.Values{}
 	data.Set("client_id", c.conf.OAuth2ClientID)
-	data.Set("scope", "https://graph.microsoft.com/.default")
+	data.Set("scope", MSGraphEndpoint(c.conf.OAuth2TenantType)+"/.default")
 	data.Set("client_secret", c.conf.OAuth2ClientSecret)
 	data.Set("grant_type", "client_credentials")
 

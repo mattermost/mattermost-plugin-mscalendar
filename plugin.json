@@ -69,6 +69,32 @@
                 "default": false
             },
             {
+                "key": "OAuth2TenantType",
+                "display_name": "Azure Directory (tenant) Type:",
+                "type": "dropdown",
+                "help_text": "Azure Directory (tenant) type.",
+                "placeholder": "",
+                "default": "commercial",
+                "options": [
+                    {
+                        "display_name": "Commercial",
+                        "value": "commercial"
+                    },
+                    {
+                        "display_name": "GCC High",
+                        "value": "gcch"
+                    },
+                    {
+                        "display_name": "US Government",
+                        "value": "usgov"
+                    },
+                    {
+                        "display_name": "China",
+                        "value": "china"
+                    }
+                ]
+            },
+            {
                 "key": "OAuth2Authority",
                 "display_name": "Azure Directory (tenant) ID:",
                 "type": "text",
