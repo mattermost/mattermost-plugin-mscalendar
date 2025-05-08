@@ -22,7 +22,7 @@ type fullBatchRequest struct {
 }
 
 func (c *client) batchRequest(req fullBatchRequest, out interface{}) error {
-	u := "https://graph.microsoft.com/v1.0/$batch"
+	u := MSGraphEndpoint(c.conf.OAuth2TenantType) + "/$batch"
 
 	_, err := c.CallJSON(http.MethodPost, u, req, out)
 	return err

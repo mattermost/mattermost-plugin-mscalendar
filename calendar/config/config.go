@@ -13,6 +13,7 @@ type StoredConfig struct {
 	OAuth2Authority    string
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
+	OAuth2TenantType   string
 	bot.Config
 	EnableStatusSync   bool
 	EnableDailySummary bool
