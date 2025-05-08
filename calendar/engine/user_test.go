@@ -176,7 +176,7 @@ func TestGetTimezone(t *testing.T) {
 		},
 		{
 			name: "error getting the mailbox setting",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(nil, errors.New("error occurred while getting the mailbox settings")).Times(1)
 			},
@@ -187,7 +187,7 @@ func TestGetTimezone(t *testing.T) {
 		},
 		{
 			name: "success getting mailbox setting",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: MockTimeZone}, nil).Times(1)
 			},
