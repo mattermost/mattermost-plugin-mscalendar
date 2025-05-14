@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/microsoft"
 
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
@@ -50,6 +49,7 @@ func (r *impl) makeClient(ctx context.Context, token *oauth2.Token, mattermostUs
 		mattermostUserID: mattermostUserID,
 		Poster:           poster,
 	}
+	c.rbuilder.SetURL(MSGraphEndpoint(r.conf.OAuth2TenantType))
 
 	return c
 }
@@ -79,6 +79,7 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		Logger:     r.logger,
 		rbuilder:   msgraph.NewClient(httpClient),
 	}
+	c.rbuilder.SetURL(MSGraphEndpoint(r.conf.OAuth2TenantType))
 	token, err := c.GetSuperuserToken()
 	if err != nil {
 		return nil, err
@@ -103,7 +104,7 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 			"Calendars.ReadWrite.Shared",
 			"MailboxSettings.Read",
 		},
-		Endpoint: microsoft.AzureADEndpoint(r.conf.OAuth2Authority),
+		Endpoint: EntraIDEndpoint(r.conf.OAuth2Authority, r.conf.OAuth2TenantType),
 	}
 }
 
