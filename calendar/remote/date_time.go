@@ -52,14 +52,17 @@ func (dt DateTime) PrettyString() string {
 
 func (dt DateTime) In(timeZone string) *DateTime {
 	t := dt.Time()
+
 	if t.IsZero() {
 		return &dt
 	}
 
 	loc, err := time.LoadLocation(tz.Go(timeZone))
-	if err == nil {
-		t = t.In(loc)
+	if err != nil {
+		return &dt
 	}
+
+	t = t.In(loc)
 
 	return &DateTime{
 		TimeZone: timeZone,
