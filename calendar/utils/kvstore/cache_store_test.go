@@ -249,7 +249,6 @@ func TestCacheStore_Cleanup(t *testing.T) {
 
 func TestCacheStore_Prefixing(t *testing.T) {
 	mockStore := new(mockKVStore)
-	prefix := "test_prefix_"
 	testKey := "key1"
 	testData := []byte("data1")
 
@@ -263,9 +262,9 @@ func TestCacheStore_Prefixing(t *testing.T) {
 	err := store.Store(testKey, testData)
 	require.NoError(t, err)
 
-	// Check that the key was stored with the prefix
+	// Check that the key was stored
 	store.mutex.RLock()
-	_, exists := store.entries[prefix+testKey]
+	_, exists := store.entries[testKey]
 	store.mutex.RUnlock()
 	assert.True(t, exists)
 
