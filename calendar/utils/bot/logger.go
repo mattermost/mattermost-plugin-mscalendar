@@ -144,7 +144,7 @@ func (l *TestLogger) logf(prefix, format string, args ...interface{}) {
 		measure(l.logContext)
 		out += fmt.Sprintf(" -- %+v", l.logContext)
 	}
-	l.TB.Logf(out)
+	l.TB.Log(out)
 }
 
 func measure(lc LogContext) {
