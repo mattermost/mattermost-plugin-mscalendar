@@ -40,7 +40,7 @@ func TestCreateMyEventSubscription(t *testing.T) {
 			name: "error creating the subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mockClient.EXPECT().CreateMySubscription(gomock.Any(), MockActingUserRemoteID).Return(nil, errors.New("error creating the subscription"))
 			},
 			assertion: func(sub *store.Subscription, err error) {
@@ -51,7 +51,7 @@ func TestCreateMyEventSubscription(t *testing.T) {
 			name: "subscription created successfully",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mockClient.EXPECT().CreateMySubscription(gomock.Any(), MockActingUserRemoteID).Return(&remote.Subscription{}, nil)
 				mockStore.EXPECT().StoreUserSubscription(mscalendar.actingUser.User, expectedSub)
 			},
@@ -96,7 +96,7 @@ func TestLoadMyEventSubscription(t *testing.T) {
 			name: "error loading the subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(nil, errors.New("error loading the subscription")).Times(1)
@@ -109,7 +109,7 @@ func TestLoadMyEventSubscription(t *testing.T) {
 			name: "subscription loaded successfully",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(expectedSubscription, nil).Times(1)
@@ -154,7 +154,7 @@ func TestListRemoteSubscriptions(t *testing.T) {
 			name: "error listing the subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockClient.EXPECT().ListSubscriptions().Return(nil, errors.New("error listing the subscriptions"))
 			},
@@ -166,7 +166,7 @@ func TestListRemoteSubscriptions(t *testing.T) {
 			name: "subscriptions listed successfully",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockClient.EXPECT().ListSubscriptions().Return([]*remote.Subscription{{ID: "mockSubscription1"}, {ID: "mockSubscription2"}}, nil)
 			},
@@ -211,7 +211,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = ""
 			},
 			assertion: func(subs *store.Subscription, err error) {
@@ -224,7 +224,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any())
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(nil, errors.New("some error occurred while loading the subscription"))
 			},
@@ -237,7 +237,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			name: "error renewing the subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil)
 				mockClient.EXPECT().RenewSubscription(gomock.Any(), MockActingUserRemoteID, &remote.Subscription{}).Return(nil, errors.New("The object was not found")).Times(1)
@@ -252,7 +252,7 @@ func TestRenewMyEventSubscription(t *testing.T) {
 			name: "successfully renew the event subscription",
 			setupMock: func() {
 				mscalendar.client = mockClient
-				mscalendar.actingUser = GetMockUser(model.NewString(MockActingUserRemoteID), nil, MockActingUserID, nil)
+				mscalendar.actingUser = GetMockUser(model.NewPointer(MockActingUserRemoteID), nil, MockActingUserID, nil)
 				mscalendar.actingUser.Settings.EventSubscriptionID = MockEventSubscriptionID
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(2)
 				mockClient.EXPECT().RenewSubscription(gomock.Any(), MockActingUserRemoteID, &remote.Subscription{}).Return(&remote.Subscription{}, nil).Times(1)

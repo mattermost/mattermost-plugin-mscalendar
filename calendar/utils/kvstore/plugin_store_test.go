@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -234,6 +235,72 @@ func TestStoreWithOptions(t *testing.T) {
 
 			tt.assertions(t, success, err)
 
+			mockAPI.AssertExpectations(t)
+		})
+	}
+}
+
+func TestList(t *testing.T) {
+	tests := []struct {
+		name       string
+		page       int
+		setup      func(*testutil.MockPluginAPI)
+		assertions func(*testing.T, error)
+	}{
+		{
+			name: "Error during KVList",
+			page: 0,
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return(nil, &model.AppError{Message: "KVList failed"})
+			},
+			assertions: func(t *testing.T, err error) {
+				assert.EqualError(t, err, "failed plugin KVList: KVList failed", "unexpected error message")
+			},
+		},
+		{
+			name: "Empty list",
+			page: 0,
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{}, nil)
+			},
+			assertions: func(t *testing.T, err error) {
+				assert.NoError(t, err, "unexpected error occurred")
+			},
+		},
+		{
+			name: "List with items",
+			page: 0,
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"key1", "key2"}, nil)
+			},
+			assertions: func(t *testing.T, err error) {
+				assert.NoError(t, err, "unexpected error occurred")
+			},
+		},
+		{
+			name: "List with deleted item",
+			page: 0,
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVList", 0, 200).Return([]string{"key1", "key2"}, nil)
+			},
+			assertions: func(t *testing.T, err error) {
+				assert.NoError(t, err, "unexpected error occurred")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockAPI := &testutil.MockPluginAPI{}
+			store := NewPluginStore(mockAPI)
+			tt.setup(mockAPI)
+
+			keys, err := store.List(tt.page, 200)
+
+			tt.assertions(t, err)
+			if err == nil {
+				assert.NotNil(t, keys)
+			}
 			mockAPI.AssertExpectations(t)
 		})
 	}
