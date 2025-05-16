@@ -11,7 +11,6 @@ linters-settings:
   goimports:
     local-prefixes: github.com/mattermost/mattermost-plugin-mscalendar
   govet:
-    check-shadowing: true
     enable-all: true
     disable:
       - fieldalignment
@@ -54,6 +53,9 @@ issues:
     - linters:
         - revive
       text: unused-parameter
+    - linters:
+        - revive
+      text: var-naming
     - path: _test\.go
       linters:
         - bodyclose
