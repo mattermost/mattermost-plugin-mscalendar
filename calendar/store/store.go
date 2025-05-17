@@ -24,6 +24,7 @@ const (
 	EventKeyPrefix            = "ev_"
 	WelcomeKeyPrefix          = "welcome_"
 	SettingsPanelPrefix       = "settings_panel_"
+	CacheKeyPrefix            = "cache_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -74,8 +75,8 @@ func NewPluginStore(api plugin.API, logger bot.Logger, poster bot.Poster, tracke
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
 		oauth2KV:           oauth2KV,
-		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
-		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
+		welcomeIndexKV:     kvstore.NewCacheStore(kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix)),
+		settingsPanelKV:    kvstore.NewCacheStore(kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix)),
 		Logger:             logger,
 		Poster:             poster,
 		Tracker:            tracker,
