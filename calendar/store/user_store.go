@@ -33,6 +33,7 @@ type UserStore interface {
 	StoreUser(user *User) error
 	LoadUserFromIndex(mattermostUserID string) (*UserShort, error)
 	DeleteUser(mattermostUserID string) error
+	GetConnectedUserCount() (uint64, error)
 	ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error
 	StoreUserInIndex(user *User) error
 	DeleteUserFromIndex(mattermostUserID string) error
@@ -223,6 +224,29 @@ func (s *pluginStore) DeleteUser(mattermostUserID string) error {
 	}
 
 	return nil
+}
+
+func (s *pluginStore) GetConnectedUserCount() (uint64, error) {
+	const perPage = 200
+
+	var count uint64
+	page := 0
+
+	for {
+		keys, err := s.userKV.List(page, perPage)
+		if err != nil {
+			return 0, fmt.Errorf("failed to count connected users: %w", err)
+		}
+
+		if len(keys) == 0 {
+			break
+		}
+
+		count += uint64(len(keys))
+		page++
+	}
+
+	return count, nil
 }
 
 func (s *pluginStore) ModifyUserIndex(modify func(userIndex UserIndex) (UserIndex, error)) error {

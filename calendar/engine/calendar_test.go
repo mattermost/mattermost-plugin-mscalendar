@@ -32,7 +32,7 @@ func TestViewCalendar(t *testing.T) {
 	}{
 		{
 			name: "error filtering with client",
-			user: GetMockUser(nil, model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user: GetMockUser(nil, model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
@@ -42,7 +42,7 @@ func TestViewCalendar(t *testing.T) {
 		},
 		{
 			name: "error getting calendar view",
-			user: GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return(nil, fmt.Errorf("error getting calendar view")).Times(1)
 			},
@@ -52,7 +52,7 @@ func TestViewCalendar(t *testing.T) {
 		},
 		{
 			name: "successful calendar view",
-			user: GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return([]*remote.Event{{Subject: MockEventName}}, nil).Times(1)
 			},
@@ -89,7 +89,7 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 	}{
 		{
 			name: "error expanding remote user",
-			user: GetMockUser(nil, model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user: GetMockUser(nil, model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
 			},
@@ -99,7 +99,7 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 		},
 		{
 			name: "error getting calendar view",
-			user: GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return(nil, fmt.Errorf("error getting calendar view")).Times(1)
 			},
@@ -109,7 +109,7 @@ func TestGetTodayCalendarEvents(t *testing.T) {
 		},
 		{
 			name: "successful calendar view",
-			user: GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			setupMock: func() {
 				mockClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, from, to).Return([]*remote.Event{{Subject: "Today's Test Event"}}, nil).Times(1)
 			},
@@ -155,7 +155,7 @@ func TestCreateCalendar(t *testing.T) {
 		},
 		{
 			name:     "error creating calendar",
-			user:     GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			calendar: GetMockCalendar(MockCalendarName),
 			setupMock: func() {
 				mockClient.EXPECT().CreateCalendar(MockRemoteUserID, &remote.Calendar{Name: MockCalendarName}).Return(nil, fmt.Errorf("error creating calendar")).Times(1)
@@ -166,7 +166,7 @@ func TestCreateCalendar(t *testing.T) {
 		},
 		{
 			name:     "successful calendar creation",
-			user:     GetMockUser(model.NewString(MockRemoteUserID), model.NewString(MockMMModelUserID), MockMMUserID, nil),
+			user:     GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			calendar: GetMockCalendar(MockCalendarName),
 			setupMock: func() {
 				mockClient.EXPECT().CreateCalendar(MockRemoteUserID, &remote.Calendar{Name: MockCalendarName}).Return(&remote.Calendar{Name: "Created Test Calendar"}, nil).Times(1)
@@ -211,7 +211,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name:  "error creating direct message",
-			user:  GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, nil),
+			user:  GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, nil),
 			event: GetMockEvent(MockEventName, nil, nil, nil, nil),
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("not found")).Times(1)
@@ -228,7 +228,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name:  "error creating event",
-			user:  GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, nil),
+			user:  GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, nil),
 			event: GetMockEvent(MockEventName, nil, nil, nil, nil),
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("not found")).Times(1)
@@ -242,7 +242,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "successful event creation",
-			user: GetMockUser(model.NewString(MockRemoteUserID), nil, MockMMUserID, nil),
+			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, nil),
 			event: GetMockEvent(
 				MockEventName,
 				&remote.Location{DisplayName: "Test Location"},
