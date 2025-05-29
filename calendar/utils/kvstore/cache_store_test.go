@@ -46,6 +46,14 @@ func (m *mockKVStore) Delete(key string) error {
 	return args.Error(0)
 }
 
+func (m *mockKVStore) List(page, perPage int) ([]string, error) {
+	args := m.Called(page, perPage)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 func TestCacheStore_LoadAndStore(t *testing.T) {
 	mockStore := new(mockKVStore)
 	testKey := "testkey"

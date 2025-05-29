@@ -182,6 +182,11 @@ func (s *cacheStore) Delete(key string) error {
 	return nil
 }
 
+// List returns a paginated list of keys from the underlying store
+func (s *cacheStore) List(page, perPage int) ([]string, error) {
+	return s.store.List(page, perPage)
+}
+
 // startCleanupTimer starts a timer to periodically clean up expired entries
 func (s *cacheStore) startCleanupTimer() {
 	s.cleanupTimer = time.AfterFunc(s.cleanupInterval, func() {
