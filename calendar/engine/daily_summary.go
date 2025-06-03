@@ -300,7 +300,11 @@ func convertMeridiemToUpperCase(timeStr string) string {
 		return timeStr
 	}
 
-	meridiem := strings.ToUpper(timeStr[len(timeStr)-2:])
+	if timeStr[0] == '0' { // check and remove zero from the start of the string
+		timeStr = timeStr[1:]
+	}
+
+	meridiem := strings.ToUpper(timeStr[len(timeStr)-2:]) // extracting last 2 characters of time string and converting it to upper case
 
 	if meridiem == "AM" || meridiem == "PM" {
 		return timeStr[:len(timeStr)-2] + meridiem
