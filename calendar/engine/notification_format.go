@@ -25,8 +25,8 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
 		TitleLink:  titleLink,
 		Title:      title,
-		Text:       text,
-		Fallback:   fmt.Sprintf("[%s](%s): %s", title, titleLink, text),
+		Text:       views.MarkdownToHTMLEntities(text),
+		Fallback:   fmt.Sprintf("[%s](%s): %s", title, titleLink, views.MarkdownToHTMLEntities(text)),
 	}
 }
 
@@ -223,15 +223,15 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 	}
 
 	ff := fields.Fields{
-		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
-		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
+		FieldSubject:     fields.NewStringValue(views.MarkdownToHTMLEntities(views.EnsureSubject(e.Subject))),
+		FieldBodyPreview: fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.BodyPreview))),
 		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
 		FieldWhen:        fields.NewStringValue(valueOrNotDefined(formattedDate)),
 		FieldDuration:    fields.NewStringValue(valueOrNotDefined(dur)),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),
-		FieldLocation:       fields.NewStringValue(valueOrNotDefined(e.Location.DisplayName)),
+		FieldLocation:       fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.Location.DisplayName))),
 		FieldResponseStatus: fields.NewStringValue(e.ResponseStatus.Response),
 		FieldAttendees:      fields.NewMultiValue(attendees...),
 	}

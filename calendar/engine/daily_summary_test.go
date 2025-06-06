@@ -562,7 +562,7 @@ func TestSetDailySummaryPostTime(t *testing.T) {
 	}{
 		{
 			name:       "error filtering with user",
-			timeString: "9:00 AM",
+			timeString: "9:00AM",
 			user:       GetMockUser(nil, nil, MockMMUserID, nil),
 			setupMock: func() {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error filtering user")).Times(1)
@@ -574,25 +574,25 @@ func TestSetDailySummaryPostTime(t *testing.T) {
 		},
 		{
 			name:       "invalid time format",
-			timeString: "invalid time",
+			timeString: "9:05 AM",
 			user:       GetMockUser(nil, nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.EqualError(t, err, "Invalid time value: invalid time")
+				require.EqualError(t, err, "Invalid time value: 9:05 AM")
 				require.Nil(t, settings)
 			},
 		},
 		{
 			name:       "time not a multiple of interval",
-			timeString: "9:05 AM",
+			timeString: "9:05AM",
 			user:       GetMockUserWithDefaultDailySummaryUserSettings(),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 			},
 			assertion: func(t *testing.T, settings *store.DailySummaryUserSettings, err error) {
-				require.EqualError(t, err, "Invalid time value: 9:05 AM")
+				require.EqualError(t, err, "time must be a multiple of 15 minutes")
 				require.Nil(t, settings)
 			},
 		},
