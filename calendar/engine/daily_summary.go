@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -333,12 +334,12 @@ func convertMeridiemToUpperCase(timeStr string) string {
 		hour = "0"
 	}
 
-	// Strip leading zeros from minute and ensure it's 2 digits
-	minuteRaw := strings.TrimLeft(parts[1], "0")
-	if minuteRaw == "" {
-		minuteRaw = "0"
+	// Normalize minute to 2-digit by trimming and converting
+	minuteInt, err := strconv.Atoi(strings.TrimLeft(parts[1], "0"))
+	if err != nil {
+		return timeStr // invalid minute format
 	}
-	minute := fmt.Sprintf("%02s", minuteRaw) // Ensure minute is always 2 characters wide by padding with leading zero if needed
+	minute := fmt.Sprintf("%02d", minuteInt) // Ensure 2-digit minute
 
 	return hour + ":" + minute + meridiem
 }
