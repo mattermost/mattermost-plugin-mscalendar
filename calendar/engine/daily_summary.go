@@ -335,7 +335,11 @@ func convertMeridiemToUpperCase(timeStr string) string {
 	}
 
 	// Normalize minute to 2-digit by trimming and converting
-	minuteInt, err := strconv.Atoi(strings.TrimLeft(parts[1], "0"))
+	minuteRaw := strings.TrimLeft(parts[1], "0")
+	if minuteRaw == "" {
+		minuteRaw = "0"
+	}
+	minuteInt, err := strconv.Atoi(minuteRaw)
 	if err != nil {
 		return timeStr // invalid minute format
 	}
