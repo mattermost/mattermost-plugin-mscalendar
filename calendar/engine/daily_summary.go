@@ -295,20 +295,50 @@ func getTodayHoursForTimezone(now time.Time, timezone string) (start, end time.T
 	return start, end
 }
 
+/*
+convertMeridiemToUpperCase normalizes time strings to the "H:MMAM" or "H:MMPM" format.
+
+*Supported format (input):
+  - "HH:MMam", "HH:MMAM", "HH:MMpm", "HH:MMPM" (case-insensitive, no space between time and meridiem)
+  - Can have more than 2 leading zeros in the hour part (e.g., "001:15am" → "1:15AM")
+
+* Output format:
+  - Hour: leading zeros removed (e.g., "01" → "1", "001" → "1")
+  - Minute: leading zeros removed and padded back to 2 digits (e.g., "05" → "05", "5" → "05", "00" → "00")
+  - Meridiem: uppercased ("am"/"pm" → "AM"/"PM")
+
+* Not supported:
+  - Inputs not matching the "HH:MMAM" format (e.g., missing colon, space between time and meridiem, etc.)
+  - Invalid times like "25:61am" or "abc" — returned as-is without modification
+*/
 func convertMeridiemToUpperCase(timeStr string) string {
-	if len(timeStr) < 2 {
+	if len(timeStr) < 6 { // Too short to be valid
 		return timeStr
 	}
 
-	if timeStr[0] == '0' { // check and remove zero from the start of the string
-		timeStr = timeStr[1:]
+	// Separate the meridiem (last 2 chars) and the time part
+	meridiem := strings.ToUpper(timeStr[len(timeStr)-2:])
+	timePart := timeStr[:len(timeStr)-2]
+
+	// Split time part into hour and minute
+	parts := strings.Split(timePart, ":")
+	if len(parts) != 2 {
+		// Invalid format; return as-is
+		return timeStr
 	}
 
-	meridiem := strings.ToUpper(timeStr[len(timeStr)-2:]) // extracting last 2 characters of time string and converting it to upper case
-
-	if meridiem == "AM" || meridiem == "PM" {
-		return timeStr[:len(timeStr)-2] + meridiem
+	// Strip leading zeros from hour
+	hour := strings.TrimLeft(parts[0], "0")
+	if hour == "" {
+		hour = "0"
 	}
 
-	return timeStr
+	// Strip leading zeros from minute and ensure it's 2 digits
+	minuteRaw := strings.TrimLeft(parts[1], "0")
+	if minuteRaw == "" {
+		minuteRaw = "0"
+	}
+	minute := fmt.Sprintf("%02s", minuteRaw) // Ensure minute is always 2 characters wide by padding with leading zero if needed
+
+	return hour + ":" + minute + meridiem
 }
