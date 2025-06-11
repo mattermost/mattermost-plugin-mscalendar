@@ -313,7 +313,7 @@ convertMeridiemToUpperCase normalizes time strings to the "H:MMAM" or "H:MMPM" f
   - Invalid times like "25:61am" or "abc" — returned as-is without modification
 */
 func convertMeridiemToUpperCase(timeStr string) string {
-	if len(timeStr) < 6 { // Too short to be valid
+	if len(timeStr) < 5 { // Too short to be valid. Shortest supported string is of type '1:5am', that will be converted to '1:05AM'
 		return timeStr
 	}
 
