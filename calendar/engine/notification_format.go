@@ -223,7 +223,7 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 	}
 
 	ff := fields.Fields{
-		FieldSubject:     fields.NewStringValue(views.MarkdownToHTMLEntities(views.EnsureSubject(e.Subject))),
+		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.BodyPreview))),
 		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
 		FieldWhen:        fields.NewStringValue(valueOrNotDefined(formattedDate)),
