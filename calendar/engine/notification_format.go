@@ -160,7 +160,7 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 }
 
 func eventToFields(e *remote.Event, timezone string) fields.Fields {
-	date := func(dtStart, dtEnd *remote.DateTime) (time.Time, time.Time, string) {
+	date := func(dtStart, dtEnd *remote.DateTime, isAllDayEvent bool) (time.Time, time.Time, string) {
 		if dtStart == nil || dtEnd == nil {
 			return time.Time{}, time.Time{}, "n/a"
 		}
@@ -169,16 +169,33 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 		dtEnd = dtEnd.In(timezone)
 		tStart := dtStart.Time()
 		tEnd := dtEnd.Time()
+
 		startFormat := "Monday, January 02"
-		if tStart.Year() != time.Now().Year() {
-			startFormat = "Monday, January 02, 2006"
+		endDateFormat := "Monday, January 02"
+
+		if isAllDayEvent {
+			return tStart, tEnd, tStart.Format(startFormat) + ": All day event"
 		}
-		startFormat += " · (" + time.Kitchen
-		endFormat := " - " + time.Kitchen + ")"
-		return tStart, tEnd, tStart.Format(startFormat) + tEnd.Format(endFormat)
+
+		if tStart.Year() != time.Now().Year() || tEnd.Year() != time.Now().Year() {
+			startFormat += ", 2006"
+			endDateFormat += ", 2006"
+		}
+
+		startFormat += " · " + time.Kitchen
+
+		var formatted string
+		if tStart.Year() != tEnd.Year() || tStart.Month() != tEnd.Month() || tStart.Day() != tEnd.Day() {
+			endDateFormat += " · " + time.Kitchen
+			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(endDateFormat)
+		} else {
+			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(time.Kitchen)
+		}
+
+		return tStart, tEnd, formatted
 	}
 
-	start, end, formattedDate := date(e.Start, e.End)
+	start, end, formattedDate := date(e.Start, e.End, e.IsAllDay)
 
 	minutes := int(end.Sub(start).Round(time.Minute).Minutes())
 	hours := int(end.Sub(start).Hours())
