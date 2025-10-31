@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package engine
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
@@ -65,6 +69,9 @@ func TestCompleteOAuth2Happy(t *testing.T) {
 
 	gomock.InOrder(
 		ss.EXPECT().VerifyOAuth2State(gomock.Eq(state)).Return(nil).Times(1),
+		ss.EXPECT().RefreshAndStoreToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(&oauth2.Token{
+			AccessToken: "creator_oauth_token",
+		}, nil),
 		ss.EXPECT().LoadMattermostUserID(fakeRemoteID).Return("", errors.New("connected user not found")).Times(1),
 		aa.EXPECT().GetMattermostUser(fakeID).Return(&model.User{
 			Id:        fakeID,
@@ -209,6 +216,9 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("fake@mattermost.com", nil)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+				ss.EXPECT().RefreshAndStoreToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(&oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, nil)
 
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
@@ -230,6 +240,9 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("fake@mattermost.com", nil)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+				ss.EXPECT().RefreshAndStoreToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(&oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, nil)
 
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
@@ -247,6 +260,9 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().VerifyOAuth2State(gomock.Eq("user_fake@mattermost.com")).Return(nil).Times(1)
+				ss.EXPECT().RefreshAndStoreToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(&oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, nil)
 			},
 			expectError: "Access token is empty",
 		},
@@ -259,6 +275,9 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				aa := d.PluginAPI.(*mock_plugin_api.MockPluginAPI)
+				ss.EXPECT().RefreshAndStoreToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(&oauth2.Token{
+					AccessToken: "creator_oauth_token",
+				}, nil)
 				ss.EXPECT().StoreUser(gomock.Any()).Return(errors.New("forced kvstore error")).Times(1)
 				ss.EXPECT().LoadMattermostUserID("user-remote-id").Return("", errors.New("connected user not found")).Times(1)
 				aa.EXPECT().GetMattermostUser(fakeID).Return(&model.User{
@@ -287,7 +306,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 
 			err := app.CompleteOAuth2(tc.mattermostUserID, tc.code, tc.state)
 			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expectError)
+			require.ErrorContains(t, err, tc.expectError)
 		})
 	}
 }

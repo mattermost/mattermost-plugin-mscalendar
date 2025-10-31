@@ -1,5 +1,5 @@
-// Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
 
 package kvstore
 
@@ -18,6 +18,7 @@ type KVStore interface {
 	StoreTTL(key string, data []byte, ttlSeconds int64) error
 	StoreWithOptions(key string, value []byte, opts model.PluginKVSetOptions) (bool, error)
 	Delete(key string) error
+	List(page, perPage int) ([]string, error)
 }
 
 var ErrNotFound = errors.New("not found")

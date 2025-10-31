@@ -1,5 +1,5 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// See LICENSE.txt for license information.
 
 package msgraph
 
@@ -31,8 +31,15 @@ func (c *client) CreateMySubscription(notificationURL, _ string) (*remote.Subscr
 		ExpirationDateTime: time.Now().Add(subscribeTTL).Format(time.RFC3339),
 		ClientState:        newRandomString(),
 	}
+
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodPost, "", sub, sub)
 	if err != nil {
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph CreateMySubscription")
 	}
 
@@ -47,8 +54,14 @@ func (c *client) CreateMySubscription(notificationURL, _ string) (*remote.Subscr
 }
 
 func (c *client) DeleteSubscription(sub *remote.Subscription) error {
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return errors.New(ErrorUserInactive)
+	}
+
 	err := c.rbuilder.Subscriptions().ID(sub.ID).Request().Delete(c.ctx)
 	if err != nil {
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return errors.Wrap(err, "msgraph DeleteSubscription")
 	}
 
@@ -60,6 +73,11 @@ func (c *client) DeleteSubscription(sub *remote.Subscription) error {
 }
 
 func (c *client) RenewSubscription(_, _ string, oldSub *remote.Subscription) (*remote.Subscription, error) {
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	expires := time.Now().Add(subscribeTTL)
 	v := struct {
 		ExpirationDateTime string `json:"expirationDateTime"`
@@ -69,6 +87,7 @@ func (c *client) RenewSubscription(_, _ string, oldSub *remote.Subscription) (*r
 	sub := remote.Subscription{}
 	err := c.rbuilder.Subscriptions().ID(oldSub.ID).Request().JSONRequest(c.ctx, http.MethodPatch, "", v, &sub)
 	if err != nil {
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph RenewSubscription")
 	}
 
@@ -84,8 +103,15 @@ func (c *client) ListSubscriptions() ([]*remote.Subscription, error) {
 	var v struct {
 		Value []*remote.Subscription `json:"value"`
 	}
+
+	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
+		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
+		return nil, errors.New(ErrorUserInactive)
+	}
+
 	err := c.rbuilder.Subscriptions().Request().JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
 	if err != nil {
+		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph ListSubscriptions")
 	}
 	return v.Value, nil

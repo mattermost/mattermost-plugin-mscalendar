@@ -1,9 +1,11 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package settingspanel
 
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
 
@@ -63,10 +65,6 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 		utils.SlackAttachmentError(w, "Error: cannot set the property, "+err.Error())
 		return
 	}
-
-	// TODO: Workaround for https://community.mattermost.com/core/pl/nphtmkowcjd8ic76tbqtapx6nc
-	// See: https://mattermost.atlassian.net/browse/MM-54032
-	time.Sleep(2 * time.Second)
 
 	response := model.PostActionIntegrationResponse{}
 	post, err := sh.panel.ToPost(mattermostUserID)

@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package config
 
 import "github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
@@ -15,6 +18,10 @@ type StoredConfig struct {
 	EnableDailySummary bool
 
 	EncryptionKey string
+}
+
+func (c *StoredConfig) IsOAuthConfigured() bool {
+	return c.OAuth2ClientID != "" && c.OAuth2ClientSecret != ""
 }
 
 type ProviderFeatures struct {

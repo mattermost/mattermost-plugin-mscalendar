@@ -1,5 +1,5 @@
-// Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
 
 package kvstore
 
@@ -79,4 +79,13 @@ func (s pluginStore) Delete(key string) error {
 		return errors.WithMessagef(appErr, "failed plugin KVdelete %q", key)
 	}
 	return nil
+}
+
+func (s pluginStore) List(page, perPage int) ([]string, error) {
+	keys, appErr := s.api.KVList(page, perPage)
+	if appErr != nil {
+		return nil, errors.WithMessage(appErr, "failed plugin KVList")
+	}
+
+	return keys, nil
 }

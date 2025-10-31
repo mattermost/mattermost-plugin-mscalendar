@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package views
 
 import (
@@ -93,7 +96,7 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 		if event.Location != nil && event.Location.DisplayName != "" {
 			fields = append(fields, &model.SlackAttachmentField{
 				Title: "Location",
-				Value: event.Location.DisplayName,
+				Value: MarkdownToHTMLEntities(event.Location.DisplayName),
 				Short: true,
 			})
 		}
@@ -151,6 +154,22 @@ func MarkdownToHTMLEntities(input string) string {
 }
 
 func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
+	link, err := url.QueryUnescape(event.Weblink)
+	if err != nil {
+		return "", err
+	}
+
+	subject := EnsureSubject(event.Subject)
+
+	if event.IsAllDay {
+		format := "(All day event) [%s](%s)"
+		if asRow {
+			format = "| All day event | [%s](%s) |"
+		}
+
+		return fmt.Sprintf(format, MarkdownToHTMLEntities(subject), link), nil
+	}
+
 	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
 	end := event.End.In(timeZone).Time().Format(time.Kitchen)
 
@@ -158,13 +177,6 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	if asRow {
 		format = "| %s - %s | [%s](%s) |"
 	}
-
-	link, err := url.QueryUnescape(event.Weblink)
-	if err != nil {
-		return "", err
-	}
-
-	subject := EnsureSubject(event.Subject)
 
 	return fmt.Sprintf(format, start, end, MarkdownToHTMLEntities(subject), link), nil
 }
@@ -177,7 +189,7 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	if event.Location != nil && event.Location.DisplayName != "" {
 		fields = append(fields, &model.SlackAttachmentField{
 			Title: "Location",
-			Value: event.Location.DisplayName,
+			Value: MarkdownToHTMLEntities(event.Location.DisplayName),
 			Short: true,
 		})
 	}
@@ -199,12 +211,12 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	}
 
 	attachment := &model.SlackAttachment{
-		Title:     event.Subject,
+		Title:     MarkdownToHTMLEntities(event.Subject),
 		TitleLink: titleLink,
 		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 		Fields:    fields,
 		Actions:   actions,
-		Fallback:  fmt.Sprintf("%s\n%s - %s", event.Subject, event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Fallback:  fmt.Sprintf("%s\n%s - %s", MarkdownToHTMLEntities(event.Subject), event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
 	}
 
 	for _, opt := range options {

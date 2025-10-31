@@ -1,7 +1,11 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package command
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
@@ -30,12 +34,20 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 	case "view", "today":
 		postStr, err := c.Engine.GetDaySummaryForUser(time.Now(), c.user())
 		if err != nil {
+			if strings.Contains(err.Error(), store.ErrorRefreshTokenNotSet) || strings.Contains(err.Error(), store.ErrorUserInactive) {
+				return store.ErrorUserInactive, false, nil
+			}
+
 			return err.Error(), false, err
 		}
 		return postStr, false, nil
 	case "tomorrow":
 		postStr, err := c.Engine.GetDaySummaryForUser(time.Now().Add(time.Hour*24), c.user())
 		if err != nil {
+			if strings.Contains(err.Error(), store.ErrorRefreshTokenNotSet) || strings.Contains(err.Error(), store.ErrorUserInactive) {
+				return store.ErrorUserInactive, false, nil
+			}
+
 			return err.Error(), false, err
 		}
 		return postStr, false, nil
@@ -47,6 +59,10 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 
 		dsum, err := c.Engine.SetDailySummaryPostTime(c.user(), val)
 		if err != nil {
+			if strings.Contains(err.Error(), store.ErrorRefreshTokenNotSet) || strings.Contains(err.Error(), store.ErrorUserInactive) {
+				return store.ErrorUserInactive, false, nil
+			}
+
 			return err.Error() + "\n" + getDailySummarySetTimeErrorMessage(), false, nil
 		}
 
@@ -54,6 +70,10 @@ func (c *Command) dailySummary(parameters ...string) (string, bool, error) {
 	case "settings":
 		dsum, err := c.Engine.GetDailySummarySettingsForUser(c.user())
 		if err != nil {
+			if strings.Contains(err.Error(), store.ErrorRefreshTokenNotSet) || strings.Contains(err.Error(), store.ErrorUserInactive) {
+				return store.ErrorUserInactive, false, nil
+			}
+
 			return err.Error() + "\nYou may need to configure your daily summary using the commands below.\n" + getDailySummaryHelp(), false, nil
 		}
 

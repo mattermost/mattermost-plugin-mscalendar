@@ -165,8 +165,9 @@ apply:
 ## Install go tools
 install-go-tools:
 	@echo Installing go tools
-	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1
+	$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.7
 	$(GO) install gotest.tools/gotestsum@v1.7.0
+	$(GO) install github.com/mattermost/mattermost-govet/v2@3f08281c344327ac09364f196b15f9a81c7eff08
 
 ## Runs golangci-lint and eslint.
 .PHONY: check-style
@@ -185,6 +186,7 @@ ifneq ($(HAS_SERVER),)
 	@echo Running golangci-lint
 	$(GO) vet ./...
 	$(GOBIN)/golangci-lint run ./...
+	$(GO) vet -vettool=$(GOBIN)/mattermost-govet -license -license.year=2019 ./...
 endif
 
 ## Builds the server, if it exists, for all supported architectures, unless MM_SERVICESETTINGS_ENABLEDEVELOPER is set.
@@ -220,6 +222,9 @@ webapp: webapp/node_modules
 ifneq ($(HAS_WEBAPP),)
 ifeq ($(MM_DEBUG),)
 	cd webapp && $(NPM) run build;
+else
+	cd webapp && $(NPM) run debug;
+endif
 endif
 
 ## Builds the webapp in debug mode, if it exists.
@@ -247,7 +252,6 @@ else ifeq ($(OS),Windows_NT)
 else
 	cd webapp && $(NPM) run debug;
 endif
-endif
 	rm -rf dist/
 	mkdir -p dist/$(PLUGIN_ID)/server/dist
 	cp $(MANIFEST_FILE) dist/$(PLUGIN_ID)/plugin.json
@@ -273,6 +277,12 @@ bundle:
 	rm -rf dist/
 	mkdir -p dist/$(PLUGIN_ID)
 	./build/bin/manifest dist
+ifneq ($(wildcard LICENSE.txt),)
+	cp -r LICENSE.txt dist/$(PLUGIN_ID)/
+endif
+ifneq ($(wildcard NOTICE.txt),)
+	cp -r NOTICE.txt dist/$(PLUGIN_ID)/
+endif
 ifneq ($(wildcard $(ASSETS_DIR)/.),)
 	cp -r $(ASSETS_DIR) dist/$(PLUGIN_ID)/
 endif
@@ -442,55 +452,6 @@ logs:
 logs-watch:
 	./build/bin/pluginctl logs-watch $(PLUGIN_ID)
 
-## Setup dlv for attaching, identifying the plugin PID for other targets.
-.PHONY: setup-attach
-setup-attach:
-	$(eval PLUGIN_PID := $(shell ps aux | grep "plugins/${PLUGIN_ID}" | grep -v "grep" | awk -F " " '{print $$2}'))
-	$(eval NUM_PID := $(shell echo -n ${PLUGIN_PID} | wc -w))
-
-	@if [ ${NUM_PID} -gt 2 ]; then \
-		echo "** There is more than 1 plugin process running. Run 'make kill reset' to restart just one."; \
-		exit 1; \
-	fi
-
-## Check if setup-attach succeeded.
-.PHONY: check-attach
-check-attach:
-	@if [ -z ${PLUGIN_PID} ]; then \
-		echo "Could not find plugin PID; the plugin is not running. Exiting."; \
-		exit 1; \
-	else \
-		echo "Located Plugin running with PID: ${PLUGIN_PID}"; \
-	fi
-
-## Attach dlv to an existing plugin instance.
-.PHONY: attach
-attach: setup-attach check-attach
-	dlv attach ${PLUGIN_PID}
-
-## Attach dlv to an existing plugin instance, exposing a headless instance on $DLV_DEBUG_PORT.
-.PHONY: attach-headless
-attach-headless: setup-attach check-attach
-	dlv attach ${PLUGIN_PID} --listen :$(DLV_DEBUG_PORT) --headless=true --api-version=2 --accept-multiclient
-
-## Detach dlv from an existing plugin instance, if previously attached.
-.PHONY: detach
-detach: setup-attach
-	@DELVE_PID=$(shell ps aux | grep "dlv attach ${PLUGIN_PID}" | grep -v "grep" | awk -F " " '{print $$2}') && \
-	if [ "$$DELVE_PID" -gt 0 ] > /dev/null 2>&1 ; then \
-		echo "Located existing delve process running with PID: $$DELVE_PID. Killing." ; \
-		kill -9 $$DELVE_PID ; \
-	fi
-
-## Kill all instances of the plugin, detaching any existing dlv instance.
-.PHONY: kill
-kill: detach
-	$(eval PLUGIN_PID := $(shell ps aux | grep "plugins/${PLUGIN_ID}" | grep -v "grep" | awk -F " " '{print $$2}'))
-
-	@for PID in ${PLUGIN_PID}; do \
-		echo "Killing plugin pid $$PID"; \
-		kill -9 $$PID; \
-	done; \
 # Help documentation à la https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help:
 	@cat Makefile build/*.mk | grep -v '\.PHONY' |  grep -v '\help:' | grep -B1 -E '^[a-zA-Z0-9_.-]+:.*' | sed -e "s/:.*//" | sed -e "s/^## //" |  grep -v '\-\-' | sed '1!G;h;$$!d' | awk 'NR%2{printf "\033[36m%-30s\033[0m",$$0;next;}1' | sort

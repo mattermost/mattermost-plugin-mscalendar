@@ -1,5 +1,5 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// See LICENSE.txt for license information.
 
 package flow
 
@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
 
@@ -78,8 +77,5 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	fh.store.RemovePostID(mattermostUserID, property)
 
-	// TODO: Workaround for https://community.mattermost.com/core/pl/nphtmkowcjd8ic76tbqtapx6nc
-	// See: https://mattermost.atlassian.net/browse/MM-54032
-	time.Sleep(2 * time.Second)
 	fh.flow.StepDone(mattermostUserID, stepNumber, value)
 }

@@ -90,7 +90,8 @@
                 "type": "text",
                 "help_text": "Microsoft Office Client Secret.",
                 "placeholder": "",
-                "default": ""
+                "default": "",
+                "secret": true
             }
         ]
     }

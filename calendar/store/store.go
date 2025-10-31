@@ -1,5 +1,5 @@
-// Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
 
 package store
 
@@ -24,6 +24,7 @@ const (
 	EventKeyPrefix            = "ev_"
 	WelcomeKeyPrefix          = "welcome_"
 	SettingsPanelPrefix       = "settings_panel_"
+	CacheKeyPrefix            = "cache_"
 )
 
 const OAuth2KeyExpiration = 15 * time.Minute
@@ -52,10 +53,11 @@ type pluginStore struct {
 	welcomeIndexKV     kvstore.KVStore
 	settingsPanelKV    kvstore.KVStore
 	Logger             bot.Logger
+	Poster             bot.Poster
 	Tracker            tracker.Tracker
 }
 
-func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker, enableEncryption bool, encryptionKey []byte) Store {
+func NewPluginStore(api plugin.API, logger bot.Logger, poster bot.Poster, tracker tracker.Tracker, enableEncryption bool, encryptionKey []byte) Store {
 	basicKV := kvstore.NewPluginStore(api)
 	oauth2KV := kvstore.NewHashedKeyStore(kvstore.NewOneTimePluginStore(api, OAuth2KeyExpiration), OAuth2KeyPrefix)
 	user2KV := kvstore.NewHashedKeyStore(basicKV, UserKeyPrefix)
@@ -73,9 +75,10 @@ func NewPluginStore(api plugin.API, logger bot.Logger, tracker tracker.Tracker, 
 		subscriptionKV:     kvstore.NewHashedKeyStore(basicKV, SubscriptionKeyPrefix),
 		eventKV:            kvstore.NewHashedKeyStore(basicKV, EventKeyPrefix),
 		oauth2KV:           oauth2KV,
-		welcomeIndexKV:     kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix),
-		settingsPanelKV:    kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix),
+		welcomeIndexKV:     kvstore.NewCacheStore(kvstore.NewHashedKeyStore(basicKV, WelcomeKeyPrefix)),
+		settingsPanelKV:    kvstore.NewCacheStore(kvstore.NewHashedKeyStore(basicKV, SettingsPanelPrefix)),
 		Logger:             logger,
+		Poster:             poster,
 		Tracker:            tracker,
 	}
 }

@@ -1,5 +1,5 @@
-// Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
-// See License for license information.
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
 
 package kvstore
 
@@ -42,6 +42,16 @@ func (s hashedKeyStore) StoreWithOptions(key string, value []byte, opts model.Pl
 
 func (s hashedKeyStore) Delete(key string) error {
 	return s.store.Delete(hashKey(s.prefix, key))
+}
+
+func (s hashedKeyStore) List(page, perPage int) ([]string, error) {
+	// List all keys with our store prefix
+	keys, err := s.store.List(page, perPage)
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
 }
 
 func hashKey(prefix, hashableKey string) string {

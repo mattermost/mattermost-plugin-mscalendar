@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package kvstore
 
 import (
@@ -127,4 +130,8 @@ func (s encryptedKeyStore) StoreWithOptions(key string, data []byte, opts model.
 
 func (s encryptedKeyStore) Delete(key string) error {
 	return s.store.Delete(key)
+}
+
+func (s encryptedKeyStore) List(page, perPage int) ([]string, error) {
+	return s.store.List(page, perPage)
 }

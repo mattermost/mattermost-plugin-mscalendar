@@ -9,6 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	store "github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
+	oauth2 "golang.org/x/oauth2"
 )
 
 // MockStore is a mock of Store interface.
@@ -46,6 +47,20 @@ func (m *MockStore) AddLinkedChannelToEvent(arg0, arg1 string) error {
 func (mr *MockStoreMockRecorder) AddLinkedChannelToEvent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddLinkedChannelToEvent", reflect.TypeOf((*MockStore)(nil).AddLinkedChannelToEvent), arg0, arg1)
+}
+
+// CheckUserConnected mocks base method.
+func (m *MockStore) CheckUserConnected(arg0 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckUserConnected", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CheckUserConnected indicates an expected call of CheckUserConnected.
+func (mr *MockStoreMockRecorder) CheckUserConnected(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserConnected", reflect.TypeOf((*MockStore)(nil).CheckUserConnected), arg0)
 }
 
 // DeleteCurrentStep mocks base method.
@@ -175,6 +190,33 @@ func (mr *MockStoreMockRecorder) DeleteUserWelcomePost(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserWelcomePost", reflect.TypeOf((*MockStore)(nil).DeleteUserWelcomePost), arg0)
 }
 
+// DisconnectUserFromStoreIfNecessary mocks base method.
+func (m *MockStore) DisconnectUserFromStoreIfNecessary(arg0 error, arg1 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DisconnectUserFromStoreIfNecessary", arg0, arg1)
+}
+
+// DisconnectUserFromStoreIfNecessary indicates an expected call of DisconnectUserFromStoreIfNecessary.
+func (mr *MockStoreMockRecorder) DisconnectUserFromStoreIfNecessary(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisconnectUserFromStoreIfNecessary", reflect.TypeOf((*MockStore)(nil).DisconnectUserFromStoreIfNecessary), arg0, arg1)
+}
+
+// GetConnectedUserCount mocks base method.
+func (m *MockStore) GetConnectedUserCount() (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConnectedUserCount")
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConnectedUserCount indicates an expected call of GetConnectedUserCount.
+func (mr *MockStoreMockRecorder) GetConnectedUserCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConnectedUserCount", reflect.TypeOf((*MockStore)(nil).GetConnectedUserCount))
+}
+
 // GetCurrentStep mocks base method.
 func (m *MockStore) GetCurrentStep(arg0 string) (int, error) {
 	m.ctrl.T.Helper()
@@ -233,6 +275,21 @@ func (m *MockStore) GetSetting(arg0, arg1 string) (interface{}, error) {
 func (mr *MockStoreMockRecorder) GetSetting(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSetting", reflect.TypeOf((*MockStore)(nil).GetSetting), arg0, arg1)
+}
+
+// GetSubscriptionCount mocks base method.
+func (m *MockStore) GetSubscriptionCount() (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSubscriptionCount")
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSubscriptionCount indicates an expected call of GetSubscriptionCount.
+func (mr *MockStoreMockRecorder) GetSubscriptionCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptionCount", reflect.TypeOf((*MockStore)(nil).GetSubscriptionCount))
 }
 
 // LoadEventMetadata mocks base method.
@@ -367,6 +424,21 @@ func (m *MockStore) ModifyUserIndex(arg0 func(store.UserIndex) (store.UserIndex,
 func (mr *MockStoreMockRecorder) ModifyUserIndex(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyUserIndex", reflect.TypeOf((*MockStore)(nil).ModifyUserIndex), arg0)
+}
+
+// RefreshAndStoreToken mocks base method.
+func (m *MockStore) RefreshAndStoreToken(arg0 *oauth2.Token, arg1 *oauth2.Config, arg2 string) (*oauth2.Token, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshAndStoreToken", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*oauth2.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshAndStoreToken indicates an expected call of RefreshAndStoreToken.
+func (mr *MockStoreMockRecorder) RefreshAndStoreToken(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshAndStoreToken", reflect.TypeOf((*MockStore)(nil).RefreshAndStoreToken), arg0, arg1, arg2)
 }
 
 // RemovePostID mocks base method.

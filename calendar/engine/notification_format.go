@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package engine
 
 import (
@@ -22,8 +25,8 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
 		TitleLink:  titleLink,
 		Title:      title,
-		Text:       text,
-		Fallback:   fmt.Sprintf("[%s](%s): %s", title, titleLink, text),
+		Text:       views.MarkdownToHTMLEntities(text),
+		Fallback:   fmt.Sprintf("[%s](%s): %s", title, titleLink, views.MarkdownToHTMLEntities(text)),
 	}
 }
 
@@ -157,7 +160,7 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 }
 
 func eventToFields(e *remote.Event, timezone string) fields.Fields {
-	date := func(dtStart, dtEnd *remote.DateTime) (time.Time, time.Time, string) {
+	date := func(dtStart, dtEnd *remote.DateTime, isAllDayEvent bool) (time.Time, time.Time, string) {
 		if dtStart == nil || dtEnd == nil {
 			return time.Time{}, time.Time{}, "n/a"
 		}
@@ -166,16 +169,33 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 		dtEnd = dtEnd.In(timezone)
 		tStart := dtStart.Time()
 		tEnd := dtEnd.Time()
+
 		startFormat := "Monday, January 02"
-		if tStart.Year() != time.Now().Year() {
-			startFormat = "Monday, January 02, 2006"
+		endDateFormat := "Monday, January 02"
+
+		if isAllDayEvent {
+			return tStart, tEnd, tStart.Format(startFormat) + ": All day event"
 		}
-		startFormat += " · (" + time.Kitchen
-		endFormat := " - " + time.Kitchen + ")"
-		return tStart, tEnd, tStart.Format(startFormat) + tEnd.Format(endFormat)
+
+		if tStart.Year() != time.Now().Year() || tEnd.Year() != time.Now().Year() {
+			startFormat += ", 2006"
+			endDateFormat += ", 2006"
+		}
+
+		startFormat += " · " + time.Kitchen
+
+		var formatted string
+		if tStart.Year() != tEnd.Year() || tStart.Month() != tEnd.Month() || tStart.Day() != tEnd.Day() {
+			endDateFormat += " · " + time.Kitchen
+			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(endDateFormat)
+		} else {
+			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(time.Kitchen)
+		}
+
+		return tStart, tEnd, formatted
 	}
 
-	start, end, formattedDate := date(e.Start, e.End)
+	start, end, formattedDate := date(e.Start, e.End, e.IsAllDay)
 
 	minutes := int(end.Sub(start).Round(time.Minute).Minutes())
 	hours := int(end.Sub(start).Hours())
@@ -221,14 +241,14 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 
 	ff := fields.Fields{
 		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
-		FieldBodyPreview: fields.NewStringValue(valueOrNotDefined(e.BodyPreview)),
+		FieldBodyPreview: fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.BodyPreview))),
 		FieldImportance:  fields.NewStringValue(valueOrNotDefined(e.Importance)),
 		FieldWhen:        fields.NewStringValue(valueOrNotDefined(formattedDate)),
 		FieldDuration:    fields.NewStringValue(valueOrNotDefined(dur)),
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),
-		FieldLocation:       fields.NewStringValue(valueOrNotDefined(e.Location.DisplayName)),
+		FieldLocation:       fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.Location.DisplayName))),
 		FieldResponseStatus: fields.NewStringValue(e.ResponseStatus.Response),
 		FieldAttendees:      fields.NewMultiValue(attendees...),
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
+// See LICENSE.txt for license information.
+
 package engine
 
 import (
@@ -19,5 +22,6 @@ func TestCopy(t *testing.T) {
 
 	assert.NotSame(t, engine, engineCopy)
 	assert.NotSame(t, engine.(*mscalendar).actingUser, engineCopy.actingUser)
-	assert.NotSame(t, engine.(*mscalendar).client, engineCopy.client)
+	assert.Nil(t, engine.(*mscalendar).client)
+	assert.Nil(t, engineCopy.client)
 }
