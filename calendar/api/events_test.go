@@ -157,22 +157,31 @@ func TestIsValid(t *testing.T) {
 			},
 		},
 		{
-			name:    "Invalid end time",
-			payload: GetMockCreateEventPayload(false, nil, time.Now().Format("2006-01-02"), time.Now().Add(1*time.Hour).Format("15:04"), "invalidEndTime", "mockDescription", "mockSubject", "mockLocation", ""),
+			name: "Invalid end time",
+			payload: func() createEventPayload {
+				futureTime := time.Now().UTC().Add(24 * time.Hour)
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(1*time.Hour).Format("15:04"), "invalidEndTime", "mockDescription", "mockSubject", "mockLocation", "")
+			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.ErrorContains(t, err, "please use a valid end time")
 			},
 		},
 		{
-			name:    "End time before start time",
-			payload: GetMockCreateEventPayload(false, nil, time.Now().Format("2006-01-02"), time.Now().Add(2*time.Hour).Format("15:04"), time.Now().Add(1*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", ""),
+			name: "End time before start time",
+			payload: func() createEventPayload {
+				futureTime := time.Now().UTC().Add(24 * time.Hour)
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(2*time.Hour).Format("15:04"), futureTime.Add(1*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
+			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.ErrorContains(t, err, "end date cannot be earlier than start date")
 			},
 		},
 		{
-			name:    "Valid event",
-			payload: GetMockCreateEventPayload(false, nil, time.Now().Format("2006-01-02"), time.Now().Add(1*time.Hour).Format("15:04"), time.Now().Add(2*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", ""),
+			name: "Valid event",
+			payload: func() createEventPayload {
+				futureTime := time.Now().UTC().Add(24 * time.Hour)
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(1*time.Hour).Format("15:04"), futureTime.Add(2*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
+			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.NoError(t, err)
 			},
