@@ -192,6 +192,8 @@ func TestCacheStore_StoreWithOptions(t *testing.T) {
 	// Set up mock expectations
 	mockStore.On("Store", testKey, initialData).Return(nil)
 	mockStore.On("StoreWithOptions", testKey, newData, opts).Return(true, nil)
+	// Allow Delete to be called by lazy deletion or cleanup goroutines
+	mockStore.On("Delete", testKey).Return(nil).Maybe()
 
 	// Create cache store with mock
 	store := NewCacheStore(mockStore)
