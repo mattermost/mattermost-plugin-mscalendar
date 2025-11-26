@@ -6,7 +6,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -74,8 +73,6 @@ func TestAutocompleteConnectedUsers(t *testing.T) {
 			rec := httptest.NewRecorder()
 
 			api.autocompleteConnectedUsers(rec, req)
-
-			fmt.Print("rec=", rec)
 
 			tc.assertions(t, rec)
 		})
