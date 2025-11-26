@@ -316,11 +316,11 @@ func TestDeleteMyEventSubscription(t *testing.T) {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockActingUserID).Return(&model.User{}, nil).Times(1)
 				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
 				mscalendar.client = mockClient
-				mockClient.EXPECT().DeleteSubscription(&remote.Subscription{}).Return(errors.New("some error occured")).Times(1)
+				mockClient.EXPECT().DeleteSubscription(&remote.Subscription{}).Return(errors.New("some error occurred")).Times(1)
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
-				require.EqualError(t, err, "failed to delete subscription : some error occured")
+				require.EqualError(t, err, "failed to delete subscription : some error occurred")
 			},
 		},
 		{
@@ -399,7 +399,7 @@ func TestDeleteOrphanedSubscription(t *testing.T) {
 			},
 		},
 		{
-			name: "subscription deleted sucessfully",
+			name: "subscription deleted successfully",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{User: &store.User{Remote: &remote.User{ID: MockActingUserRemoteID}}, MattermostUserID: MockActingUserID}

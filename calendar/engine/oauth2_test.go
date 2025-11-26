@@ -320,8 +320,10 @@ func badTokenExchangeResponder() {
 }
 
 func unauthorizedTokenGraphAPIResponder() {
+	//nolint:gosec // G101: Test data, not real credentials
 	tokenURL := "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 
+	//nolint:gosec // G101: Test data with fake tokens, not real credentials
 	tokenResponse := `{
     "token_type": "Bearer",
     "scope": "user.read%20Fmail.read",
@@ -353,8 +355,10 @@ func unauthorizedTokenGraphAPIResponder() {
 }
 
 func statusOKGraphAPIResponder() {
+	//nolint:gosec // G101: Test data, not real credentials
 	tokenURL := "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 
+	//nolint:gosec // G101: Test data with fake tokens, not real credentials
 	tokenResponse := `{
     "token_type": "Bearer",
     "scope": "user.read%20Fmail.read",

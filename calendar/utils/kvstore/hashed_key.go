@@ -4,7 +4,7 @@
 package kvstore
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // G501: MD5 used for key hashing, not cryptographic security
 	"fmt"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -59,6 +59,7 @@ func hashKey(prefix, hashableKey string) string {
 		return prefix
 	}
 
+	//nolint:gosec // G401: MD5 used for key hashing, not cryptographic security
 	h := md5.New()
 	_, _ = h.Write([]byte(hashableKey))
 	return fmt.Sprintf("%s%x", prefix, h.Sum(nil))

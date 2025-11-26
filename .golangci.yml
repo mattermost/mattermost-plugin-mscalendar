@@ -108,9 +108,6 @@ formatters:
 issues:
   exclude-rules:
     - path: server/manifest.go
-issues:
-  exclude-rules:
-    - path: server/manifest.go
       linters:
         - deadcode
         - unused
@@ -118,12 +115,6 @@ issues:
     - path: server/configuration.go
       linters:
         - unused
-    - linters:
-        - revive
-      text: unused-parameter
-    - linters:
-        - revive
-      text: var-naming
     - path: _test\.go
       linters:
         - bodyclose
