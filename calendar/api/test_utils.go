@@ -28,12 +28,14 @@ const (
 	MockRemoteUserID = "mockRemoteUserID"
 	MockChannelID    = "mockChannelID"
 
+	// ValidRequestBodyJSON is intentionally set with a past date to test validation
+	// Tests that need valid (future) dates should use GetCurrentTimeRequestBodyJSON()
 	ValidRequestBodyJSON = `{
 		"all_day": false,
 		"attendees": ["user1", "user2"],
-		"date": "2024-10-17",
-		"start_time": "10:00AM",
-		"end_time": "11:00AM",
+		"date": "2020-10-17",
+		"start_time": "10:00",
+		"end_time": "11:00",
 		"description": "Team sync meeting",
 		"subject": "Team Sync",
 		"channel_id": "mockChannelID"
@@ -59,7 +61,6 @@ func (m *MockNotificationProcessor) Quit()                    {}
 // revive:disable-next-line:unexported-return
 func GetMockSetup(t *testing.T) (*api, *mock_store.MockStore, *mock_bot.MockPoster, *mock_remote.MockRemote, *mock_plugin_api.MockPluginAPI, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_remote.MockClient) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	mockStore := mock_store.NewMockStore(ctrl)
 	mockPoster := mock_bot.NewMockPoster(ctrl)
@@ -103,7 +104,8 @@ func GetMockCreateEventPayload(allDay bool, attendees []string, date, startTime,
 }
 
 func GetCurrentTimeRequestBodyJSON(channelID string) string {
-	currentTime := time.Now()
+	// Use UTC to match test mailbox timezone and add extra buffer to avoid edge cases
+	currentTime := time.Now().UTC().Add(24 * time.Hour)
 	date := currentTime.Format("2006-01-02")
 	startTime := currentTime.Add(time.Hour).Format("15:04")
 	endTime := currentTime.Add(2 * time.Hour).Format("15:04")

@@ -42,7 +42,7 @@ func TestVerifyOAuth2State(t *testing.T) {
 			},
 		},
 		{
-			name: "Successfull Oauth state verification",
+			name: "Successful Oauth state verification",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVGet", "oauth2_fb89cea34670836627b56ad5b94ce5e3").Return([]byte(MockState), nil).Times(1)
 			},
@@ -82,7 +82,7 @@ func TestStoreOAuth2State(t *testing.T) {
 			},
 		},
 		{
-			name: "Successfull Oauth state verification",
+			name: "Successful Oauth state verification",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVSetWithExpiry", "oauth2_fb89cea34670836627b56ad5b94ce5e3", mock.Anything, int64(oAuth2StateTimeToLive)).Return(nil).Times(1)
 			},

@@ -18,8 +18,11 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store/mock_store"
 
 	"github.com/mattermost/mattermost/server/public/model"
 )
@@ -290,16 +293,14 @@ func TestPostActionTentative(t *testing.T) {
 }
 
 func TestPostActionRespond(t *testing.T) {
-	api, mockStore, _, mockRemote, mockPluginAPI, _, _, mockClient := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
-		setup      func(*http.Request)
-		assertions func(*httptest.ResponseRecorder)
+		setup      func(*http.Request, *api, *mock_store.MockStore, *mock_remote.MockRemote, *mock_plugin_api.MockPluginAPI, *mock_remote.MockClient)
+		assertions func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
 			name: "Missing event ID",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
 					Context: map[string]interface{}{},
@@ -307,29 +308,29 @@ func TestPostActionRespond(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
 			},
 		},
 		{
 			name: "Error responding to event",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
-				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
+				mockClient.EXPECT().DeclineEvent(MockRemoteUserID, MockEventID).Return(errors.New("failed to decline event"))
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
 					Context: map[string]interface{}{
 						config.EventIDKey: MockEventID,
-						"selected_option": "decline",
+						"selected_option": "No",
 					},
 				}
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				var response model.PostActionIntegrationResponse
 				err := json.NewDecoder(rec.Body).Decode(&response)
 				assert.NoError(t, err)
@@ -339,7 +340,7 @@ func TestPostActionRespond(t *testing.T) {
 		},
 		{
 			name: "Error updating post",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
@@ -356,7 +357,7 @@ func TestPostActionRespond(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				var response model.PostActionIntegrationResponse
 				err := json.NewDecoder(rec.Body).Decode(&response)
 				assert.NoError(t, err)
@@ -366,7 +367,7 @@ func TestPostActionRespond(t *testing.T) {
 		},
 		{
 			name: "No attachment found",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
@@ -383,7 +384,7 @@ func TestPostActionRespond(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				var response model.PostActionIntegrationResponse
 				err := json.NewDecoder(rec.Body).Decode(&response)
 				assert.NoError(t, err)
@@ -393,7 +394,7 @@ func TestPostActionRespond(t *testing.T) {
 		},
 		{
 			name: "Action responded successfully",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
@@ -420,20 +421,22 @@ func TestPostActionRespond(t *testing.T) {
 				bodyBytes, _ := json.Marshal(requestBody)
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
 			},
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			api, mockStore, _, mockRemote, mockPluginAPI, _, _, mockClient := GetMockSetup(t)
+
 			req := httptest.NewRequest(http.MethodPost, "/postActionAccept", nil)
 			rec := httptest.NewRecorder()
 
-			tc.setup(req)
+			tc.setup(req, api, mockStore, mockRemote, mockPluginAPI, mockClient)
 			api.postActionRespond(rec, req)
 
-			tc.assertions(rec)
+			tc.assertions(t, rec)
 		})
 	}
 }

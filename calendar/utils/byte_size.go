@@ -40,6 +40,7 @@ func (size ByteSize) String() string {
 			continue
 		}
 		if u == sizeB {
+			//nolint:gosec // G115: Safe conversion - size is guaranteed to be >= 1 (sizeB)
 			return withCommas(strconv.FormatUint(uint64(size), 10)) + sizeSuffixes[i]
 		}
 
@@ -47,6 +48,7 @@ func (size ByteSize) String() string {
 			return "n/a"
 		}
 
+		//nolint:gosec // G115: Safe conversion - overflow is checked above
 		s := strconv.FormatUint(uint64((size*10+u/2)/u), 10)
 		l := len(s)
 		switch {

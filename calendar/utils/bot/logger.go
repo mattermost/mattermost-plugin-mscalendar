@@ -104,7 +104,7 @@ func (bot *bot) logToAdmins(level, message string) {
 	if bot.AdminLogVerbose && len(bot.logContext) > 0 {
 		message += "\n" + utils.JSONBlock(bot.logContext)
 	}
-	bot.dmAdmins("(log " + level + ") " + message)
+	bot.dmAdmins("(log %s) %s", level, message)
 }
 
 type NilLogger struct{}

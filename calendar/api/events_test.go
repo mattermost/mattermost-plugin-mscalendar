@@ -17,8 +17,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 
 	"github.com/mattermost/mattermost/server/public/model"
 )
@@ -153,22 +157,31 @@ func TestIsValid(t *testing.T) {
 			},
 		},
 		{
-			name:    "Invalid end time",
-			payload: GetMockCreateEventPayload(false, nil, time.Now().Format("2006-01-02"), time.Now().Add(1*time.Hour).Format("15:04"), "invalidEndTime", "mockDescription", "mockSubject", "mockLocation", ""),
+			name: "Invalid end time",
+			payload: func() createEventPayload {
+				futureTime := time.Now().UTC().Add(24 * time.Hour)
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(1*time.Hour).Format("15:04"), "invalidEndTime", "mockDescription", "mockSubject", "mockLocation", "")
+			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.ErrorContains(t, err, "please use a valid end time")
 			},
 		},
 		{
-			name:    "End time before start time",
-			payload: GetMockCreateEventPayload(false, nil, time.Now().Format("2006-01-02"), time.Now().Add(2*time.Hour).Format("15:04"), time.Now().Add(1*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", ""),
+			name: "End time before start time",
+			payload: func() createEventPayload {
+				futureTime := time.Now().UTC().Add(24 * time.Hour)
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(2*time.Hour).Format("15:04"), futureTime.Add(1*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
+			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.ErrorContains(t, err, "end date cannot be earlier than start date")
 			},
 		},
 		{
-			name:    "Valid event",
-			payload: GetMockCreateEventPayload(false, nil, time.Now().Format("2006-01-02"), time.Now().Add(1*time.Hour).Format("15:04"), time.Now().Add(2*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", ""),
+			name: "Valid event",
+			payload: func() createEventPayload {
+				futureTime := time.Now().UTC().Add(24 * time.Hour)
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(1*time.Hour).Format("15:04"), futureTime.Add(2*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
+			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.NoError(t, err)
 			},
@@ -183,16 +196,14 @@ func TestIsValid(t *testing.T) {
 }
 
 func TestCreateEvent(t *testing.T) {
-	api, mockStore, mockPoster, mockRemote, mockPluginAPI, mockLogger, mockLoggerWith, mockRemoteClient := GetMockSetup(t)
-
 	tests := []struct {
 		name       string
-		setup      func(*http.Request)
-		assertions func(*httptest.ResponseRecorder)
+		setup      func(*http.Request, *api, *mock_store.MockStore, *mock_bot.MockPoster, *mock_remote.MockRemote, *mock_plugin_api.MockPluginAPI, *mock_bot.MockLogger, *mock_bot.MockLogger, *mock_remote.MockClient)
+		assertions func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
 			name: "Missing Mattermost User ID",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Del(MMUserIDHeader)
 				requestBody := model.PostActionIntegrationRequest{
 					Context: map[string]interface{}{
@@ -204,7 +215,7 @@ func TestCreateEvent(t *testing.T) {
 
 				mockLogger.EXPECT().Errorf("createEvent, unauthorized user").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
 				assert.NoError(t, readErr)
 				assert.Contains(t, string(responseBody), "unauthorized")
@@ -213,7 +224,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error loading the user",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
 					Context: map[string]interface{}{
@@ -227,7 +238,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading user from store").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
 				assert.NoError(t, readErr)
 				assert.Contains(t, string(responseBody), "internal error")
@@ -236,7 +247,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "User not found",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
 					Context: map[string]interface{}{
@@ -250,7 +261,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, user not found in store").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
 				assert.NoError(t, readErr)
 				assert.Contains(t, string(responseBody), "unauthorized")
@@ -259,7 +270,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error decoding the event payload",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				malformedJSON := `{"all_day": true, "attendees": ["user1", "user2"], "date": "2024-10-17", "start_time": "10:00AM", "end_time": }`
 				req.Body = io.NopCloser(bytes.NewBufferString(malformedJSON))
@@ -267,7 +278,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while decoding event payload").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				responseBody, readErr := io.ReadAll(rec.Body)
 				assert.NoError(t, readErr)
 				assert.Contains(t, string(responseBody), "invalid character")
@@ -276,15 +287,16 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "User doesn't have permission to link event to the channel",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
+				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(false).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, user don't have permission to link events in the selected channel").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "you don't have permission to link events in the selected channel")
@@ -292,9 +304,10 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error getting the mailbox settings",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
+				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
@@ -303,7 +316,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while getting mailbox settings for user").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "error getting mailbox settings")
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
@@ -311,9 +324,10 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error loading mailbox timezone location",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
-				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
+				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
+				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
@@ -322,7 +336,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading mailbox timezone location").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "unknown time zone")
@@ -330,7 +344,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Invalid payload",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				req.Body = io.NopCloser(bytes.NewBufferString(ValidRequestBodyJSON))
 				mockOAauthToken := oauth2.Token{}
@@ -340,7 +354,7 @@ func TestCreateEvent(t *testing.T) {
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockLogger.EXPECT().Errorf("createEvent, invalid payload").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusBadRequest, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "Invalid request.")
@@ -348,7 +362,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error creating event",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
@@ -361,7 +375,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while creating event", gomock.Any()).Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "failed to create event")
@@ -369,7 +383,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error storing the linked user event",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
@@ -385,7 +399,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while storing user linked event").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "error storing the user linked event")
@@ -393,7 +407,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error linking event to channel",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
@@ -410,7 +424,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("error linking event to channel").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "true")
@@ -418,7 +432,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Error creating post",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
@@ -435,7 +449,7 @@ func TestCreateEvent(t *testing.T) {
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("error sending post to channel about linked event").Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "true")
@@ -443,7 +457,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Successfully create event with channelID",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				validJSON := GetCurrentTimeRequestBodyJSON(MockChannelID)
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
@@ -458,7 +472,7 @@ func TestCreateEvent(t *testing.T) {
 				mockStore.EXPECT().AddLinkedChannelToEvent(gomock.Any(), MockChannelID).Return(nil).Times(1)
 				mockPoster.EXPECT().CreatePost(gomock.Any()).Return(nil).Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "true")
@@ -466,7 +480,7 @@ func TestCreateEvent(t *testing.T) {
 		},
 		{
 			name: "Event created successfully without channelID",
-			setup: func(req *http.Request) {
+			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockPoster *mock_bot.MockPoster, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockLogger *mock_bot.MockLogger, mockLoggerWith *mock_bot.MockLogger, mockRemoteClient *mock_remote.MockClient) {
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				validJSON := GetCurrentTimeRequestBodyJSON("")
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
@@ -478,7 +492,7 @@ func TestCreateEvent(t *testing.T) {
 				mockRemoteClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(mockEvent, nil).Times(1)
 				mockPoster.EXPECT().DMWithMessageAndAttachments(MockUserID, "Your event was created successfully.", gomock.Any()).Times(1)
 			},
-			assertions: func(rec *httptest.ResponseRecorder) {
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
 				assert.Equal(t, http.StatusCreated, rec.Result().StatusCode)
 				responseBody, _ := io.ReadAll(rec.Body)
 				assert.Contains(t, string(responseBody), "true")
@@ -487,13 +501,15 @@ func TestCreateEvent(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			api, mockStore, mockPoster, mockRemote, mockPluginAPI, mockLogger, mockLoggerWith, mockRemoteClient := GetMockSetup(t)
+
 			req := httptest.NewRequest(http.MethodPost, "/create", nil)
 			rec := httptest.NewRecorder()
 
-			tc.setup(req)
+			tc.setup(req, api, mockStore, mockPoster, mockRemote, mockPluginAPI, mockLogger, mockLoggerWith, mockRemoteClient)
 			api.createEvent(rec, req)
 
-			tc.assertions(rec)
+			tc.assertions(t, rec)
 		})
 	}
 }

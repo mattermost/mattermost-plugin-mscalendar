@@ -43,7 +43,7 @@ func (tv timeValue) Equals(v Value) bool {
 	if !ok {
 		return false
 	}
-	return tv.v == other.v
+	return tv.v.Equal(other.v)
 }
 
 type multiValue struct {
