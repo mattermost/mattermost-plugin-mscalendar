@@ -24,6 +24,7 @@ import (
 const (
 	createEventDateTimeFormat = "2006-01-02 15:04"
 	createEventDateFormat     = "2006-01-02"
+	HeaderMattermostUserID    = "Mattermost-User-Id"
 )
 
 type createEventPayload struct {
@@ -37,6 +38,7 @@ type createEventPayload struct {
 	Subject     string `json:"subject"`
 	Location    string `json:"location,omitempty"`
 	ChannelID   string `json:"channel_id"`
+	CalendarID  string `json:"calendar_id"`
 }
 
 func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, error) {
@@ -237,7 +239,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	event, err := client.CreateEvent(user.Remote.ID, event)
+	event, err := client.CreateEvent("", user.Remote.ID, event)
 	if err != nil {
 		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error occurred while creating event")
 		httputils.WriteInternalServerError(w, err)
@@ -284,4 +286,34 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httputils.WriteJSONResponse(w, `{"ok": true}`, http.StatusCreated)
+}
+
+func (api *api) listCalendars(w http.ResponseWriter, r *http.Request) {
+	mattermostUserID := r.Header.Get(HeaderMattermostUserID)
+	if mattermostUserID == "" {
+		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
+		return
+	}
+
+	user, errStore := api.Store.LoadUser(mattermostUserID)
+	if errStore != nil && !errors.Is(errStore, store.ErrNotFound) {
+		api.Logger.With(bot.LogContext{"err": errStore}).Errorf("error loading user from store")
+		httputils.WriteInternalServerError(w, errStore)
+		return
+	}
+	if errors.Is(errStore, store.ErrNotFound) {
+		httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
+		return
+	}
+
+	client := api.Remote.MakeClient(context.Background(), user.OAuth2Token)
+
+	calendars, errMailbox := client.GetCalendars(user.Remote.ID)
+	if errMailbox != nil {
+		api.Logger.With(bot.LogContext{"err": errMailbox}).Errorf("error fetching calendar list")
+		httputils.WriteInternalServerError(w, errMailbox)
+		return
+	}
+
+	httputils.WriteJSONResponse(w, calendars, http.StatusOK)
 }
