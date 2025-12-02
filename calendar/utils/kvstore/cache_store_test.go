@@ -151,6 +151,7 @@ func TestCacheStore_TTL(t *testing.T) {
 	// Set up mock expectations
 	mockStore.On("StoreTTL", testKey, testData, ttl).Return(nil)
 	mockStore.On("Load", testKey).Return(testData, nil)
+	mockStore.On("Delete", testKey).Return(nil).Maybe()
 
 	// Create cache with short TTL for testing
 	store := NewCacheStoreWithOptions(mockStore, 100*time.Millisecond, 1*time.Second)
