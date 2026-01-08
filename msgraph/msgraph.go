@@ -27,8 +27,9 @@ func GetMSCalendarProviderConfig() config.ProviderConfig {
 		BotDisplayName: ProviderMSCalendarDisplayName,
 
 		Features: config.ProviderFeatures{
-			EncryptedStore:     false,
-			EventNotifications: true,
+			EncryptedStore:             false,
+			EventNotifications:         true,
+			HideCreateEventFromCommand: true,
 		},
 	}
 }
