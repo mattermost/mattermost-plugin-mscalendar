@@ -27,6 +27,9 @@ func (c *StoredConfig) IsOAuthConfigured() bool {
 type ProviderFeatures struct {
 	EncryptedStore     bool
 	EventNotifications bool
+
+	// MM-66824 - Hiding create event command until it's implemented for MS Calendar
+	HideCreateEventFromCommand bool
 }
 
 // ProviderConfig represents the specific configuration that changes when building for different
