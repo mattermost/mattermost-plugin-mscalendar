@@ -18,7 +18,7 @@ func (c *client) CreateEvent(remoteUserID string, in *remote.Event) (*remote.Eve
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
-	err := c.rbuilder.Users().ID(remoteUserID).Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
+	err := c.rbuilder.Me().Events().Request().JSONRequest(c.ctx, http.MethodPost, "", &in, &out)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return nil, errors.Wrap(err, "msgraph CreateEvent")

@@ -14,7 +14,7 @@ func (c *client) DeleteCalendar(remoteUserID string, calID string) error {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInactive)
 	}
-	err := c.rbuilder.Users().ID(remoteUserID).Calendars().ID(calID).Request().Delete(c.ctx)
+	err := c.rbuilder.Me().Calendars().ID(calID).Request().Delete(c.ctx)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return errors.Wrap(err, "msgraph DeleteCalendar")
