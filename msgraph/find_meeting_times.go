@@ -18,7 +18,7 @@ func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetin
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
-	req := c.rbuilder.Users().ID(remoteUserID).FindMeetingTimes(nil).Request()
+	req := c.rbuilder.Me().FindMeetingTimes(nil).Request()
 	err := req.JSONRequest(c.ctx, http.MethodPost, "", &params, &meetingsOut)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)

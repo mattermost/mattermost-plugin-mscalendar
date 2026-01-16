@@ -22,6 +22,7 @@ func (c *client) GetCalendars(remoteUserID string) ([]*remote.Calendar, error) {
 		return nil, errors.New(ErrorUserInactive)
 	}
 
+	// Needs to get by remoteUserID because it can be used by admins in /mscalendar showcals command
 	req := c.rbuilder.Users().ID(remoteUserID).Calendars().Request()
 	req.Expand("children")
 	err := req.JSONRequest(c.ctx, http.MethodGet, "", nil, &v)
