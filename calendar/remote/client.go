@@ -30,7 +30,7 @@ type Calendars interface {
 }
 
 type Events interface {
-	CreateEvent(remoteUserID string, calendarEvent *Event) (*Event, error)
+	CreateEvent(calendarID, remoteUserID string, calendarEvent *Event) (*Event, error)
 	AcceptEvent(remoteUserID, eventID string) error
 	DeclineEvent(remoteUserID, eventID string) error
 	TentativelyAcceptEvent(remoteUserID, eventID string) error
