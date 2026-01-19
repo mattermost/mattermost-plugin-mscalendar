@@ -38,39 +38,51 @@ func getNotConnectedText(pluginURL string) string {
 
 type handleFunc func(parameters ...string) (string, bool, error)
 
-var cmds = []*model.AutocompleteData{
-	model.NewAutocompleteData("connect", "", fmt.Sprintf("Connect to your %s account", config.Provider.DisplayName)),
-	model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
-	{ // Summary
-		Trigger:  "summary",
-		HelpText: "View your events for today, or edit the settings for your daily summary.",
-		SubCommands: []*model.AutocompleteData{
-			model.NewAutocompleteData("view", "", "View your daily summary."),
-			model.NewAutocompleteData("today", "", "Display today's events."),
-			model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
-			model.NewAutocompleteData("settings", "", "View your settings for the daily summary."),
-			model.NewAutocompleteData("time", "", "Set the time you would like to receive your daily summary."),
-			model.NewAutocompleteData("enable", "", "Enable your daily summary."),
-			model.NewAutocompleteData("disable", "", "Disable your daily summary."),
+func getCommands() []*model.AutocompleteData {
+	cmds := []*model.AutocompleteData{
+		model.NewAutocompleteData("connect", "", fmt.Sprintf("Connect to your %s account", config.Provider.DisplayName)),
+		model.NewAutocompleteData("disconnect", "", fmt.Sprintf("Disconnect from your %s account", config.Provider.DisplayName)),
+		{ // Summary
+			Trigger:  "summary",
+			HelpText: "View your events for today, or edit the settings for your daily summary.",
+			SubCommands: []*model.AutocompleteData{
+				model.NewAutocompleteData("view", "", "View your daily summary."),
+				model.NewAutocompleteData("today", "", "Display today's events."),
+				model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
+				model.NewAutocompleteData("settings", "", "View your settings for the daily summary."),
+				model.NewAutocompleteData("time", "", "Set the time you would like to receive your daily summary."),
+				model.NewAutocompleteData("enable", "", "Enable your daily summary."),
+				model.NewAutocompleteData("disable", "", "Disable your daily summary."),
+			},
 		},
-	},
-	model.NewAutocompleteData("viewcal", "", "View your events for the upcoming 14 days, including today."),
-	{ // Create
-		Trigger:  "event",
-		HelpText: "Manage events.",
-		SubCommands: []*model.AutocompleteData{
-			model.NewAutocompleteData("create", "", "Creates a new event (desktop only)."),
-		},
-	},
-	model.NewAutocompleteData("today", "", "Display today's events."),
-	model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
-	model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
-	model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
-	model.NewAutocompleteData("help", "", "Read help text for the commands"),
+		model.NewAutocompleteData("viewcal", "", "View your events for the upcoming 14 days, including today."),
+	}
+
+	if !config.Provider.Features.HideCreateEventFromCommand {
+		cmds = append(cmds, &model.AutocompleteData{
+			Trigger:  "event",
+			HelpText: "Manage events.",
+			SubCommands: []*model.AutocompleteData{
+				model.NewAutocompleteData("create", "", "Creates a new event."),
+			},
+		})
+	}
+
+	cmds = append(cmds,
+		model.NewAutocompleteData("today", "", "Display today's events."),
+		model.NewAutocompleteData("tomorrow", "", "Display tomorrow's events."),
+		model.NewAutocompleteData("settings", "", "Edit your user personal settings."),
+		model.NewAutocompleteData("info", "", "Read information about this version of the plugin."),
+		model.NewAutocompleteData("help", "", "Read help text for the commands"),
+	)
+
+	return cmds
 }
 
 // Register should be called by the plugin to register all necessary commands
 func Register(client *pluginapilicense.Client) error {
+	cmds := getCommands()
+
 	names := []string{}
 	for _, subCommand := range cmds {
 		names = append(names, subCommand.Trigger)
@@ -119,8 +131,10 @@ func (c *Command) Handle() (string, bool, error) {
 		handler = c.requireConnectedUser(c.viewCalendar)
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
-	case "events":
-		handler = c.requireConnectedUser(c.event)
+	case "event":
+		if !config.Provider.Features.HideCreateEventFromCommand {
+			handler = c.requireConnectedUser(c.event)
+		}
 	// Admin only
 	case "showcals":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.showCalendars))
