@@ -345,14 +345,15 @@ func (s *pluginStore) StoreUserActiveEvents(mattermostUserID string, events []st
 // RefreshAndStoreToken checks whether the current access token is expired or not. If it is,
 // then it refreshes the token and stores the new pair of access and refresh tokens in kv store.
 func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Config, mattermostUserID string) (*oauth2.Token, error) {
+	tokenExpiryBuffer := 5 * time.Minute
 	// If there are only five minutes left for the token to expire, we are refreshing the token.
 	// We don't want the token to expire between the time when we decide that the old token is valid
 	// and the time at which we create the request. We are handling that by not letting the token expire.
-	if token != nil && time.Until(token.Expiry) > 5*time.Minute {
+	if token != nil && time.Until(token.Expiry) > tokenExpiryBuffer {
 		return token, nil
 	}
 
-	src := oconf.TokenSource(context.Background(), token)
+	src := oauth2.ReuseTokenSourceWithExpiry(token, oconf.TokenSource(context.Background(), token), tokenExpiryBuffer)
 	newToken, err := src.Token() // this actually goes and renews the tokens
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get the new refreshed token")
@@ -392,7 +393,8 @@ func (s *pluginStore) DisconnectUserFromStoreIfNecessary(err error, mattermostUs
 		return
 	}
 
-	if !strings.Contains(err.Error(), ErrorRefreshTokenExpired) {
+	errStr := err.Error()
+	if !strings.Contains(errStr, ErrorRefreshTokenExpired) && !strings.Contains(errStr, ErrorRefreshTokenNotSet) {
 		return
 	}
 
