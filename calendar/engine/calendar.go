@@ -64,7 +64,7 @@ func (m *mscalendar) CreateCalendar(user *User, calendar *remote.Calendar) (*rem
 	if err != nil {
 		return nil, err
 	}
-	return m.client.CreateCalendar(user.Remote.ID, calendar)
+	return m.client.CreateCalendar(calendar)
 }
 
 func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUserIDs []string) (*remote.Event, error) {
@@ -91,7 +91,7 @@ func (m *mscalendar) CreateEvent(user *User, event *remote.Event, mattermostUser
 		}
 	}
 
-	return m.client.CreateEvent(user.Remote.ID, event)
+	return m.client.CreateEvent(event)
 }
 
 func (m *mscalendar) DeleteCalendar(user *User, calendarID string) error {
@@ -103,7 +103,7 @@ func (m *mscalendar) DeleteCalendar(user *User, calendarID string) error {
 		return err
 	}
 
-	return m.client.DeleteCalendar(user.Remote.ID, calendarID)
+	return m.client.DeleteCalendar(calendarID)
 }
 
 func (m *mscalendar) FindMeetingTimes(user *User, meetingParams *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
@@ -115,7 +115,7 @@ func (m *mscalendar) FindMeetingTimes(user *User, meetingParams *remote.FindMeet
 		return nil, err
 	}
 
-	return m.client.FindMeetingTimes(user.Remote.ID, meetingParams)
+	return m.client.FindMeetingTimes(meetingParams)
 }
 
 func (m *mscalendar) GetCalendars(user *User) ([]*remote.Calendar, error) {

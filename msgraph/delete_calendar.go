@@ -9,7 +9,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 )
 
-func (c *client) DeleteCalendar(remoteUserID string, calID string) error {
+func (c *client) DeleteCalendar(calID string) error {
 	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInactive)

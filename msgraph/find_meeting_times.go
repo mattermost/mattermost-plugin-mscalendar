@@ -12,7 +12,7 @@ import (
 )
 
 // FindMeetingTimes finds meeting time suggestions for a calendar event
-func (c *client) FindMeetingTimes(remoteUserID string, params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
+func (c *client) FindMeetingTimes(params *remote.FindMeetingTimesParameters) (*remote.MeetingTimeSuggestionResults, error) {
 	meetingsOut := &remote.MeetingTimeSuggestionResults{}
 	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)

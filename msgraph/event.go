@@ -84,7 +84,7 @@ func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 	return nil
 }
 
-func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
+func (c *client) TentativelyAcceptEvent(eventID string) error {
 	dummy := &msgraph.EventTentativelyAcceptRequestParameter{}
 	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)

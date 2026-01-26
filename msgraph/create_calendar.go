@@ -13,7 +13,7 @@ import (
 )
 
 // CreateCalendar creates a calendar
-func (c *client) CreateCalendar(remoteUserID string, calIn *remote.Calendar) (*remote.Calendar, error) {
+func (c *client) CreateCalendar(calIn *remote.Calendar) (*remote.Calendar, error) {
 	var calOut = remote.Calendar{}
 	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
