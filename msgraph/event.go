@@ -47,7 +47,7 @@ func (c *client) GetEvent(remoteUserID, eventID string) (*remote.Event, error) {
 		return nil, errors.New(ErrorUserInactive)
 	}
 
-	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Request().JSONRequest(
+	err := c.rbuilder.Me().Events().ID(eventID).Request().JSONRequest(
 		c.ctx, http.MethodGet, "", nil, &e)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
@@ -62,7 +62,7 @@ func (c *client) AcceptEvent(remoteUserID, eventID string) error {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInactive)
 	}
-	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Accept(dummy).Request().Post(c.ctx)
+	err := c.rbuilder.Me().Events().ID(eventID).Accept(dummy).Request().Post(c.ctx)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return errors.Wrap(err, "msgraph Accept Event")
@@ -76,7 +76,7 @@ func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInactive)
 	}
-	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).Decline(dummy).Request().Post(c.ctx)
+	err := c.rbuilder.Me().Events().ID(eventID).Decline(dummy).Request().Post(c.ctx)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return errors.Wrap(err, "msgraph DeclineEvent")
@@ -84,13 +84,13 @@ func (c *client) DeclineEvent(remoteUserID, eventID string) error {
 	return nil
 }
 
-func (c *client) TentativelyAcceptEvent(remoteUserID, eventID string) error {
+func (c *client) TentativelyAcceptEvent(eventID string) error {
 	dummy := &msgraph.EventTentativelyAcceptRequestParameter{}
 	if !c.tokenHelpers.CheckUserConnected(c.mattermostUserID) {
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return errors.New(ErrorUserInactive)
 	}
-	err := c.rbuilder.Users().ID(remoteUserID).Events().ID(eventID).TentativelyAccept(dummy).Request().Post(c.ctx)
+	err := c.rbuilder.Me().Events().ID(eventID).TentativelyAccept(dummy).Request().Post(c.ctx)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)
 		return errors.Wrap(err, "msgraph TentativelyAcceptEvent")
@@ -105,7 +105,7 @@ func (c *client) GetEventsBetweenDates(remoteUserID string, start, end time.Time
 		c.Logger.Warnf(LogUserInactive, c.mattermostUserID)
 		return nil, errors.New(ErrorUserInactive)
 	}
-	err := c.rbuilder.Users().ID(remoteUserID).CalendarView().Request().JSONRequest(
+	err := c.rbuilder.Me().CalendarView().Request().JSONRequest(
 		c.ctx, http.MethodGet, paramStr, nil, res)
 	if err != nil {
 		c.tokenHelpers.DisconnectUserFromStoreIfNecessary(err, c.mattermostUserID)

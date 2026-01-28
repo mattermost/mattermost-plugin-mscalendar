@@ -30,10 +30,10 @@ type Calendars interface {
 }
 
 type Events interface {
-	CreateEvent(remoteUserID string, calendarEvent *Event) (*Event, error)
+	CreateEvent(calendarEvent *Event) (*Event, error)
 	AcceptEvent(remoteUserID, eventID string) error
 	DeclineEvent(remoteUserID, eventID string) error
-	TentativelyAcceptEvent(remoteUserID, eventID string) error
+	TentativelyAcceptEvent(eventID string) error
 	GetEventsBetweenDates(remoteUserID string, start, end time.Time) ([]*Event, error)
 }
 
@@ -52,7 +52,7 @@ type Utils interface {
 }
 
 type Unsupported interface {
-	CreateCalendar(remoteUserID string, calendar *Calendar) (*Calendar, error)
-	DeleteCalendar(remoteUserID, calendarID string) error
-	FindMeetingTimes(remoteUserID string, meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
+	CreateCalendar(calendar *Calendar) (*Calendar, error)
+	DeleteCalendar(calendarID string) error
+	FindMeetingTimes(meetingParams *FindMeetingTimesParameters) (*MeetingTimeSuggestionResults, error)
 }

@@ -237,7 +237,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	event, err := client.CreateEvent(user.Remote.ID, event)
+	event, err := client.CreateEvent(event)
 	if err != nil {
 		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error occurred while creating event")
 		httputils.WriteInternalServerError(w, err)

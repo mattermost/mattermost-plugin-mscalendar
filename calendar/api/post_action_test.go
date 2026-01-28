@@ -263,7 +263,7 @@ func TestPostActionTentative(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
-				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
+				mockClient.EXPECT().TentativelyAcceptEvent(MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
