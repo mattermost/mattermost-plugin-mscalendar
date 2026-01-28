@@ -158,7 +158,7 @@ func TestCreateCalendar(t *testing.T) {
 			user:     GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			calendar: GetMockCalendar(MockCalendarName),
 			setupMock: func() {
-				mockClient.EXPECT().CreateCalendar(MockRemoteUserID, &remote.Calendar{Name: MockCalendarName}).Return(nil, fmt.Errorf("error creating calendar")).Times(1)
+				mockClient.EXPECT().CreateCalendar(&remote.Calendar{Name: MockCalendarName}).Return(nil, fmt.Errorf("error creating calendar")).Times(1)
 			},
 			assertions: func(t *testing.T, _ *remote.Calendar, err error) {
 				require.EqualError(t, err, "error creating calendar")
@@ -169,7 +169,7 @@ func TestCreateCalendar(t *testing.T) {
 			user:     GetMockUser(model.NewPointer(MockRemoteUserID), model.NewPointer(MockMMModelUserID), MockMMUserID, nil),
 			calendar: GetMockCalendar(MockCalendarName),
 			setupMock: func() {
-				mockClient.EXPECT().CreateCalendar(MockRemoteUserID, &remote.Calendar{Name: MockCalendarName}).Return(&remote.Calendar{Name: "Created Test Calendar"}, nil).Times(1)
+				mockClient.EXPECT().CreateCalendar(&remote.Calendar{Name: MockCalendarName}).Return(&remote.Calendar{Name: "Created Test Calendar"}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, createdCalendar *remote.Calendar, err error) {
 				require.NoError(t, err)
@@ -218,7 +218,7 @@ func TestCreateEvent(t *testing.T) {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockPoster.EXPECT().DM(MockMMUserID, gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1)
 				mockLogger.EXPECT().Warnf("CreateEvent error creating DM. err=%v", gomock.Any())
-				mockClient.EXPECT().CreateEvent(MockRemoteUserID, gomock.Any()).Return(&remote.Event{}, nil).Times(1)
+				mockClient.EXPECT().CreateEvent(gomock.Any()).Return(&remote.Event{}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
 				require.NoError(t, err)
@@ -234,7 +234,7 @@ func TestCreateEvent(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("not found")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockPoster.EXPECT().DM(MockMMUserID, gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
-				mockClient.EXPECT().CreateEvent(MockRemoteUserID, &remote.Event{Subject: MockEventName}).Return(nil, fmt.Errorf("error creating event")).Times(1)
+				mockClient.EXPECT().CreateEvent(&remote.Event{Subject: MockEventName}).Return(nil, fmt.Errorf("error creating event")).Times(1)
 			},
 			assertions: func(t *testing.T, createdEvent *remote.Event, err error) {
 				require.EqualError(t, err, "error creating event")
@@ -254,7 +254,7 @@ func TestCreateEvent(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("not found")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
 				mockPoster.EXPECT().DM(MockMMUserID, gomock.AssignableToTypeOf(""), "testDisplayName", "testDisplayName", "testCommandTrigger").Return("", fmt.Errorf("error creating DM")).Times(1).Return("", nil)
-				mockClient.EXPECT().CreateEvent(MockRemoteUserID, &remote.Event{
+				mockClient.EXPECT().CreateEvent(&remote.Event{
 					Subject:   MockEventName,
 					Location:  &remote.Location{DisplayName: "Test Location"},
 					Start:     &remote.DateTime{DateTime: "2024-10-01T09:00:00", TimeZone: "UTC"},
@@ -301,7 +301,7 @@ func TestDeleteCalendar(t *testing.T) {
 			setupMock: func() {
 				user.User = &store.User{Remote: &remote.User{ID: MockRemoteUserID}}
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
-				mockClient.EXPECT().DeleteCalendar(user.User.Remote.ID, MockCalendarID).Return(errors.New("deletion error")).Times(1)
+				mockClient.EXPECT().DeleteCalendar(MockCalendarID).Return(errors.New("deletion error")).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.EqualError(t, err, "deletion error")
@@ -311,7 +311,7 @@ func TestDeleteCalendar(t *testing.T) {
 			name: "successful calendar deletion",
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
-				mockClient.EXPECT().DeleteCalendar(user.User.Remote.ID, MockCalendarID).Return(nil).Times(1)
+				mockClient.EXPECT().DeleteCalendar(MockCalendarID).Return(nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error) {
 				require.NoError(t, err)
@@ -355,7 +355,7 @@ func TestFindMeetingTimes(t *testing.T) {
 			setupMock: func() {
 				user.User = &store.User{Remote: &remote.User{ID: MockRemoteUserID}}
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
-				mockClient.EXPECT().FindMeetingTimes(user.User.Remote.ID, meetingParams).Return(nil, errors.New("finding times error")).Times(1)
+				mockClient.EXPECT().FindMeetingTimes(meetingParams).Return(nil, errors.New("finding times error")).Times(1)
 			},
 			assertions: func(t *testing.T, err error, results *remote.MeetingTimeSuggestionResults) {
 				require.EqualError(t, err, "finding times error")
@@ -367,7 +367,7 @@ func TestFindMeetingTimes(t *testing.T) {
 			setupMock: func() {
 				user.User = &store.User{Remote: &remote.User{ID: MockRemoteUserID}}
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
-				mockClient.EXPECT().FindMeetingTimes(user.User.Remote.ID, meetingParams).Return(&remote.MeetingTimeSuggestionResults{}, nil).Times(1)
+				mockClient.EXPECT().FindMeetingTimes(meetingParams).Return(&remote.MeetingTimeSuggestionResults{}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, err error, results *remote.MeetingTimeSuggestionResults) {
 				require.NoError(t, err)

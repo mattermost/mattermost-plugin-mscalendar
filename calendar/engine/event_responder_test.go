@@ -147,7 +147,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
-				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to tentatively accept the event")).Times(1)
+				mockClient.EXPECT().TentativelyAcceptEvent(MockEventID).Return(errors.New("unable to tentatively accept the event")).Times(1)
 			},
 			assertion: func(err error) {
 				require.Error(t, err)
@@ -159,7 +159,7 @@ func TestTentativelyAcceptEvent(t *testing.T) {
 			user: GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID)
-				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
+				mockClient.EXPECT().TentativelyAcceptEvent(MockEventID).Return(nil).Times(1)
 			},
 			assertion: func(err error) {
 				require.NoError(t, err)
@@ -274,7 +274,7 @@ func TestRespondToEvent(t *testing.T) {
 			response: OptionMaybe,
 			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
-				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(nil).Times(1)
+				mockClient.EXPECT().TentativelyAcceptEvent(MockEventID).Return(nil).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
 			},
 			assertion: func(err error) {
@@ -286,7 +286,7 @@ func TestRespondToEvent(t *testing.T) {
 			response: OptionMaybe,
 			user:     GetMockUser(model.NewPointer(MockRemoteUserID), nil, MockMMUserID, GetMockStoreSettings()),
 			setupMock: func() {
-				mockClient.EXPECT().TentativelyAcceptEvent(MockRemoteUserID, MockEventID).Return(errors.New("unable to tentatively accept the event")).Times(1)
+				mockClient.EXPECT().TentativelyAcceptEvent(MockEventID).Return(errors.New("unable to tentatively accept the event")).Times(1)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockMMUserID).Return(&model.User{Id: MockMMUserID}, nil)
 			},
 			assertion: func(err error) {

@@ -12,6 +12,8 @@ import (
 )
 
 func (c *client) GetMailboxSettings(remoteUserID string) (*remote.MailboxSettings, error) {
+	// Needs to get by remoteUserId because this function is also called when
+	// sending notifications server-side without a user client
 	u := c.rbuilder.Users().ID(remoteUserID).URL() + "/mailboxSettings"
 	out := &remote.MailboxSettings{}
 
