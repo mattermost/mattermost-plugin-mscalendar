@@ -134,7 +134,17 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 
 	storedUser, err := m.Store.LoadUser(mattermostUserID)
 	if err != nil {
-		return err
+		if err == store.ErrNotFound {
+			return err
+		}
+
+		// Fall back to force-deleting using the unencrypted user index.
+		m.Logger.Warnf("failed to load user %s during disconnect, attempting force-delete: %v", mattermostUserID, err)
+		indexUser, indexErr := m.Store.LoadUserFromIndex(mattermostUserID)
+		if indexErr != nil {
+			return errors.Wrap(err, "unable to load user for disconnect")
+		}
+		return m.Store.ForceDeleteUser(mattermostUserID, indexUser.RemoteID)
 	}
 
 	// Unlink events owned by the user that is disconnecting its account

@@ -321,15 +321,48 @@ func TestDisconnectUser(t *testing.T) {
 			},
 		},
 		{
-			name: "error loading the user",
+			name: "error loading the user - not found",
 			setupMock: func() {
 				mscalendar.client = mockClient
 				mscalendar.actingUser = &User{MattermostUserID: MockRemoteUserID}
 				mockWelcomer.EXPECT().AfterDisconnect(MockMMUserID).Return(nil).Times(1)
-				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("error loading the user")).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, store.ErrNotFound).Times(1)
 			},
 			assertions: func(err error) {
-				require.EqualError(t, err, "error loading the user")
+				require.ErrorIs(t, err, store.ErrNotFound)
+			},
+		},
+		{
+			name: "error loading the user - decryption error, fallback to force-delete succeeds",
+			setupMock: func() {
+				mscalendar.client = mockClient
+				mscalendar.actingUser = &User{MattermostUserID: MockRemoteUserID}
+				mockWelcomer.EXPECT().AfterDisconnect(MockMMUserID).Return(nil).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("cipher: message authentication failed")).Times(1)
+				mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+				mockStore.EXPECT().LoadUserFromIndex(MockMMUserID).Return(&store.UserShort{
+					MattermostUserID: MockMMUserID,
+					RemoteID:         MockRemoteUserID,
+				}, nil).Times(1)
+				mockStore.EXPECT().ForceDeleteUser(MockMMUserID, MockRemoteUserID).Return(nil).Times(1)
+			},
+			assertions: func(err error) {
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "error loading the user - decryption error, fallback fails on index lookup",
+			setupMock: func() {
+				mscalendar.client = mockClient
+				mscalendar.actingUser = &User{MattermostUserID: MockRemoteUserID}
+				mockWelcomer.EXPECT().AfterDisconnect(MockMMUserID).Return(nil).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(nil, errors.New("cipher: message authentication failed")).Times(1)
+				mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+				mockStore.EXPECT().LoadUserFromIndex(MockMMUserID).Return(nil, store.ErrNotFound).Times(1)
+			},
+			assertions: func(err error) {
+				require.Error(t, err)
+				require.ErrorContains(t, err, "unable to load user for disconnect")
 			},
 		},
 		{
