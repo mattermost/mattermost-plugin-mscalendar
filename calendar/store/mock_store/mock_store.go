@@ -133,6 +133,20 @@ func (mr *MockStoreMockRecorder) DeleteUser(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockStore)(nil).DeleteUser), arg0)
 }
 
+// ForceDeleteUser mocks base method.
+func (m *MockStore) ForceDeleteUser(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ForceDeleteUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ForceDeleteUser indicates an expected call of ForceDeleteUser.
+func (mr *MockStoreMockRecorder) ForceDeleteUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForceDeleteUser", reflect.TypeOf((*MockStore)(nil).ForceDeleteUser), arg0, arg1)
+}
+
 // DeleteUserEvent mocks base method.
 func (m *MockStore) DeleteUserEvent(arg0, arg1 string) error {
 	m.ctrl.T.Helper()

@@ -165,6 +165,8 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	pluginURLPath := "/plugins/" + url.PathEscape(env.Config.PluginID)
 	pluginURL := strings.TrimRight(*mattermostSiteURL, "/") + pluginURLPath
 
+	previousEncryptionKey := env.Config.EncryptionKey
+
 	p.updateEnv(func(e *Env) {
 		p.initEnv(e, pluginURL)
 
@@ -202,6 +204,11 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 		e.Dependencies.Poster = e.bot
 		e.Dependencies.Welcomer = mscalendarBot
 		e.Dependencies.Store = store.NewPluginStore(p.API, e.bot, e.bot, e.Dependencies.Tracker, e.Provider.Features.EncryptedStore, []byte(e.EncryptionKey))
+
+		if e.Provider.Features.EncryptedStore && previousEncryptionKey != "" && previousEncryptionKey != stored.EncryptionKey {
+			p.reEncryptUserData(e, previousEncryptionKey)
+		}
+
 		e.Dependencies.SettingsPanel = engine.NewSettingsPanel(
 			e.bot,
 			e.Dependencies.Store,
@@ -334,6 +341,94 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 	}
 	p.Templates = templates
 	return nil
+}
+
+// reEncryptUserData re-encrypts all user data when the encryption key changes.
+// Users whose records can't be decrypted with the old key are force-deleted
+// and notified to reconnect.
+func (p *Plugin) reEncryptUserData(e *Env, previousEncryptionKey string) {
+	userIndex, err := e.Dependencies.Store.LoadUserIndex()
+	if err != nil {
+		p.API.LogWarn("Encryption key changed but failed to load user index for re-encryption", "error", err.Error())
+		return
+	}
+
+	if len(userIndex) == 0 {
+		return
+	}
+
+	p.API.LogInfo("Encryption key changed, re-encrypting user data", "user_count", fmt.Sprintf("%d", len(userIndex)))
+
+	oldKeyStore := store.NewPluginStore(p.API, e.bot, e.bot, e.Dependencies.Tracker, true, []byte(previousEncryptionKey))
+
+	for _, u := range userIndex {
+		oldUser, loadErr := oldKeyStore.LoadUser(u.MattermostUserID)
+		if loadErr != nil {
+			p.API.LogWarn("Could not decrypt user with previous encryption key, force-deleting",
+				"mm_user_id", u.MattermostUserID,
+				"error", loadErr.Error(),
+			)
+			if delErr := e.Dependencies.Store.ForceDeleteUser(u.MattermostUserID, u.RemoteID); delErr != nil {
+				p.API.LogWarn("Failed to force-delete user during encryption key rotation",
+					"mm_user_id", u.MattermostUserID,
+					"error", delErr.Error(),
+				)
+			}
+			p.notifyUserReconnect(e, u.MattermostUserID, "the plugin encryption key was changed")
+			continue
+		}
+
+		if storeErr := e.Dependencies.Store.StoreUser(oldUser); storeErr != nil {
+			p.API.LogWarn("Failed to re-encrypt user data with new key, force-deleting",
+				"mm_user_id", u.MattermostUserID,
+				"error", storeErr.Error(),
+			)
+			p.cleanupUserRelatedData(e, oldUser, u)
+			p.notifyUserReconnect(e, u.MattermostUserID, "the plugin encryption key was changed and your data could not be migrated")
+		}
+	}
+}
+
+// cleanupUserRelatedData removes subscription and linked event data for a user
+// whose re-encryption failed, then force-deletes the core user records.
+func (p *Plugin) cleanupUserRelatedData(e *Env, user *store.User, indexEntry *store.UserShort) {
+	if subID := user.Settings.EventSubscriptionID; subID != "" {
+		if err := e.Dependencies.Store.DeleteUserSubscription(user, subID); err != nil {
+			p.API.LogWarn("Failed to delete subscription during encryption key rotation",
+				"mm_user_id", user.MattermostUserID,
+				"subscription_id", subID,
+				"error", err.Error(),
+			)
+		}
+	}
+
+	for eventID, channelID := range user.ChannelEvents {
+		if err := e.Dependencies.Store.DeleteLinkedChannelFromEvent(eventID, channelID); err != nil {
+			p.API.LogWarn("Failed to unlink channel event during encryption key rotation",
+				"mm_user_id", user.MattermostUserID,
+				"event_id", eventID,
+				"error", err.Error(),
+			)
+		}
+	}
+
+	if delErr := e.Dependencies.Store.ForceDeleteUser(indexEntry.MattermostUserID, indexEntry.RemoteID); delErr != nil {
+		p.API.LogWarn("Failed to force-delete user during encryption key rotation",
+			"mm_user_id", indexEntry.MattermostUserID,
+			"error", delErr.Error(),
+		)
+	}
+}
+
+func (p *Plugin) notifyUserReconnect(e *Env, mattermostUserID, reason string) {
+	msg := fmt.Sprintf("Your %s connection has been reset because %s. Please reconnect using `/%s connect`.",
+		config.Provider.DisplayName, reason, config.Provider.CommandTrigger)
+	if _, dmErr := e.bot.DM(mattermostUserID, msg); dmErr != nil {
+		p.API.LogWarn("Failed to notify user about encryption key change",
+			"mm_user_id", mattermostUserID,
+			"error", dmErr.Error(),
+		)
+	}
 }
 
 func (p *Plugin) initEnv(e *Env, pluginURL string) error {
