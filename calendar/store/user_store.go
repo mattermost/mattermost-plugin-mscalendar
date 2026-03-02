@@ -232,8 +232,12 @@ func (s *pluginStore) DeleteUser(mattermostUserID string) error {
 // the user record first. This is used when the encryption key has changed and
 // the stored user data can no longer be decrypted.
 func (s *pluginStore) ForceDeleteUser(mattermostUserID, remoteUserID string) error {
-	_ = s.userKV.Delete(mattermostUserID)
-	_ = s.mattermostUserIDKV.Delete(remoteUserID)
+	if err := s.userKV.Delete(mattermostUserID); err != nil {
+		s.Logger.Warnf("ForceDeleteUser: failed to delete user KV for %s: %v", mattermostUserID, err)
+	}
+	if err := s.mattermostUserIDKV.Delete(remoteUserID); err != nil {
+		s.Logger.Warnf("ForceDeleteUser: failed to delete mmuid KV for %s: %v", remoteUserID, err)
+	}
 	return s.DeleteUserFromIndex(mattermostUserID)
 }
 

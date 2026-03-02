@@ -363,6 +363,7 @@ func TestDisconnectUser(t *testing.T) {
 			assertions: func(err error) {
 				require.Error(t, err)
 				require.ErrorContains(t, err, "unable to load user for disconnect")
+				require.ErrorContains(t, err, "index lookup also failed")
 			},
 		},
 		{

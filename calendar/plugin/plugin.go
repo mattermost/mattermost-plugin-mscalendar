@@ -344,18 +344,8 @@ func (p *Plugin) loadTemplates(bundlePath string) error {
 }
 
 // reEncryptUserData re-encrypts all user data when the encryption key changes.
-// It creates a temporary store with the old key to read user records, then
-// writes them back through the new store (which encrypts with the new key).
-// This is fully transparent to users — all settings, tokens, and linked data
-// are preserved. If a user's record cannot be decrypted with the old key, it
-// falls back to force-deleting their data and notifying them to reconnect.
-//
-// Note on orphaned data: when a user can't be decrypted, the subscription ID
-// and linked event IDs are locked inside the unreadable record, so we cannot
-// clean them up. These records self-expire via TTLs (subscriptions expire on
-// the remote side, events via ttlAfterEventEnd). When re-encryption itself
-// fails (StoreUser error), we still have the decrypted user and clean up its
-// subscription and linked events before deleting.
+// Users whose records can't be decrypted with the old key are force-deleted
+// and notified to reconnect.
 func (p *Plugin) reEncryptUserData(e *Env, previousEncryptionKey string) {
 	userIndex, err := e.Dependencies.Store.LoadUserIndex()
 	if err != nil {
@@ -400,9 +390,7 @@ func (p *Plugin) reEncryptUserData(e *Env, previousEncryptionKey string) {
 }
 
 // cleanupUserRelatedData removes subscription and linked event data for a user
-// whose re-encryption failed, then force-deletes the core user records. This
-// requires the decrypted user to be available so we can read the subscription
-// ID and linked event IDs.
+// whose re-encryption failed, then force-deletes the core user records.
 func (p *Plugin) cleanupUserRelatedData(e *Env, user *store.User, indexEntry *store.UserShort) {
 	if subID := user.Settings.EventSubscriptionID; subID != "" {
 		if err := e.Dependencies.Store.DeleteUserSubscription(user, subID); err != nil {

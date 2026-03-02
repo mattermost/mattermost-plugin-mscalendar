@@ -142,7 +142,7 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 		m.Logger.Warnf("failed to load user %s during disconnect, attempting force-delete: %v", mattermostUserID, err)
 		indexUser, indexErr := m.Store.LoadUserFromIndex(mattermostUserID)
 		if indexErr != nil {
-			return errors.Wrap(err, "unable to load user for disconnect")
+			return errors.Wrapf(err, "unable to load user for disconnect (index lookup also failed: %v)", indexErr)
 		}
 		return m.Store.ForceDeleteUser(mattermostUserID, indexUser.RemoteID)
 	}
