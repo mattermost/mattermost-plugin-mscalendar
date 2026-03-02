@@ -1,0 +1,71 @@
+.mscalendar-sidebar {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 8px 8px;
+
+    .mscalendar-sidebar__calendar {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .fc {
+        height: 100%;
+    }
+
+    .fc .fc-timegrid-slot-label-cushion {
+        color: inherit;
+        font-size: 0.8em;
+    }
+
+    .fc .fc-col-header-cell-cushion {
+        color: inherit;
+    }
+
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+        border-color: var(--fc-border-color);
+    }
+
+    .fc-theme-standard .fc-scrollgrid {
+        border-color: var(--fc-border-color);
+    }
+
+    .fc .fc-timegrid-now-indicator-line {
+        border-color: var(--fc-now-indicator-color);
+        border-width: 2px 0 0;
+    }
+
+    .fc .fc-timegrid-now-indicator-arrow {
+        border-color: var(--fc-now-indicator-color);
+        border-top-color: transparent;
+        border-bottom-color: transparent;
+    }
+
+    .fc .fc-timegrid-event {
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+
+    .fc .fc-timegrid-event .fc-event-main {
+        padding: 2px 4px;
+    }
+
+    .fc .fc-timegrid-event .fc-event-title {
+        font-weight: 600;
+    }
+
+    .fc .fc-timegrid-event .fc-event-time {
+        font-size: 0.85em;
+        opacity: 0.85;
+    }
+
+    .fc .fc-timegrid-slot {
+        height: 2.5em;
+    }
+
+    .fc-direction-ltr .fc-timegrid-col-events {
+        margin: 0 2px;
+    }
+}

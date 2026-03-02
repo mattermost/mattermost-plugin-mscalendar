@@ -71,6 +71,12 @@ func (dt DateTime) In(timeZone string) *DateTime {
 }
 
 func (dt DateTime) Time() time.Time {
+	// Try RFC3339 first (includes offset, e.g. from Google Calendar)
+	if t, err := time.Parse(time.RFC3339, dt.DateTime); err == nil {
+		return t
+	}
+
+	// Fall back to bare format with timezone name (Microsoft Calendar style)
 	loc, err := time.LoadLocation(tz.Go(dt.TimeZone))
 	if err != nil {
 		return time.Time{}

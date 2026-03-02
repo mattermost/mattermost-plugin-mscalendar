@@ -28,6 +28,7 @@ const (
 	InternalAPIPath   = "/api/v1"
 	PathEvents        = "/events"
 	PathCreate        = "/create"
+	PathView          = "/view"
 	PathProvider      = "/provider"
 	PathConnectedUser = "/me"
 

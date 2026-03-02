@@ -14,8 +14,9 @@ type StoredConfig struct {
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
 	bot.Config
-	EnableStatusSync   bool
-	EnableDailySummary bool
+	EnableStatusSync     bool
+	EnableDailySummary   bool
+	EnableExperimentalUI bool
 
 	EncryptionKey string
 }
@@ -30,6 +31,8 @@ type ProviderFeatures struct {
 
 	// MM-66824 - Hiding create event command until it's implemented for MS Calendar
 	HideCreateEventFromCommand bool
+
+	EnableExperimentalUI bool
 }
 
 // ProviderConfig represents the specific configuration that changes when building for different
