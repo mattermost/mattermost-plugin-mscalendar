@@ -4,6 +4,6 @@ server/manifest.go
 .npminstall
 .idea
 bin
-
+node_modules
 # notice
 .notice-work

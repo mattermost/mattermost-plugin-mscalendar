@@ -17,6 +17,7 @@ type StoredConfig struct {
 	EnableStatusSync     bool
 	EnableDailySummary   bool
 	EnableExperimentalUI bool
+	ForceOAuth2Consent   bool
 
 	EncryptionKey string
 }
@@ -28,9 +29,6 @@ func (c *StoredConfig) IsOAuthConfigured() bool {
 type ProviderFeatures struct {
 	EncryptedStore     bool
 	EventNotifications bool
-
-	// MM-66824 - Hiding create event command until it's implemented for MS Calendar
-	HideCreateEventFromCommand bool
 
 	EnableExperimentalUI bool
 }

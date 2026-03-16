@@ -1,0 +1,33 @@
+.mscalendar-create-event-form {
+    .date-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+
+        input[type="date"] {
+            flex: 1;
+            padding-right: 40px;
+
+            &::-webkit-calendar-picker-indicator {
+                display: none;
+            }
+        }
+
+        .date-input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.56;
+            transition: opacity 0.15s ease;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+}

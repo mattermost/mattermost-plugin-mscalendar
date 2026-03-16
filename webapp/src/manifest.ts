@@ -9,7 +9,7 @@ const manifest = JSON.parse(`
     "support_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/issues",
     "release_notes_url": "https://mattermost.com/pl/mattermost-plugin-mscalendar/releases/tag/v1.6.0",
     "icon_path": "assets/profile-mscalendar.svg",
-    "version": "1.6.0+bae0ae1",
+    "version": "1.6.0+abd371b",
     "min_server_version": "10.7.0",
     "server": {
         "executables": {
@@ -77,6 +77,26 @@ const manifest = JSON.parse(`
                 "help_text": "",
                 "placeholder": "",
                 "default": false,
+                "hosting": "",
+                "secret": false
+            },
+            {
+                "key": "EnableExperimentalUI",
+                "display_name": "Enable Experimental Calendar UI:",
+                "type": "bool",
+                "help_text": "When true, a calendar sidebar and channel header button are registered in the Mattermost UI. This feature is experimental and may change in future releases.",
+                "placeholder": "",
+                "default": false,
+                "hosting": "",
+                "secret": false
+            },
+            {
+                "key": "ForceOAuth2Consent",
+                "display_name": "Force OAuth2 Consent Prompt:",
+                "type": "bool",
+                "help_text": "When true, users are always prompted to grant consent during the OAuth2 connect flow. Disable this if your Azure AD tenant policy restricts user consent and you have already granted admin consent for the application.",
+                "placeholder": "",
+                "default": true,
                 "hosting": "",
                 "secret": false
             },

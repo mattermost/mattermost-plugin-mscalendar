@@ -16,6 +16,7 @@ export interface MattermostTheme {
     dndIndicator: string;
     mentionBg: string;
     mentionColor: string;
+    mentionJewelBg: string;
     [key: string]: string;
 }
 
@@ -29,7 +30,7 @@ export function getCalendarCSSVars(theme: MattermostTheme): Record<string, strin
         '--fc-event-border-color': theme.buttonBg,
         '--fc-event-text-color': theme.buttonColor,
         '--fc-today-bg-color': changeOpacity(theme.buttonBg, 0.08),
-        '--fc-now-indicator-color': theme.sidebarTextActiveBorder || theme.linkColor,
+        '--fc-now-indicator-color': theme.mentionJewelBg || theme.linkColor,
         '--fc-button-text-color': theme.buttonColor,
         '--fc-button-bg-color': theme.buttonBg,
         '--fc-button-border-color': theme.buttonBg,
@@ -52,6 +53,73 @@ export function getShowAsColor(showAs: string | undefined, theme: MattermostThem
     case 'busy':
     default:
         return theme.buttonBg;
+    }
+}
+
+export interface EventStyle {
+    backgroundColor: string;
+    borderColor: string;
+    borderStyle: string;
+    borderWidth: string;
+    textColor: string;
+    classNames: string[];
+}
+
+export function getEventStyle(event: {showAs?: string; responseStatus?: {response?: string}}, theme: MattermostTheme): EventStyle {
+    const baseColor = theme.buttonBg;
+    const response = event.responseStatus?.response;
+
+    switch (response) {
+    case 'accepted':
+        return {
+            backgroundColor: changeOpacity(baseColor, 0.8),
+            borderColor: baseColor,
+            borderStyle: 'solid',
+            borderWidth: '0px',
+            textColor: theme.buttonColor,
+            classNames: [],
+        };
+    case 'tentative':
+    case 'tentativelyAccepted':
+        return {
+            backgroundColor: changeOpacity(baseColor, 0.3),
+            borderColor: baseColor,
+            borderStyle: 'dashed',
+            borderWidth: '1px',
+            textColor: theme.centerChannelColor,
+            classNames: ['mscalendar-event--tentative'],
+        };
+    case 'declined':
+        return {
+            backgroundColor: 'transparent',
+            borderColor: changeOpacity(theme.centerChannelColor, 0.32),
+            borderStyle: 'solid',
+            borderWidth: '1px',
+            textColor: changeOpacity(theme.centerChannelColor, 0.56),
+            classNames: ['mscalendar-event--declined'],
+        };
+    case 'needsAction':
+    case 'not_answered':
+    case 'notResponded':
+        return {
+            backgroundColor: 'transparent',
+            borderColor: baseColor,
+            borderStyle: 'solid',
+            borderWidth: '1px 1px 1px 1px',
+            textColor: theme.centerChannelColor,
+            classNames: ['mscalendar-event--pending'],
+        };
+    default: {
+        const fallback = getShowAsColor(event.showAs, theme);
+        return {
+            backgroundColor: fallback,
+            borderColor: fallback,
+            borderStyle: 'solid',
+            borderWidth: '1px',
+            textColor: theme.buttonColor,
+            classNames: [],
+        };
+    }
     }
 }
 

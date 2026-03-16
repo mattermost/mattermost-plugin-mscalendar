@@ -3,8 +3,8 @@ import {bindActionCreators, Dispatch} from 'redux';
 import {GlobalState} from '@mattermost/types/store';
 import {getCurrentTimezone} from 'mattermost-redux/selectors/entities/timezone';
 
-import {fetchCalendarEvents} from '@/actions';
-import {getCalendarEvents, getCalendarEventsLoading, getCalendarEventsError} from '@/selectors';
+import {fetchCalendarEvents, refreshCalendarEvents, getConnected, sendEphemeralPost, openCreateEventModal} from '@/actions';
+import {getCalendarEvents, getCalendarEventsLoading, getCalendarEventsError, isUserConnected, getPluginServerRoute} from '@/selectors';
 
 import CalendarSidebar from './calendar_sidebar';
 
@@ -14,6 +14,8 @@ function mapStateToProps(state: GlobalState) {
         loading: getCalendarEventsLoading(state),
         error: getCalendarEventsError(state),
         timezone: getCurrentTimezone(state),
+        connected: isUserConnected(state),
+        pluginServerRoute: getPluginServerRoute(state),
     };
 }
 
@@ -21,6 +23,10 @@ function mapDispatchToProps(dispatch: Dispatch) {
     return {
         actions: bindActionCreators({
             fetchCalendarEvents,
+            refreshCalendarEvents,
+            getConnected,
+            sendEphemeralPost,
+            openCreateEventModal,
         }, dispatch),
     };
 }

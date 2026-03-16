@@ -55,5 +55,9 @@ func (api *api) viewEvents(w http.ResponseWriter, r *http.Request) {
 		events = []*remote.Event{}
 	}
 
+	for _, e := range events {
+		remote.NormalizeDateTimeToRFC3339(e)
+	}
+
 	httputils.WriteJSONResponse(w, events, http.StatusOK)
 }

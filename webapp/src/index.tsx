@@ -6,11 +6,16 @@ import {GlobalState} from '@mattermost/types/store';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
+import {PluginId} from './plugin_id';
+
+import Hooks from './plugin_hooks';
+import reducer from './reducers';
+
 import CalendarSidebar from './components/calendar_sidebar';
 import ChannelHeaderIcon from './components/channel_header_icon/channel_header_icon';
-import reducer from './reducers';
-import client from './client/client';
-import {PluginId} from './plugin_id';
+import CreateEventModal from './components/modals/create_event_modal';
+import {getProviderConfiguration, handleConnect, handleDisconnect, openCreateEventModal} from './actions';
+import {getProviderConfiguration as getProviderConfigSelector} from './selectors';
 
 export default class Plugin {
     private haveSetupUI = false;
@@ -24,27 +29,41 @@ export default class Plugin {
 
         registry.registerReducer(reducer);
 
+        const hooks = new Hooks(store);
+        registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
+
         const setup = async () => {
-            let providerConfig: any = {};
-            try {
-                providerConfig = await client.getProviderConfiguration();
-            } catch {
-                // If fetch fails, default to UI disabled
-            }
+            await store.dispatch(getProviderConfiguration());
+
+            const providerConfig = getProviderConfigSelector(store.getState() as any);
 
             if (providerConfig?.Features?.EnableExperimentalUI) {
-                const {showRHSPlugin} = registry.registerRightHandSidebarComponent(
+                const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(
                     CalendarSidebar,
                     'Calendar',
                 );
 
                 registry.registerChannelHeaderButtonAction(
                     <ChannelHeaderIcon/>,
-                    () => store.dispatch(showRHSPlugin),
+                    () => store.dispatch(toggleRHSPlugin),
                     'Calendar',
                     'Toggle calendar sidebar',
                 );
             }
+
+            registry.registerChannelHeaderMenuAction(
+                <span>{'Create calendar event'}</span>,
+                async (channelID) => {
+                    if (await hooks.checkUserIsConnected()) {
+                        store.dispatch(openCreateEventModal(channelID));
+                    }
+                },
+            );
+
+            registry.registerRootComponent(CreateEventModal);
+
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnect(store));
+            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleDisconnect(store));
         };
 
         registry.registerRootComponent(() => (
