@@ -98,6 +98,7 @@ func TestInitOAuth2(t *testing.T) {
 		mattermostUserID string
 		expectURL        string
 		expectError      bool
+		forceConsent     bool
 	}{
 		{
 			name:             "MM user already connected",
@@ -120,8 +121,9 @@ func TestInitOAuth2(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:             "successful redirect",
+			name:             "successful redirect with force consent",
 			mattermostUserID: fakeID,
+			forceConsent:     true,
 			setup: func(d *Dependencies) {
 				ss := d.Store.(*mock_store.MockStore)
 				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
@@ -129,11 +131,23 @@ func TestInitOAuth2(t *testing.T) {
 			},
 			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&prompt=consent&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
 		},
+		{
+			name:             "successful redirect without force consent",
+			mattermostUserID: fakeID,
+			forceConsent:     false,
+			setup: func(d *Dependencies) {
+				ss := d.Store.(*mock_store.MockStore)
+				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
+				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
+			},
+			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
+		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			app, env := newOAuth2TestApp(ctrl)
+			env.Config.OAuth2ForceConsent = tc.forceConsent
 			if tc.setup != nil {
 				tc.setup(env.Dependencies)
 			}
