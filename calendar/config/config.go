@@ -13,6 +13,7 @@ type StoredConfig struct {
 	OAuth2Authority    string
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
+	OAuth2ForceConsent bool
 	bot.Config
 	EnableStatusSync   bool
 	EnableDailySummary bool
@@ -30,6 +31,11 @@ type ProviderFeatures struct {
 
 	// MM-66824 - Hiding create event command until it's implemented for MS Calendar
 	HideCreateEventFromCommand bool
+
+	// ForceOAuth2Consent forces the consent prompt on every OAuth2 authorization,
+	// regardless of the OAuth2ForceConsent admin setting. Use for providers that
+	// require user consent to issue a refresh token (e.g. Google OAuth2).
+	ForceOAuth2Consent bool
 }
 
 // ProviderConfig represents the specific configuration that changes when building for different

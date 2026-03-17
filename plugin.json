@@ -90,6 +90,14 @@
                 "placeholder": "",
                 "default": "",
                 "secret": true
+            },
+            {
+                "key": "OAuth2ForceConsent",
+                "display_name": "Force OAuth2 consent prompt:",
+                "type": "bool",
+                "help_text": "When true, users are always prompted for consent during OAuth2 authorization.",
+                "placeholder": "",
+                "default": true
             }
         ]
     }
