@@ -48,7 +48,12 @@ func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error
 		return "", err
 	}
 
-	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce), nil
+	opts := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline}
+	if app.Config.OAuth2ForceConsent || app.Config.Provider.Features.ForceOAuth2Consent {
+		opts = append(opts, oauth2.ApprovalForce)
+	}
+
+	return conf.AuthCodeURL(state, opts...), nil
 }
 
 func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
