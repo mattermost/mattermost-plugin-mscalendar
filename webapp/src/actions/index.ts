@@ -190,7 +190,7 @@ export function getProviderConfiguration() {
 
 export const refreshCalendarEvents = (from: string, to: string) => async (dispatch: Dispatch, getState: () => GlobalState) => {
     const key = makeEventsCacheKey(from, to);
-    dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key});
+    dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key, from, to});
 
     const pluginServerRoute = getPluginServerRoute(getState());
     const params = new URLSearchParams({from, to});
@@ -199,7 +199,7 @@ export const refreshCalendarEvents = (from: string, to: string) => async (dispat
         const freshEvents: RemoteEvent[] = await doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
             method: 'get',
         });
-        dispatch({type: ActionTypes.RECEIVED_FRESH_EVENTS, data: freshEvents, key});
+        dispatch({type: ActionTypes.RECEIVED_FRESH_EVENTS, data: freshEvents, key, from, to});
         return {data: freshEvents, error: null};
     } catch (error) {
         dispatch({type: ActionTypes.FETCH_EVENTS_ERROR, error});
@@ -210,14 +210,12 @@ export const refreshCalendarEvents = (from: string, to: string) => async (dispat
 export const refreshActiveCalendarView = () => async (dispatch: Dispatch, getState: () => GlobalState) => {
     const state = getState() as any;
     const pluginState = state['plugins-' + PluginId];
-    const activeKey = pluginState?.events?.activeKey;
-    if (!activeKey) {
+    const from = pluginState?.events?.activeFrom;
+    const to = pluginState?.events?.activeTo;
+    if (!from || !to) {
         return;
     }
 
-    const [fromDate, toDate] = activeKey.split('|');
-    const from = `${fromDate}T00:00:00.000Z`;
-    const to = `${toDate}T00:00:00.000Z`;
     await (dispatch as any)(refreshCalendarEvents(from, to));
 };
 
@@ -232,11 +230,11 @@ export const fetchCalendarEvents = (from: string, to: string) => async (dispatch
     const cached = pluginState?.events?.cache?.[key];
 
     if (cached) {
-        dispatch({type: ActionTypes.RECEIVED_CACHED_EVENTS, key});
+        dispatch({type: ActionTypes.RECEIVED_CACHED_EVENTS, key, from, to});
         return {data: cached, error: null};
     }
 
-    dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key});
+    dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key, from, to});
 
     const pluginServerRoute = getPluginServerRoute(state);
     const params = new URLSearchParams({from, to});

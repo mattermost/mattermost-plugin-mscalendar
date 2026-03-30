@@ -84,7 +84,7 @@ export default function CreateEventForm(props: Props) {
             return;
         }
 
-        dispatch(refreshActiveCalendarView() as any);
+        await dispatch(refreshActiveCalendarView() as any);
         handleClose();
     };
 

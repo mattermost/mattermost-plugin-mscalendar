@@ -57,6 +57,8 @@ function providerConfiguration(state = null, action) {
 interface EventsState {
     cache: Record<string, RemoteEvent[]>;
     activeKey: string | null;
+    activeFrom: string | null;
+    activeTo: string | null;
     loading: boolean;
     error: string | null;
 }
@@ -64,14 +66,23 @@ interface EventsState {
 const eventsInitialState: EventsState = {
     cache: {},
     activeKey: null,
+    activeFrom: null,
+    activeTo: null,
     loading: false,
     error: null,
 };
 
-function events(state: EventsState = eventsInitialState, action: {type: string; data?: RemoteEvent[]; key?: string; error?: any}): EventsState {
+function events(state: EventsState = eventsInitialState, action: {type: string; data?: RemoteEvent[]; key?: string; from?: string; to?: string; error?: any}): EventsState {
     switch (action.type) {
     case ActionTypes.FETCH_EVENTS_REQUEST:
-        return {...state, activeKey: action.key || state.activeKey, loading: true, error: null};
+        return {
+            ...state,
+            activeKey: action.key || state.activeKey,
+            activeFrom: action.from || state.activeFrom,
+            activeTo: action.to || state.activeTo,
+            loading: true,
+            error: null,
+        };
     case ActionTypes.RECEIVED_EVENTS: {
         const key = action.key || state.activeKey || '';
         const isLatest = key === state.activeKey;
@@ -83,13 +94,22 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         };
     }
     case ActionTypes.RECEIVED_CACHED_EVENTS:
-        return {...state, activeKey: action.key || null, loading: false, error: null};
+        return {
+            ...state,
+            activeKey: action.key || null,
+            activeFrom: action.from || state.activeFrom,
+            activeTo: action.to || state.activeTo,
+            loading: false,
+            error: null,
+        };
     case ActionTypes.RECEIVED_FRESH_EVENTS: {
         const freshKey = action.key || state.activeKey || '';
         return {
             ...state,
             cache: {[freshKey]: action.data || []},
             activeKey: freshKey,
+            activeFrom: action.from || state.activeFrom,
+            activeTo: action.to || state.activeTo,
             loading: false,
             error: null,
         };
@@ -141,6 +161,8 @@ export type ReducerState = {
     events: {
         cache: Record<string, RemoteEvent[]>;
         activeKey: string | null;
+        activeFrom: string | null;
+        activeTo: string | null;
         loading: boolean;
         error: string | null;
     };

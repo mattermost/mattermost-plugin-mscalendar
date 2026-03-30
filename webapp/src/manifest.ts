@@ -129,6 +129,16 @@ const manifest = JSON.parse(`
                 "default": "",
                 "hosting": "",
                 "secret": true
+            },
+            {
+                "key": "OAuth2ForceConsent",
+                "display_name": "Force OAuth2 consent prompt:",
+                "type": "bool",
+                "help_text": "When true, users are always prompted for consent during OAuth2 authorization. Set to false if your Azure/Entra configuration requires admin consent for registered applications and non-admin users are encountering authorization errors.",
+                "placeholder": "",
+                "default": true,
+                "hosting": "",
+                "secret": false
             }
         ],
         "sections": null

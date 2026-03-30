@@ -19,6 +19,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/httputils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/tz"
 )
 
 const (
@@ -195,9 +196,16 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loc, errLocation := time.LoadLocation(mailbox.TimeZone)
+	tzName := tz.Go(mailbox.TimeZone)
+	if tzName == "" && mailbox.TimeZone != "" {
+		errTz := fmt.Errorf("unknown time zone %q", mailbox.TimeZone)
+		api.Logger.With(bot.LogContext{"err": errTz.Error(), "timezone": mailbox.TimeZone}).Errorf("createEvent, error occurred while loading mailbox timezone location")
+		httputils.WriteInternalServerError(w, errTz)
+		return
+	}
+	loc, errLocation := time.LoadLocation(tzName)
 	if errLocation != nil {
-		api.Logger.With(bot.LogContext{"err": errLocation.Error(), "timezone": mailbox.TimeZone}).Errorf("createEvent, error occurred while loading mailbox timezone location")
+		api.Logger.With(bot.LogContext{"err": errLocation.Error(), "timezone": mailbox.TimeZone, "converted": tzName}).Errorf("createEvent, error occurred while loading mailbox timezone location")
 		httputils.WriteInternalServerError(w, errLocation)
 		return
 	}
