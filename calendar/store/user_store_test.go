@@ -6,10 +6,12 @@ package store
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/kvstore"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -320,6 +322,63 @@ func TestDeleteUser(t *testing.T) {
 			tt.setup(mockAPI)
 
 			err := store.DeleteUser(MockMMUserID)
+
+			tt.assertions(t, err)
+			mockAPI.AssertExpectations(t)
+		})
+	}
+}
+
+func TestForceDeleteUser(t *testing.T) {
+	tests := []struct {
+		name       string
+		setup      func(*testutil.MockPluginAPI, *mock_bot.MockLogger)
+		assertions func(*testing.T, error)
+	}{
+		{
+			name: "Success force-deleting user even if KVDelete calls fail for user and mmuid",
+			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger) {
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(&model.AppError{Message: "delete failed"})
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(&model.AppError{Message: "delete failed"})
+				mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any(), gomock.Any()).Times(2)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(MockUserIndexJSON), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(true, nil).Times(1)
+			},
+			assertions: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Success force-deleting user",
+			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger) {
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil)
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(nil)
+				mockAPI.On("KVGet", "userindex_").Return([]byte(MockUserIndexJSON), nil).Times(1)
+				mockAPI.On("KVSetWithOptions", "userindex_", mock.Anything, mock.Anything).Return(true, nil).Times(1)
+			},
+			assertions: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Error deleting user from index propagates",
+			setup: func(mockAPI *testutil.MockPluginAPI, mockLogger *mock_bot.MockLogger) {
+				mockAPI.On("KVDelete", "user_c3b5020d58a049787bc969768465b890").Return(nil)
+				mockAPI.On("KVDelete", "mmuid_e138a0f218087f9324d8c77f87d5f3a0").Return(nil)
+				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)
+			},
+			assertions: func(t *testing.T, err error) {
+				require.Error(t, err)
+				require.ErrorContains(t, err, "KVGet failed")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockAPI, store, mockLogger, _, _ := GetMockSetup(t)
+			tt.setup(mockAPI, mockLogger)
+
+			err := store.ForceDeleteUser(MockMMUserID, MockRemoteID)
 
 			tt.assertions(t, err)
 			mockAPI.AssertExpectations(t)

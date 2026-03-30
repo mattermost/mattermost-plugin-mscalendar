@@ -49,7 +49,7 @@ func (app *oauth2App) InitOAuth2(mattermostUserID string) (url string, err error
 	}
 
 	opts := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline}
-	if app.Config.ForceOAuth2Consent {
+	if app.Config.OAuth2ForceConsent || app.Config.Provider.Features.ForceOAuth2Consent {
 		opts = append(opts, oauth2.ApprovalForce)
 	}
 
