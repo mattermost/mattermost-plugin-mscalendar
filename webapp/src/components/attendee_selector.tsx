@@ -54,7 +54,7 @@ export default function AttendeeSelector(props: Props) {
     }, [dispatch]);
 
     const isValidEmail = (input: string): boolean => {
-        return (/\S+@\S+\.\S+/).test(input);
+        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(input);
     };
 
     const handleChange = (selected: readonly SelectOption[] | null) => {

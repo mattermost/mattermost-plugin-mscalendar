@@ -43,6 +43,7 @@
     .mscalendar-tooltip__close {
         background: none;
         border: none;
+        color: inherit;
         cursor: pointer;
         padding: 2px;
         border-radius: 4px;
@@ -56,6 +57,7 @@
 
         .icon {
             font-size: 18px;
+            color: inherit;
         }
     }
 

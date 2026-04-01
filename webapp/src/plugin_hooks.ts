@@ -49,12 +49,13 @@ export default class Hooks {
     };
 
     checkUserIsConnected = async (): Promise<boolean> => {
-        const connected = isUserConnected(this.store.getState());
+        let connected = isUserConnected(this.store.getState());
         if (connected === null) {
             await this.store.dispatch(getConnected());
+            connected = isUserConnected(this.store.getState());
         }
 
-        if (!isUserConnected(this.store.getState())) {
+        if (!connected) {
             const providerConfiguration = getProviderConfiguration(this.store.getState());
             const displayName = providerConfiguration?.DisplayName || 'the calendar provider';
             const commandTrigger = providerConfiguration?.CommandTrigger || 'mscalendar';

@@ -23,6 +23,7 @@ export default class FormButton extends PureComponent {
         defaultMessage: 'Create',
         btnClass: 'btn-primary',
         extraClasses: '',
+        type: 'button',
     };
 
     constructor(props) {
