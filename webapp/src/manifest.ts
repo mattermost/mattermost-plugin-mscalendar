@@ -9,7 +9,7 @@ const manifest = JSON.parse(`
     "support_url": "https://github.com/mattermost/mattermost-plugin-mscalendar/issues",
     "release_notes_url": "https://mattermost.com/pl/mattermost-plugin-mscalendar/releases/tag/v1.6.0",
     "icon_path": "assets/profile-mscalendar.svg",
-    "version": "1.6.0+d305959",
+    "version": "1.6.0+3ab9a0d",
     "min_server_version": "10.7.0",
     "server": {
         "executables": {
