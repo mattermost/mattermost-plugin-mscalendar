@@ -1,6 +1,6 @@
 import React from 'react';
-import ReactSelect, {ActionMeta} from 'react-select';
-import AsyncSelect, {Props as ReactSelectProps} from 'react-select/async';
+import ReactSelect, {ActionMeta, GroupBase, Props as ReactSelectBaseProps} from 'react-select';
+import AsyncSelect from 'react-select/async';
 import CreatableSelect from 'react-select/creatable';
 
 import {Theme} from 'mattermost-redux/selectors/entities/preferences';
@@ -16,10 +16,12 @@ type ReactSelectOption = {
 
 const MAX_NUM_OPTIONS = 100;
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+type OmitKeys<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
-export type Props = Omit<ReactSelectProps<ReactSelectOption>, 'theme'> & {
+export type Props = OmitKeys<ReactSelectBaseProps<ReactSelectOption, boolean, GroupBase<ReactSelectOption>>, 'theme' | 'onChange'> & {
     theme: Theme;
+    label?: React.ReactNode;
+    onChange?: (name: string | undefined, value: string | string[] | null) => void;
     addValidate?: (isValid: () => boolean) => void;
     removeValidate?: (isValid: () => boolean) => void;
     allowUserDefinedValue?: boolean;
@@ -47,18 +49,24 @@ export default class ReactSelectSetting extends React.PureComponent<Props, State
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        if (prevState.invalid && (this.props.value && this.props.value.value) !== (prevProps.value && prevProps.value.value)) {
+        const getSingleValue = (v: Props['value']) => {
+            if (!v || Array.isArray(v)) {
+                return null;
+            }
+            return (v as ReactSelectOption).value;
+        };
+        if (prevState.invalid && getSingleValue(this.props.value) !== getSingleValue(prevProps.value)) {
             this.setState({invalid: false}); //eslint-disable-line react/no-did-update-set-state
         }
     }
 
-    handleChange = (value: ReactSelectOption | ReactSelectOption[], action: ActionMeta) => {
+    handleChange = (value: readonly ReactSelectOption[] | ReactSelectOption | null, action: ActionMeta<ReactSelectOption>) => {
         if (this.props.onChange) {
             if (Array.isArray(value)) {
-                this.props.onChange(this.props.name, value.map((x) => x.value));
+                this.props.onChange(this.props.name, (value as ReactSelectOption[]).map((x) => x.value));
             } else {
-                const newValue = value ? value.value : null;
-                this.props.onChange(this.props.name, newValue);
+                const single = value as ReactSelectOption | null;
+                this.props.onChange(this.props.name, single ? single.value : null);
             }
         }
         if (this.props.resetInvalidOnChange) {
@@ -67,9 +75,9 @@ export default class ReactSelectSetting extends React.PureComponent<Props, State
     };
 
     filterOptions = (input: string) => {
-        let options = this.props.options;
+        let options = this.props.options ?? [];
         if (input) {
-            options = options.filter((opt: ReactSelectOption) => opt.label.toUpperCase().includes(input.toUpperCase()));
+            options = options.filter((opt) => 'label' in opt && opt.label?.toUpperCase().includes(input.toUpperCase()));
         }
         return Promise.resolve(options.slice(0, MAX_NUM_OPTIONS));
     };
@@ -89,6 +97,18 @@ export default class ReactSelectSetting extends React.PureComponent<Props, State
     };
 
     render() {
+        const {
+            theme,
+            label,
+            addValidate,
+            removeValidate,
+            allowUserDefinedValue,
+            limitOptions,
+            resetInvalidOnChange,
+            onChange,
+            ...selectProps
+        } = this.props;
+
         const requiredMsg = 'This field is required.';
         let validationError = null;
 
@@ -101,46 +121,47 @@ export default class ReactSelectSetting extends React.PureComponent<Props, State
         }
 
         let selectComponent = null;
-        if (this.props.limitOptions && this.props.options.length > MAX_NUM_OPTIONS) {
+        if (limitOptions && (selectProps.options?.length ?? 0) > MAX_NUM_OPTIONS) {
             selectComponent = (
                 <AsyncSelect
-                    {...this.props}
+                    {...selectProps}
                     loadOptions={this.filterOptions}
                     defaultOptions={true}
                     menuPortalTarget={document.body}
                     menuPlacement='auto'
                     onChange={this.handleChange}
-                    styles={getStyleForReactSelect(this.props.theme)}
+                    styles={getStyleForReactSelect(theme)}
                 />
             );
-        } else if (this.props.allowUserDefinedValue) {
+        } else if (allowUserDefinedValue) {
             selectComponent = (
                 <CreatableSelect
-                    {...this.props}
+                    {...selectProps}
                     noOptionsMessage={() => 'Start typing...'}
                     formatCreateLabel={(value) => `Add "${value}"`}
                     placeholder=''
                     menuPortalTarget={document.body}
                     menuPlacement='auto'
                     onChange={this.handleChange}
-                    styles={getStyleForReactSelect(this.props.theme)}
+                    styles={getStyleForReactSelect(theme)}
                 />
             );
         } else {
             selectComponent = (
                 <ReactSelect
-                    {...this.props}
+                    {...selectProps}
                     menuPortalTarget={document.body}
                     menuPlacement='auto'
                     onChange={this.handleChange}
-                    styles={getStyleForReactSelect(this.props.theme)}
+                    styles={getStyleForReactSelect(theme)}
                 />
             );
         }
         return (
             <Setting
                 inputId={this.props.name}
-                {...this.props}
+                label={this.props.label}
+                required={this.props.required}
             >
                 {selectComponent}
                 {validationError}

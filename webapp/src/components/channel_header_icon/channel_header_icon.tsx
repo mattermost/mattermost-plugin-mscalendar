@@ -5,7 +5,12 @@ const ChannelHeaderIcon = () => (
         viewBox='0 0 24 24'
         xmlns='http://www.w3.org/2000/svg'
     >
-        <circle cx='12' cy='12' r='12' fill='#FFFFFF'/>
+        <circle
+            cx='12'
+            cy='12'
+            r='12'
+            fill='#FFFFFF'
+        />
         <g transform='translate(2.5 2) scale(0.0475)'>
             <g clipPath='url(#mscal-clip0)'>
                 <path
@@ -16,20 +21,104 @@ const ChannelHeaderIcon = () => (
                     d='M33.0327 72.5211V327.352L226.892 368V35L33.0327 72.5211V72.5211ZM162.756 243.017C154.564 253.798 143.883 259.201 130.7 259.201C117.855 259.201 107.4 253.973 99.3075 243.53C91.228 233.074 87.1757 219.466 87.1757 202.682C87.1757 184.959 91.278 170.626 99.4951 159.683C107.712 148.739 118.593 143.261 132.139 143.261C144.933 143.261 155.289 148.489 163.181 158.97C171.085 169.451 175.038 183.258 175.038 200.406C175.05 218.028 170.948 232.236 162.756 243.017Z'
                     fill='#0072C6'
                 />
-                <rect x='263' y='158' width='22' height='23' fill='#0072C6'/>
-                <rect x='291' y='158' width='22' height='23' fill='#0072C6'/>
-                <rect x='319' y='158' width='22' height='23' fill='#0072C6'/>
-                <rect x='235' y='188' width='22' height='23' fill='#0072C6'/>
-                <rect x='263' y='188' width='22' height='23' fill='#0072C6'/>
-                <rect x='291' y='188' width='22' height='23' fill='#0072C6'/>
-                <rect x='319' y='188' width='22' height='23' fill='#0072C6'/>
-                <rect x='235' y='218' width='22' height='23' fill='#0072C6'/>
-                <rect x='263' y='218' width='22' height='23' fill='#0072C6'/>
-                <rect x='291' y='218' width='22' height='23' fill='#0072C6'/>
-                <rect x='319' y='218' width='22' height='23' fill='#0072C6'/>
-                <rect x='235' y='248' width='22' height='23' fill='#0072C6'/>
-                <rect x='263' y='248' width='22' height='23' fill='#0072C6'/>
-                <rect x='291' y='248' width='22' height='23' fill='#0072C6'/>
+                <rect
+                    x='263'
+                    y='158'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='291'
+                    y='158'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='319'
+                    y='158'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='235'
+                    y='188'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='263'
+                    y='188'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='291'
+                    y='188'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='319'
+                    y='188'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='235'
+                    y='218'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='263'
+                    y='218'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='291'
+                    y='218'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='319'
+                    y='218'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='235'
+                    y='248'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='263'
+                    y='248'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
+                <rect
+                    x='291'
+                    y='248'
+                    width='22'
+                    height='23'
+                    fill='#0072C6'
+                />
             </g>
             <path
                 fillRule='evenodd'
@@ -39,7 +128,12 @@ const ChannelHeaderIcon = () => (
             />
             <defs>
                 <clipPath id='mscal-clip0'>
-                    <rect width='329.36' height='333' fill='white' transform='translate(33.0327 35)'/>
+                    <rect
+                        width='329.36'
+                        height='333'
+                        fill='white'
+                        transform='translate(33.0327 35)'
+                    />
                 </clipPath>
             </defs>
         </g>

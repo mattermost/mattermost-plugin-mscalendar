@@ -14,7 +14,7 @@ interface CalendarHeaderProps {
 
 function formatDateLabel(start: Date, end: Date, isWeekView: boolean): string {
     if (!isWeekView) {
-        return start.toLocaleDateString(undefined, {
+        return start.toLocaleDateString([], {
             weekday: 'short',
             month: 'short',
             day: 'numeric',
@@ -28,12 +28,12 @@ function formatDateLabel(start: Date, end: Date, isWeekView: boolean): string {
     const sameMonth = start.getMonth() === lastDay.getMonth() && start.getFullYear() === lastDay.getFullYear();
 
     if (sameMonth) {
-        const monthYear = start.toLocaleDateString(undefined, {month: 'short', year: 'numeric'});
+        const monthYear = start.toLocaleDateString([], {month: 'short', year: 'numeric'});
         return `${start.getDate()} - ${lastDay.getDate()} ${monthYear}`;
     }
 
-    const startStr = start.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
-    const endStr = lastDay.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+    const startStr = start.toLocaleDateString([], {month: 'short', day: 'numeric'});
+    const endStr = lastDay.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
     return `${startStr} - ${endStr}`;
 }
 

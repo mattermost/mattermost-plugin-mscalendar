@@ -27,7 +27,13 @@
     "experimentalDecorators": true,
     "jsx": "react-jsx",
     "typeRoots": [
-      "./types"
+      "./types",
+      "./node_modules/@types"
+    ],
+    "types": [
+      "jest",
+      "node",
+      "testing-library__jest-dom"
     ]
   },
   "include": [

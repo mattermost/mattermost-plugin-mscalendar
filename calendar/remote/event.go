@@ -14,6 +14,7 @@ type Event struct {
 	Start                      *DateTime            `json:"start,omitempty"`
 	Location                   *Location            `json:"location,omitempty"`
 	Conference                 *Conference          `json:"conference,omitempty"`
+	OnlineMeeting              *OnlineMeetingInfo   `json:"onlineMeeting,omitempty"`
 	End                        *DateTime            `json:"end,omitempty"`
 	Organizer                  *Attendee            `json:"organizer,omitempty"`
 	Body                       *ItemBody            `json:"Body,omitempty"`
@@ -66,6 +67,12 @@ type Coordinates struct {
 type Conference struct {
 	Application string `json:"application"`
 	URL         string `json:"url"`
+}
+
+// OnlineMeetingInfo holds the online meeting details returned by the MS Graph API.
+// The joinUrl field contains the Teams meeting join link.
+type OnlineMeetingInfo struct {
+	JoinURL string `json:"joinUrl"`
 }
 
 type Attendee struct {

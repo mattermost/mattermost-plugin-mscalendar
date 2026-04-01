@@ -1,3 +1,7 @@
+import {GlobalState} from '@mattermost/types/store';
+
+import type {AppDispatch} from '@/hooks';
+
 import {getConnected, openCreateEventModal, sendEphemeralPost} from './actions';
 import {getProviderConfiguration, isUserConnected} from './selectors';
 
@@ -6,8 +10,8 @@ type ContextArgs = {channel_id: string};
 const createEventCommand = 'event create';
 
 interface Store {
-    dispatch(action: {type: string}): void;
-    getState(): object;
+    dispatch: AppDispatch;
+    getState(): GlobalState;
 }
 
 export default class Hooks {

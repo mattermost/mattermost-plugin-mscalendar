@@ -1,6 +1,9 @@
 import {Theme} from 'mattermost-redux/selectors/entities/preferences';
+import {StylesConfig} from 'react-select';
 
 import {changeOpacity} from 'mattermost-redux/utils/theme_utils';
+
+type AnySelectOption = {label: string; value: string};
 
 export const getBaseStyles = (theme: Theme) => {
     return {
@@ -31,7 +34,7 @@ export const getModalStyles = (theme: Theme) => ({
     },
 });
 
-export const getStyleForReactSelect = (theme: Theme) => {
+export const getStyleForReactSelect = (theme: Theme): StylesConfig<AnySelectOption> => {
     if (!theme) {
         return {};
     }

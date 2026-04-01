@@ -72,14 +72,18 @@ export default function TimeSelector(props: Props) {
         value = options.find((option: Option) => option.value === props.value);
     }
 
-    const handleChange = (_: string, newValue: string) => {
+    const handleChange = (_: string | undefined, newValue: string | string[] | null) => {
+        const selectedTime = typeof newValue === 'string' ? newValue : null;
+        if (!selectedTime) {
+            return;
+        }
         if (props.startTime) {
-            props.onChange('end_time', newValue);
+            props.onChange('end_time', selectedTime);
         } else {
-            props.onChange('start_time', newValue);
+            props.onChange('start_time', selectedTime);
 
             options.forEach((option: Option, i: number) => {
-                if (option.value === newValue && i + 2 < options.length) {
+                if (option.value === selectedTime && i + 2 < options.length) {
                     props.onChange('end_time', options[i + 2].value);
                 }
             });

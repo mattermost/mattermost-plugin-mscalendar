@@ -1,7 +1,21 @@
 import React from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
-import {Modal} from 'react-bootstrap';
+import {Modal as BootstrapModal} from 'react-bootstrap';
+
+type ModalRootProps = React.PropsWithChildren<{
+    dialogClassName?: string;
+    show?: boolean;
+    onHide?: () => void;
+    onExited?: () => void;
+    bsSize?: string;
+    backdrop?: string | boolean;
+}>;
+
+const Modal = BootstrapModal as unknown as React.FC<ModalRootProps> & {
+    Header: React.FC<React.PropsWithChildren<{closeButton?: boolean}>>;
+    Title: React.FC<React.PropsWithChildren<Record<string, unknown>>>;
+};
 
 import {isCreateEventModalVisible} from '@/selectors';
 

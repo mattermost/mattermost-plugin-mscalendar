@@ -97,7 +97,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
         const startTime = iso.slice(11, 16);
 
         const [h, m] = startTime.split(':').map(Number);
-        const endMinutes = h * 60 + m + 30;
+        const endMinutes = (h * 60) + m + 30;
         const endH = String(Math.floor(endMinutes / 60) % 24).padStart(2, '0');
         const endM = String(endMinutes % 60).padStart(2, '0');
         const endTime = `${endH}:${endM}`;

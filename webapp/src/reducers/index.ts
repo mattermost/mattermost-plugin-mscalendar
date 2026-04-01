@@ -3,7 +3,16 @@ import {combineReducers} from 'redux';
 import ActionTypes from '../constants';
 import {RemoteEvent} from '../types/calendar';
 
-function userConnected(state: boolean | null = null, action) {
+type PluginAction = {
+    type: string;
+    data?: Record<string, unknown>;
+    key?: string;
+    from?: string;
+    to?: string;
+    error?: {message?: string};
+};
+
+function userConnected(state: boolean | null = null, action: PluginAction) {
     switch (action.type) {
     case ActionTypes.RECEIVED_CONNECTED:
         return true;
@@ -14,7 +23,7 @@ function userConnected(state: boolean | null = null, action) {
     }
 }
 
-const createEventModalVisible = (state = false, action) => {
+const createEventModalVisible = (state = false, action: PluginAction) => {
     switch (action.type) {
     case ActionTypes.OPEN_CREATE_EVENT_MODAL:
     case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
@@ -26,17 +35,17 @@ const createEventModalVisible = (state = false, action) => {
     }
 };
 
-const createEventModal = (state = {}, action) => {
+const createEventModal = (state = {}, action: PluginAction) => {
     switch (action.type) {
     case ActionTypes.OPEN_CREATE_EVENT_MODAL:
     case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
         return {
-            postId: action.data.postId,
-            description: action.data.description,
-            channelId: action.data.channelId,
-            date: action.data.date,
-            startTime: action.data.startTime,
-            endTime: action.data.endTime,
+            postId: action.data?.postId,
+            description: action.data?.description,
+            channelId: action.data?.channelId,
+            date: action.data?.date,
+            startTime: action.data?.startTime,
+            endTime: action.data?.endTime,
         };
     case ActionTypes.CLOSE_CREATE_EVENT_MODAL:
         return {};
@@ -45,7 +54,7 @@ const createEventModal = (state = {}, action) => {
     }
 };
 
-function providerConfiguration(state = null, action) {
+function providerConfiguration(state = null, action: PluginAction) {
     switch (action.type) {
     case ActionTypes.RECEIVED_PROVIDER_CONFIGURATION:
         return action.data;

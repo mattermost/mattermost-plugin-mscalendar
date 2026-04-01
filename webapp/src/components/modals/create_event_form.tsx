@@ -1,7 +1,11 @@
 import React, {useState} from 'react';
-import {useSelector, useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
-import {Modal} from 'react-bootstrap';
+import {Modal as BootstrapModal} from 'react-bootstrap';
+
+type ModalSectionProps = React.PropsWithChildren<{ style?: React.CSSProperties }>;
+const ModalBody = BootstrapModal.Body as unknown as React.FC<ModalSectionProps>;
+const ModalFooter = BootstrapModal.Footer as unknown as React.FC<ModalSectionProps>;
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
@@ -18,7 +22,8 @@ import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
 import DateInput from '@/components/date_input';
 import {capitalizeFirstCharacter} from '@/utils/text';
-import {CreateCalendarEventResponse, createCalendarEvent, refreshActiveCalendarView} from '@/actions';
+import {useAppDispatch} from '@/hooks';
+import {createCalendarEvent, refreshActiveCalendarView} from '@/actions';
 import {getTodayString} from '@/utils/datetime';
 import {getCreateEventModal} from '@/selectors';
 
@@ -33,7 +38,7 @@ export default function CreateEventForm(props: Props) {
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const modalData = useSelector(getCreateEventModal);
 
     const [formValues, setFormValues] = useState<CreateEventPayload>({
@@ -78,13 +83,13 @@ export default function CreateEventForm(props: Props) {
 
         setSubmitting(true);
 
-        const response = (await dispatch(createCalendarEvent(formValues))) as CreateCalendarEventResponse;
+        const response = await dispatch(createCalendarEvent(formValues));
         if (response.error) {
             handleError(response.error);
             return;
         }
 
-        await dispatch(refreshActiveCalendarView() as any);
+        await dispatch(refreshActiveCalendarView());
         handleClose();
     };
 
@@ -142,22 +147,22 @@ export default function CreateEventForm(props: Props) {
             role='form'
             onSubmit={handleSubmit}
         >
-            <Modal.Body
+            <ModalBody
                 style={style.modalBody}
             >
                 {error}
                 {form}
-            </Modal.Body>
-            <Modal.Footer style={style.modalFooter}>
+            </ModalBody>
+            <ModalFooter style={style.modalFooter}>
                 {footer}
-            </Modal.Footer>
+            </ModalFooter>
         </form>
     );
 }
 
 type ActualFormProps = {
     formValues: CreateEventPayload;
-    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => Promise<{ error?: string }>;
+    setFormValue: <Key extends keyof CreateEventPayload>(name: Key, value: CreateEventPayload[Key]) => void;
 }
 
 const ActualForm = (props: ActualFormProps) => {
@@ -192,6 +197,7 @@ const ActualForm = (props: ActualFormProps) => {
             label: 'Guests (optional)',
             component: (
                 <AttendeeSelector
+                    value={formValues.attendees}
                     onChange={(selected) => setFormValue('attendees', selected)}
                 />
             ),
@@ -250,6 +256,7 @@ const ActualForm = (props: ActualFormProps) => {
             label: 'Link event to channel (optional)',
             component: (
                 <ChannelSelector
+                    value={formValues.channel_id ? [formValues.channel_id] : []}
                     onChange={(selected) => setFormValue('channel_id', selected)}
                 />
             ),

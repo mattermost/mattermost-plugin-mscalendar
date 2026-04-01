@@ -27,6 +27,7 @@
     "@mattermost/client": "10.9.0",
     "@mattermost/types": "10.9.0",
     "@testing-library/jest-dom": "5.16.1",
+    "@testing-library/react": "16.3.2",
     "@types/babel__core": "7.1.18",
     "@types/babel__template": "7.4.1",
     "@types/jest": "29.5.11",
@@ -104,6 +105,7 @@
       "text-summary"
     ],
     "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
       "^.+\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "identity-obj-proxy",
       "^.+\\.(css|less|scss)$": "identity-obj-proxy",
       "^.*i18n.*\\.(json)$": "<rootDir>/tests/i18n_mock.json",

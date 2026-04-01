@@ -1,12 +1,13 @@
 import React, {useCallback, useState} from 'react';
-import {useSelector, useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
+import {useAppDispatch} from '@/hooks';
 import {getStyleForReactSelect} from '@/utils/styles';
-import {AutocompleteConnectedUsersResponse, autocompleteConnectedUsers} from '@/actions';
+import {autocompleteConnectedUsers} from '@/actions';
 
 type SelectOption = {
     label: string;
@@ -23,10 +24,10 @@ export default function AttendeeSelector(props: Props) {
 
     const theme = useSelector(getTheme);
 
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
-        const response = (await dispatch(autocompleteConnectedUsers(input))) as AutocompleteConnectedUsersResponse;
+        const response = await dispatch(autocompleteConnectedUsers(input));
 
         if (response.error) {
             setStoredError(response.error);
@@ -35,7 +36,7 @@ export default function AttendeeSelector(props: Props) {
 
         setStoredError('');
 
-        return response.data.map((u) => ({
+        return (response.data ?? []).map((u) => ({
             label: u.mm_display_name,
             value: u.mm_id,
         }));
@@ -45,14 +46,16 @@ export default function AttendeeSelector(props: Props) {
         return (/\S+@\S+\.\S+/).test(input);
     };
 
-    const handleChange = (selected: SelectOption[]) => {
+    const handleChange = (selected: readonly SelectOption[]) => {
         props.onChange(selected.map((option) => option.value));
     };
 
+    const selectedValues = props.value.map((v) => ({label: v, value: v}));
+
     return (
         <>
-            <AsyncCreatableSelect
-                value={props.value}
+            <AsyncCreatableSelect<SelectOption, true>
+                value={selectedValues}
                 loadOptions={loadOptions}
                 defaultOptions={true}
                 menuPortalTarget={document.body}

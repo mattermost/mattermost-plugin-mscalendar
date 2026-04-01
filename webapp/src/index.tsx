@@ -1,8 +1,10 @@
 import React, {useEffect} from 'react';
 
-import {Store, Action} from 'redux';
+import {Action, Store} from 'redux';
 
 import {GlobalState} from '@mattermost/types/store';
+
+import type {AppDispatch} from '@/hooks';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
@@ -33,9 +35,10 @@ export default class Plugin {
         registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
 
         const setup = async () => {
-            await store.dispatch(getProviderConfiguration());
+            const thunkDispatch = store.dispatch as AppDispatch;
+            await thunkDispatch(getProviderConfiguration());
 
-            const providerConfig = getProviderConfigSelector(store.getState() as any);
+            const providerConfig = getProviderConfigSelector(store.getState());
 
             if (providerConfig?.Features?.EnableExperimentalUI) {
                 const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(
@@ -55,7 +58,7 @@ export default class Plugin {
                 <span>{'Create calendar event'}</span>,
                 async (channelID) => {
                     if (await hooks.checkUserIsConnected()) {
-                        store.dispatch(openCreateEventModal(channelID));
+                        thunkDispatch(openCreateEventModal(channelID));
                     }
                 },
             );
