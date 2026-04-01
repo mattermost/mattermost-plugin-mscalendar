@@ -5,8 +5,8 @@
     "build:watch": "webpack --mode=production --watch",
     "debug": "webpack --mode=none",
     "debug:watch": "webpack --mode=development --watch",
-    "lint": "eslint --ignore-pattern node_modules --ignore-pattern dist --ext .js --ext .jsx --ext tsx --ext ts . --quiet --cache",
-    "fix": "eslint --ignore-pattern node_modules --ignore-pattern dist --ext .js --ext .jsx --ext tsx --ext ts . --quiet --fix --cache",
+    "lint": "eslint --ignore-pattern node_modules --ignore-pattern dist --ext .js --ext .jsx --ext .tsx --ext .ts . --quiet --cache",
+    "fix": "eslint --ignore-pattern node_modules --ignore-pattern dist --ext .js --ext .jsx --ext .tsx --ext .ts . --quiet --fix --cache",
     "test": "jest --forceExit --detectOpenHandles --verbose",
     "test:watch": "jest --watch",
     "test-ci": "jest --forceExit --detectOpenHandles --maxWorkers=2",
@@ -69,6 +69,7 @@
     "sass-loader": "13.0.0",
     "style-loader": "3.3.1",
     "webpack": "5.96.0",
+    "typescript": "5.6.3",
     "webpack-cli": "5.1.4"
   },
   "dependencies": {
@@ -88,8 +89,7 @@
     "react-redux": "8.0.2",
     "react-select": "5.10.0",
     "redux": "4.2.0",
-    "reselect": "5.1.1",
-    "typescript": "5.6.3"
+    "reselect": "5.1.1"
   },
   "jest": {
     "testPathIgnorePatterns": [

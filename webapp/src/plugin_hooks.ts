@@ -49,15 +49,17 @@ export default class Hooks {
     };
 
     checkUserIsConnected = async (): Promise<boolean> => {
-        if (!isUserConnected(this.store.getState())) {
+        const connected = isUserConnected(this.store.getState());
+        if (connected === null) {
             await this.store.dispatch(getConnected());
-            if (!isUserConnected(this.store.getState())) {
-                const providerConfiguration = getProviderConfiguration(this.store.getState());
-                const displayName = providerConfiguration?.DisplayName || 'the calendar provider';
-                const commandTrigger = providerConfiguration?.CommandTrigger || 'mscalendar';
-                this.store.dispatch(sendEphemeralPost(`Your Mattermost account is not connected to ${displayName}. In order to create a calendar event please connect your account first using \`/${commandTrigger} connect\`.`));
-                return false;
-            }
+        }
+
+        if (!isUserConnected(this.store.getState())) {
+            const providerConfiguration = getProviderConfiguration(this.store.getState());
+            const displayName = providerConfiguration?.DisplayName || 'the calendar provider';
+            const commandTrigger = providerConfiguration?.CommandTrigger || 'mscalendar';
+            this.store.dispatch(sendEphemeralPost(`Your Mattermost account is not connected to ${displayName}. In order to create a calendar event please connect your account first using \`/${commandTrigger} connect\`.`));
+            return false;
         }
 
         return true;

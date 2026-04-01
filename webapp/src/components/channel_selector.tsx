@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {useSelector} from 'react-redux';
 
 import AsyncSelect from 'react-select/async';
@@ -22,7 +22,7 @@ type Props = {
 
 export default function ChannelSelector(props: Props) {
     const [storedError, setStoredError] = useState('');
-    const optionCache = useRef<Record<string, string>>({});
+    const [selectedOption, setSelectedOption] = useState<SelectOption | null>(null);
 
     const theme = useSelector(getTheme);
     const teamId = useSelector(getCurrentTeamId);
@@ -44,24 +44,34 @@ export default function ChannelSelector(props: Props) {
             value: c.id,
         }));
 
-        for (const opt of options) {
-            optionCache.current[opt.value] = opt.label;
+        if (props.value && (!selectedOption || selectedOption.value !== props.value)) {
+            const match = options.find((o) => o.value === props.value);
+            if (match) {
+                setSelectedOption(match);
+            }
         }
 
         return options;
-    }, [dispatch, teamId]);
+    }, [dispatch, teamId, props.value, selectedOption]);
 
     const handleChange = (selected: SelectOption | null) => {
+        setSelectedOption(selected);
         if (selected) {
-            optionCache.current[selected.value] = selected.label;
             props.onChange(selected.value);
         }
     };
 
+    let displayValue: SelectOption | null = null;
+    if (props.value) {
+        displayValue = selectedOption?.value === props.value ?
+            selectedOption :
+            {label: props.value, value: props.value};
+    }
+
     return (
         <>
             <AsyncSelect<SelectOption, false>
-                value={props.value ? {label: optionCache.current[props.value] || props.value, value: props.value} : null}
+                value={displayValue}
                 loadOptions={loadOptions}
                 defaultOptions={true}
                 menuPortalTarget={document.body}

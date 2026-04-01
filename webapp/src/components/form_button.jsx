@@ -32,8 +32,18 @@ export default class FormButton extends PureComponent {
     }
 
     render() {
-        // eslint-disable-next-line no-unused-vars
-        const {saving, disabled, executing, executingMessage, savingMessage, defaultMessage, btnClass, extraClasses, id, ...props} = this.props;
+        const {
+            saving,
+            disabled,
+            executing,
+            executingMessage,
+            savingMessage,
+            defaultMessage,
+            btnClass,
+            extraClasses,
+            id,
+            ...props
+        } = this.props;
         const buttonId = id || this.generatedId;
 
         let contents;

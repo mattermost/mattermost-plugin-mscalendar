@@ -11,6 +11,8 @@ const CalendarIconSVG = ({theme}: CalendarIconSVGProps) => (
         viewBox='0 0 48 48'
         fill='none'
         xmlns='http://www.w3.org/2000/svg'
+        aria-hidden='true'
+        focusable='false'
     >
         <path
             d='M36 8H12a4 4 0 00-4 4v24a4 4 0 004 4h24a4 4 0 004-4V12a4 4 0 00-4-4z'
