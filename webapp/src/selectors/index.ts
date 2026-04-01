@@ -17,7 +17,11 @@ export const getSiteURL = (state: GlobalState): string => {
 
     let basePath = '';
     if (config && config.SiteURL) {
-        basePath = new URL(config.SiteURL).pathname;
+        try {
+            basePath = new URL(config.SiteURL).pathname;
+        } catch {
+            return '';
+        }
 
         if (basePath && basePath[basePath.length - 1] === '/') {
             basePath = basePath.substring(0, basePath.length - 1);

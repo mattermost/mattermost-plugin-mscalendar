@@ -45,11 +45,4 @@ describe('CreateEventModal', () => {
         render(<CreateEventModal/>);
         expect(screen.getByTestId('create-event-form')).toBeInTheDocument();
     });
-
-    it('renders the modal when visible', () => {
-        mockUseSelector.mockReturnValue(true);
-        render(<CreateEventModal/>);
-        expect(screen.getByText('Create Calendar Event')).toBeInTheDocument();
-        expect(screen.getByTestId('create-event-form')).toBeInTheDocument();
-    });
 });

@@ -17,7 +17,7 @@ type SelectOption = {
 
 type Props = {
     onChange: (selected: string) => void;
-    value: string[];
+    value: string | null;
 };
 
 export default function ChannelSelector(props: Props) {
@@ -53,7 +53,7 @@ export default function ChannelSelector(props: Props) {
     return (
         <>
             <AsyncSelect<SelectOption, false>
-                value={props.value.map((v) => ({label: v, value: v}))}
+                value={props.value ? {label: props.value, value: props.value} : null}
                 loadOptions={loadOptions}
                 defaultOptions={true}
                 menuPortalTarget={document.body}

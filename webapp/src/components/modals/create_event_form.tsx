@@ -16,7 +16,6 @@ import {CreateEventPayload} from '@/types/calendar_api_types';
 import {getModalStyles} from '@/utils/styles';
 
 import FormButton from '@/components/form_button';
-import Loading from '@/components/loading';
 import Setting from '@/components/setting';
 import AttendeeSelector from '@/components/attendee_selector';
 import TimeSelector from '@/components/time_selector';
@@ -36,7 +35,6 @@ type Props = {
 export default function CreateEventForm(props: Props) {
     const [storedError, setStoredError] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [loading, setLoading] = useState(false);
 
     const dispatch = useAppDispatch();
     const modalData = useSelector(getCreateEventModal);
@@ -95,7 +93,10 @@ export default function CreateEventForm(props: Props) {
 
     const style = getModalStyles(theme);
 
-    const disableSubmit = false;
+    const disableSubmit = !formValues.subject.trim() ||
+        !formValues.date ||
+        (!formValues.all_day && (!formValues.start_time || !formValues.end_time)) ||
+        (!formValues.all_day && formValues.start_time >= formValues.end_time);
     const footer = (
         <React.Fragment>
             <FormButton
@@ -116,17 +117,12 @@ export default function CreateEventForm(props: Props) {
         </React.Fragment>
     );
 
-    let form;
-    if (loading) {
-        form = <Loading/>;
-    } else {
-        form = (
-            <ActualForm
-                formValues={formValues}
-                setFormValue={setFormValue}
-            />
-        );
-    }
+    const form = (
+        <ActualForm
+            formValues={formValues}
+            setFormValue={setFormValue}
+        />
+    );
 
     let error;
     if (storedError) {
@@ -256,7 +252,7 @@ const ActualForm = (props: ActualFormProps) => {
             label: 'Link event to channel (optional)',
             component: (
                 <ChannelSelector
-                    value={formValues.channel_id ? [formValues.channel_id] : []}
+                    value={formValues.channel_id || null}
                     onChange={(selected) => setFormValue('channel_id', selected)}
                 />
             ),

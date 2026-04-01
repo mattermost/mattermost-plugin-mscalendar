@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 
 import {Action, Store} from 'redux';
 
@@ -86,8 +86,11 @@ interface SetupUIProps {
 }
 
 const SetupUI = ({setup, haveSetupUI, finishedSetupUI}: SetupUIProps) => {
+    const startedRef = useRef(false);
+
     useEffect(() => {
-        if (!haveSetupUI) {
+        if (!haveSetupUI && !startedRef.current) {
+            startedRef.current = true;
             setup().
                 catch((error) => {
                     // eslint-disable-next-line no-console

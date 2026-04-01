@@ -19,8 +19,14 @@ class MockResizeObserver {
     disconnect = jest.fn();
 }
 
+const savedResizeObserver = (global as Record<string, unknown>).ResizeObserver;
+
 beforeAll(() => {
     (global as Record<string, unknown>).ResizeObserver = MockResizeObserver;
+});
+
+afterAll(() => {
+    (global as Record<string, unknown>).ResizeObserver = savedResizeObserver;
 });
 
 const makeProps = (overrides: Partial<CalendarSidebarProps> = {}): CalendarSidebarProps => ({

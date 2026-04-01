@@ -1,8 +1,11 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 
+let formButtonCounter = 0;
+
 export default class FormButton extends PureComponent {
     static propTypes = {
+        id: PropTypes.string,
         executing: PropTypes.bool,
         disabled: PropTypes.bool,
         executingMessage: PropTypes.node,
@@ -22,11 +25,28 @@ export default class FormButton extends PureComponent {
         extraClasses: '',
     };
 
+    constructor(props) {
+        super(props);
+        formButtonCounter += 1;
+        this.uniqueId = props.id || `formButton-${formButtonCounter}`;
+    }
+
     render() {
-        const {saving, disabled, savingMessage, defaultMessage, btnClass, extraClasses, ...props} = this.props;
+        // eslint-disable-next-line no-unused-vars
+        const {saving, disabled, executing, executingMessage, savingMessage, defaultMessage, btnClass, extraClasses, id, ...props} = this.props;
 
         let contents;
-        if (saving) {
+        if (executing) {
+            contents = (
+                <span>
+                    <span
+                        className='fa fa-spin fa-spinner'
+                        title={'Loading Icon'}
+                    />
+                    {executingMessage || savingMessage}
+                </span>
+            );
+        } else if (saving) {
             contents = (
                 <span>
                     <span
@@ -48,9 +68,9 @@ export default class FormButton extends PureComponent {
 
         return (
             <button
-                id='saveSetting'
+                id={this.uniqueId}
                 className={className}
-                disabled={disabled || saving}
+                disabled={disabled || saving || executing}
                 {...props}
             >
                 {contents}

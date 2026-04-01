@@ -17,7 +17,11 @@ export default function DateInput(props: Props) {
     const theme = useSelector(getTheme);
 
     const handleIconClick = () => {
-        inputRef.current?.showPicker();
+        if (inputRef.current && typeof inputRef.current.showPicker === 'function') {
+            inputRef.current.showPicker();
+        } else {
+            inputRef.current?.focus();
+        }
     };
 
     return (
@@ -30,15 +34,17 @@ export default function DateInput(props: Props) {
                 onChange={(e) => onChange(e.target.value)}
                 className={className}
             />
-            <span
+            <button
+                type='button'
                 onClick={handleIconClick}
                 className='date-input-icon'
+                aria-label='Open date picker'
             >
                 <CalendarOutlineIcon
                     size={22}
                     color={theme.centerChannelColor}
                 />
-            </span>
+            </button>
         </div>
     );
 }

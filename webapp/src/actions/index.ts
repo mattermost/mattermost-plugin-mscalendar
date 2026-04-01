@@ -64,7 +64,7 @@ export const autocompleteConnectedUsers = (input: string): AppThunk<Promise<Auto
             return {data: response.data};
         }).
         catch((response) => {
-            const error = response.message?.error || 'An error occurred while searching for users.';
+            const error = response.message || 'An error occurred while searching for users.';
             return {data: [], error};
         });
 };
@@ -81,7 +81,7 @@ export const autocompleteUserChannels = (input: string, teamId: string): AppThun
         const channelsCanWriteTo = channels.filter((c) => haveIChannelPermission(state, teamId, c.id, Permissions.CREATE_POST));
         return {data: channelsCanWriteTo};
     } catch (e: any) {
-        const error = e.message?.error || 'An error occurred while searching for channels.';
+        const error = e.message || 'An error occurred while searching for channels.';
         return {data: [], error};
     }
 };
@@ -103,7 +103,7 @@ export const createCalendarEvent = (payload: CreateEventPayload): AppThunk<Promi
             return {data};
         }).
         catch((response) => {
-            const error = response.message?.error || 'An error occurred while creating the event.';
+            const error = response.message || 'An error occurred while creating the event.';
             return {error};
         });
 };

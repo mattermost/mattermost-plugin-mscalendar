@@ -165,7 +165,7 @@ export type ReducerState = {
         date?: string;
         startTime?: string;
         endTime?: string;
-    } | null;
+    };
     providerConfiguration: ProviderConfig;
     events: {
         cache: Record<string, RemoteEvent[]>;

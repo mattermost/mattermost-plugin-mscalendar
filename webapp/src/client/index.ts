@@ -11,7 +11,15 @@ export const doFetch = async (url: string, options: Options) => {
 export const doFetchWithResponse = async (url: string, options: Options = {}) => {
     const response = await fetch(url, Client4.getOptions(options));
 
-    const data = await response.json();
+    let data: any;
+    if (response.status !== 204) {
+        const text = await response.text();
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = text;
+        }
+    }
 
     if (response.ok) {
         return {

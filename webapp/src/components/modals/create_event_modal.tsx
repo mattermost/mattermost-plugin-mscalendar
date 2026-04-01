@@ -8,7 +8,7 @@ type ModalRootProps = React.PropsWithChildren<{
     show?: boolean;
     onHide?: () => void;
     onExited?: () => void;
-    bsSize?: string;
+    size?: 'sm' | 'lg' | 'xl';
     backdrop?: string | boolean;
 }>;
 
@@ -49,7 +49,7 @@ export default function CreateEventModal(props: Props) {
             show={visible}
             onHide={close}
             onExited={close}
-            bsSize='large'
+            size='lg'
             backdrop='static'
         >
             <Modal.Header closeButton={true}>

@@ -119,19 +119,28 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
                 }}
             >
                 <div className='mscalendar-tooltip__header'>
-                    <a
-                        className='mscalendar-tooltip__title'
-                        href={weblink}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        style={{color: theme.linkColor}}
-                    >
-                        {event.subject || '(No title)'}
-                        <i
-                            className='icon icon-open-in-new'
-                            style={{fontSize: '14px', marginLeft: '4px'}}
-                        />
-                    </a>
+                    {weblink ? (
+                        <a
+                            className='mscalendar-tooltip__title'
+                            href={weblink}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            style={{color: theme.linkColor}}
+                        >
+                            {event.subject || '(No title)'}
+                            <i
+                                className='icon icon-open-in-new'
+                                style={{fontSize: '14px', marginLeft: '4px'}}
+                            />
+                        </a>
+                    ) : (
+                        <span
+                            className='mscalendar-tooltip__title'
+                            style={{color: theme.centerChannelColor}}
+                        >
+                            {event.subject || '(No title)'}
+                        </span>
+                    )}
                     <button
                         type='button'
                         className='mscalendar-tooltip__close'

@@ -48,6 +48,7 @@ const CalendarHeader = ({onPrev, onNext, onToday, onRefresh, loading, currentSta
                     className='mscalendar-sidebar__header-btn'
                     onClick={onPrev}
                     title='Previous'
+                    aria-label='Previous'
                     style={{color: theme.centerChannelColor}}
                 >
                     <i className='icon icon-chevron-left'/>
@@ -58,6 +59,7 @@ const CalendarHeader = ({onPrev, onNext, onToday, onRefresh, loading, currentSta
                     className='mscalendar-sidebar__header-btn'
                     onClick={onNext}
                     title='Next'
+                    aria-label='Next'
                     style={{color: theme.centerChannelColor}}
                 >
                     <i className='icon icon-chevron-right'/>
@@ -70,6 +72,7 @@ const CalendarHeader = ({onPrev, onNext, onToday, onRefresh, loading, currentSta
                     onClick={onRefresh}
                     disabled={loading}
                     title='Refresh'
+                    aria-label='Refresh'
                     style={{color: theme.centerChannelColor}}
                 >
                     <i className={`icon icon-refresh${loading ? ' mscalendar-spin' : ''}`}/>

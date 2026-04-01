@@ -22,18 +22,18 @@ export default class Hooks {
     }
 
     slashCommandWillBePostedHook = async (rawMessage: string, contextArgs: ContextArgs) => {
-        let message;
-        if (rawMessage) {
-            message = rawMessage.trim();
-        }
+        const message = rawMessage ? rawMessage.trim() : '';
 
         if (!message) {
             return Promise.resolve({message, args: contextArgs});
         }
 
         const providerConfiguration = getProviderConfiguration(this.store.getState());
-        if (providerConfiguration && message.startsWith(`/${providerConfiguration.CommandTrigger} ` + createEventCommand)) {
-            return this.handleCreateEventSlashCommand(message, contextArgs);
+        if (providerConfiguration) {
+            const prefix = `/${providerConfiguration.CommandTrigger} ${createEventCommand}`;
+            if (message === prefix || message.startsWith(prefix + ' ')) {
+                return this.handleCreateEventSlashCommand(message, contextArgs);
+            }
         }
 
         return Promise.resolve({message, args: contextArgs});

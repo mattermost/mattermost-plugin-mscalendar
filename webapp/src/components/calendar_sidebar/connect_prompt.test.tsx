@@ -57,31 +57,33 @@ describe('ConnectPrompt', () => {
         expect(windowOpenSpy).toHaveBeenCalledWith(
             '/plugins/com.mattermost.mscalendar/oauth2/connect',
             'Connect Mattermost to Microsoft Calendar',
-            'height=570,width=520',
+            'height=570,width=520,noopener,noreferrer',
         );
         expect(baseProps.sendEphemeralPost).not.toHaveBeenCalled();
     });
 
     it('sends ephemeral post on click when running in desktop app', () => {
         const originalUA = navigator.userAgent;
-        Object.defineProperty(navigator, 'userAgent', {
-            value: 'Mozilla/5.0 Mattermost/5.0 Electron/22.0',
-            configurable: true,
-        });
+        try {
+            Object.defineProperty(navigator, 'userAgent', {
+                value: 'Mozilla/5.0 Mattermost/5.0 Electron/22.0',
+                configurable: true,
+            });
 
-        const windowOpenSpy = jest.spyOn(window, 'open').mockReturnValue(null);
-        render(<ConnectPrompt {...baseProps}/>);
-        fireEvent.click(screen.getByText('Connect account'));
+            const windowOpenSpy = jest.spyOn(window, 'open').mockReturnValue(null);
+            render(<ConnectPrompt {...baseProps}/>);
+            fireEvent.click(screen.getByText('Connect account'));
 
-        expect(baseProps.sendEphemeralPost).toHaveBeenCalledTimes(1);
-        expect(baseProps.sendEphemeralPost).toHaveBeenCalledWith(
-            expect.stringContaining('web browser'),
-        );
-        expect(windowOpenSpy).not.toHaveBeenCalled();
-
-        Object.defineProperty(navigator, 'userAgent', {
-            value: originalUA,
-            configurable: true,
-        });
+            expect(baseProps.sendEphemeralPost).toHaveBeenCalledTimes(1);
+            expect(baseProps.sendEphemeralPost).toHaveBeenCalledWith(
+                expect.stringContaining('web browser'),
+            );
+            expect(windowOpenSpy).not.toHaveBeenCalled();
+        } finally {
+            Object.defineProperty(navigator, 'userAgent', {
+                value: originalUA,
+                configurable: true,
+            });
+        }
     });
 });

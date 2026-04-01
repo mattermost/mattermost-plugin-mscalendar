@@ -18,7 +18,6 @@ type StoredConfig struct {
 	EnableStatusSync     bool
 	EnableDailySummary   bool
 	EnableExperimentalUI bool
-	ForceOAuth2Consent   bool
 
 	EncryptionKey string
 }

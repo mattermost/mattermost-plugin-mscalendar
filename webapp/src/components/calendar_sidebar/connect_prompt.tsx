@@ -27,7 +27,7 @@ const ConnectPrompt = ({theme, pluginServerRoute, sendEphemeralPost}: ConnectPro
         window.open(
             `${pluginServerRoute}/oauth2/connect`,
             'Connect Mattermost to Microsoft Calendar',
-            'height=570,width=520',
+            'height=570,width=520,noopener,noreferrer',
         );
     }, [pluginServerRoute, sendEphemeralPost]);
 

@@ -24,6 +24,9 @@ if (NPM_TARGET === 'build:watch' || NPM_TARGET === 'debug:watch') {
             });
             compiler.hooks.afterEmit.tap('AfterEmitPlugin', () => {
                 exec('cd .. && make deploy-from-watch', (err, stdout, stderr) => {
+                    if (err) {
+                        process.stderr.write(`deploy-from-watch failed: ${err.message}\n`);
+                    }
                     if (stdout) {
                         process.stdout.write(stdout);
                     }
