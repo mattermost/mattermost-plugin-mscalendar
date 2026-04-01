@@ -49,13 +49,16 @@ export default class ReactSelectSetting extends React.PureComponent<Props, State
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        const getSingleValue = (v: Props['value']) => {
-            if (!v || Array.isArray(v)) {
+        const getComparableValue = (v: Props['value']): string | null => {
+            if (!v) {
                 return null;
+            }
+            if (Array.isArray(v)) {
+                return (v as ReactSelectOption[]).map((o) => o.value).sort().join(',');
             }
             return (v as ReactSelectOption).value;
         };
-        if (prevState.invalid && getSingleValue(this.props.value) !== getSingleValue(prevProps.value)) {
+        if (prevState.invalid && getComparableValue(this.props.value) !== getComparableValue(prevProps.value)) {
             this.setState({invalid: false}); //eslint-disable-line react/no-did-update-set-state
         }
     }

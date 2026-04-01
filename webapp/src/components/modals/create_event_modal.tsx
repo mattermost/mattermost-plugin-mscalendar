@@ -3,6 +3,12 @@ import {useSelector, useDispatch} from 'react-redux';
 
 import {Modal as BootstrapModal} from 'react-bootstrap';
 
+import {isCreateEventModalVisible} from '@/selectors';
+
+import {closeCreateEventModal} from '@/actions';
+
+import CreateEventForm from './create_event_form';
+
 type ModalRootProps = React.PropsWithChildren<{
     dialogClassName?: string;
     show?: boolean;
@@ -16,12 +22,6 @@ const Modal = BootstrapModal as unknown as React.FC<ModalRootProps> & {
     Header: React.FC<React.PropsWithChildren<{closeButton?: boolean}>>;
     Title: React.FC<React.PropsWithChildren<Record<string, unknown>>>;
 };
-
-import {isCreateEventModalVisible} from '@/selectors';
-
-import {closeCreateEventModal} from '@/actions';
-
-import CreateEventForm from './create_event_form';
 
 type Props = {
 }

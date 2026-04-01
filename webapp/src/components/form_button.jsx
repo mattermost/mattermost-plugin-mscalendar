@@ -28,12 +28,13 @@ export default class FormButton extends PureComponent {
     constructor(props) {
         super(props);
         formButtonCounter += 1;
-        this.uniqueId = props.id || `formButton-${formButtonCounter}`;
+        this.generatedId = `formButton-${formButtonCounter}`;
     }
 
     render() {
         // eslint-disable-next-line no-unused-vars
         const {saving, disabled, executing, executingMessage, savingMessage, defaultMessage, btnClass, extraClasses, id, ...props} = this.props;
+        const buttonId = id || this.generatedId;
 
         let contents;
         if (executing) {
@@ -68,7 +69,7 @@ export default class FormButton extends PureComponent {
 
         return (
             <button
-                id={this.uniqueId}
+                id={buttonId}
                 className={className}
                 disabled={disabled || saving || executing}
                 {...props}

@@ -98,6 +98,8 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         return {
             ...state,
             cache: {...state.cache, [key]: action.data || []},
+            activeFrom: action.from || state.activeFrom,
+            activeTo: action.to || state.activeTo,
             loading: isLatest ? false : state.loading,
             error: null,
         };
@@ -166,7 +168,7 @@ export type ReducerState = {
         startTime?: string;
         endTime?: string;
     };
-    providerConfiguration: ProviderConfig;
+    providerConfiguration: ProviderConfig | null;
     events: {
         cache: Record<string, RemoteEvent[]>;
         activeKey: string | null;

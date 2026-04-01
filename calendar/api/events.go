@@ -83,7 +83,7 @@ func (cep createEventPayload) ToRemoteEvent(loc *time.Location) (*remote.Event, 
 	if cep.Description != "" {
 		evt.Body = &remote.ItemBody{
 			Content:     cep.Description,
-			ContentType: "text/plain",
+			ContentType: "text",
 		}
 	}
 	evt.Subject = cep.Subject

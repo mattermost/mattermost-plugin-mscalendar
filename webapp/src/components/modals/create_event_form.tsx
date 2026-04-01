@@ -71,7 +71,6 @@ export default function CreateEventForm(props: Props) {
     const handleError = (error: string) => {
         const errorMessage = capitalizeFirstCharacter(error);
         setStoredError(errorMessage);
-        setSubmitting(false);
     };
 
     const handleSubmit = async (e?: React.FormEvent) => {
@@ -79,16 +78,26 @@ export default function CreateEventForm(props: Props) {
             e.preventDefault();
         }
 
-        setSubmitting(true);
-
-        const response = await dispatch(createCalendarEvent(formValues));
-        if (response.error) {
-            handleError(response.error);
+        if (submitting) {
             return;
         }
 
-        await dispatch(refreshActiveCalendarView());
-        handleClose();
+        setSubmitting(true);
+
+        try {
+            const response = await dispatch(createCalendarEvent(formValues));
+            if (response.error) {
+                handleError(response.error);
+                return;
+            }
+
+            await dispatch(refreshActiveCalendarView());
+            handleClose();
+        } catch (err: any) {
+            handleError(err.message || 'An unexpected error occurred.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const style = getModalStyles(theme);

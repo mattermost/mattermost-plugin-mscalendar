@@ -34,8 +34,23 @@ export default class Plugin {
         const hooks = new Hooks(store);
         registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
 
+        const thunkDispatch = store.dispatch as AppDispatch;
+
+        registry.registerChannelHeaderMenuAction(
+            <span>{'Create calendar event'}</span>,
+            async (channelID) => {
+                if (await hooks.checkUserIsConnected()) {
+                    thunkDispatch(openCreateEventModal(channelID));
+                }
+            },
+        );
+
+        registry.registerRootComponent(CreateEventModal);
+
+        registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnect(store));
+        registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleDisconnect(store));
+
         const setup = async () => {
-            const thunkDispatch = store.dispatch as AppDispatch;
             await thunkDispatch(getProviderConfiguration());
 
             const providerConfig = getProviderConfigSelector(store.getState());
@@ -53,20 +68,6 @@ export default class Plugin {
                     'Toggle calendar sidebar',
                 );
             }
-
-            registry.registerChannelHeaderMenuAction(
-                <span>{'Create calendar event'}</span>,
-                async (channelID) => {
-                    if (await hooks.checkUserIsConnected()) {
-                        thunkDispatch(openCreateEventModal(channelID));
-                    }
-                },
-            );
-
-            registry.registerRootComponent(CreateEventModal);
-
-            registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnect(store));
-            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleDisconnect(store));
         };
 
         registry.registerRootComponent(() => (

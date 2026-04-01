@@ -248,7 +248,7 @@ export const fetchCalendarEvents = (from: string, to: string): AppThunk<Promise<
         const events: RemoteEvent[] = await doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
             method: 'get',
         });
-        dispatch({type: ActionTypes.RECEIVED_EVENTS, data: events, key});
+        dispatch({type: ActionTypes.RECEIVED_EVENTS, data: events, key, from, to});
         return {data: events, error: null};
     } catch (error) {
         dispatch({type: ActionTypes.FETCH_EVENTS_ERROR, error});

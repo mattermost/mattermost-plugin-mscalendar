@@ -39,9 +39,11 @@ export default function Setting(props: Props) {
             }
             <div>
                 {children}
-                <div className='help-text'>
-                    {helpText}
-                </div>
+                {helpText && (
+                    <div className='help-text'>
+                        {helpText}
+                    </div>
+                )}
             </div>
         </div>
     );

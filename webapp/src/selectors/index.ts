@@ -53,7 +53,7 @@ export const getCreateEventModal = (state: GlobalState) => getPluginState(state)
 
 export const isUserConnected = (state: GlobalState): boolean | null => getPluginState(state).userConnected;
 
-export const getProviderConfiguration = (state: GlobalState): ProviderConfig => getPluginState(state).providerConfiguration;
+export const getProviderConfiguration = (state: GlobalState): ProviderConfig | null => getPluginState(state).providerConfiguration;
 
 export function getCalendarEvents(state: GlobalState): RemoteEvent[] {
     const eventsState = getPluginState(state).events;

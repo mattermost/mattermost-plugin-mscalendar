@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 
 import AsyncCreatableSelect from 'react-select/async-creatable';
@@ -21,6 +21,7 @@ type Props = {
 
 export default function AttendeeSelector(props: Props) {
     const [storedError, setStoredError] = useState('');
+    const optionCache = useRef<Record<string, string>>({});
 
     const theme = useSelector(getTheme);
 
@@ -36,21 +37,35 @@ export default function AttendeeSelector(props: Props) {
 
         setStoredError('');
 
-        return (response.data ?? []).map((u) => ({
+        const options = (response.data ?? []).map((u) => ({
             label: u.mm_display_name,
             value: u.mm_id,
         }));
+
+        for (const opt of options) {
+            optionCache.current[opt.value] = opt.label;
+        }
+
+        return options;
     }, []);
 
     const isValidEmail = (input: string): boolean => {
         return (/\S+@\S+\.\S+/).test(input);
     };
 
-    const handleChange = (selected: readonly SelectOption[]) => {
-        props.onChange(selected.map((option) => option.value));
+    const handleChange = (selected: readonly SelectOption[] | null) => {
+        if (selected) {
+            for (const opt of selected) {
+                optionCache.current[opt.value] = opt.label;
+            }
+        }
+        props.onChange(selected ? selected.map((option) => option.value) : []);
     };
 
-    const selectedValues = props.value.map((v) => ({label: v, value: v}));
+    const selectedValues = props.value.map((v) => ({
+        label: optionCache.current[v] || v,
+        value: v,
+    }));
 
     return (
         <>
