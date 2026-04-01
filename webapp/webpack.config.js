@@ -101,7 +101,7 @@ const config = {
         publicPath: '/',
         filename: 'main.js',
     },
-    mode: (isDev) ? 'eval-source-map' : 'production',
+    mode: isDev ? 'development' : 'production',
     plugins,
 };
 

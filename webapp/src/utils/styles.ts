@@ -30,7 +30,7 @@ export const getModalStyles = (theme: Theme) => ({
     descriptionArea: {
         height: 'auto',
         width: '100%',
-        color: '#000',
+        color: theme.centerChannelColor,
     },
 });
 

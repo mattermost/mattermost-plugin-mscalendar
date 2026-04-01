@@ -41,6 +41,11 @@ func (api *api) viewEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if from.After(to) {
+		httputils.WriteBadRequestError(w, fmt.Errorf("from must be before or equal to to"))
+		return
+	}
+
 	eng := engine.New(api.Env, mattermostUserID)
 	user := engine.NewUser(mattermostUserID)
 

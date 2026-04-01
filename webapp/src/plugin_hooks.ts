@@ -52,8 +52,10 @@ export default class Hooks {
         if (!isUserConnected(this.store.getState())) {
             await this.store.dispatch(getConnected());
             if (!isUserConnected(this.store.getState())) {
-                const providerConfiguration = await getProviderConfiguration(this.store.getState());
-                this.store.dispatch(sendEphemeralPost(`Your Mattermost account is not connected to ${providerConfiguration.DisplayName}. In order to create a calendar event please connect your account first using \`/${providerConfiguration.CommandTrigger} connect\`.`));
+                const providerConfiguration = getProviderConfiguration(this.store.getState());
+                const displayName = providerConfiguration?.DisplayName || 'the calendar provider';
+                const commandTrigger = providerConfiguration?.CommandTrigger || 'mscalendar';
+                this.store.dispatch(sendEphemeralPost(`Your Mattermost account is not connected to ${displayName}. In order to create a calendar event please connect your account first using \`/${commandTrigger} connect\`.`));
                 return false;
             }
         }

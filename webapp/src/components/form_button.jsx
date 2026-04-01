@@ -50,7 +50,7 @@ export default class FormButton extends PureComponent {
             <button
                 id='saveSetting'
                 className={className}
-                disabled={disabled}
+                disabled={disabled || saving}
                 {...props}
             >
                 {contents}

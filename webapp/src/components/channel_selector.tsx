@@ -42,7 +42,7 @@ export default function ChannelSelector(props: Props) {
             label: c.display_name,
             value: c.id,
         }));
-    }, []);
+    }, [dispatch, teamId]);
 
     const handleChange = (selected: SelectOption | null) => {
         if (selected) {

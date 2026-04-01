@@ -9,7 +9,8 @@ class Client {
 
     constructor() {
         const url = new URL(window.location.href);
-        this.baseUrl = url.protocol + '//' + url.host;
+        const basePath = url.pathname.replace(/\/+$/, '').split('/plugins/')[0] || '';
+        this.baseUrl = url.protocol + '//' + url.host + basePath;
         this.pluginUrl = this.baseUrl + '/plugins/' + manifest.id;
         this.pluginApiUrl = this.pluginUrl + '/api/v1';
     }

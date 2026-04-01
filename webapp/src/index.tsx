@@ -88,9 +88,14 @@ interface SetupUIProps {
 const SetupUI = ({setup, haveSetupUI, finishedSetupUI}: SetupUIProps) => {
     useEffect(() => {
         if (!haveSetupUI) {
-            setup().then(() => {
-                finishedSetupUI();
-            });
+            setup().
+                catch((error) => {
+                    // eslint-disable-next-line no-console
+                    console.error('Plugin setup failed:', error);
+                }).
+                finally(() => {
+                    finishedSetupUI();
+                });
         }
     }, []);
 

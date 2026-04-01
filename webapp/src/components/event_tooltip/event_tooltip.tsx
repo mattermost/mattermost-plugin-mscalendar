@@ -70,7 +70,7 @@ function formatEventTime(event: RemoteEvent, timezone: string): string {
         return `${startDate} ${startTime} - ${endTime}`;
     }
 
-    return `${start.toLocaleDateString([], dateOptions)} - ${end.toLocaleDateString([], dateOptions)}`;
+    return `${start.toLocaleString([], dateOptions)} - ${end.toLocaleString([], dateOptions)}`;
 }
 
 const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventTooltipProps) => {
@@ -136,6 +136,7 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
                         type='button'
                         className='mscalendar-tooltip__close'
                         onClick={onClose}
+                        aria-label='Close event details'
                         style={{color: theme.centerChannelColor}}
                     >
                         <i className='icon icon-close'/>

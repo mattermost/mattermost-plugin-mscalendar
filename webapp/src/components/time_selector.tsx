@@ -35,11 +35,9 @@ export default function TimeSelector(props: Props) {
 
         if (props.date === getTodayString()) {
             const now = new Date();
-            fromHour = now.getHours();
-            fromMinute = (Math.ceil(now.getMinutes() / 15) * 15) % 60;
-            if (fromMinute === 0) {
-                fromHour++;
-            }
+            const roundedMinutes = Math.ceil(now.getMinutes() / minuteStep) * minuteStep;
+            fromHour = now.getHours() + Math.floor(roundedMinutes / 60);
+            fromMinute = roundedMinutes % 60;
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 

@@ -1,8 +1,8 @@
-import React, {PureComponent} from 'react';
+import React, {CSSProperties, PureComponent} from 'react';
 
 type Props = {
     position?: 'absolute' | 'fixed' | 'relative' | 'static' | 'inherit';
-    style?: object;
+    style?: CSSProperties;
 };
 
 export default class Loading extends PureComponent<Props> {
