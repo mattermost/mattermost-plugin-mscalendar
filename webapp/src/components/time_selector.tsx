@@ -42,9 +42,9 @@ export default function TimeSelector(props: Props) {
         }
 
         if (props.startTime) {
-            const parts = props.startTime.split(':');
-            fromHour = parseInt(parts[0], 10);
-            fromMinute = parseInt(parts[1], 10) + minuteStep;
+            const parsed = parseHHMM(props.startTime);
+            fromHour = parsed.hour;
+            fromMinute = parsed.minute + minuteStep;
             const extraHours = Math.floor(fromMinute / 60);
             fromMinute %= 60;
             fromHour += extraHours;
@@ -56,9 +56,9 @@ export default function TimeSelector(props: Props) {
         }
 
         if (props.endTime) {
-            const parts = props.endTime.split(':');
-            toHour = parseInt(parts[0], 10);
-            toMinute = parseInt(parts[1], 10);
+            const parsed = parseHHMM(props.endTime);
+            toHour = parsed.hour;
+            toMinute = parsed.minute;
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
@@ -88,8 +88,8 @@ export default function TimeSelector(props: Props) {
             props.onChange('start_time', selectedTime);
 
             options.forEach((option: Option, i: number) => {
-                if (option.value === selectedTime && i + 2 < options.length) {
-                    props.onChange('end_time', options[i + 2].value);
+                if (option.value === selectedTime) {
+                    props.onChange('end_time', i + 2 < options.length ? options[i + 2].value : '');
                 }
             });
         }
@@ -104,6 +104,16 @@ export default function TimeSelector(props: Props) {
         />
     );
 }
+
+const parseHHMM = (time: string): {hour: number; minute: number} => {
+    const parts = time.split(':');
+    const hour = parseInt(parts[0], 10);
+    const minute = parseInt(parts[1], 10);
+    return {
+        hour: Number.isNaN(hour) ? 0 : hour,
+        minute: Number.isNaN(minute) ? 0 : minute,
+    };
+};
 
 const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = minuteStep) => {
     const timeArray = [];

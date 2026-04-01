@@ -9,7 +9,8 @@ class Client {
 
     constructor() {
         this.baseUrl = window.location.origin;
-        this.pluginUrl = this.baseUrl + '/plugins/' + manifest.id;
+        const basePath = (window as Window & {basename?: string}).basename ?? '';
+        this.pluginUrl = this.baseUrl + basePath + '/plugins/' + manifest.id;
         this.pluginApiUrl = this.pluginUrl + '/api/v1';
     }
 
@@ -37,7 +38,11 @@ class Client {
             throw new Error(errorData.error || `Request failed with status ${response.status}`);
         }
 
-        return response.json();
+        const text = await response.text();
+        if (!text) {
+            return null as unknown as T;
+        }
+        return JSON.parse(text) as T;
     };
 }
 
