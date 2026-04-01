@@ -25,6 +25,7 @@ class Client {
     private doGet = async <T>(url: string): Promise<T> => {
         const response = await fetch(url, {
             method: 'GET',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',

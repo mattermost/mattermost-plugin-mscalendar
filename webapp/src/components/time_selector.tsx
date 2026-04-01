@@ -45,6 +45,13 @@ export default function TimeSelector(props: Props) {
             const parts = props.startTime.split(':');
             fromHour = parseInt(parts[0], 10);
             fromMinute = parseInt(parts[1], 10) + minuteStep;
+            const extraHours = Math.floor(fromMinute / 60);
+            fromMinute = fromMinute % 60;
+            fromHour += extraHours;
+            if (fromHour >= 24) {
+                fromHour = 23;
+                fromMinute = 59;
+            }
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
