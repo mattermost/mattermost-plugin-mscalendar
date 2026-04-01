@@ -14,7 +14,7 @@ interface CalendarHeaderProps {
 
 function formatDateLabel(start: Date, end: Date, isWeekView: boolean): string {
     if (!isWeekView) {
-        return start.toLocaleDateString(undefined, {
+        return start.toLocaleDateString([], {
             weekday: 'short',
             month: 'short',
             day: 'numeric',
@@ -28,12 +28,12 @@ function formatDateLabel(start: Date, end: Date, isWeekView: boolean): string {
     const sameMonth = start.getMonth() === lastDay.getMonth() && start.getFullYear() === lastDay.getFullYear();
 
     if (sameMonth) {
-        const monthYear = start.toLocaleDateString(undefined, {month: 'short', year: 'numeric'});
+        const monthYear = start.toLocaleDateString([], {month: 'short', year: 'numeric'});
         return `${start.getDate()} - ${lastDay.getDate()} ${monthYear}`;
     }
 
-    const startStr = start.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
-    const endStr = lastDay.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+    const startStr = start.toLocaleDateString([], {month: 'short', day: 'numeric'});
+    const endStr = lastDay.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
     return `${startStr} - ${endStr}`;
 }
 
@@ -48,6 +48,7 @@ const CalendarHeader = ({onPrev, onNext, onToday, onRefresh, loading, currentSta
                     className='mscalendar-sidebar__header-btn'
                     onClick={onPrev}
                     title='Previous'
+                    aria-label='Previous'
                     style={{color: theme.centerChannelColor}}
                 >
                     <i className='icon icon-chevron-left'/>
@@ -58,6 +59,7 @@ const CalendarHeader = ({onPrev, onNext, onToday, onRefresh, loading, currentSta
                     className='mscalendar-sidebar__header-btn'
                     onClick={onNext}
                     title='Next'
+                    aria-label='Next'
                     style={{color: theme.centerChannelColor}}
                 >
                     <i className='icon icon-chevron-right'/>
@@ -70,6 +72,7 @@ const CalendarHeader = ({onPrev, onNext, onToday, onRefresh, loading, currentSta
                     onClick={onRefresh}
                     disabled={loading}
                     title='Refresh'
+                    aria-label='Refresh'
                     style={{color: theme.centerChannelColor}}
                 >
                     <i className={`icon icon-refresh${loading ? ' mscalendar-spin' : ''}`}/>

@@ -1,5 +1,6 @@
 dist
 server/manifest.go
+webapp/src/manifest.ts
 .DS_Store
 .npminstall
 .idea

@@ -88,7 +88,7 @@ func TestToRemoteEvent(t *testing.T) {
 					},
 					Body: &remote.ItemBody{
 						Content:     "Discuss the quarterly results.",
-						ContentType: "text/plain",
+						ContentType: "text",
 					},
 				}
 				assert.Equal(t, expectedEvent, event)

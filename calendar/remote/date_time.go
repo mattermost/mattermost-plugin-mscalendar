@@ -74,6 +74,9 @@ func (dt DateTime) In(timeZone string) *DateTime {
 // from Microsoft's bare datetime + timezone format to RFC3339 with offset,
 // so clients can parse them without needing timezone resolution logic.
 func NormalizeDateTimeToRFC3339(e *Event) {
+	if e == nil {
+		return
+	}
 	if e.Start != nil {
 		e.Start = normalizeDateTime(e.Start)
 	}

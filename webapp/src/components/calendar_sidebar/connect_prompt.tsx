@@ -1,10 +1,9 @@
 import {useCallback} from 'react';
 
+import manifest from '@/manifest';
 import {MattermostTheme} from '@/utils/calendar_theme';
 
 import CalendarIconSVG from './calendar_icon_svg';
-
-const CONNECT_USING_BROWSER_MESSAGE = 'Please connect your Microsoft Calendar account using your web browser. The desktop app cannot open the OAuth window directly.';
 
 function isDesktopApp(): boolean {
     const userAgent = window.navigator.userAgent;
@@ -18,23 +17,25 @@ interface ConnectPromptProps {
 }
 
 const ConnectPrompt = ({theme, pluginServerRoute, sendEphemeralPost}: ConnectPromptProps) => {
+    const pluginName = manifest.name;
+
     const handleConnect = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         if (isDesktopApp()) {
-            sendEphemeralPost(CONNECT_USING_BROWSER_MESSAGE);
+            sendEphemeralPost(`Please connect your ${pluginName} account using your web browser. The desktop app cannot open the OAuth window directly.`);
             return;
         }
         window.open(
             `${pluginServerRoute}/oauth2/connect`,
-            'Connect Mattermost to Microsoft Calendar',
-            'height=570,width=520',
+            `Connect Mattermost to ${pluginName}`,
+            'height=570,width=520,noopener,noreferrer',
         );
-    }, [pluginServerRoute, sendEphemeralPost]);
+    }, [pluginServerRoute, sendEphemeralPost, pluginName]);
 
     return (
         <div className='mscalendar-sidebar__connect'>
             <div className='mscalendar-sidebar__connect-welcome'>
-                {'Welcome to Microsoft Calendar'}
+                {`Welcome to ${pluginName}`}
             </div>
             <div className='mscalendar-sidebar__connect-icon'>
                 <CalendarIconSVG theme={theme}/>

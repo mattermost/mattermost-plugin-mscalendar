@@ -20,7 +20,7 @@ const config = {
             runtime: 'automatic',
             useBuiltIns: true,
         }],
-        ['@babel/typescript', {
+        ['@babel/preset-typescript', {
             allExtensions: true,
             isTSX: true,
         }],
@@ -29,7 +29,7 @@ const config = {
     plugins: [
         '@babel/plugin-proposal-class-properties',
         '@babel/plugin-syntax-dynamic-import',
-        '@babel/proposal-object-rest-spread',
+        '@babel/plugin-proposal-object-rest-spread',
         '@babel/plugin-proposal-optional-chaining',
         'babel-plugin-typescript-to-proptypes',
     ],
@@ -38,10 +38,12 @@ const config = {
 // Jest needs module transformation
 config.env = {
     test: {
-        presets: config.presets,
+        presets: [
+            ['@babel/preset-env', {...config.presets[0][1], modules: 'auto'}],
+            ...config.presets.slice(1),
+        ],
         plugins: config.plugins,
     },
 };
-config.env.test.presets[0][1].modules = 'auto';
 
 module.exports = config;

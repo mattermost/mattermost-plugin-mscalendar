@@ -78,14 +78,6 @@
                 "default": false
             },
             {
-                "key": "ForceOAuth2Consent",
-                "display_name": "Force OAuth2 Consent Prompt:",
-                "type": "bool",
-                "help_text": "When true, users are always prompted to grant consent during the OAuth2 connect flow. Disable this if your Azure AD tenant policy restricts user consent and you have already granted admin consent for the application.",
-                "placeholder": "",
-                "default": true
-            },
-            {
                 "key": "OAuth2Authority",
                 "display_name": "Azure Directory (tenant) ID:",
                 "type": "text",

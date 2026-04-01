@@ -2,20 +2,26 @@ import {createSelector} from 'reselect';
 
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
+import {GlobalState} from '@mattermost/types/store';
 
 import {PluginId} from '../plugin_id';
 
 import {ProviderConfig, ReducerState} from '../reducers';
 import {RemoteEvent} from '../types/calendar';
 
-const getPluginState = (state): ReducerState => state['plugins-' + PluginId] || {};
+const getPluginState = (state: GlobalState): ReducerState =>
+    (state as unknown as Record<string, ReducerState>)['plugins-' + PluginId] || ({} as ReducerState);
 
-export const getSiteURL = (state): string => {
+export const getSiteURL = (state: GlobalState): string => {
     const config = getConfig(state);
 
     let basePath = '';
     if (config && config.SiteURL) {
-        basePath = new URL(config.SiteURL).pathname;
+        try {
+            basePath = new URL(config.SiteURL).pathname;
+        } catch {
+            return '';
+        }
 
         if (basePath && basePath[basePath.length - 1] === '/') {
             basePath = basePath.substring(0, basePath.length - 1);
@@ -25,7 +31,7 @@ export const getSiteURL = (state): string => {
     return basePath;
 };
 
-export const getPluginServerRoute = (state): string => {
+export const getPluginServerRoute = (state: GlobalState): string => {
     return getSiteURL(state) + '/plugins/' + PluginId;
 };
 
@@ -41,15 +47,15 @@ export const getCurrentUserLocale = createSelector(
     },
 );
 
-export const isCreateEventModalVisible = (state) => getPluginState(state).createEventModalVisible;
+export const isCreateEventModalVisible = (state: GlobalState) => getPluginState(state).createEventModalVisible;
 
-export const getCreateEventModal = (state) => getPluginState(state).createEventModal;
+export const getCreateEventModal = (state: GlobalState) => getPluginState(state).createEventModal;
 
-export const isUserConnected = (state): boolean | null => getPluginState(state).userConnected;
+export const isUserConnected = (state: GlobalState): boolean | null => getPluginState(state).userConnected;
 
-export const getProviderConfiguration = (state): ProviderConfig => getPluginState(state).providerConfiguration;
+export const getProviderConfiguration = (state: GlobalState): ProviderConfig | null => getPluginState(state).providerConfiguration;
 
-export function getCalendarEvents(state): RemoteEvent[] {
+export function getCalendarEvents(state: GlobalState): RemoteEvent[] {
     const eventsState = getPluginState(state).events;
     if (!eventsState?.activeKey) {
         return [];
@@ -57,10 +63,10 @@ export function getCalendarEvents(state): RemoteEvent[] {
     return eventsState.cache?.[eventsState.activeKey] || [];
 }
 
-export function getCalendarEventsLoading(state): boolean {
+export function getCalendarEventsLoading(state: GlobalState): boolean {
     return getPluginState(state).events?.loading || false;
 }
 
-export function getCalendarEventsError(state): string | null {
+export function getCalendarEventsError(state: GlobalState): string | null {
     return getPluginState(state).events?.error || null;
 }

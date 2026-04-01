@@ -31,15 +31,28 @@ function formatResponseStatus(response?: string): {label: string; className: str
     }
 }
 
+function buildTzOptions(timezone: string): Intl.DateTimeFormatOptions {
+    if (!timezone || timezone === 'local') {
+        return {};
+    }
+    try {
+        new Intl.DateTimeFormat([], {timeZone: timezone}); // eslint-disable-line no-new
+        return {timeZone: timezone};
+    } catch {
+        return {};
+    }
+}
+
 function formatEventTime(event: RemoteEvent, timezone: string): string {
     if (event.isAllDay) {
         return 'All day';
     }
 
+    const tzProp = buildTzOptions(timezone);
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
         minute: '2-digit',
-        timeZone: timezone || undefined,
+        ...tzProp,
     };
     const dateOptions: Intl.DateTimeFormatOptions = {
         ...options,
@@ -55,21 +68,21 @@ function formatEventTime(event: RemoteEvent, timezone: string): string {
         return '';
     }
 
-    const startDate = start.toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric', timeZone: timezone || undefined});
-    const startTime = start.toLocaleTimeString(undefined, options);
+    const startDate = start.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric', ...tzProp});
+    const startTime = start.toLocaleTimeString([], options);
 
     if (!end) {
         return `${startDate} ${startTime}`;
     }
 
-    const endDate = end.toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric', timeZone: timezone || undefined});
-    const endTime = end.toLocaleTimeString(undefined, options);
+    const endDate = end.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric', ...tzProp});
+    const endTime = end.toLocaleTimeString([], options);
 
     if (startDate === endDate) {
         return `${startDate} ${startTime} - ${endTime}`;
     }
 
-    return `${start.toLocaleDateString(undefined, dateOptions)} - ${end.toLocaleDateString(undefined, dateOptions)}`;
+    return `${start.toLocaleString([], dateOptions)} - ${end.toLocaleString([], dateOptions)}`;
 }
 
 const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventTooltipProps) => {
@@ -88,8 +101,9 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
     const spaceBelow = window.innerHeight - anchorRect.bottom;
     const fitsBelow = spaceBelow > 200;
 
-    const top = fitsBelow ? anchorRect.bottom + 4 : undefined;
-    const bottom = fitsBelow ? undefined : (window.innerHeight - anchorRect.top + 4);
+    const verticalPosition = fitsBelow ?
+        {top: anchorRect.bottom + 4} :
+        {bottom: (window.innerHeight - anchorRect.top) + 4};
     const right = Math.max(8, window.innerWidth - anchorRect.right);
 
     const status = formatResponseStatus(event.responseStatus?.response);
@@ -101,100 +115,113 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
     const weblink = event.weblink;
 
     const tooltip = (
-        <div className='mscalendar-tooltip__backdrop' onClick={onClose}>
+        <div
+            className='mscalendar-tooltip__backdrop'
+            role='presentation'
+            onClick={onClose}
+        >
             <div
                 ref={tooltipRef}
                 className='mscalendar-tooltip'
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                    top,
-                    bottom,
+                    ...verticalPosition,
                     right,
                     backgroundColor: theme.centerChannelBg,
                     color: theme.centerChannelColor,
                 }}
             >
-            <div className='mscalendar-tooltip__header'>
-                <a
-                    className='mscalendar-tooltip__title'
-                    href={weblink}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    style={{color: theme.linkColor}}
-                >
-                    {event.subject || '(No title)'}
-                    <i
-                        className='icon icon-open-in-new'
-                        style={{fontSize: '14px', marginLeft: '4px'}}
-                    />
-                </a>
-                <button
-                    type='button'
-                    className='mscalendar-tooltip__close'
-                    onClick={onClose}
-                    style={{color: theme.centerChannelColor}}
-                >
-                    <i className='icon icon-close'/>
-                </button>
-            </div>
-
-            <div
-                className='mscalendar-tooltip__time'
-                style={{color: theme.centerChannelColor}}
-            >
-                <i className='icon icon-clock-outline'/>
-                <span>{timeDisplay}</span>
-            </div>
-
-            {locationName && (
-                <div className='mscalendar-tooltip__row'>
-                    <i className='icon icon-map-marker-outline'/>
-                    <span>{locationName}</span>
-                </div>
-            )}
-
-            {conferenceUrl && (
-                <div className='mscalendar-tooltip__conference'>
-                    <a
-                        className='mscalendar-tooltip__join-btn'
-                        href={conferenceUrl}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        style={{
-                            backgroundColor: theme.buttonBg,
-                            color: theme.buttonColor,
-                        }}
-                    >
-                        {'Join'}
-                    </a>
-                    {conferenceName && (
+                <div className='mscalendar-tooltip__header'>
+                    {weblink ? (
+                        <a
+                            className='mscalendar-tooltip__title'
+                            href={weblink}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            style={{color: theme.linkColor}}
+                        >
+                            {event.subject || '(No title)'}
+                            <i
+                                className='icon icon-open-in-new'
+                                style={{fontSize: '14px', marginLeft: '4px'}}
+                            />
+                        </a>
+                    ) : (
                         <span
-                            className='mscalendar-tooltip__conference-name'
+                            className='mscalendar-tooltip__title'
                             style={{color: theme.centerChannelColor}}
                         >
-                            <i className='icon icon-video-outline'/>
-                            {conferenceName}
+                            {event.subject || '(No title)'}
                         </span>
                     )}
+                    <button
+                        type='button'
+                        className='mscalendar-tooltip__close'
+                        onClick={onClose}
+                        aria-label='Close event details'
+                        style={{color: theme.centerChannelColor}}
+                    >
+                        <i className='icon icon-close'/>
+                    </button>
                 </div>
-            )}
 
-            {organizerName && (
-                <div className='mscalendar-tooltip__row'>
-                    <i className='icon icon-account-outline'/>
-                    <div className='mscalendar-tooltip__organizer'>
-                        <span>{organizerName}</span>
-                        <span className='mscalendar-tooltip__organizer-label'>{'Organizer'}</span>
+                <div
+                    className='mscalendar-tooltip__time'
+                    style={{color: theme.centerChannelColor}}
+                >
+                    <i className='icon icon-clock-outline'/>
+                    <span>{timeDisplay}</span>
+                </div>
+
+                {locationName && (
+                    <div className='mscalendar-tooltip__row'>
+                        <i className='icon icon-map-marker-outline'/>
+                        <span>{locationName}</span>
                     </div>
-                </div>
-            )}
+                )}
 
-            <div className='mscalendar-tooltip__row mscalendar-tooltip__row--status'>
-                <i className='icon icon-check-circle-outline'/>
-                <span className={`mscalendar-tooltip__status ${status.className}`}>
-                    {status.label}
-                </span>
-            </div>
+                {conferenceUrl && (
+                    <div className='mscalendar-tooltip__conference'>
+                        <a
+                            className='mscalendar-tooltip__join-btn'
+                            href={conferenceUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            style={{
+                                backgroundColor: theme.buttonBg,
+                                color: theme.buttonColor,
+                            }}
+                        >
+                            {'Join'}
+                        </a>
+                        {conferenceName && (
+                            <span
+                                className='mscalendar-tooltip__conference-name'
+                                style={{color: theme.centerChannelColor}}
+                            >
+                                <i className='icon icon-video-outline'/>
+                                {conferenceName}
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {organizerName && (
+                    <div className='mscalendar-tooltip__row'>
+                        <i className='icon icon-account-outline'/>
+                        <div className='mscalendar-tooltip__organizer'>
+                            <span>{organizerName}</span>
+                            <span className='mscalendar-tooltip__organizer-label'>{'Organizer'}</span>
+                        </div>
+                    </div>
+                )}
+
+                <div className='mscalendar-tooltip__row mscalendar-tooltip__row--status'>
+                    <i className='icon icon-check-circle-outline'/>
+                    <span className={`mscalendar-tooltip__status ${status.className}`}>
+                        {status.label}
+                    </span>
+                </div>
             </div>
         </div>
     );

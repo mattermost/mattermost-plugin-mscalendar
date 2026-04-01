@@ -1,8 +1,10 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
-import {Store, Action} from 'redux';
+import {Action, Store} from 'redux';
 
 import {GlobalState} from '@mattermost/types/store';
+
+import type {AppDispatch} from '@/hooks';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
@@ -18,26 +20,45 @@ import {getProviderConfiguration, handleConnect, handleDisconnect, openCreateEve
 import {getProviderConfiguration as getProviderConfigSelector} from './selectors';
 
 export default class Plugin {
-    private haveSetupUI = false;
+    private setupComplete = false;
 
     private finishedSetupUI = () => {
-        this.haveSetupUI = true;
+        this.setupComplete = true;
     };
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
-        this.haveSetupUI = false;
+        this.setupComplete = false;
 
         registry.registerReducer(reducer);
 
         const hooks = new Hooks(store);
         registry.registerSlashCommandWillBePostedHook(hooks.slashCommandWillBePostedHook);
 
+        const thunkDispatch = store.dispatch as AppDispatch;
+
+        registry.registerChannelHeaderMenuAction(
+            <span>{'Create calendar event'}</span>,
+            async (channelID) => {
+                if (await hooks.checkUserIsConnected()) {
+                    thunkDispatch(openCreateEventModal(channelID));
+                }
+            },
+        );
+
+        registry.registerRootComponent(CreateEventModal);
+
+        registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnect(store));
+        registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleDisconnect(store));
+
         const setup = async () => {
-            await store.dispatch(getProviderConfiguration());
+            await thunkDispatch(getProviderConfiguration());
 
-            const providerConfig = getProviderConfigSelector(store.getState() as any);
+            const providerConfig = getProviderConfigSelector(store.getState());
+            if (!providerConfig) {
+                throw new Error('Failed to load provider configuration');
+            }
 
-            if (providerConfig?.Features?.EnableExperimentalUI) {
+            if (providerConfig.Features?.EnableExperimentalUI) {
                 const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(
                     CalendarSidebar,
                     'Calendar',
@@ -50,46 +71,52 @@ export default class Plugin {
                     'Toggle calendar sidebar',
                 );
             }
-
-            registry.registerChannelHeaderMenuAction(
-                <span>{'Create calendar event'}</span>,
-                async (channelID) => {
-                    if (await hooks.checkUserIsConnected()) {
-                        store.dispatch(openCreateEventModal(channelID));
-                    }
-                },
-            );
-
-            registry.registerRootComponent(CreateEventModal);
-
-            registry.registerWebSocketEventHandler(`custom_${PluginId}_connected`, handleConnect(store));
-            registry.registerWebSocketEventHandler(`custom_${PluginId}_disconnected`, handleDisconnect(store));
         };
 
         registry.registerRootComponent(() => (
             <SetupUI
                 setup={setup}
-                haveSetupUI={this.haveSetupUI}
                 finishedSetupUI={this.finishedSetupUI}
             />
         ));
     }
 }
 
+const RETRY_DELAY_MS = 5000;
+const MAX_RETRIES = 3;
+
 interface SetupUIProps {
     setup: () => Promise<void>;
-    haveSetupUI: boolean;
     finishedSetupUI: () => void;
 }
 
-const SetupUI = ({setup, haveSetupUI, finishedSetupUI}: SetupUIProps) => {
-    useEffect(() => {
-        if (!haveSetupUI) {
-            setup().then(() => {
-                finishedSetupUI();
-            });
+const SetupUI = ({setup, finishedSetupUI}: SetupUIProps) => {
+    const [retryCount, setRetryCount] = useState(0);
+    const runningRef = useRef(false);
+
+    const attemptSetup = useCallback(async () => {
+        if (runningRef.current) {
+            return;
         }
-    }, []);
+        runningRef.current = true;
+        try {
+            await setup();
+            finishedSetupUI();
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('Plugin setup failed:', error);
+            runningRef.current = false;
+
+            if (retryCount < MAX_RETRIES) {
+                const scheduleRetry = () => setRetryCount((c) => c + 1);
+                setTimeout(scheduleRetry, RETRY_DELAY_MS);
+            }
+        }
+    }, [setup, finishedSetupUI, retryCount]);
+
+    useEffect(() => {
+        attemptSetup();
+    }, [attemptSetup]);
 
     return null;
 };

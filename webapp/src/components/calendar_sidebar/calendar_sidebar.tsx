@@ -36,9 +36,22 @@ export interface CalendarSidebarProps {
 const EXPANDED_WIDTH_THRESHOLD = 500;
 const POLL_INTERVAL_MS = 60_000;
 
-function getCurrentScrollTime(): string {
+function getCurrentScrollTime(tz?: string): string {
     const now = new Date();
-    const hours = Math.max(0, now.getHours() - 1);
+    let hours: number;
+
+    if (tz) {
+        try {
+            const formatter = new Intl.DateTimeFormat('en-US', {hour: 'numeric', hour12: false, timeZone: tz});
+            hours = parseInt(formatter.format(now), 10);
+        } catch {
+            hours = now.getHours();
+        }
+    } else {
+        hours = now.getHours();
+    }
+
+    hours = Math.max(0, hours - 1);
     return `${String(hours).padStart(2, '0')}:00:00`;
 }
 
@@ -92,14 +105,22 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     }, []);
 
     const handleDateClick = useCallback((arg: DateClickArg) => {
+        if (arg.allDay) {
+            const date = arg.dateStr.slice(0, 10);
+            actions.openCreateEventModal({date, startTime: '', endTime: ''});
+            return;
+        }
+
         const iso = arg.dateStr;
         const date = iso.slice(0, 10);
         const startTime = iso.slice(11, 16);
 
         const [h, m] = startTime.split(':').map(Number);
-        const endMinutes = h * 60 + m + 30;
-        const endH = String(Math.floor(endMinutes / 60) % 24).padStart(2, '0');
-        const endM = String(endMinutes % 60).padStart(2, '0');
+        const endMinutes = (h * 60) + m + 30;
+
+        const clampedEnd = Math.min(endMinutes, 1439);
+        const endH = String(Math.floor(clampedEnd / 60)).padStart(2, '0');
+        const endM = String(clampedEnd % 60).padStart(2, '0');
         const endTime = `${endH}:${endM}`;
 
         actions.openCreateEventModal({date, startTime, endTime});
@@ -182,7 +203,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     );
 
     const containerStyle = useMemo(() => getContainerStyle(theme), [theme]);
-    const scrollTime = useMemo(() => getCurrentScrollTime(), []);
+    const scrollTime = useMemo(() => getCurrentScrollTime(timezone), [timezone]);
 
     if (connected === null) {
         return (
@@ -232,8 +253,11 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
                 />
             )}
             {error && (
-                <div style={{padding: '8px 0', color: theme.dndIndicator || '#D24B4E', fontSize: '0.85em'}}>
-                    {'Unable to load calendar events. Please ensure your account is connected.'}
+                <div
+                    role='alert'
+                    style={{padding: '8px 0', color: theme.dndIndicator || '#D24B4E', fontSize: '0.85em'}}
+                >
+                    {'Unable to load calendar events.'}
                 </div>
             )}
             <div className='mscalendar-sidebar__calendar'>

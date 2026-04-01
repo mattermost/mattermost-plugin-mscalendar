@@ -3,7 +3,7 @@ import React from 'react';
 type Props = {
     inputId?: string;
     label: React.ReactNode;
-    children: React.ReactChildren;
+    children: React.ReactNode;
     helpText?: React.ReactNode;
     required?: boolean;
     hideRequiredStar?: boolean;
@@ -39,9 +39,11 @@ export default function Setting(props: Props) {
             }
             <div>
                 {children}
-                <div className='help-text'>
-                    {helpText}
-                </div>
+                {helpText && (
+                    <div className='help-text'>
+                        {helpText}
+                    </div>
+                )}
             </div>
         </div>
     );

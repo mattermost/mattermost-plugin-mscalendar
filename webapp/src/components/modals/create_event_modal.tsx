@@ -1,7 +1,7 @@
 import React from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
-import {Modal} from 'react-bootstrap';
+import {Modal as BootstrapModal} from 'react-bootstrap';
 
 import {isCreateEventModalVisible} from '@/selectors';
 
@@ -9,10 +9,21 @@ import {closeCreateEventModal} from '@/actions';
 
 import CreateEventForm from './create_event_form';
 
-type Props = {
-}
+type ModalRootProps = React.PropsWithChildren<{
+    dialogClassName?: string;
+    show?: boolean;
+    onHide?: () => void;
+    onExited?: () => void;
+    size?: 'sm' | 'lg' | 'xl';
+    backdrop?: string | boolean;
+}>;
 
-export default function CreateEventModal(props: Props) {
+const Modal = BootstrapModal as unknown as React.FC<ModalRootProps> & {
+    Header: React.FC<React.PropsWithChildren<{closeButton?: boolean}>>;
+    Title: React.FC<React.PropsWithChildren<Record<string, unknown>>>;
+};
+
+export default function CreateEventModal() {
     const visible = useSelector(isCreateEventModalVisible);
 
     const dispatch = useDispatch();
@@ -24,7 +35,6 @@ export default function CreateEventModal(props: Props) {
 
     const content = (
         <CreateEventForm
-            {...props}
             close={close}
         />
     );
@@ -35,7 +45,7 @@ export default function CreateEventModal(props: Props) {
             show={visible}
             onHide={close}
             onExited={close}
-            bsSize='large'
+            size='lg'
             backdrop='static'
         >
             <Modal.Header closeButton={true}>

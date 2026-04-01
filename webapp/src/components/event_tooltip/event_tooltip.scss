@@ -43,6 +43,7 @@
     .mscalendar-tooltip__close {
         background: none;
         border: none;
+        color: inherit;
         cursor: pointer;
         padding: 2px;
         border-radius: 4px;
@@ -54,8 +55,15 @@
             opacity: 1;
         }
 
+        &:focus-visible {
+            opacity: 1;
+            outline: 2px solid var(--button-bg);
+            outline-offset: 1px;
+        }
+
         .icon {
             font-size: 18px;
+            color: inherit;
         }
     }
 
@@ -109,6 +117,12 @@
         &:hover {
             opacity: 0.88;
             text-decoration: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--button-bg);
+            outline-offset: 1px;
+            opacity: 1;
         }
     }
 

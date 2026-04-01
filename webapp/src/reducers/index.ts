@@ -3,7 +3,16 @@ import {combineReducers} from 'redux';
 import ActionTypes from '../constants';
 import {RemoteEvent} from '../types/calendar';
 
-function userConnected(state: boolean | null = null, action) {
+type PluginAction = {
+    type: string;
+    data?: Record<string, unknown>;
+    key?: string;
+    from?: string;
+    to?: string;
+    error?: {message?: string};
+};
+
+function userConnected(state: boolean | null = null, action: PluginAction) {
     switch (action.type) {
     case ActionTypes.RECEIVED_CONNECTED:
         return true;
@@ -14,10 +23,9 @@ function userConnected(state: boolean | null = null, action) {
     }
 }
 
-const createEventModalVisible = (state = false, action) => {
+const createEventModalVisible = (state = false, action: PluginAction) => {
     switch (action.type) {
     case ActionTypes.OPEN_CREATE_EVENT_MODAL:
-    case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
         return true;
     case ActionTypes.CLOSE_CREATE_EVENT_MODAL:
         return false;
@@ -26,17 +34,16 @@ const createEventModalVisible = (state = false, action) => {
     }
 };
 
-const createEventModal = (state = {}, action) => {
+const createEventModal = (state = {}, action: PluginAction) => {
     switch (action.type) {
     case ActionTypes.OPEN_CREATE_EVENT_MODAL:
-    case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
         return {
-            postId: action.data.postId,
-            description: action.data.description,
-            channelId: action.data.channelId,
-            date: action.data.date,
-            startTime: action.data.startTime,
-            endTime: action.data.endTime,
+            postId: action.data?.postId,
+            description: action.data?.description,
+            channelId: action.data?.channelId,
+            date: action.data?.date,
+            startTime: action.data?.startTime,
+            endTime: action.data?.endTime,
         };
     case ActionTypes.CLOSE_CREATE_EVENT_MODAL:
         return {};
@@ -45,7 +52,7 @@ const createEventModal = (state = {}, action) => {
     }
 };
 
-function providerConfiguration(state = null, action) {
+function providerConfiguration(state = null, action: PluginAction) {
     switch (action.type) {
     case ActionTypes.RECEIVED_PROVIDER_CONFIGURATION:
         return action.data;
@@ -85,28 +92,40 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         };
     case ActionTypes.RECEIVED_EVENTS: {
         const key = action.key || state.activeKey || '';
-        const isLatest = key === state.activeKey;
+        if (key !== state.activeKey) {
+            return {...state, cache: {...state.cache, [key]: action.data || []}};
+        }
         return {
             ...state,
             cache: {...state.cache, [key]: action.data || []},
-            loading: isLatest ? false : state.loading,
-            error: null,
-        };
-    }
-    case ActionTypes.RECEIVED_CACHED_EVENTS:
-        return {
-            ...state,
-            activeKey: action.key || null,
             activeFrom: action.from || state.activeFrom,
             activeTo: action.to || state.activeTo,
             loading: false,
             error: null,
         };
-    case ActionTypes.RECEIVED_FRESH_EVENTS: {
-        const freshKey = action.key || state.activeKey || '';
+    }
+    case ActionTypes.RECEIVED_CACHED_EVENTS: {
+        const cachedKey = action.key || null;
+        if (cachedKey !== state.activeKey) {
+            return state;
+        }
         return {
             ...state,
-            cache: {[freshKey]: action.data || []},
+            activeKey: cachedKey,
+            activeFrom: action.from || state.activeFrom,
+            activeTo: action.to || state.activeTo,
+            loading: false,
+            error: null,
+        };
+    }
+    case ActionTypes.RECEIVED_FRESH_EVENTS: {
+        const freshKey = action.key || state.activeKey || '';
+        if (freshKey !== state.activeKey) {
+            return state;
+        }
+        return {
+            ...state,
+            cache: {...state.cache, [freshKey]: action.data || []},
             activeKey: freshKey,
             activeFrom: action.from || state.activeFrom,
             activeTo: action.to || state.activeTo,
@@ -114,8 +133,13 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
             error: null,
         };
     }
-    case ActionTypes.FETCH_EVENTS_ERROR:
+    case ActionTypes.FETCH_EVENTS_ERROR: {
+        const errorKey = action.key || state.activeKey;
+        if (errorKey !== state.activeKey) {
+            return state;
+        }
         return {...state, loading: false, error: action.error?.message || 'Failed to fetch events'};
+    }
     default:
         return state;
     }
@@ -156,8 +180,8 @@ export type ReducerState = {
         date?: string;
         startTime?: string;
         endTime?: string;
-    } | null;
-    providerConfiguration: ProviderConfig;
+    };
+    providerConfiguration: ProviderConfig | null;
     events: {
         cache: Record<string, RemoteEvent[]>;
         activeKey: string | null;
