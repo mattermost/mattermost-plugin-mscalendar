@@ -83,7 +83,13 @@ function ReactSelectSetting(props: Props) {
     useEffect(() => {
         const current = getComparableValue(props.value);
         if (invalid && current !== prevValueRef.current) {
-            setInvalid(false);
+            let valueIsValid = Boolean(props.value);
+            if (props.value && Array.isArray(props.value)) {
+                valueIsValid = Boolean(props.value.length);
+            }
+            if (valueIsValid) {
+                setInvalid(false);
+            }
         }
         prevValueRef.current = current;
     }, [props.value, invalid]);

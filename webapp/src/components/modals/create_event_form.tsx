@@ -132,7 +132,10 @@ export default function CreateEventForm(props: Props) {
     let error;
     if (storedError) {
         error = (
-            <p className='alert alert-danger'>
+            <p
+                className='alert alert-danger'
+                role='alert'
+            >
                 <i
                     style={{marginRight: '10px'}}
                     className='fa fa-warning'

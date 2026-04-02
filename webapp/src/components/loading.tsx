@@ -9,7 +9,7 @@ function Loading({position = 'relative', style = {}}: Props) {
     return (
         <div
             className='loading-screen'
-            style={{position, ...style}}
+            style={{...style, position}}
             role='status'
             aria-live='polite'
             aria-busy='true'

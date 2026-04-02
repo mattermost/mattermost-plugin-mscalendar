@@ -1,6 +1,4 @@
-import React, {memo, useRef} from 'react';
-
-let formButtonCounter = 0;
+import React, {memo, useId} from 'react';
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
     id?: string;
@@ -29,12 +27,8 @@ function FormButton({
     children,
     ...rest
 }: Props) {
-    const generatedIdRef = useRef<string>('');
-    if (!generatedIdRef.current) {
-        formButtonCounter += 1;
-        generatedIdRef.current = `formButton-${formButtonCounter}`;
-    }
-    const buttonId = id || generatedIdRef.current;
+    const generatedId = useId();
+    const buttonId = id || generatedId;
 
     let contents: React.ReactNode;
     if (executing) {
@@ -60,22 +54,25 @@ function FormButton({
             </span>
         );
     } else {
-        contents = children || defaultMessage;
+        contents = children ?? defaultMessage;
     }
 
     let className = 'save-button btn ' + btnClass;
     if (extraClasses) {
         className += ' ' + extraClasses;
     }
+    if (rest.className) {
+        className += ' ' + rest.className;
+    }
 
     return (
         <button
+            {...rest}
             id={buttonId}
             className={className}
             disabled={disabled || saving || executing}
             aria-busy={saving || executing}
             type={type}
-            {...rest}
         >
             {contents}
         </button>

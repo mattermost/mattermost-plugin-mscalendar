@@ -42,6 +42,7 @@ export default function ChannelSelector(props: Props) {
 
         if (response.error) {
             setStoredError(response.error);
+            setResolving(false);
             return [];
         }
 
