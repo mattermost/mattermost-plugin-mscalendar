@@ -49,7 +49,7 @@ export default function CreateEventForm(props: Props) {
         date: modalData?.date || getTodayString(),
         start_time: modalData?.startTime || '',
         end_time: modalData?.endTime || '',
-        description: '',
+        description: modalData?.description || '',
         channel_id: modalData?.channelId || '',
         location: '',
     });

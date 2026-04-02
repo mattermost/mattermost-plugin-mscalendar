@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 
 import AsyncSelect from 'react-select/async';
@@ -73,6 +73,16 @@ export default function ChannelSelector(props: Props) {
             }
         }
     }, [dispatch, teamId, props.value]);
+
+    useEffect(() => {
+        if (props.value && selectedOption?.value !== props.value) {
+            setResolving(true);
+            loadOptions('');
+        } else if (!props.value) {
+            setSelectedOption(null);
+            setResolving(false);
+        }
+    }, [props.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleChange = (selected: SelectOption | null) => {
         setSelectedOption(selected);
