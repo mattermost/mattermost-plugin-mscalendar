@@ -56,9 +56,7 @@ export default function ChannelSelector(props: Props) {
 
     const handleChange = (selected: SelectOption | null) => {
         setSelectedOption(selected);
-        if (selected) {
-            props.onChange(selected.value);
-        }
+        props.onChange(selected ? selected.value : '');
     };
 
     let displayValue: SelectOption | null = null;

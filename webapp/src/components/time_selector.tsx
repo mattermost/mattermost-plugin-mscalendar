@@ -98,8 +98,9 @@ export default function TimeSelector(props: Props) {
             props.onChange('start_time', selectedTime);
 
             options.forEach((option: Option, i: number) => {
-                if (option.value === selectedTime) {
-                    props.onChange('end_time', i + 2 < options.length ? options[i + 2].value : '');
+                if (option.value === selectedTime && i + 1 < options.length) {
+                    const endIdx = Math.min(i + 2, options.length - 1);
+                    props.onChange('end_time', options[endIdx].value);
                 }
             });
         }
