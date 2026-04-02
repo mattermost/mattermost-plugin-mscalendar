@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
 import ReactSelect, {ActionMeta, GroupBase, Props as ReactSelectBaseProps} from 'react-select';
 import AsyncSelect from 'react-select/async';
 import CreatableSelect from 'react-select/creatable';
@@ -29,146 +29,142 @@ export type Props = OmitKeys<ReactSelectBaseProps<ReactSelectOption, boolean, Gr
     resetInvalidOnChange?: boolean;
 };
 
-type State = {
-    invalid: boolean;
-};
-
-export default class ReactSelectSetting extends React.PureComponent<Props, State> {
-    state: State = {invalid: false};
-
-    componentDidMount() {
-        if (this.props.addValidate) {
-            this.props.addValidate(this.isValid);
-        }
+function getComparableValue(v: Props['value']): string | null {
+    if (!v) {
+        return null;
     }
-
-    componentWillUnmount() {
-        if (this.props.removeValidate) {
-            this.props.removeValidate(this.isValid);
-        }
+    if (Array.isArray(v)) {
+        return (v as ReactSelectOption[]).map((o) => o.value).sort().join(',');
     }
+    return (v as ReactSelectOption).value;
+}
 
-    componentDidUpdate(prevProps: Props, prevState: State) {
-        const getComparableValue = (v: Props['value']): string | null => {
-            if (!v) {
-                return null;
-            }
-            if (Array.isArray(v)) {
-                return (v as ReactSelectOption[]).map((o) => o.value).sort().join(',');
-            }
-            return (v as ReactSelectOption).value;
+function ReactSelectSetting(props: Props) {
+    const {
+        theme,
+        label,
+        addValidate,
+        removeValidate,
+        allowUserDefinedValue,
+        limitOptions,
+        resetInvalidOnChange,
+        onChange,
+        ...selectProps
+    } = props;
+
+    const [invalid, setInvalid] = useState(false);
+    const prevValueRef = useRef(getComparableValue(props.value));
+
+    const isValid = useCallback(() => {
+        if (!props.required) {
+            return true;
+        }
+
+        let valid = Boolean(props.value);
+        if (props.value && Array.isArray(props.value)) {
+            valid = Boolean(props.value.length);
+        }
+
+        setInvalid(!valid);
+        return valid;
+    }, [props.required, props.value]);
+
+    useEffect(() => {
+        addValidate?.(isValid);
+        return () => {
+            removeValidate?.(isValid);
         };
-        if (prevState.invalid && getComparableValue(this.props.value) !== getComparableValue(prevProps.value)) {
-            this.setState({invalid: false}); //eslint-disable-line react/no-did-update-set-state
-        }
-    }
+    }, [addValidate, removeValidate, isValid]);
 
-    handleChange = (value: readonly ReactSelectOption[] | ReactSelectOption | null, action: ActionMeta<ReactSelectOption>) => {
-        if (this.props.onChange) {
+    useEffect(() => {
+        const current = getComparableValue(props.value);
+        if (invalid && current !== prevValueRef.current) {
+            setInvalid(false);
+        }
+        prevValueRef.current = current;
+    }, [props.value, invalid]);
+
+    const handleChange = useCallback((value: readonly ReactSelectOption[] | ReactSelectOption | null, _action: ActionMeta<ReactSelectOption>) => {
+        if (onChange) {
             if (Array.isArray(value)) {
-                this.props.onChange(this.props.name, (value as ReactSelectOption[]).map((x) => x.value));
+                onChange(props.name, (value as ReactSelectOption[]).map((x) => x.value));
             } else {
                 const single = value as ReactSelectOption | null;
-                this.props.onChange(this.props.name, single ? single.value : null);
+                onChange(props.name, single ? single.value : null);
             }
         }
-        if (this.props.resetInvalidOnChange) {
-            this.setState({invalid: false});
+        if (resetInvalidOnChange) {
+            setInvalid(false);
         }
-    };
+    }, [onChange, props.name, resetInvalidOnChange]);
 
-    filterOptions = (input: string) => {
-        let options = this.props.options ?? [];
+    const filterOptions = useCallback((input: string) => {
+        let options = props.options ?? [];
         if (input) {
             options = options.filter((opt) => 'label' in opt && opt.label?.toUpperCase().includes(input.toUpperCase()));
         }
         return Promise.resolve(options.slice(0, MAX_NUM_OPTIONS));
-    };
+    }, [props.options]);
 
-    isValid = () => {
-        if (!this.props.required) {
-            return true;
-        }
+    const requiredMsg = 'This field is required.';
+    let validationError = null;
 
-        let valid = Boolean(this.props.value);
-        if (this.props.value && Array.isArray(this.props.value)) {
-            valid = Boolean(this.props.value.length);
-        }
-
-        this.setState({invalid: !valid});
-        return valid;
-    };
-
-    render() {
-        const {
-            theme,
-            label,
-            addValidate,
-            removeValidate,
-            allowUserDefinedValue,
-            limitOptions,
-            resetInvalidOnChange,
-            onChange,
-            ...selectProps
-        } = this.props;
-
-        const requiredMsg = 'This field is required.';
-        let validationError = null;
-
-        if (this.props.required && this.state.invalid) {
-            validationError = (
-                <p className='help-text error-text'>
-                    <span>{requiredMsg}</span>
-                </p>
-            );
-        }
-
-        let selectComponent = null;
-        if (limitOptions && (selectProps.options?.length ?? 0) > MAX_NUM_OPTIONS) {
-            selectComponent = (
-                <AsyncSelect
-                    {...selectProps}
-                    loadOptions={this.filterOptions}
-                    defaultOptions={true}
-                    menuPortalTarget={document.body}
-                    menuPlacement='auto'
-                    onChange={this.handleChange}
-                    styles={getStyleForReactSelect(theme)}
-                />
-            );
-        } else if (allowUserDefinedValue) {
-            selectComponent = (
-                <CreatableSelect
-                    {...selectProps}
-                    noOptionsMessage={() => 'Start typing...'}
-                    formatCreateLabel={(value) => `Add "${value}"`}
-                    placeholder=''
-                    menuPortalTarget={document.body}
-                    menuPlacement='auto'
-                    onChange={this.handleChange}
-                    styles={getStyleForReactSelect(theme)}
-                />
-            );
-        } else {
-            selectComponent = (
-                <ReactSelect
-                    {...selectProps}
-                    menuPortalTarget={document.body}
-                    menuPlacement='auto'
-                    onChange={this.handleChange}
-                    styles={getStyleForReactSelect(theme)}
-                />
-            );
-        }
-        return (
-            <Setting
-                inputId={this.props.name}
-                label={this.props.label}
-                required={this.props.required}
-            >
-                {selectComponent}
-                {validationError}
-            </Setting>
+    if (props.required && invalid) {
+        validationError = (
+            <p className='help-text error-text'>
+                <span>{requiredMsg}</span>
+            </p>
         );
     }
+
+    let selectComponent = null;
+    if (limitOptions && (selectProps.options?.length ?? 0) > MAX_NUM_OPTIONS) {
+        selectComponent = (
+            <AsyncSelect
+                {...selectProps}
+                loadOptions={filterOptions}
+                defaultOptions={true}
+                menuPortalTarget={document.body}
+                menuPlacement='auto'
+                onChange={handleChange}
+                styles={getStyleForReactSelect(theme)}
+            />
+        );
+    } else if (allowUserDefinedValue) {
+        selectComponent = (
+            <CreatableSelect
+                {...selectProps}
+                noOptionsMessage={() => 'Start typing...'}
+                formatCreateLabel={(value) => `Add "${value}"`}
+                placeholder=''
+                menuPortalTarget={document.body}
+                menuPlacement='auto'
+                onChange={handleChange}
+                styles={getStyleForReactSelect(theme)}
+            />
+        );
+    } else {
+        selectComponent = (
+            <ReactSelect
+                {...selectProps}
+                menuPortalTarget={document.body}
+                menuPlacement='auto'
+                onChange={handleChange}
+                styles={getStyleForReactSelect(theme)}
+            />
+        );
+    }
+
+    return (
+        <Setting
+            inputId={props.name}
+            label={props.label}
+            required={props.required}
+        >
+            {selectComponent}
+            {validationError}
+        </Setting>
+    );
 }
+
+export default memo(ReactSelectSetting);

@@ -60,11 +60,7 @@ export default function CreateEventForm(props: Props) {
 
     const theme = useSelector(getTheme);
 
-    const handleClose = (e?: Event) => {
-        if (e && e.preventDefault) {
-            e.preventDefault();
-        }
-
+    const handleClose = () => {
         props.close();
     };
 
