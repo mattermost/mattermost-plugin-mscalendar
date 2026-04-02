@@ -30,29 +30,22 @@ function FormButton({
     const generatedId = useId();
     const buttonId = id || generatedId;
 
+    const spinner = (message: React.ReactNode) => (
+        <span>
+            <span
+                className='fa fa-spin fa-spinner'
+                title={'Loading Icon'}
+                aria-hidden={true}
+            />
+            {message}
+        </span>
+    );
+
     let contents: React.ReactNode;
     if (executing) {
-        contents = (
-            <span>
-                <span
-                    className='fa fa-spin fa-spinner'
-                    title={'Loading Icon'}
-                    aria-hidden={true}
-                />
-                {executingMessage ?? savingMessage}
-            </span>
-        );
+        contents = spinner(executingMessage ?? savingMessage);
     } else if (saving) {
-        contents = (
-            <span>
-                <span
-                    className='fa fa-spin fa-spinner'
-                    title={'Loading Icon'}
-                    aria-hidden={true}
-                />
-                {savingMessage}
-            </span>
-        );
+        contents = spinner(savingMessage);
     } else {
         contents = children ?? defaultMessage;
     }
