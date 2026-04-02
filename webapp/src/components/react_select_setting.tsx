@@ -54,20 +54,24 @@ function ReactSelectSetting(props: Props) {
 
     const [invalid, setInvalid] = useState(false);
     const prevValueRef = useRef(getComparableValue(props.value));
+    const valueRef = useRef(props.value);
+    const requiredRef = useRef(props.required);
+    valueRef.current = props.value;
+    requiredRef.current = props.required;
 
     const isValid = useCallback(() => {
-        if (!props.required) {
+        if (!requiredRef.current) {
             return true;
         }
 
-        let valid = Boolean(props.value);
-        if (props.value && Array.isArray(props.value)) {
-            valid = Boolean(props.value.length);
+        let valid = Boolean(valueRef.current);
+        if (valueRef.current && Array.isArray(valueRef.current)) {
+            valid = Boolean(valueRef.current.length);
         }
 
         setInvalid(!valid);
         return valid;
-    }, [props.required, props.value]);
+    }, []);
 
     useEffect(() => {
         addValidate?.(isValid);

@@ -73,6 +73,7 @@ function FormButton({
             id={buttonId}
             className={className}
             disabled={disabled || saving || executing}
+            aria-busy={saving || executing}
             type={type}
             {...rest}
         >

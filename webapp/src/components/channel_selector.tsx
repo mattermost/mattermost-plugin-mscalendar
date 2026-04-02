@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 
 import AsyncSelect from 'react-select/async';
@@ -23,6 +23,7 @@ type Props = {
 export default function ChannelSelector(props: Props) {
     const [storedError, setStoredError] = useState('');
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(null);
+    const requestIdRef = useRef(0);
 
     const theme = useSelector(getTheme);
     const teamId = useSelector(getCurrentTeamId);
@@ -30,7 +31,12 @@ export default function ChannelSelector(props: Props) {
     const dispatch = useAppDispatch();
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
+        const requestId = ++requestIdRef.current;
         const response = await dispatch(autocompleteUserChannels(input, teamId));
+
+        if (requestId !== requestIdRef.current) {
+            return [];
+        }
 
         if (response.error) {
             setStoredError(response.error);
@@ -44,7 +50,7 @@ export default function ChannelSelector(props: Props) {
             value: c.id,
         }));
 
-        if (props.value && (!selectedOption || selectedOption.value !== props.value)) {
+        if (props.value) {
             const match = options.find((o) => o.value === props.value);
             if (match) {
                 setSelectedOption(match);
@@ -52,19 +58,15 @@ export default function ChannelSelector(props: Props) {
         }
 
         return options;
-    }, [dispatch, teamId, props.value, selectedOption]);
+    }, [dispatch, teamId, props.value]);
 
     const handleChange = (selected: SelectOption | null) => {
         setSelectedOption(selected);
         props.onChange(selected ? selected.value : '');
     };
 
-    let displayValue: SelectOption | null = null;
-    if (props.value) {
-        displayValue = selectedOption?.value === props.value ?
-            selectedOption :
-            {label: props.value, value: props.value};
-    }
+    const displayValue: SelectOption | null =
+        (props.value && selectedOption?.value === props.value) ? selectedOption : null;
 
     return (
         <>

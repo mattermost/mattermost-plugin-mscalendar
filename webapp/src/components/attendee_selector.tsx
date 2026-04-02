@@ -59,8 +59,12 @@ export default function AttendeeSelector(props: Props) {
         return options;
     }, [dispatch]);
 
-    const isValidEmail = (input: string): boolean => {
-        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(input.trim());
+    const isValidNewOption = (input: string): boolean => {
+        const trimmed = input.trim().toLowerCase();
+        if (!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(trimmed)) {
+            return false;
+        }
+        return !props.value.some((v) => v.toLowerCase() === trimmed);
     };
 
     const handleChange = (selected: readonly SelectOption[] | null) => {
@@ -90,7 +94,7 @@ export default function AttendeeSelector(props: Props) {
                 menuPortalTarget={document.body}
                 menuPlacement='auto'
                 onChange={handleChange}
-                isValidNewOption={isValidEmail}
+                isValidNewOption={isValidNewOption}
                 styles={getStyleForReactSelect(theme)}
                 isMulti={true}
             />

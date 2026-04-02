@@ -35,8 +35,10 @@ export default function TimeSelector(props: Props) {
         let toHour = 23;
         let toMinute = isStartTimeSelector ? 30 : 45;
         let ranges: string[] = [];
+        let constrainedByDate = false;
 
         if (props.date === getTodayString()) {
+            constrainedByDate = true;
             const now = new Date();
             const roundedMinutes = Math.ceil(now.getMinutes() / minuteStep) * minuteStep;
             fromHour = now.getHours() + Math.floor(roundedMinutes / 60);
@@ -72,7 +74,7 @@ export default function TimeSelector(props: Props) {
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
-        if (!ranges.length && !props.startTime) {
+        if (!ranges.length && !props.startTime && !constrainedByDate) {
             ranges = generateMilitaryTimeArray(0, 0, toHour, toMinute);
         }
 
