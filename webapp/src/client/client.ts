@@ -1,5 +1,5 @@
 import {RemoteEvent} from '@/types/calendar';
-
+import type {ProviderConfig} from '@/reducers';
 import manifest from '../manifest';
 
 class Client {
@@ -14,16 +14,18 @@ class Client {
         this.pluginApiUrl = this.pluginUrl + '/api/v1';
     }
 
-    getProviderConfiguration = async (): Promise<any> => {
-        return this.doGet(`${this.pluginApiUrl}/provider`);
+    getProviderConfiguration = async (): Promise<ProviderConfig | null> => {
+        const config = await this.doGet<ProviderConfig>(`${this.pluginApiUrl}/provider`);
+        return config || null;
     };
 
-    getCalendarEvents = async (from: string, to: string): Promise<RemoteEvent[]> => {
+    getCalendarEvents = async (from: string, to: string): Promise<RemoteEvent[] | null> => {
         const params = new URLSearchParams({from, to});
-        return this.doGet<RemoteEvent[]>(`${this.pluginApiUrl}/events/view?${params.toString()}`);
+        const events = await this.doGet<RemoteEvent[]>(`${this.pluginApiUrl}/events/view?${params.toString()}`);
+        return events || [];
     };
 
-    private doGet = async <T>(url: string): Promise<T> => {
+    private doGet = async <T>(url: string): Promise<T | null> => {
         const response = await fetch(url, {
             method: 'GET',
             credentials: 'same-origin',
@@ -39,10 +41,14 @@ class Client {
         }
 
         const text = await response.text();
-        if (!text) {
-            return null as unknown as T;
+        if (!text.trim()) {
+            return null;
         }
-        return JSON.parse(text) as T;
+        try {
+            return JSON.parse(text) as T;
+        } catch {
+            throw new Error(`Failed to parse response JSON: ${text}`);
+        }
     };
 }
 

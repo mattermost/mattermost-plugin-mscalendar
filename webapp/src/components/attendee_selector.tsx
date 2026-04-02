@@ -68,12 +68,12 @@ export default function AttendeeSelector(props: Props) {
             setLabelMap((prev) => {
                 const next = {...prev};
                 for (const opt of selected) {
-                    next[opt.value] = opt.label;
+                    next[opt.value.trim()] = opt.label.trim();
                 }
                 return next;
             });
         }
-        props.onChange(selected ? selected.map((option) => option.value) : []);
+        props.onChange(selected ? selected.map((option) => option.value.trim()) : []);
     };
 
     const selectedValues = props.value.map((v) => ({
