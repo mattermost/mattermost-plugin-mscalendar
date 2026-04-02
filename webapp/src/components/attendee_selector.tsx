@@ -70,9 +70,9 @@ export default function AttendeeSelector(props: Props) {
         if (!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(trimmed)) {
             return false;
         }
-        const inSelected = props.value.some((v) => v.toLowerCase() === trimmed);
+        const inSelected = props.value.some((v) => v.trim().toLowerCase() === trimmed);
         const inOptions = selectOptions.some((opt) =>
-            'value' in opt && opt.value.toLowerCase() === trimmed,
+            'value' in opt && opt.value.trim().toLowerCase() === trimmed,
         );
         return !inSelected && !inOptions;
     };

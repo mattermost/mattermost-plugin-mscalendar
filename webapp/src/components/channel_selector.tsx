@@ -34,34 +34,44 @@ export default function ChannelSelector(props: Props) {
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
         const requestId = ++requestIdRef.current;
-        const response = await dispatch(autocompleteUserChannels(input, teamId));
 
-        if (requestId !== requestIdRef.current) {
+        try {
+            const response = await dispatch(autocompleteUserChannels(input, teamId));
+
+            if (requestId !== requestIdRef.current) {
+                return [];
+            }
+
+            if (response.error) {
+                setStoredError(response.error);
+                return [];
+            }
+
+            setStoredError('');
+
+            const options = (response.data ?? []).map((c) => ({
+                label: c.display_name,
+                value: c.id,
+            }));
+
+            if (props.value) {
+                const match = options.find((o) => o.value === props.value);
+                if (match) {
+                    setSelectedOption(match);
+                }
+            }
+
+            return options;
+        } catch (err) {
+            if (requestId === requestIdRef.current) {
+                setStoredError(String(err));
+            }
             return [];
-        }
-
-        if (response.error) {
-            setStoredError(response.error);
-            setResolving(false);
-            return [];
-        }
-
-        setStoredError('');
-
-        const options = (response.data ?? []).map((c) => ({
-            label: c.display_name,
-            value: c.id,
-        }));
-
-        if (props.value) {
-            const match = options.find((o) => o.value === props.value);
-            if (match) {
-                setSelectedOption(match);
+        } finally {
+            if (requestId === requestIdRef.current) {
+                setResolving(false);
             }
         }
-
-        setResolving(false);
-        return options;
     }, [dispatch, teamId, props.value]);
 
     const handleChange = (selected: SelectOption | null) => {

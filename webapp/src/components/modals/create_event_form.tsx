@@ -3,6 +3,9 @@ import {useSelector} from 'react-redux';
 
 import {Modal as BootstrapModal} from 'react-bootstrap';
 
+// react-bootstrap is provided by the Mattermost runtime, not bundled by the
+// plugin. The installed @types/react-bootstrap don't match that runtime version,
+// so we cast through unknown to a compatible FC type.
 type ModalSectionProps = React.PropsWithChildren<{ style?: React.CSSProperties }>;
 const ModalBody = BootstrapModal.Body as unknown as React.FC<ModalSectionProps>;
 const ModalFooter = BootstrapModal.Footer as unknown as React.FC<ModalSectionProps>;
@@ -113,7 +116,7 @@ export default function CreateEventForm(props: Props) {
             <FormButton
                 id='submit-button'
                 type='submit'
-                btnClass='btn btn-primary'
+                btnClass='btn-primary'
                 saving={submitting}
                 disabled={disableSubmit}
             >
