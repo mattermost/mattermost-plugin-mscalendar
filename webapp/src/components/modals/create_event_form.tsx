@@ -90,8 +90,8 @@ export default function CreateEventForm(props: Props) {
                 return;
             }
 
-            await dispatch(refreshActiveCalendarView());
             handleClose();
+            dispatch(refreshActiveCalendarView());
         } catch (err: any) {
             handleError(err.message || 'An unexpected error occurred.');
         } finally {

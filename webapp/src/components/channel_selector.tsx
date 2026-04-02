@@ -79,6 +79,7 @@ export default function ChannelSelector(props: Props) {
             setResolving(true);
             loadOptions('');
         } else if (!props.value) {
+            ++requestIdRef.current;
             setSelectedOption(null);
             setResolving(false);
         }
