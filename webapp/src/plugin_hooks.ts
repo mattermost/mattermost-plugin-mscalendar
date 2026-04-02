@@ -25,7 +25,7 @@ export default class Hooks {
         const message = rawMessage ? rawMessage.trim() : '';
 
         if (!message) {
-            return {message, args: contextArgs};
+            return {message: rawMessage, args: contextArgs};
         }
 
         const providerConfiguration = getProviderConfiguration(this.store.getState());
@@ -36,7 +36,7 @@ export default class Hooks {
             }
         }
 
-        return {message, args: contextArgs};
+        return {message: rawMessage, args: contextArgs};
     };
 
     handleCreateEventSlashCommand = async (_message: string, contextArgs: ContextArgs) => {

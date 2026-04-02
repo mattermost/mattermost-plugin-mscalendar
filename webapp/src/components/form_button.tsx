@@ -39,7 +39,7 @@ function FormButton({
                     title={'Loading Icon'}
                     aria-hidden={true}
                 />
-                {executingMessage || savingMessage}
+                {executingMessage ?? savingMessage}
             </span>
         );
     } else if (saving) {

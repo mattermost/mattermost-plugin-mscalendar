@@ -175,8 +175,6 @@ type ActualFormProps = {
 const ActualForm = (props: ActualFormProps) => {
     const {formValues, setFormValue} = props;
 
-    const theme = useSelector(getTheme);
-
     const components = [
         {
             id: 'subject',

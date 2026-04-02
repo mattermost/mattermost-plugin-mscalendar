@@ -109,11 +109,23 @@ function ReactSelectSetting(props: Props) {
     }, [onChange, props.name, resetInvalidOnChange]);
 
     const filterOptions = useCallback((input: string) => {
-        let options = props.options ?? [];
-        if (input) {
-            options = options.filter((opt) => 'label' in opt && opt.label?.toUpperCase().includes(input.toUpperCase()));
+        const raw = props.options ?? [];
+        if (!input) {
+            return Promise.resolve(raw.slice(0, MAX_NUM_OPTIONS));
         }
-        return Promise.resolve(options.slice(0, MAX_NUM_OPTIONS));
+        const term = input.toUpperCase();
+        const filtered: (ReactSelectOption | GroupBase<ReactSelectOption>)[] = [];
+        for (const entry of raw) {
+            if ('options' in entry) {
+                const children = entry.options.filter((child) => child.label?.toUpperCase().includes(term));
+                if (children.length) {
+                    filtered.push({...entry, options: children});
+                }
+            } else if (entry.label?.toUpperCase().includes(term)) {
+                filtered.push(entry);
+            }
+        }
+        return Promise.resolve(filtered.slice(0, MAX_NUM_OPTIONS));
     }, [props.options]);
 
     const requiredMsg = 'This field is required.';
