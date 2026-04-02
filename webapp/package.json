@@ -40,7 +40,6 @@
     "@types/react-transition-group": "4.4.0",
     "@typescript-eslint/eslint-plugin": "5.10.1",
     "@typescript-eslint/parser": "5.10.1",
-    "@typescript-eslint/typescript-estree": "5.52.0",
     "babel-jest": "29.7.0",
     "babel-loader": "9.2.1",
     "babel-plugin-formatjs": "10.3.7",

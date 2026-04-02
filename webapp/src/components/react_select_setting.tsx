@@ -110,8 +110,29 @@ function ReactSelectSetting(props: Props) {
 
     const filterOptions = useCallback((input: string) => {
         const raw = props.options ?? [];
+
+        const limitResults = (entries: readonly (ReactSelectOption | GroupBase<ReactSelectOption>)[]) => {
+            const result: (ReactSelectOption | GroupBase<ReactSelectOption>)[] = [];
+            let count = 0;
+            for (const entry of entries) {
+                if (count >= MAX_NUM_OPTIONS) {
+                    break;
+                }
+                if ('options' in entry) {
+                    const remaining = MAX_NUM_OPTIONS - count;
+                    const children = entry.options.slice(0, remaining);
+                    result.push({...entry, options: children});
+                    count += children.length;
+                } else {
+                    result.push(entry);
+                    count += 1;
+                }
+            }
+            return result;
+        };
+
         if (!input) {
-            return Promise.resolve(raw.slice(0, MAX_NUM_OPTIONS));
+            return Promise.resolve(limitResults(raw));
         }
         const term = input.toUpperCase();
         const filtered: (ReactSelectOption | GroupBase<ReactSelectOption>)[] = [];
@@ -125,7 +146,7 @@ function ReactSelectSetting(props: Props) {
                 filtered.push(entry);
             }
         }
-        return Promise.resolve(filtered.slice(0, MAX_NUM_OPTIONS));
+        return Promise.resolve(limitResults(filtered));
     }, [props.options]);
 
     const requiredMsg = 'This field is required.';
