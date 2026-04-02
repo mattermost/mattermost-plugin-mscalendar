@@ -26,11 +26,14 @@ type Option = {
 export default function TimeSelector(props: Props) {
     const theme = useSelector(getTheme);
 
+    const isEndTimeSelector = Boolean(props.startTime);
+    const isStartTimeSelector = !isEndTimeSelector;
+
     const options: Option[] = useMemo(() => {
         let fromHour = 0;
         let fromMinute = 0;
         let toHour = 23;
-        let toMinute = 45;
+        let toMinute = isStartTimeSelector ? 30 : 45;
         let ranges: string[] = [];
 
         if (props.date === getTodayString()) {
@@ -57,18 +60,27 @@ export default function TimeSelector(props: Props) {
             const parsed = parseHHMM(props.endTime);
             toHour = parsed.hour;
             toMinute = parsed.minute;
+            if (isStartTimeSelector) {
+                const endTotal = (toHour * 60) + toMinute;
+                const maxStartTotal = endTotal - minuteStep;
+                if (maxStartTotal < 0) {
+                    return [];
+                }
+                toHour = Math.floor(maxStartTotal / 60);
+                toMinute = maxStartTotal % 60;
+            }
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
         if (!ranges.length && !props.startTime) {
-            ranges = generateMilitaryTimeArray();
+            ranges = generateMilitaryTimeArray(0, 0, toHour, toMinute);
         }
 
         return ranges.map((t) => ({
             label: t,
             value: t,
         }));
-    }, [props.startTime, props.endTime, props.date]);
+    }, [props.startTime, props.endTime, props.date, isStartTimeSelector]);
 
     let value: Option | undefined | null;
     if (props.value) {
