@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 
 import AsyncCreatableSelect from 'react-select/async-creatable';
@@ -22,13 +22,19 @@ type Props = {
 export default function AttendeeSelector(props: Props) {
     const [storedError, setStoredError] = useState('');
     const [labelMap, setLabelMap] = useState<Record<string, string>>({});
+    const requestIdRef = useRef(0);
 
     const theme = useSelector(getTheme);
 
     const dispatch = useAppDispatch();
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
+        const requestId = ++requestIdRef.current;
         const response = await dispatch(autocompleteConnectedUsers(input));
+
+        if (requestId !== requestIdRef.current) {
+            return [];
+        }
 
         if (response.error) {
             setStoredError(response.error);
