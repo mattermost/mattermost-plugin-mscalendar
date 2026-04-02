@@ -25,7 +25,7 @@ export default class Hooks {
         const message = rawMessage ? rawMessage.trim() : '';
 
         if (!message) {
-            return Promise.resolve({message, args: contextArgs});
+            return {message, args: contextArgs};
         }
 
         const providerConfiguration = getProviderConfiguration(this.store.getState());
@@ -36,16 +36,16 @@ export default class Hooks {
             }
         }
 
-        return Promise.resolve({message, args: contextArgs});
+        return {message, args: contextArgs};
     };
 
     handleCreateEventSlashCommand = async (message: string, contextArgs: ContextArgs) => {
         if (!(await this.checkUserIsConnected())) {
-            return Promise.resolve({});
+            return {};
         }
 
         this.store.dispatch(openCreateEventModal(contextArgs.channel_id));
-        return Promise.resolve({});
+        return {};
     };
 
     checkUserIsConnected = async (): Promise<boolean> => {

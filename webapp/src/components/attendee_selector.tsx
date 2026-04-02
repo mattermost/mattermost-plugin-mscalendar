@@ -60,7 +60,7 @@ export default function AttendeeSelector(props: Props) {
     }, [dispatch]);
 
     const isValidEmail = (input: string): boolean => {
-        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(input);
+        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(input.trim());
     };
 
     const handleChange = (selected: readonly SelectOption[] | null) => {
@@ -95,7 +95,7 @@ export default function AttendeeSelector(props: Props) {
                 isMulti={true}
             />
             {storedError && (
-                <div>
+                <div role='alert'>
                     <span className='error-text'>{storedError}</span>
                 </div>
             )}

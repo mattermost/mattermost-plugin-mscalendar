@@ -48,11 +48,9 @@ export default function TimeSelector(props: Props) {
             const extraHours = Math.floor(fromMinute / 60);
             fromMinute %= 60;
             fromHour += extraHours;
-            if (fromHour >= 24) {
-                fromHour = 23;
-                fromMinute = 59;
+            if (fromHour < 24) {
+                ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
             }
-            ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
         if (props.endTime) {
@@ -62,7 +60,7 @@ export default function TimeSelector(props: Props) {
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
         }
 
-        if (!ranges.length) {
+        if (!ranges.length && !props.startTime) {
             ranges = generateMilitaryTimeArray();
         }
 
@@ -118,13 +116,9 @@ const parseHHMM = (time: string): {hour: number; minute: number} => {
 const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = minuteStep) => {
     const timeArray = [];
     for (let hour = fromHour; hour <= toHour; hour++) {
-        if (hour !== fromHour) {
-            fromMinute = 0;
-        }
-        if (hour !== toHour) {
-            toMinute = 45;
-        }
-        for (let minute = fromMinute; minute <= toMinute; minute += step) {
+        const startMinute = hour === fromHour ? fromMinute : 0;
+        const endMinute = hour === toHour ? toMinute : 45;
+        for (let minute = startMinute; minute <= endMinute; minute += step) {
             const formattedHour = hour.toString().padStart(2, '0');
             const formattedMinute = minute.toString().padStart(2, '0');
             const timeString = `${formattedHour}:${formattedMinute}`;

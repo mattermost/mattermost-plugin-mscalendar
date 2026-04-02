@@ -54,6 +54,7 @@ export default class FormButton extends PureComponent {
                     <span
                         className='fa fa-spin fa-spinner'
                         title={'Loading Icon'}
+                        aria-hidden={true}
                     />
                     {executingMessage || savingMessage}
                 </span>
@@ -64,6 +65,7 @@ export default class FormButton extends PureComponent {
                     <span
                         className='fa fa-spin fa-spinner'
                         title={'Loading Icon'}
+                        aria-hidden={true}
                     />
                     {savingMessage}
                 </span>
