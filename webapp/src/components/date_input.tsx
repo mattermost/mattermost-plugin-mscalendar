@@ -5,6 +5,7 @@ import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 import {CalendarOutlineIcon} from '@mattermost/compass-icons/components';
 
 type Props = {
+    id?: string;
     value: string;
     min?: string;
     onChange: (value: string) => void;
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export default function DateInput(props: Props) {
-    const {value, min, onChange, className} = props;
+    const {id, value, min, onChange, className} = props;
     const inputRef = useRef<HTMLInputElement>(null);
     const theme = useSelector(getTheme);
 
@@ -27,6 +28,7 @@ export default function DateInput(props: Props) {
     return (
         <div className='date-input-wrapper'>
             <input
+                id={id}
                 ref={inputRef}
                 type='date'
                 value={value}

@@ -39,7 +39,7 @@ export default class Hooks {
         return {message, args: contextArgs};
     };
 
-    handleCreateEventSlashCommand = async (message: string, contextArgs: ContextArgs) => {
+    handleCreateEventSlashCommand = async (_message: string, contextArgs: ContextArgs) => {
         if (!(await this.checkUserIsConnected())) {
             return {};
         }

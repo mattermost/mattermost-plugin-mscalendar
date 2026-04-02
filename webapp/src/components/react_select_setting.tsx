@@ -121,11 +121,14 @@ function ReactSelectSetting(props: Props) {
         );
     }
 
+    const inputId = selectProps.inputId || props.name;
+
     let selectComponent = null;
     if (limitOptions && (selectProps.options?.length ?? 0) > MAX_NUM_OPTIONS) {
         selectComponent = (
             <AsyncSelect
                 {...selectProps}
+                inputId={inputId}
                 loadOptions={filterOptions}
                 defaultOptions={true}
                 menuPortalTarget={document.body}
@@ -138,6 +141,7 @@ function ReactSelectSetting(props: Props) {
         selectComponent = (
             <CreatableSelect
                 {...selectProps}
+                inputId={inputId}
                 noOptionsMessage={() => 'Start typing...'}
                 formatCreateLabel={(value) => `Add "${value}"`}
                 placeholder=''
@@ -151,6 +155,7 @@ function ReactSelectSetting(props: Props) {
         selectComponent = (
             <ReactSelect
                 {...selectProps}
+                inputId={inputId}
                 menuPortalTarget={document.body}
                 menuPlacement='auto'
                 onChange={handleChange}
@@ -161,7 +166,7 @@ function ReactSelectSetting(props: Props) {
 
     return (
         <Setting
-            inputId={props.name}
+            inputId={inputId}
             label={props.label}
             required={props.required}
         >

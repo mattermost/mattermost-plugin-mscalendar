@@ -16,6 +16,7 @@ type SelectOption = {
 }
 
 type Props = {
+    inputId?: string;
     onChange: (selected: string) => void;
     value: string | null;
 };
@@ -23,6 +24,7 @@ type Props = {
 export default function ChannelSelector(props: Props) {
     const [storedError, setStoredError] = useState('');
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(null);
+    const [resolving, setResolving] = useState(Boolean(props.value));
     const requestIdRef = useRef(0);
 
     const theme = useSelector(getTheme);
@@ -57,6 +59,7 @@ export default function ChannelSelector(props: Props) {
             }
         }
 
+        setResolving(false);
         return options;
     }, [dispatch, teamId, props.value]);
 
@@ -71,9 +74,11 @@ export default function ChannelSelector(props: Props) {
     return (
         <>
             <AsyncSelect<SelectOption, false>
+                inputId={props.inputId}
                 value={displayValue}
                 loadOptions={loadOptions}
                 defaultOptions={true}
+                isLoading={resolving}
                 menuPortalTarget={document.body}
                 menuPlacement='auto'
                 onChange={handleChange}
@@ -81,7 +86,7 @@ export default function ChannelSelector(props: Props) {
                 isMulti={false}
             />
             {storedError && (
-                <div>
+                <div role='alert'>
                     <span className='error-text'>{storedError}</span>
                 </div>
             )}

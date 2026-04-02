@@ -11,11 +11,13 @@ import ReactSelectSetting from './react_select_setting';
 const minuteStep = 15;
 
 type Props = {
+    inputId?: string;
+    name: 'start_time' | 'end_time';
     value: string;
     onChange: (name: keyof CreateEventPayload, value: string) => void;
-    startTime?: string
-    endTime?: string
-    date?: string
+    startTime?: string;
+    endTime?: string;
+    date?: string;
 }
 
 type Option = {
@@ -26,8 +28,8 @@ type Option = {
 export default function TimeSelector(props: Props) {
     const theme = useSelector(getTheme);
 
-    const isEndTimeSelector = Boolean(props.startTime);
-    const isStartTimeSelector = !isEndTimeSelector;
+    const isStartTimeSelector = props.name === 'start_time';
+    const isEndTimeSelector = props.name === 'end_time';
 
     const options: Option[] = useMemo(() => {
         let fromHour = 0;
@@ -82,7 +84,7 @@ export default function TimeSelector(props: Props) {
             label: t,
             value: t,
         }));
-    }, [props.startTime, props.endTime, props.date, isStartTimeSelector]);
+    }, [props.startTime, props.endTime, props.date, props.name, isStartTimeSelector]);
 
     let value: Option | undefined | null;
     if (props.value) {
@@ -94,11 +96,9 @@ export default function TimeSelector(props: Props) {
         if (!selectedTime) {
             return;
         }
-        if (props.startTime) {
-            props.onChange('end_time', selectedTime);
-        } else {
-            props.onChange('start_time', selectedTime);
+        props.onChange(props.name, selectedTime);
 
+        if (isStartTimeSelector) {
             options.forEach((option: Option, i: number) => {
                 if (option.value === selectedTime && i + 1 < options.length) {
                     const endIdx = Math.min(i + 2, options.length - 1);
@@ -110,6 +110,7 @@ export default function TimeSelector(props: Props) {
 
     return (
         <ReactSelectSetting
+            inputId={props.inputId}
             value={value}
             onChange={handleChange}
             theme={theme}

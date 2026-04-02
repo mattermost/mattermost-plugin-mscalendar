@@ -1,6 +1,7 @@
 import React, {useCallback, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 
+import {GroupBase} from 'react-select';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
@@ -15,6 +16,7 @@ type SelectOption = {
 }
 
 type Props = {
+    inputId?: string;
     onChange: (selected: string[]) => void;
     value: string[];
 };
@@ -59,12 +61,20 @@ export default function AttendeeSelector(props: Props) {
         return options;
     }, [dispatch]);
 
-    const isValidNewOption = (input: string): boolean => {
+    const isValidNewOption = (
+        input: string,
+        _selectValue: readonly SelectOption[],
+        selectOptions: readonly (SelectOption | GroupBase<SelectOption>)[],
+    ): boolean => {
         const trimmed = input.trim().toLowerCase();
         if (!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(trimmed)) {
             return false;
         }
-        return !props.value.some((v) => v.toLowerCase() === trimmed);
+        const inSelected = props.value.some((v) => v.toLowerCase() === trimmed);
+        const inOptions = selectOptions.some((opt) =>
+            'value' in opt && opt.value.toLowerCase() === trimmed,
+        );
+        return !inSelected && !inOptions;
     };
 
     const handleChange = (selected: readonly SelectOption[] | null) => {
@@ -88,6 +98,7 @@ export default function AttendeeSelector(props: Props) {
     return (
         <>
             <AsyncCreatableSelect<SelectOption, true>
+                inputId={props.inputId}
                 value={selectedValues}
                 loadOptions={loadOptions}
                 defaultOptions={true}

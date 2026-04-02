@@ -173,10 +173,12 @@ const ActualForm = (props: ActualFormProps) => {
 
     const components = [
         {
+            id: 'subject',
             label: 'Subject',
             required: true,
             component: (
                 <input
+                    id='subject'
                     onChange={(e) => setFormValue('subject', e.target.value)}
                     value={formValues.subject}
                     className='form-control'
@@ -184,10 +186,12 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
+            id: 'location',
             label: 'Location (optional)',
             required: false,
             component: (
                 <input
+                    id='location'
                     onChange={(e) => setFormValue('location', e.target.value)}
                     value={formValues.location}
                     className='form-control'
@@ -195,19 +199,23 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
+            id: 'attendees',
             label: 'Guests (optional)',
             component: (
                 <AttendeeSelector
+                    inputId='attendees'
                     value={formValues.attendees}
                     onChange={(selected) => setFormValue('attendees', selected)}
                 />
             ),
         },
         {
+            id: 'date',
             label: 'Date',
             required: true,
             component: (
                 <DateInput
+                    id='date'
                     value={formValues.date}
                     min={getTodayString()}
                     onChange={(value) => {
@@ -220,10 +228,13 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
+            id: 'start_time',
             label: 'Start Time',
             required: true,
             component: (
                 <TimeSelector
+                    inputId='start_time'
+                    name='start_time'
                     value={formValues.start_time}
                     endTime={formValues.end_time}
                     date={formValues.date}
@@ -232,10 +243,13 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
+            id: 'end_time',
             label: 'End Time',
             required: true,
             component: (
                 <TimeSelector
+                    inputId='end_time'
+                    name='end_time'
                     value={formValues.end_time}
                     startTime={formValues.start_time}
                     date={formValues.date}
@@ -244,9 +258,11 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
+            id: 'description',
             label: 'Description (optional)',
             component: (
                 <textarea
+                    id='description'
                     onChange={(e) => setFormValue('description', e.target.value)}
                     value={formValues.description}
                     className='form-control'
@@ -254,9 +270,11 @@ const ActualForm = (props: ActualFormProps) => {
             ),
         },
         {
+            id: 'channel_id',
             label: 'Link event to channel (optional)',
             component: (
                 <ChannelSelector
+                    inputId='channel_id'
                     value={formValues.channel_id || null}
                     onChange={(selected) => setFormValue('channel_id', selected)}
                 />
@@ -269,9 +287,9 @@ const ActualForm = (props: ActualFormProps) => {
         <div className='mscalendar-create-event-form'>
             {components.map((c) => (
                 <Setting
-                    key={c.label}
+                    key={c.id}
                     label={c.label}
-                    inputId={c.label}
+                    inputId={c.id}
                     required={c.required}
                 >
                     {c.component}
