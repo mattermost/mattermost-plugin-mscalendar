@@ -59,7 +59,7 @@ export const autocompleteConnectedUsers = (input: string): AppThunk<Promise<Auto
     const state = getState();
     const pluginServerRoute = getPluginServerRoute(state);
 
-    return doFetchWithResponse(`${pluginServerRoute}/autocomplete/users?search=${input}`).
+    return doFetchWithResponse(`${pluginServerRoute}/autocomplete/users?search=${encodeURIComponent(input)}`).
         then((response) => {
             return {data: response.data};
         }).

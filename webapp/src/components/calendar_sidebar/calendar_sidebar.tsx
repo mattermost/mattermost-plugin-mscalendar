@@ -36,9 +36,22 @@ export interface CalendarSidebarProps {
 const EXPANDED_WIDTH_THRESHOLD = 500;
 const POLL_INTERVAL_MS = 60_000;
 
-function getCurrentScrollTime(): string {
+function getCurrentScrollTime(tz?: string): string {
     const now = new Date();
-    const hours = Math.max(0, now.getHours() - 1);
+    let hours: number;
+
+    if (tz) {
+        try {
+            const formatter = new Intl.DateTimeFormat('en-US', {hour: 'numeric', hour12: false, timeZone: tz});
+            hours = parseInt(formatter.format(now), 10);
+        } catch {
+            hours = now.getHours();
+        }
+    } else {
+        hours = now.getHours();
+    }
+
+    hours = Math.max(0, hours - 1);
     return `${String(hours).padStart(2, '0')}:00:00`;
 }
 
@@ -92,15 +105,34 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     }, []);
 
     const handleDateClick = useCallback((arg: DateClickArg) => {
+        if (arg.allDay) {
+            const date = arg.dateStr.slice(0, 10);
+            actions.openCreateEventModal({date, startTime: '', endTime: ''});
+            return;
+        }
+
         const iso = arg.dateStr;
-        const date = iso.slice(0, 10);
+        let date = iso.slice(0, 10);
         const startTime = iso.slice(11, 16);
 
         const [h, m] = startTime.split(':').map(Number);
         const endMinutes = (h * 60) + m + 30;
-        const endH = String(Math.floor(endMinutes / 60) % 24).padStart(2, '0');
-        const endM = String(endMinutes % 60).padStart(2, '0');
-        const endTime = `${endH}:${endM}`;
+
+        let endTime: string;
+        if (endMinutes >= 1440) {
+            const wrapped = endMinutes - 1440;
+            const endH = String(Math.floor(wrapped / 60)).padStart(2, '0');
+            const endM = String(wrapped % 60).padStart(2, '0');
+            endTime = `${endH}:${endM}`;
+
+            const nextDay = new Date(date);
+            nextDay.setDate(nextDay.getDate() + 1);
+            date = nextDay.toISOString().slice(0, 10);
+        } else {
+            const endH = String(Math.floor(endMinutes / 60)).padStart(2, '0');
+            const endM = String(endMinutes % 60).padStart(2, '0');
+            endTime = `${endH}:${endM}`;
+        }
 
         actions.openCreateEventModal({date, startTime, endTime});
     }, [actions]);
@@ -182,7 +214,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     );
 
     const containerStyle = useMemo(() => getContainerStyle(theme), [theme]);
-    const scrollTime = useMemo(() => getCurrentScrollTime(), []);
+    const scrollTime = useMemo(() => getCurrentScrollTime(timezone), [timezone]);
 
     if (connected === null) {
         return (

@@ -29,7 +29,7 @@ export const doFetchWithResponse = async (url: string, options: Options = {}) =>
     }
 
     throw new ClientError(Client4.url, {
-        message: typeof data === 'string' ? data : (data?.message || data?.error || ''),
+        message: typeof data === 'string' ? data : (data?.message || data?.error || response.statusText || 'Request failed'),
         status_code: response.status,
         url,
     });

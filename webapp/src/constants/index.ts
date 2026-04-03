@@ -1,6 +1,6 @@
 import manifest from '../manifest';
 
-export default {
+const ActionTypes = {
     CLOSE_CREATE_EVENT_MODAL: `${manifest.id}_close_create_modal`,
     OPEN_CREATE_EVENT_MODAL: `${manifest.id}_open_create_modal`,
     OPEN_CREATE_EVENT_MODAL_WITHOUT_POST: `${manifest.id}_open_create_modal_without_post`,
@@ -15,4 +15,6 @@ export default {
     RECEIVED_CACHED_EVENTS: `${manifest.id}_received_cached_events`,
     FETCH_EVENTS_ERROR: `${manifest.id}_fetch_events_error`,
     RECEIVED_FRESH_EVENTS: `${manifest.id}_received_fresh_events`,
-};
+} as const;
+
+export default ActionTypes;

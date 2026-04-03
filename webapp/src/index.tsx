@@ -54,8 +54,11 @@ export default class Plugin {
             await thunkDispatch(getProviderConfiguration());
 
             const providerConfig = getProviderConfigSelector(store.getState());
+            if (!providerConfig) {
+                throw new Error('Failed to load provider configuration');
+            }
 
-            if (providerConfig?.Features?.EnableExperimentalUI) {
+            if (providerConfig.Features?.EnableExperimentalUI) {
                 const {toggleRHSPlugin} = registry.registerRightHandSidebarComponent(
                     CalendarSidebar,
                     'Calendar',
@@ -93,12 +96,14 @@ const SetupUI = ({setup, haveSetupUI, finishedSetupUI}: SetupUIProps) => {
         if (!haveSetupUI && !startedRef.current) {
             startedRef.current = true;
             setup().
+                then(() => {
+                    finishedSetupUI();
+                }).
                 catch((error) => {
+                    startedRef.current = false;
+
                     // eslint-disable-next-line no-console
                     console.error('Plugin setup failed:', error);
-                }).
-                finally(() => {
-                    finishedSetupUI();
                 });
         }
     }, []);

@@ -38,7 +38,7 @@ func normalizeEvents(events []*remote.Event) []*remote.Event {
 
 		if events[i].Conference == nil && events[i].OnlineMeeting != nil && events[i].OnlineMeeting.JoinURL != "" {
 			events[i].Conference = &remote.Conference{
-				Application: "Microsoft Teams",
+				Application: "Online Meeting",
 				URL:         events[i].OnlineMeeting.JoinURL,
 			}
 		}

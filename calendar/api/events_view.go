@@ -46,6 +46,12 @@ func (api *api) viewEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	const maxWindow = 62 * 24 * time.Hour
+	if to.Sub(from) > maxWindow {
+		httputils.WriteBadRequestError(w, fmt.Errorf("date range must not exceed 62 days"))
+		return
+	}
+
 	eng := engine.New(api.Env, mattermostUserID)
 	user := engine.NewUser(mattermostUserID)
 

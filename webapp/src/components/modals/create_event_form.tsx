@@ -90,11 +90,12 @@ export default function CreateEventForm(props: Props) {
                 return;
             }
             handleClose();
-        } catch (err: any) {
-            handleError(err.message || 'An unexpected error occurred.');
+            dispatch(refreshActiveCalendarView());
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+            handleError(message);
         } finally {
             setSubmitting(false);
-            dispatch(refreshActiveCalendarView());
         }
     };
 

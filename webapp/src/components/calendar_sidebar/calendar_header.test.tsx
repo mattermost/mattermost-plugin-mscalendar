@@ -18,6 +18,20 @@ describe('CalendarHeader', () => {
         theme: mockTheme,
     };
 
+    let localeDateSpy: jest.SpyInstance;
+
+    function formatEnUS(this: Date, _locales?: Intl.LocalesArgument, options?: Intl.DateTimeFormatOptions) {
+        return new Intl.DateTimeFormat('en-US', options).format(this);
+    }
+
+    beforeAll(() => {
+        localeDateSpy = jest.spyOn(Date.prototype, 'toLocaleDateString').mockImplementation(formatEnUS);
+    });
+
+    afterAll(() => {
+        localeDateSpy.mockRestore();
+    });
+
     afterEach(() => {
         jest.clearAllMocks();
     });

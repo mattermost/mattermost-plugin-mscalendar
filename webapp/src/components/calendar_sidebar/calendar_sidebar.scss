@@ -222,3 +222,9 @@
 .mscalendar-spin {
     animation: mscalendar-spin 0.8s linear infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .mscalendar-spin {
+        animation: none;
+    }
+}
