@@ -202,6 +202,8 @@ function makeEventsCacheKey(from: string, to: string): string {
 
 type FetchEventsResult = {data: RemoteEvent[] | null; error: unknown};
 
+const inflightControllers = new Map<string, AbortController>();
+
 function fetchEventsRange(
     from: string,
     to: string,
@@ -210,15 +212,28 @@ function fetchEventsRange(
     dispatch: AppDispatch,
     getState: () => GlobalState,
 ): Promise<FetchEventsResult> {
+    const previous = inflightControllers.get(key);
+    if (previous) {
+        previous.abort();
+    }
+    const controller = new AbortController();
+    inflightControllers.set(key, controller);
+
     const pluginServerRoute = getPluginServerRoute(getState());
     const params = new URLSearchParams({from, to});
 
     return doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
         method: 'get',
+        signal: controller.signal,
     }).then((events: RemoteEvent[]) => {
+        inflightControllers.delete(key);
         dispatch({type: successType, data: events, key, from, to});
         return {data: events, error: null} as FetchEventsResult;
     }).catch((error: unknown) => {
+        inflightControllers.delete(key);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            return {data: null, error: null} as FetchEventsResult;
+        }
         dispatch({type: ActionTypes.FETCH_EVENTS_ERROR, error, key});
         return {data: null, error} as FetchEventsResult;
     });

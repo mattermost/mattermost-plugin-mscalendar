@@ -44,7 +44,6 @@ export default function CreateEventModal() {
             dialogClassName='modal--scroll'
             show={visible}
             onHide={close}
-            onExited={close}
             size='lg'
             backdrop='static'
         >

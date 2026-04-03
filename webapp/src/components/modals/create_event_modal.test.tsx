@@ -31,7 +31,7 @@ describe('CreateEventModal', () => {
     it('returns null when modal is not visible', () => {
         mockUseSelector.mockReturnValue(false);
         const {container} = render(<CreateEventModal/>);
-        expect(container.innerHTML).toBe('');
+        expect(container.firstChild).toBeNull();
     });
 
     it('renders modal with title when visible', () => {

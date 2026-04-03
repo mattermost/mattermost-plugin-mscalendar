@@ -22,10 +22,6 @@ import {getProviderConfiguration as getProviderConfigSelector} from './selectors
 export default class Plugin {
     private setupComplete = false;
 
-    private finishedSetupUI = () => {
-        this.setupComplete = true;
-    };
-
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
         this.setupComplete = false;
 
@@ -73,10 +69,17 @@ export default class Plugin {
             }
         };
 
+        const setupStatus = {
+            isComplete: () => this.setupComplete,
+            markComplete: () => {
+                this.setupComplete = true;
+            },
+        };
+
         registry.registerRootComponent(() => (
             <SetupUI
                 setup={setup}
-                finishedSetupUI={this.finishedSetupUI}
+                setupStatus={setupStatus}
             />
         ));
     }
@@ -85,23 +88,28 @@ export default class Plugin {
 const RETRY_DELAY_MS = 5000;
 const MAX_RETRIES = 3;
 
-interface SetupUIProps {
-    setup: () => Promise<void>;
-    finishedSetupUI: () => void;
+interface SetupStatus {
+    isComplete: () => boolean;
+    markComplete: () => void;
 }
 
-const SetupUI = ({setup, finishedSetupUI}: SetupUIProps) => {
+interface SetupUIProps {
+    setup: () => Promise<void>;
+    setupStatus: SetupStatus;
+}
+
+const SetupUI = ({setup, setupStatus}: SetupUIProps) => {
     const [retryCount, setRetryCount] = useState(0);
     const runningRef = useRef(false);
 
     const attemptSetup = useCallback(async () => {
-        if (runningRef.current) {
+        if (setupStatus.isComplete() || runningRef.current) {
             return;
         }
         runningRef.current = true;
         try {
             await setup();
-            finishedSetupUI();
+            setupStatus.markComplete();
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('Plugin setup failed:', error);
@@ -112,7 +120,7 @@ const SetupUI = ({setup, finishedSetupUI}: SetupUIProps) => {
                 setTimeout(scheduleRetry, RETRY_DELAY_MS);
             }
         }
-    }, [setup, finishedSetupUI, retryCount]);
+    }, [setup, setupStatus, retryCount]);
 
     useEffect(() => {
         attemptSetup();

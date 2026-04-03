@@ -1,4 +1,6 @@
-import React, {memo, useId} from 'react';
+import React, {memo, useRef} from 'react';
+
+let buttonIdCounter = 0;
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
     id?: string;
@@ -27,8 +29,8 @@ function FormButton({
     children,
     ...rest
 }: Props) {
-    const generatedId = useId();
-    const buttonId = id || generatedId;
+    const generatedIdRef = useRef(`mscal-btn-${++buttonIdCounter}`);
+    const buttonId = id || generatedIdRef.current;
 
     const spinner = (message: React.ReactNode) => (
         <span>
@@ -37,6 +39,7 @@ function FormButton({
                 title={'Loading Icon'}
                 aria-hidden={true}
             />
+            {' '}
             {message}
         </span>
     );

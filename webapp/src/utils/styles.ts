@@ -34,15 +34,15 @@ export const getModalStyles = (theme: Theme) => ({
     },
 });
 
-export const getStyleForReactSelect = (theme: Theme): StylesConfig<AnySelectOption> => {
-    if (!theme) {
-        return {};
-    }
+export const Z_INDEX_BACKDROP = 1000;
+export const Z_INDEX_TOOLTIP = 1010;
+export const Z_INDEX_MENU_PORTAL = 1020;
 
+export const getStyleForReactSelect = (theme: Theme): StylesConfig<AnySelectOption> => {
     return {
         menuPortal: (provided) => ({
             ...provided,
-            zIndex: 9999,
+            zIndex: Z_INDEX_MENU_PORTAL,
         }),
         control: (provided, state) => ({
             ...provided,

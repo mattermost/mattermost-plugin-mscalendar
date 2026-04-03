@@ -1,7 +1,10 @@
-import {useId} from 'react';
+import {useRef} from 'react';
+
+let idCounter = 0;
 
 const ChannelHeaderIcon = () => {
-    const clipId = useId();
+    const clipIdRef = useRef(`mscal-clip-${++idCounter}`);
+    const clipId = clipIdRef.current;
 
     return (
         <svg
