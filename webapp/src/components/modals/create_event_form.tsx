@@ -90,13 +90,15 @@ export default function CreateEventForm(props: Props) {
                 return;
             }
             handleClose();
-            dispatch(refreshActiveCalendarView());
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
             handleError(message);
+            return;
         } finally {
             setSubmitting(false);
         }
+
+        dispatch(refreshActiveCalendarView()).catch(() => { /* best-effort refresh */ });
     };
 
     const style = getModalStyles(theme);

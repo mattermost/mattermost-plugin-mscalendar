@@ -26,7 +26,6 @@ function userConnected(state: boolean | null = null, action: PluginAction) {
 const createEventModalVisible = (state = false, action: PluginAction) => {
     switch (action.type) {
     case ActionTypes.OPEN_CREATE_EVENT_MODAL:
-    case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
         return true;
     case ActionTypes.CLOSE_CREATE_EVENT_MODAL:
         return false;
@@ -38,7 +37,6 @@ const createEventModalVisible = (state = false, action: PluginAction) => {
 const createEventModal = (state = {}, action: PluginAction) => {
     switch (action.type) {
     case ActionTypes.OPEN_CREATE_EVENT_MODAL:
-    case ActionTypes.OPEN_CREATE_EVENT_MODAL_WITHOUT_POST:
         return {
             postId: action.data?.postId,
             description: action.data?.description,
@@ -127,7 +125,7 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         }
         return {
             ...state,
-            cache: {[freshKey]: action.data || []},
+            cache: {...state.cache, [freshKey]: action.data || []},
             activeKey: freshKey,
             activeFrom: action.from || state.activeFrom,
             activeTo: action.to || state.activeTo,

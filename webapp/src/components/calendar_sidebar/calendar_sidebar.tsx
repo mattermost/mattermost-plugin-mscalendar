@@ -112,27 +112,16 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
         }
 
         const iso = arg.dateStr;
-        let date = iso.slice(0, 10);
+        const date = iso.slice(0, 10);
         const startTime = iso.slice(11, 16);
 
         const [h, m] = startTime.split(':').map(Number);
         const endMinutes = (h * 60) + m + 30;
 
-        let endTime: string;
-        if (endMinutes >= 1440) {
-            const wrapped = endMinutes - 1440;
-            const endH = String(Math.floor(wrapped / 60)).padStart(2, '0');
-            const endM = String(wrapped % 60).padStart(2, '0');
-            endTime = `${endH}:${endM}`;
-
-            const nextDay = new Date(date);
-            nextDay.setDate(nextDay.getDate() + 1);
-            date = nextDay.toISOString().slice(0, 10);
-        } else {
-            const endH = String(Math.floor(endMinutes / 60)).padStart(2, '0');
-            const endM = String(endMinutes % 60).padStart(2, '0');
-            endTime = `${endH}:${endM}`;
-        }
+        const clampedEnd = Math.min(endMinutes, 1439);
+        const endH = String(Math.floor(clampedEnd / 60)).padStart(2, '0');
+        const endM = String(clampedEnd % 60).padStart(2, '0');
+        const endTime = `${endH}:${endM}`;
 
         actions.openCreateEventModal({date, startTime, endTime});
     }, [actions]);
@@ -264,8 +253,11 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
                 />
             )}
             {error && (
-                <div style={{padding: '8px 0', color: theme.dndIndicator || '#D24B4E', fontSize: '0.85em'}}>
-                    {'Unable to load calendar events. Please ensure your account is connected.'}
+                <div
+                    role='alert'
+                    style={{padding: '8px 0', color: theme.dndIndicator || '#D24B4E', fontSize: '0.85em'}}
+                >
+                    {'Unable to load calendar events.'}
                 </div>
             )}
             <div className='mscalendar-sidebar__calendar'>

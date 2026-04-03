@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import {Action, Store} from 'redux';
 
@@ -20,14 +20,14 @@ import {getProviderConfiguration, handleConnect, handleDisconnect, openCreateEve
 import {getProviderConfiguration as getProviderConfigSelector} from './selectors';
 
 export default class Plugin {
-    private haveSetupUI = false;
+    private setupComplete = false;
 
     private finishedSetupUI = () => {
-        this.haveSetupUI = true;
+        this.setupComplete = true;
     };
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
-        this.haveSetupUI = false;
+        this.setupComplete = false;
 
         registry.registerReducer(reducer);
 
@@ -76,37 +76,47 @@ export default class Plugin {
         registry.registerRootComponent(() => (
             <SetupUI
                 setup={setup}
-                haveSetupUI={this.haveSetupUI}
                 finishedSetupUI={this.finishedSetupUI}
             />
         ));
     }
 }
 
+const RETRY_DELAY_MS = 5000;
+const MAX_RETRIES = 3;
+
 interface SetupUIProps {
     setup: () => Promise<void>;
-    haveSetupUI: boolean;
     finishedSetupUI: () => void;
 }
 
-const SetupUI = ({setup, haveSetupUI, finishedSetupUI}: SetupUIProps) => {
-    const startedRef = useRef(false);
+const SetupUI = ({setup, finishedSetupUI}: SetupUIProps) => {
+    const [retryCount, setRetryCount] = useState(0);
+    const runningRef = useRef(false);
+
+    const attemptSetup = useCallback(async () => {
+        if (runningRef.current) {
+            return;
+        }
+        runningRef.current = true;
+        try {
+            await setup();
+            finishedSetupUI();
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('Plugin setup failed:', error);
+            runningRef.current = false;
+
+            if (retryCount < MAX_RETRIES) {
+                const scheduleRetry = () => setRetryCount((c) => c + 1);
+                setTimeout(scheduleRetry, RETRY_DELAY_MS);
+            }
+        }
+    }, [setup, finishedSetupUI, retryCount]);
 
     useEffect(() => {
-        if (!haveSetupUI && !startedRef.current) {
-            startedRef.current = true;
-            setup().
-                then(() => {
-                    finishedSetupUI();
-                }).
-                catch((error) => {
-                    startedRef.current = false;
-
-                    // eslint-disable-next-line no-console
-                    console.error('Plugin setup failed:', error);
-                });
-        }
-    }, []);
+        attemptSetup();
+    }, [attemptSetup]);
 
     return null;
 };

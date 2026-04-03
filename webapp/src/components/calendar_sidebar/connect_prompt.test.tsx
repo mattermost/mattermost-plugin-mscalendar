@@ -1,6 +1,7 @@
 import {render, screen, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+import manifest from '@/manifest';
 import {mockTheme} from '@/testutils/theme';
 
 import ConnectPrompt from './connect_prompt';
@@ -19,7 +20,7 @@ describe('ConnectPrompt', () => {
 
     it('renders welcome text', () => {
         render(<ConnectPrompt {...baseProps}/>);
-        expect(screen.getByText('Welcome to Microsoft Calendar')).toBeInTheDocument();
+        expect(screen.getByText(`Welcome to ${manifest.name}`)).toBeInTheDocument();
     });
 
     it('renders the connect prompt text', () => {
@@ -56,7 +57,7 @@ describe('ConnectPrompt', () => {
         fireEvent.click(screen.getByText('Connect account'));
         expect(windowOpenSpy).toHaveBeenCalledWith(
             '/plugins/com.mattermost.mscalendar/oauth2/connect',
-            'Connect Mattermost to Microsoft Calendar',
+            `Connect Mattermost to ${manifest.name}`,
             'height=570,width=520,noopener,noreferrer',
         );
         expect(baseProps.sendEphemeralPost).not.toHaveBeenCalled();

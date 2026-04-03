@@ -1,4 +1,4 @@
-import {Client4} from '@mattermost/client';
+import {Client4, ClientError} from '@mattermost/client';
 import {PostTypes} from 'mattermost-redux/action_types';
 import {GlobalState} from '@mattermost/types/store';
 import {haveIChannelPermission} from 'mattermost-redux/selectors/entities/roles';
@@ -117,7 +117,9 @@ export function getConnected(): AppThunk<Promise<{data?: unknown; error?: unknow
                 method: 'get',
             });
         } catch (error) {
-            dispatch({type: ActionTypes.RECEIVED_DISCONNECTED});
+            if (error instanceof ClientError && error.status_code === 401) {
+                dispatch({type: ActionTypes.RECEIVED_DISCONNECTED});
+            }
             return {error};
         }
 
@@ -132,11 +134,12 @@ export function getConnected(): AppThunk<Promise<{data?: unknown; error?: unknow
 
 export function sendEphemeralPost(message: string, channelId?: string): AppThunk {
     return (dispatch, getState) => {
+        const resolvedChannelId = channelId || getCurrentChannelId(getState());
         const timestamp = Date.now();
         const post = {
             id: 'mscalplugin_' + Date.now(),
             user_id: getState().entities.users.currentUserId,
-            channel_id: channelId || getCurrentChannelId(getState()),
+            channel_id: resolvedChannelId,
             message,
             type: 'system_ephemeral',
             create_at: timestamp,
@@ -149,7 +152,7 @@ export function sendEphemeralPost(message: string, channelId?: string): AppThunk
         dispatch({
             type: PostTypes.RECEIVED_NEW_POST,
             data: post,
-            channelId,
+            channelId: resolvedChannelId,
         });
     };
 }
@@ -193,23 +196,38 @@ export function getProviderConfiguration(): AppThunk<Promise<ProviderConfig | {e
     };
 }
 
-export const refreshCalendarEvents = (from: string, to: string): AppThunk<Promise<{data: RemoteEvent[] | null; error: unknown}>> => async (dispatch, getState) => {
-    const key = makeEventsCacheKey(from, to);
-    dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key, from, to});
+function makeEventsCacheKey(from: string, to: string): string {
+    return `${from}|${to}`;
+}
 
+type FetchEventsResult = {data: RemoteEvent[] | null; error: unknown};
+
+function fetchEventsRange(
+    from: string,
+    to: string,
+    key: string,
+    successType: string,
+    dispatch: AppDispatch,
+    getState: () => GlobalState,
+): Promise<FetchEventsResult> {
     const pluginServerRoute = getPluginServerRoute(getState());
     const params = new URLSearchParams({from, to});
 
-    try {
-        const freshEvents: RemoteEvent[] = await doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
-            method: 'get',
-        });
-        dispatch({type: ActionTypes.RECEIVED_FRESH_EVENTS, data: freshEvents, key, from, to});
-        return {data: freshEvents, error: null};
-    } catch (error) {
-        dispatch({type: ActionTypes.FETCH_EVENTS_ERROR, error});
-        return {data: null, error};
-    }
+    return doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
+        method: 'get',
+    }).then((events: RemoteEvent[]) => {
+        dispatch({type: successType, data: events, key, from, to});
+        return {data: events, error: null} as FetchEventsResult;
+    }).catch((error: unknown) => {
+        dispatch({type: ActionTypes.FETCH_EVENTS_ERROR, error, key});
+        return {data: null, error} as FetchEventsResult;
+    });
+}
+
+export const refreshCalendarEvents = (from: string, to: string): AppThunk<Promise<FetchEventsResult>> => async (dispatch, getState) => {
+    const key = makeEventsCacheKey(from, to);
+    dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key, from, to});
+    return fetchEventsRange(from, to, key, ActionTypes.RECEIVED_FRESH_EVENTS, dispatch as AppDispatch, getState);
 };
 
 export const refreshActiveCalendarView = (): AppThunk<Promise<void>> => async (dispatch, getState) => {
@@ -224,11 +242,7 @@ export const refreshActiveCalendarView = (): AppThunk<Promise<void>> => async (d
     await (dispatch as AppDispatch)(refreshCalendarEvents(from, to));
 };
 
-function makeEventsCacheKey(from: string, to: string): string {
-    return `${from.split('T')[0]}|${to.split('T')[0]}`;
-}
-
-export const fetchCalendarEvents = (from: string, to: string): AppThunk<Promise<{data: RemoteEvent[] | null; error: unknown}>> => async (dispatch, getState) => {
+export const fetchCalendarEvents = (from: string, to: string): AppThunk<Promise<FetchEventsResult>> => async (dispatch, getState) => {
     const key = makeEventsCacheKey(from, to);
     const state = getState() as Record<string, any>;
     const pluginState = state['plugins-' + PluginId];
@@ -240,18 +254,5 @@ export const fetchCalendarEvents = (from: string, to: string): AppThunk<Promise<
     }
 
     dispatch({type: ActionTypes.FETCH_EVENTS_REQUEST, key, from, to});
-
-    const pluginServerRoute = getPluginServerRoute(state as GlobalState);
-    const params = new URLSearchParams({from, to});
-
-    try {
-        const events: RemoteEvent[] = await doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
-            method: 'get',
-        });
-        dispatch({type: ActionTypes.RECEIVED_EVENTS, data: events, key, from, to});
-        return {data: events, error: null};
-    } catch (error) {
-        dispatch({type: ActionTypes.FETCH_EVENTS_ERROR, error});
-        return {data: null, error};
-    }
+    return fetchEventsRange(from, to, key, ActionTypes.RECEIVED_EVENTS, dispatch as AppDispatch, getState);
 };

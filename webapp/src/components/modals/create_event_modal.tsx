@@ -23,10 +23,7 @@ const Modal = BootstrapModal as unknown as React.FC<ModalRootProps> & {
     Title: React.FC<React.PropsWithChildren<Record<string, unknown>>>;
 };
 
-type Props = {
-}
-
-export default function CreateEventModal(props: Props) {
+export default function CreateEventModal() {
     const visible = useSelector(isCreateEventModalVisible);
 
     const dispatch = useDispatch();
@@ -38,7 +35,6 @@ export default function CreateEventModal(props: Props) {
 
     const content = (
         <CreateEventForm
-            {...props}
             close={close}
         />
     );

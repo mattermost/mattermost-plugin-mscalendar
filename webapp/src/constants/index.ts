@@ -3,7 +3,6 @@ import manifest from '../manifest';
 const ActionTypes = {
     CLOSE_CREATE_EVENT_MODAL: `${manifest.id}_close_create_modal`,
     OPEN_CREATE_EVENT_MODAL: `${manifest.id}_open_create_modal`,
-    OPEN_CREATE_EVENT_MODAL_WITHOUT_POST: `${manifest.id}_open_create_modal_without_post`,
 
     RECEIVED_CONNECTED: `${manifest.id}_connected`,
     RECEIVED_DISCONNECTED: `${manifest.id}_disconnected`,

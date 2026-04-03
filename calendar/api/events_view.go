@@ -4,12 +4,14 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/httputils"
 )
@@ -57,6 +59,11 @@ func (api *api) viewEvents(w http.ResponseWriter, r *http.Request) {
 
 	events, err := eng.ViewCalendar(user, from, to)
 	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("viewEvents, user not found in store")
+			httputils.WriteUnauthorizedError(w, fmt.Errorf("unauthorized"))
+			return
+		}
 		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("viewEvents, error fetching calendar events")
 		httputils.WriteInternalServerError(w, err)
 		return

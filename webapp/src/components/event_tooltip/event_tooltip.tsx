@@ -31,16 +31,28 @@ function formatResponseStatus(response?: string): {label: string; className: str
     }
 }
 
+function buildTzOptions(timezone: string): Intl.DateTimeFormatOptions {
+    if (!timezone || timezone === 'local') {
+        return {};
+    }
+    try {
+        new Intl.DateTimeFormat([], {timeZone: timezone}); // eslint-disable-line no-new
+        return {timeZone: timezone};
+    } catch {
+        return {};
+    }
+}
+
 function formatEventTime(event: RemoteEvent, timezone: string): string {
     if (event.isAllDay) {
         return 'All day';
     }
 
-    const tz = timezone || 'UTC';
+    const tzProp = buildTzOptions(timezone);
     const options: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
         minute: '2-digit',
-        timeZone: tz,
+        ...tzProp,
     };
     const dateOptions: Intl.DateTimeFormatOptions = {
         ...options,
@@ -56,14 +68,14 @@ function formatEventTime(event: RemoteEvent, timezone: string): string {
         return '';
     }
 
-    const startDate = start.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric', timeZone: tz});
+    const startDate = start.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric', ...tzProp});
     const startTime = start.toLocaleTimeString([], options);
 
     if (!end) {
         return `${startDate} ${startTime}`;
     }
 
-    const endDate = end.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric', timeZone: tz});
+    const endDate = end.toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric', ...tzProp});
     const endTime = end.toLocaleTimeString([], options);
 
     if (startDate === endDate) {
@@ -105,6 +117,7 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
     const tooltip = (
         <div
             className='mscalendar-tooltip__backdrop'
+            role='presentation'
             onClick={onClose}
         >
             <div
