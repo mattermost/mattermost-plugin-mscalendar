@@ -222,15 +222,21 @@ function fetchEventsRange(
     const pluginServerRoute = getPluginServerRoute(getState());
     const params = new URLSearchParams({from, to});
 
+    const cleanupController = () => {
+        if (inflightControllers.get(key) === controller) {
+            inflightControllers.delete(key);
+        }
+    };
+
     return doFetch(`${pluginServerRoute}/api/v1/events/view?${params.toString()}`, {
         method: 'get',
         signal: controller.signal,
     }).then((events: RemoteEvent[]) => {
-        inflightControllers.delete(key);
+        cleanupController();
         dispatch({type: successType, data: events, key, from, to});
         return {data: events, error: null} as FetchEventsResult;
     }).catch((error: unknown) => {
-        inflightControllers.delete(key);
+        cleanupController();
         if (error instanceof DOMException && error.name === 'AbortError') {
             return {data: null, error: null} as FetchEventsResult;
         }

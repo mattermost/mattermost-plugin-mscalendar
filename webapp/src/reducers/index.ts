@@ -105,13 +105,9 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         };
     }
     case ActionTypes.RECEIVED_CACHED_EVENTS: {
-        const cachedKey = action.key || null;
-        if (cachedKey !== state.activeKey) {
-            return state;
-        }
         return {
             ...state,
-            activeKey: cachedKey,
+            activeKey: action.key || state.activeKey,
             activeFrom: action.from || state.activeFrom,
             activeTo: action.to || state.activeTo,
             loading: false,
