@@ -65,7 +65,7 @@ func (api *api) viewEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("viewEvents, error fetching calendar events")
-		httputils.WriteInternalServerError(w, err)
+		httputils.WriteInternalServerError(w, fmt.Errorf("error fetching calendar events"))
 		return
 	}
 

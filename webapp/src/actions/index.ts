@@ -204,6 +204,11 @@ type FetchEventsResult = {data: RemoteEvent[] | null; error: unknown};
 
 const inflightControllers = new Map<string, AbortController>();
 
+export function resetInflightControllers() {
+    inflightControllers.forEach((controller) => controller.abort());
+    inflightControllers.clear();
+}
+
 function fetchEventsRange(
     from: string,
     to: string,

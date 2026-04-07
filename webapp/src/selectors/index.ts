@@ -14,21 +14,10 @@ const getPluginState = (state: GlobalState): ReducerState =>
 
 export const getSiteURL = (state: GlobalState): string => {
     const config = getConfig(state);
-
-    let basePath = '';
-    if (config && config.SiteURL) {
-        try {
-            basePath = new URL(config.SiteURL).pathname;
-        } catch {
-            return '';
-        }
-
-        if (basePath && basePath[basePath.length - 1] === '/') {
-            basePath = basePath.substring(0, basePath.length - 1);
-        }
+    if (config?.SiteURL) {
+        return config.SiteURL.replace(/\/+$/, '');
     }
-
-    return basePath;
+    return window.location.origin;
 };
 
 export const getPluginServerRoute = (state: GlobalState): string => {

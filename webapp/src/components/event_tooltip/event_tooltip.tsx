@@ -95,7 +95,17 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
             }
         };
         document.addEventListener('keydown', handleEsc);
-        return () => document.removeEventListener('keydown', handleEsc);
+        window.addEventListener('resize', onClose);
+
+        const scrollableParent = document.getElementById('rhsContainer');
+        const scrollTarget = scrollableParent || window;
+        scrollTarget.addEventListener('scroll', onClose, true);
+
+        return () => {
+            document.removeEventListener('keydown', handleEsc);
+            window.removeEventListener('resize', onClose);
+            scrollTarget.removeEventListener('scroll', onClose, true);
+        };
     }, [onClose]);
 
     const spaceBelow = window.innerHeight - anchorRect.bottom;

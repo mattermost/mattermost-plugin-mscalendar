@@ -1,12 +1,12 @@
 .mscalendar-tooltip__backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: 999;
 }
 
 .mscalendar-tooltip {
     position: fixed;
-    z-index: 1010;
+    z-index: 999;
     min-width: 260px;
     max-width: 320px;
     border-radius: 8px;

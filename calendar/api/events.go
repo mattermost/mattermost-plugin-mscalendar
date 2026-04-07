@@ -206,7 +206,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	loc, errLocation := time.LoadLocation(tzName)
 	if errLocation != nil {
 		api.Logger.With(bot.LogContext{"err": errLocation.Error(), "timezone": mailbox.TimeZone, "converted": tzName}).Errorf("createEvent, error occurred while loading mailbox timezone location")
-		httputils.WriteInternalServerError(w, errLocation)
+		httputils.WriteInternalServerError(w, fmt.Errorf("unable to resolve mailbox timezone"))
 		return
 	}
 

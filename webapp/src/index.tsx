@@ -16,7 +16,7 @@ import reducer from './reducers';
 import CalendarSidebar from './components/calendar_sidebar';
 import ChannelHeaderIcon from './components/channel_header_icon/channel_header_icon';
 import CreateEventModal from './components/modals/create_event_modal';
-import {getProviderConfiguration, handleConnect, handleDisconnect, openCreateEventModal} from './actions';
+import {getProviderConfiguration, handleConnect, handleDisconnect, openCreateEventModal, resetInflightControllers} from './actions';
 import {getProviderConfiguration as getProviderConfigSelector} from './selectors';
 
 export default class Plugin {
@@ -24,6 +24,7 @@ export default class Plugin {
 
     public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
         this.setupComplete = false;
+        resetInflightControllers();
 
         registry.registerReducer(reducer);
 

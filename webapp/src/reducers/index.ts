@@ -79,6 +79,21 @@ const eventsInitialState: EventsState = {
     error: null,
 };
 
+const MAX_CACHE_ENTRIES = 10;
+
+function evictStaleCache(cache: Record<string, RemoteEvent[]>, keepKey?: string): Record<string, RemoteEvent[]> {
+    const keys = Object.keys(cache);
+    if (keys.length <= MAX_CACHE_ENTRIES) {
+        return cache;
+    }
+    const evicted = {...cache};
+    const toRemove = keys.filter((k) => k !== keepKey).slice(0, keys.length - MAX_CACHE_ENTRIES);
+    for (const k of toRemove) {
+        delete evicted[k];
+    }
+    return evicted;
+}
+
 function events(state: EventsState = eventsInitialState, action: {type: string; data?: RemoteEvent[]; key?: string; from?: string; to?: string; error?: any}): EventsState {
     switch (action.type) {
     case ActionTypes.FETCH_EVENTS_REQUEST:
@@ -92,12 +107,13 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         };
     case ActionTypes.RECEIVED_EVENTS: {
         const key = action.key || state.activeKey || '';
+        const newCache = evictStaleCache({...state.cache, [key]: action.data || []}, key);
         if (key !== state.activeKey) {
-            return {...state, cache: {...state.cache, [key]: action.data || []}};
+            return {...state, cache: newCache};
         }
         return {
             ...state,
-            cache: {...state.cache, [key]: action.data || []},
+            cache: newCache,
             activeFrom: action.from || state.activeFrom,
             activeTo: action.to || state.activeTo,
             loading: false,
@@ -121,7 +137,7 @@ function events(state: EventsState = eventsInitialState, action: {type: string; 
         }
         return {
             ...state,
-            cache: {...state.cache, [freshKey]: action.data || []},
+            cache: evictStaleCache({...state.cache, [freshKey]: action.data || []}, freshKey),
             activeKey: freshKey,
             activeFrom: action.from || state.activeFrom,
             activeTo: action.to || state.activeTo,
