@@ -84,6 +84,11 @@ export default class Plugin {
             />
         ));
     }
+
+    public uninitialize() {
+        this.setupComplete = false;
+        resetInflightControllers();
+    }
 }
 
 const RETRY_DELAY_MS = 5000;
