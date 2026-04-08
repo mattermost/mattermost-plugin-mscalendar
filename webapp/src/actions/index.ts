@@ -117,9 +117,7 @@ export function getConnected(): AppThunk<Promise<{data?: unknown; error?: unknow
                 method: 'get',
             });
         } catch (error) {
-            if (error instanceof ClientError && error.status_code === 401) {
-                dispatch({type: ActionTypes.RECEIVED_DISCONNECTED});
-            }
+            dispatch({type: ActionTypes.RECEIVED_DISCONNECTED});
             return {error};
         }
 
