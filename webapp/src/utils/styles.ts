@@ -36,7 +36,7 @@ export const getModalStyles = (theme: Theme) => ({
 
 export const Z_INDEX_BACKDROP = 1000;
 export const Z_INDEX_TOOLTIP = 1010;
-export const Z_INDEX_MENU_PORTAL = 1020;
+export const Z_INDEX_MENU_PORTAL = 1060;
 
 export const getStyleForReactSelect = (theme: Theme): StylesConfig<AnySelectOption> => {
     return {

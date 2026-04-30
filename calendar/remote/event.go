@@ -46,9 +46,9 @@ type EventResponseStatus struct {
 
 type Location struct {
 	DisplayName  string       `json:"displayName,omitempty"`
-	Address      *Address     `json:"address"`
-	Coordinates  *Coordinates `json:"coordinates"`
-	LocationType string       `json:"locationType"`
+	Address      *Address     `json:"address,omitempty"`
+	Coordinates  *Coordinates `json:"coordinates,omitempty"`
+	LocationType string       `json:"locationType,omitempty"`
 }
 
 type Address struct {
