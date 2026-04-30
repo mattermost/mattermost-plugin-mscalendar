@@ -52,6 +52,7 @@ type PluginAPI interface {
 	SearchLinkableChannelForUser(teamID, mattermostUserID, search string) ([]*model.Channel, error)
 	GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error)
 	PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any)
+	LogAuditRec(rec *model.AuditRecord)
 }
 
 type Env struct {

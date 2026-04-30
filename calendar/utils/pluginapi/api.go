@@ -147,3 +147,7 @@ func (a *API) GetPost(postID string) (*model.Post, error) {
 func (a *API) PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any) {
 	a.api.PublishWebSocketEvent(event, payload, &model.WebsocketBroadcast{UserId: mattermostUserID})
 }
+
+func (a *API) LogAuditRec(rec *model.AuditRecord) {
+	a.api.LogAuditRec(rec)
+}

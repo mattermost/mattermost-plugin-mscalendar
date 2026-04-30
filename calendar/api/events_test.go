@@ -88,7 +88,7 @@ func TestToRemoteEvent(t *testing.T) {
 					},
 					Body: &remote.ItemBody{
 						Content:     "Discuss the quarterly results.",
-						ContentType: "text/plain",
+						ContentType: "text",
 					},
 				}
 				assert.Equal(t, expectedEvent, event)
@@ -332,7 +332,7 @@ func TestCreateEvent(t *testing.T) {
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "Invalid/TimeZone"}, nil).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "Not_A_Real_Timezone_!@#"}, nil).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading mailbox timezone location").Times(1)
 			},

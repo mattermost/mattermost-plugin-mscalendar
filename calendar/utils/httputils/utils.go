@@ -80,6 +80,7 @@ func WriteJSONResponse(w http.ResponseWriter, data any, statusCode int) error {
 		return errors.Wrap(err, "couldn't parse response")
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if _, err := w.Write(jsonResponse); err != nil {
 		return errors.Wrap(err, "couldn't send response to user")

@@ -16,6 +16,9 @@
         },
         "executable": ""
     },
+    "webapp": {
+        "bundle_path": "webapp/dist/main.js"
+    },
     "settings_schema": {
         "header": "",
         "footer": "",
@@ -63,6 +66,14 @@
                 "display_name": "Display full context for each admin log message:",
                 "type": "bool",
                 "help_text": "",
+                "placeholder": "",
+                "default": false
+            },
+            {
+                "key": "EnableExperimentalUI",
+                "display_name": "Enable Experimental Calendar UI:",
+                "type": "bool",
+                "help_text": "When true, a calendar sidebar and channel header button are registered in the Mattermost UI. This feature is experimental and may change in future releases.",
                 "placeholder": "",
                 "default": false
             },

@@ -37,15 +37,19 @@ func Init(h *httputils.Handler, env engine.Env, notificationProcessor engine.Not
 	postActionRouter.HandleFunc(config.PathConfirmStatusChange, api.postActionConfirmStatusChange).Methods(http.MethodPost)
 
 	dialogRouter := h.Router.PathPrefix(config.PathAutocomplete).Subrouter()
-	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers)
+	dialogRouter.HandleFunc(config.PathUsers, api.autocompleteConnectedUsers).Methods(http.MethodGet)
 
 	apiRoutes := h.Router.PathPrefix(config.InternalAPIPath).Subrouter()
 	eventsRouter := apiRoutes.PathPrefix(config.PathEvents).Subrouter()
 	eventsRouter.HandleFunc(config.PathCreate, api.createEvent).Methods(http.MethodPost)
-	apiRoutes.HandleFunc(config.PathConnectedUser, api.connectedUserHandler)
+	eventsRouter.HandleFunc(config.PathView, api.viewEvents).Methods(http.MethodGet)
+	apiRoutes.HandleFunc(config.PathConnectedUser, api.connectedUserHandler).Methods(http.MethodGet)
 
-	// Returns provider information for the plugin to use
-	apiRoutes.HandleFunc(config.PathProvider, func(w http.ResponseWriter, r *http.Request) {
-		httputils.WriteJSONResponse(w, config.Provider, http.StatusOK)
-	})
+	apiRoutes.HandleFunc(config.PathProvider, api.getProviderConfiguration).Methods(http.MethodGet)
+}
+
+func (api *api) getProviderConfiguration(w http.ResponseWriter, r *http.Request) {
+	resp := config.Provider
+	resp.Features.EnableExperimentalUI = api.Config.EnableExperimentalUI
+	httputils.WriteJSONResponse(w, resp, http.StatusOK)
 }

@@ -66,6 +66,7 @@ func GetMockSetup(t *testing.T) (*api, *mock_store.MockStore, *mock_bot.MockPost
 	mockPoster := mock_bot.NewMockPoster(ctrl)
 	mockRemote := mock_remote.NewMockRemote(ctrl)
 	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+	mockPluginAPI.EXPECT().LogAuditRec(gomock.Any()).AnyTimes()
 	mockLogger := mock_bot.NewMockLogger(ctrl)
 	mockLoggerWith := mock_bot.NewMockLogger(ctrl)
 	mockClient := mock_remote.NewMockClient(ctrl)

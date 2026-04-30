@@ -58,15 +58,13 @@ func getCommands() []*model.AutocompleteData {
 		model.NewAutocompleteData("viewcal", "", "View your events for the upcoming 14 days, including today."),
 	}
 
-	if !config.Provider.Features.HideCreateEventFromCommand {
-		cmds = append(cmds, &model.AutocompleteData{
-			Trigger:  "event",
-			HelpText: "Manage events.",
-			SubCommands: []*model.AutocompleteData{
-				model.NewAutocompleteData("create", "", "Creates a new event."),
-			},
-		})
-	}
+	cmds = append(cmds, &model.AutocompleteData{
+		Trigger:  "event",
+		HelpText: "Manage events.",
+		SubCommands: []*model.AutocompleteData{
+			model.NewAutocompleteData("create", "", "Creates a new event."),
+		},
+	})
 
 	cmds = append(cmds,
 		model.NewAutocompleteData("today", "", "Display today's events."),
@@ -132,9 +130,7 @@ func (c *Command) Handle() (string, bool, error) {
 	case "settings":
 		handler = c.requireConnectedUser(c.settings)
 	case "event":
-		if !config.Provider.Features.HideCreateEventFromCommand {
-			handler = c.requireConnectedUser(c.event)
-		}
+		handler = c.requireConnectedUser(c.event)
 	// Admin only
 	case "showcals":
 		handler = c.requireConnectedUser(c.requireAdminUser(c.showCalendars))
