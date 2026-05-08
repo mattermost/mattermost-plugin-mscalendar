@@ -150,7 +150,7 @@ func TestViewEvents(t *testing.T) {
 					Remote:           &remote.User{ID: MockRemoteUserID},
 				}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), mockOAuthToken, MockUserID, gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), mockOAuthToken, MockUserID, gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, gomock.Any(), gomock.Any()).Return(nil, assert.AnError).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("viewEvents, error fetching calendar events").Times(1)
@@ -175,7 +175,7 @@ func TestViewEvents(t *testing.T) {
 					Remote:           &remote.User{ID: MockRemoteUserID},
 				}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), mockOAuthToken, MockUserID, gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), mockOAuthToken, MockUserID, gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, gomock.Any(), gomock.Any()).Return([]*remote.Event{
 					{Subject: "Test Event"},
 				}, nil).Times(1)
@@ -199,7 +199,7 @@ func TestViewEvents(t *testing.T) {
 					Remote:           &remote.User{ID: MockRemoteUserID},
 				}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), mockOAuthToken, MockUserID, gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), mockOAuthToken, MockUserID, gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetDefaultCalendarView(MockRemoteUserID, gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
 			},
 			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {

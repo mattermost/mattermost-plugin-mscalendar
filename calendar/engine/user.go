@@ -125,12 +125,15 @@ func (user *User) Markdown() string {
 
 func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 	m.AfterDisconnect(mattermostUserID)
-	err := m.Filter(
-		withClient,
-	)
-	if err != nil {
-		return err
-	}
+
+	// Note: we intentionally do NOT call m.Filter(withClient) up front here.
+	// A user whose refresh token has been revoked has already been marked
+	// inactive by DisconnectUserFromStoreIfNecessary (their stored
+	// OAuth2Token is nil), which means MakeUserClient will fail. Local
+	// disconnect must always succeed regardless of whether we can still talk
+	// to the remote provider — otherwise users who got the "you have been
+	// marked inactive, please disconnect and reconnect" DM would be unable
+	// to actually disconnect.
 
 	storedUser, err := m.Store.LoadUser(mattermostUserID)
 	if err != nil {
@@ -178,9 +181,18 @@ func (m *mscalendar) DisconnectUser(mattermostUserID string) error {
 			return errors.WithMessagef(err, "failed to delete subscription %s", eventSubscriptionID)
 		}
 
-		err = m.client.DeleteSubscription(sub.Remote)
-		if err != nil {
-			m.Logger.Warnf("failed to delete remote subscription %s. err=%v", eventSubscriptionID, err)
+		// Best-effort: try to delete the remote subscription too. If the
+		// user's token cannot be refreshed (the most common reason
+		// disconnect runs in the first place), log and move on — Microsoft
+		// will expire the orphaned subscription on its own (~3 days), and
+		// blocking local disconnect on this would strand the user.
+		if errFilter := m.Filter(withClient); errFilter != nil {
+			m.Logger.With(bot.LogContext{
+				"err":            errFilter.Error(),
+				"subscriptionID": eventSubscriptionID,
+			}).Warnf("disconnect: skipping remote subscription cleanup, unable to build user client")
+		} else if errDelete := m.client.DeleteSubscription(sub.Remote); errDelete != nil {
+			m.Logger.Warnf("failed to delete remote subscription %s. err=%v", eventSubscriptionID, errDelete)
 		}
 	}
 

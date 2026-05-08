@@ -4,6 +4,7 @@
 package store
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -1007,4 +1008,103 @@ func TestIsConfiguredForCustomStatusUpdates(t *testing.T) {
 			require.Equal(t, tt.expectedResult, result, "Expected %v but got %v", tt.expectedResult, result)
 		})
 	}
+}
+
+func TestDisconnectUserFromStoreIfNecessary(t *testing.T) {
+	const (
+		userKey   = "user_c3b5020d58a049787bc969768465b890"
+		mmuidKey  = "mmuid_e138a0f218087f9324d8c77f87d5f3a0"
+		connected = `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"abc","refresh_token":"def","expiry":"2099-01-01T00:00:00Z"}}`
+		inactive  = `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":null}`
+	)
+	refreshErr := errors.New(ErrorRefreshTokenNotSet)
+
+	tests := []struct {
+		name  string
+		err   error
+		setup func(*testutil.MockPluginAPI, *mock_bot.MockLogger, *mock_bot.MockPoster)
+	}{
+		{
+			name:  "nil error is a no-op",
+			err:   nil,
+			setup: func(_ *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockPoster) {},
+		},
+		{
+			name:  "non-matching error is a no-op",
+			err:   errors.New("unrelated failure"),
+			setup: func(_ *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockPoster) {},
+		},
+		{
+			name: "LoadUser failure is logged and no DM is sent",
+			err:  refreshErr,
+			setup: func(api *testutil.MockPluginAPI, logger *mock_bot.MockLogger, _ *mock_bot.MockPoster) {
+				api.On("KVGet", userKey).Return(nil, &model.AppError{Message: "boom"})
+				logger.EXPECT().Errorf(gomock.Any(), gomock.Any(), gomock.Any())
+			},
+		},
+		{
+			name: "Already-disconnected user is not re-stored and not re-DMed",
+			err:  refreshErr,
+			setup: func(api *testutil.MockPluginAPI, _ *mock_bot.MockLogger, _ *mock_bot.MockPoster) {
+				api.On("KVGet", userKey).Return([]byte(inactive), nil)
+				// No KVSet, no DM expectations: the strict mock asserts they are not called.
+			},
+		},
+		{
+			name: "Connected user is disconnected and DMed exactly once",
+			err:  refreshErr,
+			setup: func(api *testutil.MockPluginAPI, _ *mock_bot.MockLogger, poster *mock_bot.MockPoster) {
+				api.On("KVGet", userKey).Return([]byte(connected), nil)
+				api.On("KVSet", userKey, mock.Anything).Return(nil)
+				api.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil)
+				poster.EXPECT().DM(MockMMUserID, ErrorUserInactive).Return("postID", nil)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockAPI, store, mockLogger, mockPoster := GetMockSetupWithPoster(t)
+			tt.setup(mockAPI, mockLogger, mockPoster)
+
+			store.DisconnectUserFromStoreIfNecessary(tt.err, MockMMUserID)
+
+			mockAPI.AssertExpectations(t)
+		})
+	}
+}
+
+// TestDisconnectUserFromStoreIfNecessary_Idempotent verifies that calling the
+// function repeatedly only DMs the user once, which is the actual user-facing
+// invariant we care about (no spam after the first disconnect).
+func TestDisconnectUserFromStoreIfNecessary_Idempotent(t *testing.T) {
+	const (
+		userKey  = "user_c3b5020d58a049787bc969768465b890"
+		mmuidKey = "mmuid_e138a0f218087f9324d8c77f87d5f3a0"
+	)
+	refreshErr := errors.New(ErrorRefreshTokenNotSet)
+
+	mockAPI, store, _, mockPoster := GetMockSetupWithPoster(t)
+
+	// First call: user is still connected. Expect store + a single DM.
+	mockAPI.On("KVGet", userKey).Return(
+		[]byte(`{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"abc"}}`),
+		nil,
+	).Once()
+	mockAPI.On("KVSet", userKey, mock.Anything).Return(nil).Once()
+	mockAPI.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil).Once()
+	mockPoster.EXPECT().DM(MockMMUserID, ErrorUserInactive).Return("postID", nil).Times(1)
+
+	// Subsequent calls: user is already disconnected. Only a KVGet should fire;
+	// no further KVSet, no further DM.
+	mockAPI.On("KVGet", userKey).Return(
+		[]byte(`{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":null}`),
+		nil,
+	)
+
+	store.DisconnectUserFromStoreIfNecessary(refreshErr, MockMMUserID)
+	store.DisconnectUserFromStoreIfNecessary(refreshErr, MockMMUserID)
+	store.DisconnectUserFromStoreIfNecessary(refreshErr, MockMMUserID)
+
+	mockAPI.AssertExpectations(t)
 }

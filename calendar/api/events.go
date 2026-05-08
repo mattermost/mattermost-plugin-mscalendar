@@ -218,7 +218,13 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	client := api.Remote.MakeUserClient(context.Background(), user.OAuth2Token, mattermostUserID, api.Poster, api.Store)
+	client, errClient := api.Remote.MakeUserClient(context.Background(), user.OAuth2Token, mattermostUserID, api.Poster, api.Store)
+	if errClient != nil {
+		api.Logger.With(bot.LogContext{"err": errClient.Error(), "userID": mattermostUserID}).Errorf("createEvent, unable to build user client (token refresh likely failed)")
+		auditRec.AddErrorDesc(fmt.Sprintf("unable to build user client: %s", errClient.Error()))
+		httputils.WriteUnauthorizedError(w, fmt.Errorf("calendar account not connected; please reconnect"))
+		return
+	}
 
 	mailbox, errMailbox := client.GetMailboxSettings(user.Remote.ID)
 	if errMailbox != nil {
