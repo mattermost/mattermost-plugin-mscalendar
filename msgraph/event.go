@@ -34,7 +34,18 @@ var responseStatusConversion = map[string]string{
 // converts microsoft calendar responses to our representation of fields
 func normalizeEvents(events []*remote.Event) []*remote.Event {
 	for i := range events {
-		events[i].ResponseStatus.Response = responseStatusConversion[events[i].ResponseStatus.Response]
+		if events[i].ResponseStatus == nil {
+			events[i].ResponseStatus = &remote.EventResponseStatus{Response: remote.EventResponseStatusNotAnswered}
+		} else {
+			events[i].ResponseStatus.Response = responseStatusConversion[events[i].ResponseStatus.Response]
+		}
+
+		if events[i].Conference == nil && events[i].OnlineMeeting != nil && events[i].OnlineMeeting.JoinURL != "" {
+			events[i].Conference = &remote.Conference{
+				Application: "Online Meeting",
+				URL:         events[i].OnlineMeeting.JoinURL,
+			}
+		}
 	}
 	return events
 }

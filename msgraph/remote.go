@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
 
@@ -55,19 +56,34 @@ func (r *impl) makeClient(ctx context.Context, token *oauth2.Token, mattermostUs
 }
 
 // MakeUserClient creates a new client having user-delegated permissions with refreshed token.
-func (r *impl) MakeUserClient(ctx context.Context, oauthToken *oauth2.Token, mattermostUserID string, poster bot.Poster, userTokenHelpers remote.UserTokenHelpers) remote.Client {
+//
+// If the stored OAuth2 token cannot be refreshed we return a non-nil error and
+// a nil Client so callers cannot accidentally invoke methods on a half-built
+// client (which would dereference nil fields and crash the plugin host). When
+// the refresh failure indicates an expired/revoked refresh token, we also mark
+// the user as disconnected via the existing token helpers so subsequent calls
+// short-circuit instead of repeatedly hitting AAD.
+func (r *impl) MakeUserClient(ctx context.Context, oauthToken *oauth2.Token, mattermostUserID string, poster bot.Poster, userTokenHelpers remote.UserTokenHelpers) (remote.Client, error) {
 	config := r.NewOAuth2Config()
 
 	token, err := userTokenHelpers.RefreshAndStoreToken(oauthToken, config, mattermostUserID)
 	if err != nil {
-		r.logger.Warnf("Not able to refresh or store the token", "error", err.Error())
-		return &client{}
+		r.logger.With(bot.LogContext{
+			"error":            err.Error(),
+			"mattermostUserID": mattermostUserID,
+		}).Warnf("Not able to refresh or store the token")
+		userTokenHelpers.DisconnectUserFromStoreIfNecessary(err, mattermostUserID)
+		return nil, errors.Wrap(err, "msgraph MakeUserClient")
 	}
 
-	return r.makeClient(ctx, token, mattermostUserID, poster, userTokenHelpers)
+	return r.makeClient(ctx, token, mattermostUserID, poster, userTokenHelpers), nil
 }
 
 // MakeSuperuserClient creates a new client used for app-only permissions.
+//
+// The returned client wires in a no-op UserTokenHelpers so that any method
+// reaching for c.tokenHelpers cannot dereference nil. Today no superuser
+// method uses tokenHelpers, but this keeps the invariant true for future code.
 func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 	httpClient := &http.Client{
 		Timeout: time.Second * 60,
@@ -88,7 +104,20 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		AccessToken: token,
 		TokenType:   "Bearer",
 	}
-	return r.makeClient(ctx, o, "", nil, nil), nil
+	return r.makeClient(ctx, o, "", nil, noopUserTokenHelpers{}), nil
+}
+
+// noopUserTokenHelpers is a safe-by-default UserTokenHelpers implementation
+// used by the superuser client. It treats the user as connected (so methods
+// proceed) and turns Disconnect/Refresh into no-ops, since superuser flows
+// don't operate on a Mattermost user.
+type noopUserTokenHelpers struct{}
+
+func (noopUserTokenHelpers) CheckUserConnected(string) bool { return true }
+func (noopUserTokenHelpers) DisconnectUserFromStoreIfNecessary(error, string) {
+}
+func (noopUserTokenHelpers) RefreshAndStoreToken(token *oauth2.Token, _ *oauth2.Config, _ string) (*oauth2.Token, error) {
+	return token, nil
 }
 
 func (r *impl) NewOAuth2Config() *oauth2.Config {

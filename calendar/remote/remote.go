@@ -20,7 +20,7 @@ var (
 )
 
 type Remote interface {
-	MakeUserClient(context.Context, *oauth2.Token, string, bot.Poster, UserTokenHelpers) Client
+	MakeUserClient(context.Context, *oauth2.Token, string, bot.Poster, UserTokenHelpers) (Client, error)
 	MakeSuperuserClient(ctx context.Context) (Client, error)
 	NewOAuth2Config() *oauth2.Config
 	HandleWebhook(http.ResponseWriter, *http.Request) []*Notification

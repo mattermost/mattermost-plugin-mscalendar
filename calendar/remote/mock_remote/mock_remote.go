@@ -83,11 +83,12 @@ func (mr *MockRemoteMockRecorder) MakeSuperuserClient(arg0 interface{}) *gomock.
 }
 
 // MakeUserClient mocks base method.
-func (m *MockRemote) MakeUserClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 remote.UserTokenHelpers) remote.Client {
+func (m *MockRemote) MakeUserClient(arg0 context.Context, arg1 *oauth2.Token, arg2 string, arg3 bot.Poster, arg4 remote.UserTokenHelpers) (remote.Client, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MakeUserClient", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(remote.Client)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // MakeUserClient indicates an expected call of MakeUserClient.

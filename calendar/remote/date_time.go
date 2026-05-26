@@ -70,7 +70,39 @@ func (dt DateTime) In(timeZone string) *DateTime {
 	}
 }
 
+// NormalizeDateTimeToRFC3339 converts the Start and End fields of an event
+// from Microsoft's bare datetime + timezone format to RFC3339 with offset,
+// so clients can parse them without needing timezone resolution logic.
+func NormalizeDateTimeToRFC3339(e *Event) {
+	if e == nil {
+		return
+	}
+	if e.Start != nil {
+		e.Start = normalizeDateTime(e.Start)
+	}
+	if e.End != nil {
+		e.End = normalizeDateTime(e.End)
+	}
+}
+
+func normalizeDateTime(dt *DateTime) *DateTime {
+	t := dt.Time()
+	if t.IsZero() {
+		return dt
+	}
+	return &DateTime{
+		DateTime: t.Format(time.RFC3339),
+		TimeZone: dt.TimeZone,
+	}
+}
+
 func (dt DateTime) Time() time.Time {
+	// Try RFC3339 first (includes offset, e.g. from Google Calendar)
+	if t, err := time.Parse(time.RFC3339, dt.DateTime); err == nil {
+		return t
+	}
+
+	// Fall back to bare format with timezone name (Microsoft Calendar style)
 	loc, err := time.LoadLocation(tz.Go(dt.TimeZone))
 	if err != nil {
 		return time.Time{}

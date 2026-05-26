@@ -1,9 +1,10 @@
 dist
 server/manifest.go
+webapp/src/manifest.ts
 .DS_Store
 .npminstall
 .idea
 bin
-
+node_modules
 # notice
 .notice-work

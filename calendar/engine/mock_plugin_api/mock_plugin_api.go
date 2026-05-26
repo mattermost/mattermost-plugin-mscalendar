@@ -138,6 +138,18 @@ func (mr *MockPluginAPIMockRecorder) GetPost(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPost", reflect.TypeOf((*MockPluginAPI)(nil).GetPost), arg0)
 }
 
+// LogAuditRec mocks base method.
+func (m *MockPluginAPI) LogAuditRec(arg0 *model.AuditRecord) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogAuditRec", arg0)
+}
+
+// LogAuditRec indicates an expected call of LogAuditRec.
+func (mr *MockPluginAPIMockRecorder) LogAuditRec(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogAuditRec", reflect.TypeOf((*MockPluginAPI)(nil).LogAuditRec), arg0)
+}
+
 // IsSysAdmin mocks base method.
 func (m *MockPluginAPI) IsSysAdmin(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()

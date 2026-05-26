@@ -61,6 +61,21 @@ func GetMockSetup(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockL
 	return mockAPI, store, mockLogger, mockLoggerWith, mockTracker
 }
 
+// GetMockSetupWithPoster is like GetMockSetup but also returns the mock
+// Poster so tests can assert on DM behavior. Prefer GetMockSetup unless the
+// test needs to verify Poster interactions.
+func GetMockSetupWithPoster(t *testing.T) (*testutil.MockPluginAPI, Store, *mock_bot.MockLogger, *mock_bot.MockPoster) {
+	ctrl := gomock.NewController(t)
+	t.Cleanup(ctrl.Finish)
+	mockLogger := mock_bot.NewMockLogger(ctrl)
+	mockTracker := mock_tracker.NewMockTracker(ctrl)
+	mockPoster := mock_bot.NewMockPoster(ctrl)
+	mockAPI := &testutil.MockPluginAPI{}
+	store := NewPluginStore(mockAPI, mockLogger, mockPoster, mockTracker, false, nil)
+
+	return mockAPI, store, mockLogger, mockPoster
+}
+
 func GetMockUser() *User {
 	return &User{
 		MattermostUserID:      MockMMUserID,

@@ -15,8 +15,9 @@ type StoredConfig struct {
 	OAuth2ClientSecret string
 	OAuth2ForceConsent bool
 	bot.Config
-	EnableStatusSync   bool
-	EnableDailySummary bool
+	EnableStatusSync     bool
+	EnableDailySummary   bool
+	EnableExperimentalUI bool
 
 	EncryptionKey string
 }
@@ -26,11 +27,9 @@ func (c *StoredConfig) IsOAuthConfigured() bool {
 }
 
 type ProviderFeatures struct {
-	EncryptedStore     bool
-	EventNotifications bool
-
-	// MM-66824 - Hiding create event command until it's implemented for MS Calendar
-	HideCreateEventFromCommand bool
+	EncryptedStore       bool
+	EventNotifications   bool
+	EnableExperimentalUI bool
 
 	// ForceOAuth2Consent forces the consent prompt on every OAuth2 authorization,
 	// regardless of the OAuth2ForceConsent admin setting. Use for providers that

@@ -88,7 +88,7 @@ func TestToRemoteEvent(t *testing.T) {
 					},
 					Body: &remote.ItemBody{
 						Content:     "Discuss the quarterly results.",
-						ContentType: "text/plain",
+						ContentType: "text",
 					},
 				}
 				assert.Equal(t, expectedEvent, event)
@@ -311,7 +311,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(nil, errors.New("error getting mailbox settings")).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while getting mailbox settings for user").Times(1)
@@ -331,8 +331,8 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
-				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "Invalid/TimeZone"}, nil).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
+				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "Not_A_Real_Timezone_!@#"}, nil).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while loading mailbox timezone location").Times(1)
 			},
@@ -350,7 +350,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockLogger.EXPECT().Errorf("createEvent, invalid payload").Times(1)
 			},
@@ -369,7 +369,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockRemoteClient.EXPECT().CreateEvent(gomock.Any()).Return(nil, errors.New("failed to create event")).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
@@ -389,7 +389,7 @@ func TestCreateEvent(t *testing.T) {
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockEvent := GetMockRemoteEvent()
@@ -414,7 +414,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockEvent := GetMockRemoteEvent()
 				mockRemoteClient.EXPECT().CreateEvent(gomock.Any()).Return(mockEvent, nil).Times(1)
@@ -439,7 +439,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockEvent := GetMockRemoteEvent()
 				mockRemoteClient.EXPECT().CreateEvent(gomock.Any()).Return(mockEvent, nil).Times(1)
@@ -464,7 +464,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockEvent := GetMockRemoteEvent()
 				mockRemoteClient.EXPECT().CreateEvent(gomock.Any()).Return(mockEvent, nil).Times(1)
@@ -486,7 +486,7 @@ func TestCreateEvent(t *testing.T) {
 				req.Body = io.NopCloser(bytes.NewBufferString(validJSON))
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockEvent := GetMockRemoteEvent()
 				mockRemoteClient.EXPECT().CreateEvent(gomock.Any()).Return(mockEvent, nil).Times(1)

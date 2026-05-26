@@ -79,7 +79,10 @@ func (app *oauth2App) CompleteOAuth2(authedUserID, code, state string) error {
 		return err
 	}
 
-	client := app.Remote.MakeUserClient(ctx, tok, mattermostUserID, app.Poster, app.Store)
+	client, err := app.Remote.MakeUserClient(ctx, tok, mattermostUserID, app.Poster, app.Store)
+	if err != nil {
+		return errors.Wrap(err, "unable to build user client during OAuth2 completion")
+	}
 	me, err := client.GetMe()
 	if err != nil {
 		return err

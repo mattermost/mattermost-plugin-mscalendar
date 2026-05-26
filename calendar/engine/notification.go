@@ -136,7 +136,14 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	n.Subscription = sub.Remote
 	n.SubscriptionCreator = creator.Remote
 
-	client := processor.Remote.MakeUserClient(context.Background(), creator.OAuth2Token, sub.MattermostCreatorID, processor.Poster, processor.Store)
+	client, err := processor.Remote.MakeUserClient(context.Background(), creator.OAuth2Token, sub.MattermostCreatorID, processor.Poster, processor.Store)
+	if err != nil {
+		// MakeUserClient already disconnects the user (when applicable) and
+		// logs a warning. Returning here lets the work loop log the failure
+		// and stops us from dereferencing a nil client. The orphaned remote
+		// subscription will expire on Microsoft's side.
+		return errors.Wrap(err, "unable to build user client for notification")
+	}
 
 	if n.RecommendRenew {
 		var renewed *remote.Subscription

@@ -418,7 +418,14 @@ func (s *pluginStore) DisconnectUserFromStoreIfNecessary(err error, mattermostUs
 		return
 	}
 
-	// Mark the user as inactive
+	// Idempotency guard: if the user has already been marked inactive, don't
+	// re-store and don't re-DM. Without this, every subsequent failed token
+	// refresh (webhook, scheduled job, slash command, etc.) would post a fresh
+	// "you have been marked inactive" DM and spam the user.
+	if user.OAuth2Token == nil {
+		return
+	}
+
 	user.OAuth2Token = nil
 	if err = s.StoreUser(user); err != nil {
 		s.Logger.Errorf("Not able to store the user %s. error: %s", mattermostUserID, err.Error())

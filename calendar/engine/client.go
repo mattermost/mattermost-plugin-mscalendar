@@ -20,7 +20,7 @@ func (m *mscalendar) MakeClient() (remote.Client, error) {
 		return nil, err
 	}
 
-	return m.Remote.MakeUserClient(context.Background(), m.actingUser.OAuth2Token, m.actingUser.MattermostUserID, m.Poster, m.Store), nil
+	return m.Remote.MakeUserClient(context.Background(), m.actingUser.OAuth2Token, m.actingUser.MattermostUserID, m.Poster, m.Store)
 }
 
 func (m *mscalendar) MakeSuperuserClient() (remote.Client, error) {

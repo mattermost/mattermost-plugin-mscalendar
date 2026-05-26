@@ -9,14 +9,26 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const maxRequestBodyBytes int64 = 1 << 20 // 1 MB
+
 type Handler struct {
+	root *mux.Router
+
+	// Router is the mux.Router that sub-packages register routes on.
+	// It sits behind the global middleware applied in ServeHTTP.
 	*mux.Router
 }
 
 func NewHandler() *Handler {
-	h := &Handler{
-		Router: mux.NewRouter(),
+	router := mux.NewRouter()
+	router.Handle("{anything:.*}", http.NotFoundHandler())
+	return &Handler{
+		root:   router,
+		Router: router,
 	}
-	h.Router.Handle("{anything:.*}", http.NotFoundHandler())
-	return h
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyBytes)
+	h.root.ServeHTTP(w, r)
 }

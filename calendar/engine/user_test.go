@@ -309,15 +309,38 @@ func TestDisconnectUser(t *testing.T) {
 		assertions func(err error)
 	}{
 		{
-			name: "error filtering the user",
+			name: "remote subscription cleanup is best-effort when client cannot be built",
 			setupMock: func() {
+				// Reproduces the post-revocation disconnect scenario: the
+				// stored OAuth2Token has already been cleared by
+				// DisconnectUserFromStoreIfNecessary, so any attempt to build
+				// a user client fails. Local disconnect must still succeed.
 				mscalendar.client = nil
-				mscalendar.actingUser = &User{MattermostUserID: MockRemoteUserID}
+				mscalendar.actingUser = &User{
+					User: &store.User{
+						MattermostUserID: MockMMUserID,
+						Remote:           &remote.User{ID: MockRemoteUserID},
+					},
+					MattermostUser:   &model.User{Id: MockMMUserID},
+					MattermostUserID: MockMMUserID,
+				}
 				mockWelcomer.EXPECT().AfterDisconnect(MockMMUserID).Return(nil).Times(1)
-				mockStore.EXPECT().LoadUser(MockRemoteUserID).Return(nil, errors.New("error filtering the user")).Times(1)
+				mockStore.EXPECT().LoadUser(MockMMUserID).Return(&store.User{
+					MattermostUserID: MockMMUserID,
+					Settings:         store.Settings{EventSubscriptionID: MockEventSubscriptionID},
+				}, nil).Times(1)
+				mockStore.EXPECT().LoadSubscription(MockEventSubscriptionID).Return(&store.Subscription{Remote: &remote.Subscription{}}, nil).Times(1)
+				mockStore.EXPECT().DeleteUserSubscription(gomock.Any(), MockEventSubscriptionID).Return(nil).Times(1)
+				// MakeUserClient fails because the user's refresh token is gone.
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), MockMMUserID, gomock.Any(), gomock.Any()).Return(nil, errors.New("token revoked")).Times(1)
+				// Expect the warning, then the local cleanup completes.
+				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
+				mockLoggerWith.EXPECT().Warnf("disconnect: skipping remote subscription cleanup, unable to build user client").Times(1)
+				mockStore.EXPECT().DeleteUser(MockMMUserID).Return(nil).Times(1)
+				mockStore.EXPECT().DeleteUserFromIndex(MockMMUserID).Return(nil).Times(1)
 			},
 			assertions: func(err error) {
-				require.ErrorContains(t, err, "error filtering the user")
+				require.NoError(t, err)
 			},
 		},
 		{
