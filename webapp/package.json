@@ -45,7 +45,7 @@
     "babel-plugin-formatjs": "10.3.7",
     "babel-plugin-typescript-to-proptypes": "2.1.0",
     "css-loader": "6.5.1",
-    "eslint": "7.9.0",
+    "eslint": "7.32.0",
     "eslint-import-resolver-typescript": "3.6.1",
     "eslint-import-resolver-webpack": "0.12.2",
     "eslint-plugin-babel": "5.3.1",
