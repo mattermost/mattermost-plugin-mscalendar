@@ -30,11 +30,11 @@ func TestHandleWebhook(t *testing.T) {
 	}`
 
 	tests := []struct {
-		name                 string
-		body                 string
-		wantStatus           int
-		wantNotificationLen  int
-		wantSubscriptionID   string
+		name                string
+		body                string
+		wantStatus          int
+		wantNotificationLen int
+		wantSubscriptionID  string
 	}{
 		{
 			name:                "empty value array",
