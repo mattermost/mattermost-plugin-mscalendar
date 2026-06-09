@@ -67,6 +67,11 @@ func (r *impl) HandleWebhook(w http.ResponseWriter, req *http.Request) []*remote
 
 	notifications := []*remote.Notification{}
 	for _, wh := range v.Value {
+		if wh == nil {
+			r.logger.Infof("msgraph: skipping null webhook entry in notification payload.")
+			continue
+		}
+
 		n := &remote.Notification{
 			SubscriptionID: wh.SubscriptionID,
 			ChangeType:     wh.ChangeType,
