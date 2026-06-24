@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"text/template"
@@ -290,6 +291,17 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 }
 
 func (p *Plugin) ServeHTTP(_ *plugin.Context, w http.ResponseWriter, req *http.Request) {
+	defer func() {
+		if r := recover(); r != nil {
+			p.API.LogError("Recovered from panic while serving HTTP request",
+				"url", req.URL.String(),
+				"error", fmt.Sprintf("%v", r),
+				"stack", string(debug.Stack()),
+			)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}()
+
 	env := p.getEnv()
 	if env.configError != nil {
 		p.API.LogError("Error occurred while getting env", "err", env.configError.Error())
