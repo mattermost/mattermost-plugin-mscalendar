@@ -18,7 +18,7 @@ import (
 
 func TestServeHTTPRecoversFromPanic(t *testing.T) {
 	mockAPI := &plugintest.API{}
-	mockAPI.On("LogError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
+	mockAPI.On("LogError", "Recovered from panic while serving HTTP request", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 	defer mockAPI.AssertExpectations(t)
 
 	handler := httputils.NewHandler()
@@ -38,7 +38,6 @@ func TestServeHTTPRecoversFromPanic(t *testing.T) {
 	})
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Result().StatusCode)
-	mockAPI.AssertCalled(t, "LogError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestServeHTTPNoPanicSucceeds(t *testing.T) {

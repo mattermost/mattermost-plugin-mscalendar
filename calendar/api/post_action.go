@@ -180,14 +180,13 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 			utils.SlackAttachmentError(w, "Error: invalid state to change to.")
 			return
 		}
-		prettyChangeTo, ok := request.Context["pretty_change_to"]
-		if !ok {
-			prettyChangeTo = changeTo
-		}
-		stringPrettyChangeTo, ok := prettyChangeTo.(string)
-		if !ok {
-			utils.SlackAttachmentError(w, "Error: invalid pretty state to change to.")
-			return
+		stringPrettyChangeTo := stringChangeTo
+		if prettyChangeTo, ok := request.Context["pretty_change_to"]; ok {
+			stringPrettyChangeTo, ok = prettyChangeTo.(string)
+			if !ok {
+				utils.SlackAttachmentError(w, "Error: invalid pretty state to change to.")
+				return
+			}
 		}
 
 		status, err := api.PluginAPI.GetMattermostUserStatus(mattermostUserID)
