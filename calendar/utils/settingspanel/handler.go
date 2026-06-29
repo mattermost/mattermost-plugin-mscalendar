@@ -59,7 +59,11 @@ func (sh *handler) handleAction(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	idString := id.(string)
+	idString, ok := id.(string)
+	if !ok {
+		utils.SlackAttachmentError(w, "Error: invalid setting id")
+		return
+	}
 	err := sh.panel.Set(mattermostUserID, idString, value)
 	if err != nil {
 		utils.SlackAttachmentError(w, "Error: cannot set the property, "+err.Error())
