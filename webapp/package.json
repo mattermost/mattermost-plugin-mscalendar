@@ -90,6 +90,11 @@
     "redux": "4.2.1",
     "reselect": "5.2.0"
   },
+  "overrides": {
+    "@fullcalendar/moment-timezone": {
+      "moment-timezone": "$moment-timezone"
+    }
+  },
   "jest": {
     "testPathIgnorePatterns": [
       "/node_modules/",
