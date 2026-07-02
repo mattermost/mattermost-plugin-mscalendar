@@ -29,6 +29,10 @@ func runRenewJob(env engine.Env) {
 	env.Logger.Debugf("Renew job: %v users", len(uindex))
 
 	for _, u := range uindex {
+		if u == nil || u.RemoteID == "" {
+			continue
+		}
+
 		asUser := engine.New(env, u.MattermostUserID)
 
 		env.Logger.Debugf("Renewing for user: %s", u.MattermostUserID)
