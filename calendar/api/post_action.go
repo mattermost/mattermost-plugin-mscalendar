@@ -102,6 +102,11 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !api.PluginAPI.CanReadChannel(p.ChannelId, user.MattermostUserID) {
+		utils.SlackAttachmentError(w, "Error: not authorized")
+		return
+	}
+
 	sas := p.Attachments()
 	if len(sas) == 0 {
 		utils.SlackAttachmentError(w, "Error: Failed to update the post: No attachments found")
