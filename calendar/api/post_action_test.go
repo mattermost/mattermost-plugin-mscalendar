@@ -144,8 +144,33 @@ func TestPostActionAccept(t *testing.T) {
 			},
 		},
 		{
+			name: "User not authorized to read the post's channel",
+			setup: func(req *http.Request) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(false)
+
+				req.Header.Set(MMUserIDHeader, MockUserID)
+				requestBody := model.PostActionIntegrationRequest{
+					Context: map[string]interface{}{
+						config.EventIDKey: MockEventID,
+					},
+				}
+				bodyBytes, _ := json.Marshal(requestBody)
+				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			},
+			assertions: func(rec *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
+				var response model.PostActionIntegrationResponse
+				err := json.NewDecoder(rec.Body).Decode(&response)
+				assert.NoError(t, err)
+				assert.Equal(t, "Error: not authorized", response.EphemeralText)
+			},
+		},
+		{
 			name: "Accept event successfully",
 			setup: func(req *http.Request) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(true)
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
@@ -201,8 +226,33 @@ func TestPostDeclineAccept(t *testing.T) {
 			},
 		},
 		{
+			name: "User not authorized to read the post's channel",
+			setup: func(req *http.Request) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(false)
+
+				req.Header.Set(MMUserIDHeader, MockUserID)
+				requestBody := model.PostActionIntegrationRequest{
+					Context: map[string]interface{}{
+						config.EventIDKey: MockEventID,
+					},
+				}
+				bodyBytes, _ := json.Marshal(requestBody)
+				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			},
+			assertions: func(rec *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
+				var response model.PostActionIntegrationResponse
+				err := json.NewDecoder(rec.Body).Decode(&response)
+				assert.NoError(t, err)
+				assert.Equal(t, "Error: not authorized", response.EphemeralText)
+			},
+		},
+		{
 			name: "Decline event successfully",
 			setup: func(req *http.Request) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(true)
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
@@ -258,8 +308,33 @@ func TestPostActionTentative(t *testing.T) {
 			},
 		},
 		{
+			name: "User not authorized to read the post's channel",
+			setup: func(req *http.Request) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(false)
+
+				req.Header.Set(MMUserIDHeader, MockUserID)
+				requestBody := model.PostActionIntegrationRequest{
+					Context: map[string]interface{}{
+						config.EventIDKey: MockEventID,
+					},
+				}
+				bodyBytes, _ := json.Marshal(requestBody)
+				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			},
+			assertions: func(rec *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
+				var response model.PostActionIntegrationResponse
+				err := json.NewDecoder(rec.Body).Decode(&response)
+				assert.NoError(t, err)
+				assert.Equal(t, "Error: not authorized", response.EphemeralText)
+			},
+		},
+		{
 			name: "Tentatively accept event successfully",
 			setup: func(req *http.Request) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(true)
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Times(2)
@@ -315,6 +390,8 @@ func TestPostActionRespond(t *testing.T) {
 		{
 			name: "Error responding to event",
 			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
+				mockPluginAPI.EXPECT().GetPost("").Return(&model.Post{ChannelId: MockChannelID}, nil)
+				mockPluginAPI.EXPECT().CanReadChannel(MockChannelID, MockUserID).Return(true)
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
@@ -339,13 +416,9 @@ func TestPostActionRespond(t *testing.T) {
 			},
 		},
 		{
-			name: "Error updating post",
+			name: "Error getting the post",
 			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
-				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockPluginAPI.EXPECT().GetPost("").Return(nil, &model.AppError{Message: "error getting post"})
-				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 
 				req.Header.Set(MMUserIDHeader, MockUserID)
 				requestBody := model.PostActionIntegrationRequest{
@@ -362,16 +435,12 @@ func TestPostActionRespond(t *testing.T) {
 				err := json.NewDecoder(rec.Body).Decode(&response)
 				assert.NoError(t, err)
 				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
-				assert.Equal(t, response.EphemeralText, "Error: Failed to update the post: error getting post")
+				assert.Equal(t, response.EphemeralText, "Error: Failed to get the post: error getting post")
 			},
 		},
 		{
 			name: "User not authorized to read the post's channel",
 			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
-				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(2)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
-				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
-				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
 				attachment := model.SlackAttachment{
 					Title: "Private Title",
 					Text:  "Secret attachment content.",
