@@ -106,6 +106,7 @@ export default function ChannelSelector(props: Props) {
                 onChange={handleChange}
                 styles={getStyleForReactSelect(theme)}
                 isMulti={false}
+                isClearable={true}
             />
             {storedError && (
                 <div role='alert'>
