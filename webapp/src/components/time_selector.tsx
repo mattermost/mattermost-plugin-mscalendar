@@ -3,12 +3,10 @@ import {useSelector} from 'react-redux';
 
 import {getTheme} from 'mattermost-redux/selectors/entities/preferences';
 
-import {getTodayString} from '@/utils/datetime';
+import {MINUTE_STEP, getTodayString} from '@/utils/datetime';
 import {CreateEventPayload} from '@/types/calendar_api_types';
 
 import ReactSelectSetting from './react_select_setting';
-
-const minuteStep = 15;
 
 type Props = {
     inputId?: string;
@@ -42,7 +40,7 @@ export default function TimeSelector(props: Props) {
         if (props.date === getTodayString()) {
             constrainedByDate = true;
             const now = new Date();
-            const roundedMinutes = Math.ceil(now.getMinutes() / minuteStep) * minuteStep;
+            const roundedMinutes = Math.ceil(now.getMinutes() / MINUTE_STEP) * MINUTE_STEP;
             fromHour = now.getHours() + Math.floor(roundedMinutes / 60);
             fromMinute = roundedMinutes % 60;
             ranges = generateMilitaryTimeArray(fromHour, fromMinute, toHour, toMinute);
@@ -51,7 +49,7 @@ export default function TimeSelector(props: Props) {
         if (props.startTime) {
             const parsed = parseHHMM(props.startTime);
             fromHour = parsed.hour;
-            fromMinute = parsed.minute + minuteStep;
+            fromMinute = parsed.minute + MINUTE_STEP;
             const extraHours = Math.floor(fromMinute / 60);
             fromMinute %= 60;
             fromHour += extraHours;
@@ -66,7 +64,7 @@ export default function TimeSelector(props: Props) {
             toMinute = parsed.minute;
             if (isStartTimeSelector) {
                 const endTotal = (toHour * 60) + toMinute;
-                const maxStartTotal = endTotal - minuteStep;
+                const maxStartTotal = endTotal - MINUTE_STEP;
                 if (maxStartTotal < 0) {
                     return [];
                 }
@@ -128,7 +126,7 @@ const parseHHMM = (time: string): {hour: number; minute: number} => {
     };
 };
 
-const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = minuteStep) => {
+const generateMilitaryTimeArray = (fromHour = 0, fromMinute = 0, toHour = 23, toMinute = 45, step = MINUTE_STEP) => {
     const timeArray = [];
     for (let hour = fromHour; hour <= toHour; hour++) {
         const startMinute = hour === fromHour ? fromMinute : 0;
