@@ -26,7 +26,7 @@ import DateInput from '@/components/date_input';
 import {capitalizeFirstCharacter} from '@/utils/text';
 import {useAppDispatch} from '@/hooks';
 import {createCalendarEvent, refreshActiveCalendarView} from '@/actions';
-import {getTodayString} from '@/utils/datetime';
+import {getEarliestTimeForToday, getTodayString} from '@/utils/datetime';
 import {getCreateEventModal} from '@/selectors';
 
 import './create_event_form.scss';
@@ -224,8 +224,17 @@ const ActualForm = (props: ActualFormProps) => {
                     min={getTodayString()}
                     onChange={(value) => {
                         setFormValue('date', value);
-                        setFormValue('start_time', '');
-                        setFormValue('end_time', '');
+
+                        // Only clear the times when they become invalid for the new
+                        // date (i.e. now in the past when switching to today), so the
+                        // form stays submittable after simply changing the date.
+                        const startInPast = value === getTodayString() &&
+                            formValues.start_time !== '' &&
+                            formValues.start_time < getEarliestTimeForToday();
+                        if (startInPast) {
+                            setFormValue('start_time', '');
+                            setFormValue('end_time', '');
+                        }
                     }}
                     className='form-control'
                 />
