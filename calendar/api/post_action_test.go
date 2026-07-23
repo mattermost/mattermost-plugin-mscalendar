@@ -502,6 +502,49 @@ func TestPostActionConfirmStatusChange(t *testing.T) {
 			},
 		},
 		{
+			name: "Numeric change_to does not panic",
+			setup: func(req *http.Request) {
+				req.Header.Set(MMUserIDHeader, MockUserID)
+				requestBody := model.PostActionIntegrationRequest{
+					Context: map[string]interface{}{
+						"value":     true,
+						"change_to": 123,
+					},
+				}
+				bodyBytes, _ := json.Marshal(requestBody)
+				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			},
+			assertions: func(rec *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
+				var response model.PostActionIntegrationResponse
+				err := json.NewDecoder(rec.Body).Decode(&response)
+				assert.NoError(t, err)
+				assert.Contains(t, response.EphemeralText, "Error: invalid state to change to.")
+			},
+		},
+		{
+			name: "Numeric pretty_change_to does not panic",
+			setup: func(req *http.Request) {
+				req.Header.Set(MMUserIDHeader, MockUserID)
+				requestBody := model.PostActionIntegrationRequest{
+					Context: map[string]interface{}{
+						"value":            true,
+						"change_to":        "away",
+						"pretty_change_to": 123,
+					},
+				}
+				bodyBytes, _ := json.Marshal(requestBody)
+				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			},
+			assertions: func(rec *httptest.ResponseRecorder) {
+				assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
+				var response model.PostActionIntegrationResponse
+				err := json.NewDecoder(rec.Body).Decode(&response)
+				assert.NoError(t, err)
+				assert.Contains(t, response.EphemeralText, "Error: invalid pretty state to change to.")
+			},
+		},
+		{
 			name: "Error getting user status",
 			setup: func(req *http.Request) {
 				mockPluginAPI.EXPECT().GetMattermostUserStatus(MockUserID).Return(nil, errors.New("status error")).Times(1)
