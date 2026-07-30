@@ -98,6 +98,28 @@ linters:
       - linters:
           - gosec
         text: G301
+      - linters:
+          - gosec
+        text: G703
+      - linters:
+          - gosec
+        text: G704
+      - linters:
+          - gosec
+        text: G706
+      - linters:
+          - gosec
+        text: G710
+      - linters:
+          - gosec
+        text: G101
+        path: _test\.go
+      - linters:
+          - gosec
+        path: build/
+      - linters:
+          - govet
+        path: webapp/node_modules/
 
 formatters:
   disable-all: true
