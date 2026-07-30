@@ -1,6 +1,6 @@
 module github.com/mattermost/mattermost-plugin-mscalendar
 
-go 1.26.3
+go 1.26.5
 
 require (
 	github.com/golang/mock v1.6.0
