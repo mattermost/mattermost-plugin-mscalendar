@@ -19,6 +19,7 @@ func (oa *oa) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 	redirectURL, err := oa.app.InitOAuth2(mattermostUserID)
 	if err != nil {
 		httputils.WriteInternalServerError(w, err)
+		return
 	}
-	http.Redirect(w, r, redirectURL, http.StatusFound)
+	http.Redirect(w, r, redirectURL, http.StatusFound) //nolint:gosec // G710: redirect URL is from plugin OAuth2 config, not user input
 }

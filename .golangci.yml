@@ -1,30 +1,15 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
-  modules-download-mode: readonly
-
-linters-settings:
-  goconst:
-    min-len: 3
-    min-occurrences: 2
-  gofmt:
-    simplify: true
-  goimports:
-    local-prefixes: github.com/mattermost/mattermost-plugin-mscalendar
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-  misspell:
-    locale: US
-  revive:
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
+    - copyloopvar
     - errcheck
+    - gocheckcompilerdirectives
     - gocritic
     - gosec
     - govet
@@ -36,59 +21,41 @@ linters:
     - unconvert
     - unused
     - whitespace
+  settings:
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+    revive:
+      rules:
+        - name: redefines-builtin-id
+          disabled: true
+    staticcheck:
+      checks: ["all", "-QF1001", "-QF1002", "-QF1003", "-QF1004", "-QF1006", "-QF1007", "-QF1008", "-QF1011", "-QF1012"]
   exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
       - linters:
-          - revive
-        text: var-naming|error-naming|exported|increment-decrement|error-strings|if-return|unused-parameter|blank-imports|empty-block|package-comments
+          - goconst
+          - gosec
+        path: _test\.go
       - linters:
           - errcheck
-        text: Error return value
+        path: (calendar|msgraph)/
+      - linters:
+          - revive
+        text: unused-parameter
+      - linters:
+          - revive
+        text: var-naming
       - linters:
           - staticcheck
         text: SA1019
-      - linters:
-          - staticcheck
-        text: ST1023
-      - linters:
-          - staticcheck
-        text: ST1012
-      - linters:
-          - staticcheck
-        text: ST1005
-      - linters:
-          - staticcheck
-        text: QF1011
-      - linters:
-          - staticcheck
-        text: QF1001
-      - linters:
-          - staticcheck
-        text: QF1003
-      - linters:
-          - staticcheck
-        text: QF1012
-      - linters:
-          - staticcheck
-        text: QT1019
-      - linters:
-          - staticcheck
-        text: QF1008
-      - linters:
-          - staticcheck
-        text: QF1004
-      - linters:
-          - staticcheck
-        text: ST1019
-      - linters:
-          - staticcheck
-        text: QF1006
-      - linters:
-          - staticcheck
-        text: QF1002
-      - linters:
-          - staticcheck
-        text: QF1007
       - linters:
           - gosec
         text: G104
@@ -98,25 +65,23 @@ linters:
       - linters:
           - gosec
         text: G301
+      - path: (.+)\.go$
+        text: 'shadow: declaration of "err" shadows declaration at'
+    paths:
+      - server/manifest.go
+      - build/
+      - webapp/node_modules/
 
 formatters:
-  disable-all: true
   enable:
     - gofmt
     - goimports
-
-issues:
-  exclude-rules:
-    - path: server/manifest.go
-      linters:
-        - deadcode
-        - unused
-        - varcheck
-    - path: server/configuration.go
-      linters:
-        - unused
-    - path: _test\.go
-      linters:
-        - bodyclose
-        - goconst
-        - scopelint # https://github.com/kyoh86/scopelint/issues/4
+  settings:
+    gofmt:
+      simplify: true
+  exclusions:
+    generated: lax
+    paths:
+      - server/manifest.go
+      - build/
+      - webapp/node_modules/
