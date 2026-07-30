@@ -46,7 +46,7 @@ linters:
         path: _test\.go
       - linters:
           - errcheck
-        text: Error return value
+        path: (calendar|msgraph)/
       - linters:
           - revive
         text: unused-parameter
