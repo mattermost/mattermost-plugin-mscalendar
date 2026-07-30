@@ -237,6 +237,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
 					gomock.Eq("fake@mattermost.com"),
+					gomock.Eq("%s"),
 					gomock.Eq(fmt.Sprintf(RemoteUserAlreadyConnected, config.Provider.DisplayName, "mail-value", "sample-username", config.Provider.CommandTrigger)),
 				).Return("post_id", nil).Times(1)
 			},
@@ -261,6 +262,7 @@ func TestCompleteOAuth2Errors(t *testing.T) {
 				poster := d.Poster.(*mock_bot.MockPoster)
 				poster.EXPECT().DM(
 					gomock.Eq("fake@mattermost.com"),
+					gomock.Eq("%s"),
 					gomock.Eq(fmt.Sprintf(RemoteUserAlreadyConnectedDisabled, config.Provider.DisplayName, "mail-value", config.Provider.CommandTrigger)),
 				).Return("post_id", nil).Times(1)
 			},

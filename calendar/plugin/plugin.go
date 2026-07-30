@@ -271,7 +271,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 
 	if out != "" {
-		env.Poster.Ephemeral(args.UserId, args.ChannelId, out)
+		env.Poster.Ephemeral(args.UserId, args.ChannelId, "%s", out)
 	}
 
 	response := &model.CommandResponse{}
@@ -435,7 +435,7 @@ func (p *Plugin) cleanupUserRelatedData(e *Env, user *store.User, indexEntry *st
 func (p *Plugin) notifyUserReconnect(e *Env, mattermostUserID, reason string) {
 	msg := fmt.Sprintf("Your %s connection has been reset because %s. Please reconnect using `/%s connect`.",
 		config.Provider.DisplayName, reason, config.Provider.CommandTrigger)
-	if _, dmErr := e.bot.DM(mattermostUserID, msg); dmErr != nil {
+	if _, dmErr := e.bot.DM(mattermostUserID, "%s", msg); dmErr != nil {
 		p.API.LogWarn("Failed to notify user about encryption key change",
 			"mm_user_id", mattermostUserID,
 			"error", dmErr.Error(),
