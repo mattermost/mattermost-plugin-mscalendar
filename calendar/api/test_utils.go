@@ -105,11 +105,11 @@ func GetMockCreateEventPayload(allDay bool, attendees []string, date, startTime,
 }
 
 func GetCurrentTimeRequestBodyJSON(channelID string) string {
-	// Use UTC to match test mailbox timezone and add extra buffer to avoid edge cases
-	currentTime := time.Now().UTC().Add(24 * time.Hour)
-	date := currentTime.Format("2006-01-02")
-	startTime := currentTime.Add(time.Hour).Format("15:04")
-	endTime := currentTime.Add(2 * time.Hour).Format("15:04")
+	// Use UTC to match test mailbox timezone
+	tomorrow := TomorrowMidnightUTC()
+	date := tomorrow.Format("2006-01-02")
+	startTime := tomorrow.Add(10 * time.Hour).Format("15:04")
+	endTime := tomorrow.Add(12 * time.Hour).Format("15:04")
 
 	return fmt.Sprintf(`{
 					"all_day": false,
@@ -122,6 +122,12 @@ func GetCurrentTimeRequestBodyJSON(channelID string) string {
 					"location": "Conference Room",
 					"channel_id": "%s"
 				}`, date, startTime, endTime, channelID)
+}
+
+// TomorrowMidnightUTC anchors event fixtures to a fixed time of day so that
+// start/end offsets never roll over into the following day.
+func TomorrowMidnightUTC() time.Time {
+	return time.Now().UTC().Add(24 * time.Hour).Truncate(24 * time.Hour)
 }
 
 func GetMockRemoteEvent() *remote.Event {

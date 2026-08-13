@@ -159,8 +159,8 @@ func TestIsValid(t *testing.T) {
 		{
 			name: "Invalid end time",
 			payload: func() createEventPayload {
-				futureTime := time.Now().UTC().Add(24 * time.Hour)
-				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(1*time.Hour).Format("15:04"), "invalidEndTime", "mockDescription", "mockSubject", "mockLocation", "")
+				futureTime := TomorrowMidnightUTC()
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(10*time.Hour).Format("15:04"), "invalidEndTime", "mockDescription", "mockSubject", "mockLocation", "")
 			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.ErrorContains(t, err, "please use a valid end time")
@@ -169,8 +169,8 @@ func TestIsValid(t *testing.T) {
 		{
 			name: "End time before start time",
 			payload: func() createEventPayload {
-				futureTime := time.Now().UTC().Add(24 * time.Hour)
-				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(2*time.Hour).Format("15:04"), futureTime.Add(1*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
+				futureTime := TomorrowMidnightUTC()
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(12*time.Hour).Format("15:04"), futureTime.Add(10*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
 			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.ErrorContains(t, err, "end date cannot be earlier than start date")
@@ -179,8 +179,8 @@ func TestIsValid(t *testing.T) {
 		{
 			name: "Valid event",
 			payload: func() createEventPayload {
-				futureTime := time.Now().UTC().Add(24 * time.Hour)
-				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(1*time.Hour).Format("15:04"), futureTime.Add(2*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
+				futureTime := TomorrowMidnightUTC()
+				return GetMockCreateEventPayload(false, nil, futureTime.Format("2006-01-02"), futureTime.Add(10*time.Hour).Format("15:04"), futureTime.Add(12*time.Hour).Format("15:04"), "mockDescription", "mockSubject", "mockLocation", "")
 			}(),
 			assertions: func(t *testing.T, err error) {
 				assert.NoError(t, err)
