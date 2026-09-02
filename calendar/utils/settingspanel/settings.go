@@ -20,7 +20,7 @@ type Setting interface {
 	IsDisabled(foreignValue interface{}) bool
 	GetTitle() string
 	GetDescription() string
-	GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error)
+	GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.MessageAttachment, error)
 }
 
 type Panel interface {
@@ -99,7 +99,7 @@ func (p *panel) Print(userID string) {
 		p.logger.Warnf("could not clean previous setting post. err=%v", err)
 	}
 
-	sas := []*model.SlackAttachment{}
+	sas := []*model.MessageAttachment{}
 	for _, key := range p.settingKeys {
 		s := p.settings[key]
 		sa, loopErr := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
@@ -124,7 +124,7 @@ func (p *panel) Print(userID string) {
 func (p *panel) ToPost(userID string) (*model.Post, error) {
 	post := &model.Post{}
 
-	sas := []*model.SlackAttachment{}
+	sas := []*model.MessageAttachment{}
 	for _, key := range p.settingKeys {
 		s := p.settings[key]
 		sa, err := s.GetSlackAttachments(userID, p.pluginURL+p.settingHandler, p.isSettingDisabled(userID, s))
@@ -135,7 +135,7 @@ func (p *panel) ToPost(userID string) (*model.Post, error) {
 		sas = append(sas, sa)
 	}
 
-	model.ParseSlackAttachment(post, sas)
+	model.ParseMessageAttachment(post, sas)
 	return post, nil
 }
 

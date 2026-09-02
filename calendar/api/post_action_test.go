@@ -441,7 +441,7 @@ func TestPostActionRespond(t *testing.T) {
 		{
 			name: "User not authorized to read the post's channel",
 			setup: func(req *http.Request, api *api, mockStore *mock_store.MockStore, mockRemote *mock_remote.MockRemote, mockPluginAPI *mock_plugin_api.MockPluginAPI, mockClient *mock_remote.MockClient) {
-				attachment := model.SlackAttachment{
+				attachment := model.MessageAttachment{
 					Title: "Private Title",
 					Text:  "Secret attachment content.",
 				}
@@ -449,7 +449,7 @@ func TestPostActionRespond(t *testing.T) {
 					Id:        MockPostID,
 					ChannelId: MockChannelID,
 					Props: map[string]interface{}{
-						"attachments": []*model.SlackAttachment{&attachment},
+						"attachments": []*model.MessageAttachment{&attachment},
 					},
 				}
 				mockPluginAPI.EXPECT().GetPost("").Return(&mockPost, nil)
@@ -509,7 +509,7 @@ func TestPostActionRespond(t *testing.T) {
 				mockRemote.EXPECT().MakeUserClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mockClient, nil)
 				mockPluginAPI.EXPECT().GetMattermostUser(MockUserID).Return(&model.User{Id: MockUserID}, nil).Times(2)
 				mockClient.EXPECT().AcceptEvent(MockRemoteUserID, MockEventID).Return(nil)
-				attachment := model.SlackAttachment{
+				attachment := model.MessageAttachment{
 					Title: "Example Title",
 					Text:  "This is an example attachment.",
 				}
@@ -517,7 +517,7 @@ func TestPostActionRespond(t *testing.T) {
 					Id:        MockPostID,
 					ChannelId: MockChannelID,
 					Props: map[string]interface{}{
-						"attachments": []*model.SlackAttachment{&attachment},
+						"attachments": []*model.MessageAttachment{&attachment},
 					},
 				}
 				mockPluginAPI.EXPECT().GetPost("").Return(&mockPost, nil)

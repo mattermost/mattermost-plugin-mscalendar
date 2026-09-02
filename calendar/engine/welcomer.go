@@ -86,7 +86,7 @@ func (bot *mscBot) AfterSuccessfullyConnect(userID, userLogin string) error {
 		post := &model.Post{
 			Id: postID,
 		}
-		model.ParseSlackAttachment(post, []*model.SlackAttachment{bot.newConnectedAttachment(userLogin)})
+		model.ParseMessageAttachment(post, []*model.MessageAttachment{bot.newConnectedAttachment(userLogin)})
 		bot.UpdatePost(post)
 	}
 
@@ -114,10 +114,10 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 	bot.notifySettings(userID)
 }
 
-func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
+func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
 	title := "Connect"
 	text := fmt.Sprintf(WelcomeMessage, bot.Provider.DisplayName, bot.pluginURL)
-	sa := model.SlackAttachment{
+	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     text,
 		Fallback: fmt.Sprintf("%s: %s", title, text),
@@ -126,10 +126,10 @@ func (bot *mscBot) newConnectAttachment() *model.SlackAttachment {
 	return &sa
 }
 
-func (bot *mscBot) newConnectedAttachment(userLogin string) *model.SlackAttachment {
+func (bot *mscBot) newConnectedAttachment(userLogin string) *model.MessageAttachment {
 	title := "Connect"
 	text := ":tada: Congratulations! Your " + bot.Provider.DisplayName + " account (*" + userLogin + "*) has been connected to Mattermost."
-	return &model.SlackAttachment{
+	return &model.MessageAttachment{
 		Title:    title,
 		Text:     text,
 		Fallback: fmt.Sprintf("%s: %s", title, text),

@@ -16,14 +16,14 @@ import (
 )
 
 type Option interface {
-	Apply(remote.Event, *model.SlackAttachment)
+	Apply(remote.Event, *model.MessageAttachment)
 }
 
 type showTimezoneOption struct {
 	timezone string
 }
 
-func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.SlackAttachment) {
+func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.MessageAttachment) {
 	attachment.Text = fmt.Sprintf(
 		"%s - %s (%s)",
 		event.Start.In(tzOpt.timezone).Time().Format(time.Kitchen),
@@ -74,7 +74,7 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 	return resp, nil
 }
 
-func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model.SlackAttachment, error) {
+func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model.MessageAttachment, error) {
 	if len(events) == 0 {
 		return "You have no events for that day", nil, nil
 	}
@@ -88,20 +88,20 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 
 	message := fmt.Sprintf("Agenda for %s.\nTimes are shown in %s", events[0].Start.Time().Format("Monday, 02 January"), events[0].Start.TimeZone)
 
-	var attachments []*model.SlackAttachment
+	var attachments []*model.MessageAttachment
 	for _, event := range events {
 		var actions []*model.PostAction
 
-		fields := []*model.SlackAttachmentField{}
+		fields := []*model.MessageAttachmentField{}
 		if event.Location != nil && event.Location.DisplayName != "" {
-			fields = append(fields, &model.SlackAttachmentField{
+			fields = append(fields, &model.MessageAttachmentField{
 				Title: "Location",
 				Value: MarkdownToHTMLEntities(event.Location.DisplayName),
 				Short: true,
 			})
 		}
 
-		attachments = append(attachments, &model.SlackAttachment{
+		attachments = append(attachments, &model.MessageAttachment{
 			Title: event.Subject,
 			// Text:    event.BodyPreview,
 			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
@@ -181,13 +181,13 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 	return fmt.Sprintf(format, start, end, MarkdownToHTMLEntities(subject), link), nil
 }
 
-func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.SlackAttachment, error) {
+func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Option) (*model.MessageAttachment, error) {
 	var actions []*model.PostAction
-	fields := []*model.SlackAttachmentField{}
+	fields := []*model.MessageAttachmentField{}
 	var titleLink string
 
 	if event.Location != nil && event.Location.DisplayName != "" {
-		fields = append(fields, &model.SlackAttachmentField{
+		fields = append(fields, &model.MessageAttachmentField{
 			Title: "Location",
 			Value: MarkdownToHTMLEntities(event.Location.DisplayName),
 			Short: true,
@@ -203,14 +203,14 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 			title = event.Conference.Application
 		}
 
-		fields = append(fields, &model.SlackAttachmentField{
+		fields = append(fields, &model.MessageAttachmentField{
 			Title: title,
 			Value: event.Conference.URL,
 			Short: true,
 		})
 	}
 
-	attachment := &model.SlackAttachment{
+	attachment := &model.MessageAttachment{
 		Title:     MarkdownToHTMLEntities(event.Subject),
 		TitleLink: titleLink,
 		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
@@ -271,7 +271,7 @@ func EnsureSubject(s string) string {
 	return s
 }
 
-func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string, options ...Option) (message string, attachment *model.SlackAttachment, err error) {
+func RenderUpcomingEventAsAttachment(event *remote.Event, timeZone string, options ...Option) (message string, attachment *model.MessageAttachment, err error) {
 	message = "Upcoming event:\n"
 	attachment, err = RenderEventAsAttachment(event, timeZone, options...)
 	return message, attachment, err

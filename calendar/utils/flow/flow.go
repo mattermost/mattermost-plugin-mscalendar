@@ -29,8 +29,8 @@ type Store interface {
 }
 
 type Step interface {
-	PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment
-	ResponseSlackAttachment(value bool) *model.SlackAttachment
+	PostSlackAttachment(flowHandler string, i int) *model.MessageAttachment
+	ResponseSlackAttachment(value bool) *model.MessageAttachment
 	GetPropertyName() string
 	ShouldSkip(value bool) int
 	IsEmpty() bool
@@ -48,7 +48,7 @@ type SimpleStep struct {
 	FalseSkip            int
 }
 
-func (s *SimpleStep) PostSlackAttachment(flowHandler string, i int) *model.SlackAttachment {
+func (s *SimpleStep) PostSlackAttachment(flowHandler string, i int) *model.MessageAttachment {
 	actionTrue := model.PostAction{
 		Name: s.TrueButtonMessage,
 		Integration: &model.PostActionIntegration{
@@ -63,7 +63,7 @@ func (s *SimpleStep) PostSlackAttachment(flowHandler string, i int) *model.Slack
 		},
 	}
 
-	sa := model.SlackAttachment{
+	sa := model.MessageAttachment{
 		Title:    s.Title,
 		Text:     s.Message,
 		Actions:  []*model.PostAction{&actionTrue, &actionFalse},
@@ -73,13 +73,13 @@ func (s *SimpleStep) PostSlackAttachment(flowHandler string, i int) *model.Slack
 	return &sa
 }
 
-func (s *SimpleStep) ResponseSlackAttachment(value bool) *model.SlackAttachment {
+func (s *SimpleStep) ResponseSlackAttachment(value bool) *model.MessageAttachment {
 	message := s.FalseResponseMessage
 	if value {
 		message = s.TrueResponseMessage
 	}
 
-	sa := model.SlackAttachment{
+	sa := model.MessageAttachment{
 		Title:    s.Title,
 		Text:     message,
 		Actions:  []*model.PostAction{},

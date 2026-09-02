@@ -93,7 +93,7 @@ func (s *dailySummarySetting) GetDependency() string {
 	return s.dependsOn
 }
 
-func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.MessageAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 
@@ -101,7 +101,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 	if disabled {
 		text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
-		sa := model.SlackAttachment{
+		sa := model.MessageAttachment{
 			Title:    title,
 			Text:     text,
 			Actions:  actions,
@@ -199,7 +199,7 @@ func (s *dailySummarySetting) GetSlackAttachments(userID, settingHandler string,
 
 	actions = append(actions, &actionToggle)
 
-	sa := model.SlackAttachment{
+	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     s.description,
 		Actions:  actions,

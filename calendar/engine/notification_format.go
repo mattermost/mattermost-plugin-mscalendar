@@ -16,11 +16,11 @@ import (
 	"github.com/mattermost/mattermost/server/public/model"
 )
 
-func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.SlackAttachment {
+func (processor *notificationProcessor) newSlackAttachment(n *remote.Notification) *model.MessageAttachment {
 	title := views.EnsureSubject(n.Event.Subject)
 	titleLink := n.Event.Weblink
 	text := n.Event.BodyPreview
-	return &model.SlackAttachment{
+	return &model.MessageAttachment{
 		AuthorName: n.Event.Organizer.EmailAddress.Name,
 		AuthorLink: "mailto:" + n.Event.Organizer.EmailAddress.Address,
 		TitleLink:  titleLink,
@@ -30,7 +30,7 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 	}
 }
 
-func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification, timezone string) *model.SlackAttachment {
+func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification, timezone string) *model.MessageAttachment {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(new) " + sa.Title
 
@@ -38,7 +38,7 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	for _, k := range notificationFieldOrder {
 		v := fields[k]
 
-		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+		sa.Fields = append(sa.Fields, &model.MessageAttachmentField{
 			Title: k,
 			Value: strings.Join(v.Strings(), ", "),
 			Short: true,
@@ -51,7 +51,7 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	return sa
 }
 
-func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event, timezone string) (bool, *model.SlackAttachment) {
+func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event, timezone string) (bool, *model.MessageAttachment) {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(updated) " + sa.Title
 
@@ -83,7 +83,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		if !isImportantChange(k) {
 			continue
 		}
-		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+		sa.Fields = append(sa.Fields, &model.MessageAttachmentField{
 			Title: k,
 			Value: views.MarkdownToHTMLEntities(strings.Join(newFields[k].Strings(), ", ")),
 			Short: true,
@@ -93,7 +93,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		if !isImportantChange(k) {
 			continue
 		}
-		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+		sa.Fields = append(sa.Fields, &model.MessageAttachmentField{
 			Title: k,
 			Value: fmt.Sprintf("~~%s~~ \u2192 %s", views.MarkdownToHTMLEntities(strings.Join(priorFields[k].Strings(), ", ")), views.MarkdownToHTMLEntities(strings.Join(newFields[k].Strings(), ", "))),
 			Short: true,
@@ -103,7 +103,7 @@ func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.No
 		if !isImportantChange(k) {
 			continue
 		}
-		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+		sa.Fields = append(sa.Fields, &model.MessageAttachmentField{
 			Title: k,
 			Value: fmt.Sprintf("~~%s~~", views.MarkdownToHTMLEntities(strings.Join(priorFields[k].Strings(), ", "))),
 			Short: true,

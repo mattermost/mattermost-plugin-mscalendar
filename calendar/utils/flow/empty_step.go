@@ -14,8 +14,8 @@ type EmptyStep struct {
 	Message string
 }
 
-func (s *EmptyStep) PostSlackAttachment(_ string, _ int) *model.SlackAttachment {
-	sa := model.SlackAttachment{
+func (s *EmptyStep) PostSlackAttachment(_ string, _ int) *model.MessageAttachment {
+	sa := model.MessageAttachment{
 		Title:    s.Title,
 		Text:     s.Message,
 		Fallback: fmt.Sprintf("%s: %s", s.Title, s.Message),
@@ -24,7 +24,7 @@ func (s *EmptyStep) PostSlackAttachment(_ string, _ int) *model.SlackAttachment 
 	return &sa
 }
 
-func (s *EmptyStep) ResponseSlackAttachment(_ bool) *model.SlackAttachment {
+func (s *EmptyStep) ResponseSlackAttachment(_ bool) *model.MessageAttachment {
 	return nil
 }
 
