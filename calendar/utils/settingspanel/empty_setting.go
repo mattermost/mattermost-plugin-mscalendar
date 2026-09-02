@@ -44,9 +44,9 @@ func (s *emptySetting) GetTitle() string {
 func (s *emptySetting) GetDescription() string {
 	return s.description
 }
-func (s *emptySetting) GetSlackAttachments(_, _ string, _ bool) (*model.SlackAttachment, error) {
+func (s *emptySetting) GetSlackAttachments(_, _ string, _ bool) (*model.MessageAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
-	sa := model.SlackAttachment{
+	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     s.description,
 		Fallback: fmt.Sprintf("%s: %s", title, s.description),

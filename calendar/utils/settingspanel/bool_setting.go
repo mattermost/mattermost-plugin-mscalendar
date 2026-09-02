@@ -83,7 +83,7 @@ func (s *boolSetting) getActionStyle(actionValue, currentValue string) string {
 	return "default"
 }
 
-func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.SlackAttachment, error) {
+func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disabled bool) (*model.MessageAttachment, error) {
 	title := fmt.Sprintf("Setting: %s", s.title)
 	currentValueMessage := "Disabled"
 
@@ -127,7 +127,7 @@ func (s *boolSetting) GetSlackAttachments(userID, settingHandler string, disable
 	}
 
 	text := fmt.Sprintf("%s\n%s", s.description, currentValueMessage)
-	sa := model.SlackAttachment{
+	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     text,
 		Actions:  actions,
