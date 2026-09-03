@@ -65,7 +65,7 @@ func (fh *fh) handleFlow(w http.ResponseWriter, r *http.Request) {
 
 	response := model.PostActionIntegrationResponse{}
 	post := model.Post{}
-	model.ParseSlackAttachment(&post, []*model.SlackAttachment{step.ResponseSlackAttachment(value)})
+	model.ParseMessageAttachment(&post, []*model.MessageAttachment{step.ResponseSlackAttachment(value)})
 	response.Update = &post
 
 	w.Header().Set("Content-Type", "application/json")

@@ -330,7 +330,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 				ChannelId: payload.ChannelID,
 			}
 			if attachment != nil {
-				model.ParseSlackAttachment(post, []*model.SlackAttachment{attachment})
+				model.ParseMessageAttachment(post, []*model.MessageAttachment{attachment})
 			}
 			if err := api.Poster.CreatePost(post); err != nil {
 				api.Logger.With(bot.LogContext{"err": err}).Errorf("error sending post to channel about linked event")

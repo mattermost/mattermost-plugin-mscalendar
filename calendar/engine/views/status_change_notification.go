@@ -21,7 +21,7 @@ var prettyStatuses = map[string]string{
 	model.StatusOffline: "Offline",
 }
 
-func RenderStatusChangeNotificationView(events []*remote.Event, status, url string) *model.SlackAttachment {
+func RenderStatusChangeNotificationView(events []*remote.Event, status, url string) *model.MessageAttachment {
 	for _, e := range events {
 		if e.Start.Time().After(time.Now()) {
 			return statusChangeAttachments(e, status, url)
@@ -62,7 +62,7 @@ func renderScheduleItem(event *remote.Event, status string) string {
 	return resp
 }
 
-func statusChangeAttachments(event *remote.Event, status, url string) *model.SlackAttachment {
+func statusChangeAttachments(event *remote.Event, status, url string) *model.MessageAttachment {
 	actionYes := &model.PostAction{
 		Name: "Yes",
 		Integration: &model.PostActionIntegration{
@@ -102,7 +102,7 @@ func statusChangeAttachments(event *remote.Event, status, url string) *model.Sla
 
 	title := "Status change"
 	text := renderScheduleItem(event, status)
-	sa := &model.SlackAttachment{
+	sa := &model.MessageAttachment{
 		Title:    title,
 		Text:     text,
 		Actions:  []*model.PostAction{actionYes, actionNo},

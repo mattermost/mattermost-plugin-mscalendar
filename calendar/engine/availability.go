@@ -634,7 +634,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 						m.Logger.With(bot.LogContext{"err": errRender}).Errorf("notifyUpcomingEvents error rendering channel post")
 						continue
 					}
-					model.ParseSlackAttachment(post, []*model.SlackAttachment{attachment})
+					model.ParseMessageAttachment(post, []*model.MessageAttachment{attachment})
 					errPoster := m.Poster.CreatePost(post)
 					if errPoster != nil {
 						m.Logger.With(bot.LogContext{"err": errPoster}).Warnf("notifyUpcomingEvents error creating post in channel")

@@ -174,7 +174,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		}
 	}
 
-	var sa *model.SlackAttachment
+	var sa *model.MessageAttachment
 	prior, err := processor.Store.LoadUserEvent(creator.MattermostUserID, n.Event.ICalUID)
 	if err != nil && err != store.ErrNotFound {
 		return err

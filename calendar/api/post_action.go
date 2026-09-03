@@ -138,7 +138,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 	sa := sas[0]
 
 	if err == nil || isAcceptedError(err) {
-		sa.Fields = append(sa.Fields, &model.SlackAttachmentField{
+		sa.Fields = append(sa.Fields, &model.MessageAttachmentField{
 			Title: "Response",
 			Value: fmt.Sprintf("You have %s this event", prettyOption(option)),
 			Short: false,
@@ -147,7 +147,7 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	sa.Actions = []*model.PostAction{}
 	postResponse := model.PostActionIntegrationResponse{}
-	model.ParseSlackAttachment(p, []*model.SlackAttachment{sa})
+	model.ParseMessageAttachment(p, []*model.MessageAttachment{sa})
 
 	postResponse.Update = p
 
@@ -252,13 +252,13 @@ func (api *api) postActionConfirmStatusChange(w http.ResponseWriter, req *http.R
 		returnText = eventInfo + "\n" + returnText
 	}
 
-	sa := &model.SlackAttachment{
+	sa := &model.MessageAttachment{
 		Title:    "Status Change",
 		Text:     returnText,
 		Fallback: "Status Change: " + returnText,
 	}
 
-	model.ParseSlackAttachment(post, []*model.SlackAttachment{sa})
+	model.ParseMessageAttachment(post, []*model.MessageAttachment{sa})
 
 	response.Update = post
 	w.Header().Set("Content-Type", "application/json")
