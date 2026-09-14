@@ -6,6 +6,20 @@ jest.mock('react-redux', () => ({
     useDispatch: jest.fn(() => jest.fn()),
 }));
 
+// react-bootstrap is a webpack external: at runtime the host provides its own
+// React 19-compatible build. The npm package pinned for local dev/tests still
+// uses react-transition-group's legacy findDOMNode, which React 19 removed, so
+// it's stubbed out here rather than exercised under jsdom.
+jest.mock('react-bootstrap', () => {
+    const ModalStub = ({show, children}: {show?: boolean; children?: React.ReactNode}) => (
+        show ? <div>{children}</div> : null
+    );
+    ModalStub.Header = ({children}: {children?: React.ReactNode}) => <div>{children}</div>;
+    ModalStub.Title = ({children}: {children?: React.ReactNode}) => <div>{children}</div>;
+
+    return {Modal: ModalStub};
+});
+
 jest.mock('./create_event_form', () => {
     return {
         __esModule: true,
