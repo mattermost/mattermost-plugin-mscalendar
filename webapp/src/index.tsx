@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
-import {Action, Store} from 'redux';
+import {Store} from 'redux';
 
 import {GlobalState} from '@mattermost/types/store';
 
@@ -22,7 +22,7 @@ import {getProviderConfiguration as getProviderConfigSelector} from './selectors
 export default class Plugin {
     private setupComplete = false;
 
-    public async initialize(registry: PluginRegistry, store: Store<GlobalState, Action<Record<string, unknown>>>) {
+    public async initialize(registry: PluginRegistry, store: Store<GlobalState>) {
         this.setupComplete = false;
         resetInflightControllers();
 
