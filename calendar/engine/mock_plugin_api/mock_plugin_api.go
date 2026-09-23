@@ -48,6 +48,20 @@ func (mr *MockPluginAPIMockRecorder) CanLinkEventToChannel(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanLinkEventToChannel", reflect.TypeOf((*MockPluginAPI)(nil).CanLinkEventToChannel), arg0, arg1)
 }
 
+// CanReadChannel mocks base method.
+func (m *MockPluginAPI) CanReadChannel(arg0, arg1 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CanReadChannel", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CanReadChannel indicates an expected call of CanReadChannel.
+func (mr *MockPluginAPIMockRecorder) CanReadChannel(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanReadChannel", reflect.TypeOf((*MockPluginAPI)(nil).CanReadChannel), arg0, arg1)
+}
+
 // GetMattermostUser mocks base method.
 func (m *MockPluginAPI) GetMattermostUser(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()
