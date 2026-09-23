@@ -43,9 +43,30 @@ func (api *api) preprocessAction(w http.ResponseWriter, req *http.Request) (msca
 	return mscal, engine.NewUser(mattermostUserID), eventID, option, request.PostId
 }
 
+// authorizePostAction ensures the acting user is allowed to read the channel the
+// post belongs to. It must be called before any calendar-mutating operation so
+// an unauthorized request never reaches the remote provider.
+func (api *api) authorizePostAction(w http.ResponseWriter, postID, mattermostUserID string) (*model.Post, bool) {
+	post, appErr := api.PluginAPI.GetPost(postID)
+	if appErr != nil {
+		utils.SlackAttachmentError(w, "Error: Failed to get the post: "+appErr.Error())
+		return nil, false
+	}
+
+	if !api.PluginAPI.CanReadChannel(post.ChannelId, mattermostUserID) {
+		utils.SlackAttachmentError(w, "Error: not authorized")
+		return nil, false
+	}
+
+	return post, true
+}
+
 func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
-	localEngine, user, eventID, _, _ := api.preprocessAction(w, req)
+	localEngine, user, eventID, _, postID := api.preprocessAction(w, req)
 	if eventID == "" {
+		return
+	}
+	if _, ok := api.authorizePostAction(w, postID, user.MattermostUserID); !ok {
 		return
 	}
 	err := localEngine.AcceptEvent(user, eventID)
@@ -57,8 +78,11 @@ func (api *api) postActionAccept(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
-	localEngine, user, eventID, _, _ := api.preprocessAction(w, req)
+	localEngine, user, eventID, _, postID := api.preprocessAction(w, req)
 	if eventID == "" {
+		return
+	}
+	if _, ok := api.authorizePostAction(w, postID, user.MattermostUserID); !ok {
 		return
 	}
 	err := localEngine.DeclineEvent(user, eventID)
@@ -69,8 +93,11 @@ func (api *api) postActionDecline(w http.ResponseWriter, req *http.Request) {
 }
 
 func (api *api) postActionTentative(w http.ResponseWriter, req *http.Request) {
-	localEngine, user, eventID, _, _ := api.preprocessAction(w, req)
+	localEngine, user, eventID, _, postID := api.preprocessAction(w, req)
 	if eventID == "" {
+		return
+	}
+	if _, ok := api.authorizePostAction(w, postID, user.MattermostUserID); !ok {
 		return
 	}
 	err := localEngine.TentativelyAcceptEvent(user, eventID)
@@ -85,6 +112,12 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 	if eventID == "" {
 		return
 	}
+
+	p, ok := api.authorizePostAction(w, postID, user.MattermostUserID)
+	if !ok {
+		return
+	}
+
 	err := calendar.RespondToEvent(user, eventID, option)
 	if err != nil && !isAcceptedError(err) && !isNotFoundError(err) && !isCanceledError(err) {
 		utils.SlackAttachmentError(w, "Error: Failed to respond to event: "+err.Error())
@@ -93,12 +126,6 @@ func (api *api) postActionRespond(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil && isCanceledError(err) {
 		utils.SlackAttachmentError(w, "Error: Cannot respond to the event because it is already canceled.")
-		return
-	}
-
-	p, appErr := api.PluginAPI.GetPost(postID)
-	if appErr != nil {
-		utils.SlackAttachmentError(w, "Error: Failed to update the post: "+appErr.Error())
 		return
 	}
 

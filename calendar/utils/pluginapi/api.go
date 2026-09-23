@@ -119,6 +119,25 @@ func (a *API) CanLinkEventToChannel(channelID, userID string) bool {
 	return a.api.HasPermissionToChannel(userID, channelID, model.PermissionCreatePost)
 }
 
+// CanReadChannel reports whether the user is allowed to read the given channel,
+// mirroring the authorization the core post API enforces before returning a post.
+func (a *API) CanReadChannel(channelID, userID string) bool {
+	if a.api.HasPermissionToChannel(userID, channelID, model.PermissionReadChannelContent) {
+		return true
+	}
+
+	channel, appErr := a.api.GetChannel(channelID)
+	if appErr != nil {
+		return false
+	}
+
+	if channel.Type == model.ChannelTypeOpen {
+		return a.api.HasPermissionToTeam(userID, channel.TeamId, model.PermissionReadPublicChannel)
+	}
+
+	return false
+}
+
 func (a *API) CleanKVStore() error {
 	appErr := a.api.KVDeleteAll()
 	if appErr != nil {
