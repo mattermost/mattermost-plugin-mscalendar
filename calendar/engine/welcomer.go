@@ -34,8 +34,13 @@ type mscBot struct {
 }
 
 const (
-	WelcomeMessage = `Welcome to the %s plugin. [Click here to link your account.](%s/oauth2/connect)`
+	ConnectMessageTitleTemplate = "Connect your %s account"
+	ConnectMessageBody          = "You can get reminders about upcoming meetings, create new meetings or view your schedule for the day. Notifications of events and invites from your calendar will be posted here."
+	ConnectButtonTitle          = "Connect account"
+	ConnectActionID             = "connect_account"
+	WelcomeMessage              = `Welcome to the %s plugin. [Click here to link your account.](%s/oauth2/connect)`
 )
+
 
 func (m *mscalendar) Welcome(userID string) error {
 	return m.Welcomer.Welcome(userID)
