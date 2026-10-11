@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
@@ -22,6 +23,7 @@ type Users interface {
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetUserSettings(user *User) (*store.Settings, error)
+	GetUserTimeFormat(mattermostUserID string) string
 }
 
 type User struct {
@@ -243,3 +245,25 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 
 	return &user.Settings, nil
 }
+
+func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
+	if m.PluginAPI == nil || mattermostUserID == "" {
+		return views.TimeFormat12Hour
+	}
+
+	useMilitaryTime, err := m.PluginAPI.GetUserPreference(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
+	if err != nil {
+		m.Logger.With(bot.LogContext{
+			"mattermostUserID": mattermostUserID,
+			"err":              err.Error(),
+		}).Debugf("failed to get military time preference, using default format")
+		return views.TimeFormat12Hour
+	}
+
+	if useMilitaryTime == "true" {
+		return views.TimeFormat24Hour
+	}
+
+	return views.TimeFormat12Hour
+}
+
