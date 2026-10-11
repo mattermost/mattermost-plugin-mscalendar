@@ -4,6 +4,7 @@
 package store
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -1154,4 +1155,44 @@ func TestRefreshAndStoreToken_ValidTokenNotExpired(t *testing.T) {
 	require.False(t, serverCalled, "expected no HTTP call when token is far from expiration")
 	mockAPI.AssertExpectations(t)
 }
+
+func TestRefreshAndStoreToken_SuccessfulRefreshAndStore(t *testing.T) {
+	const (
+		userKey  = "user_c3b5020d58a049787bc969768465b890"
+		mmuidKey = "mmuid_e138a0f218087f9324d8c77f87d5f3a0"
+	)
+
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	serverCalled := false
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		serverCalled = true
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"refreshed-access","refresh_token":"refreshed-refresh","expires_in":3600,"token_type":"Bearer"}`))
+	})
+	defer ts.Close()
+
+	expiredToken := newMockToken("old-access", "old-refresh", time.Now().Add(-1*time.Hour))
+	userJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"old-access","refresh_token":"old-refresh"}}`
+
+	mockAPI.On("KVGet", userKey).Return([]byte(userJSON), nil).Once()
+	mockAPI.On("KVSet", userKey, mock.MatchedBy(func(data []byte) bool {
+		var u User
+		if err := json.Unmarshal(data, &u); err != nil {
+			return false
+		}
+		return u.OAuth2Token != nil && u.OAuth2Token.AccessToken == "refreshed-access" && u.OAuth2Token.RefreshToken == "refreshed-refresh"
+	})).Return(nil).Once()
+	mockAPI.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil).Once()
+
+	newToken, err := store.RefreshAndStoreToken(expiredToken, oconf, MockMMUserID)
+
+	require.NoError(t, err)
+	require.NotNil(t, newToken)
+	require.True(t, serverCalled)
+	require.Equal(t, "refreshed-access", newToken.AccessToken)
+	require.Equal(t, "refreshed-refresh", newToken.RefreshToken)
+	mockAPI.AssertExpectations(t)
+}
+
 
