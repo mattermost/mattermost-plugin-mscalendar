@@ -14,6 +14,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_welcomer"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote/mock_remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
@@ -648,4 +649,44 @@ func TestGetUserSettings(t *testing.T) {
 			tt.assertions(result, err)
 		})
 	}
+}
+
+func TestGetUserTimeFormat(t *testing.T) {
+	t.Run("military time enabled returns 24-hour format", func(t *testing.T) {
+		mscalendar, _, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
+		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("true", nil).Times(1)
+
+		tf := mscalendar.GetUserTimeFormat("user_1")
+		require.Equal(t, views.TimeFormat24Hour, tf)
+	})
+
+	t.Run("military time disabled returns 12-hour format", func(t *testing.T) {
+		mscalendar, _, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
+		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("false", nil).Times(1)
+
+		tf := mscalendar.GetUserTimeFormat("user_1")
+		require.Equal(t, views.TimeFormat12Hour, tf)
+	})
+
+	t.Run("preference lookup error defaults to 12-hour format", func(t *testing.T) {
+		mscalendar, _, _, _, mockPluginAPI, _, mockLogger := GetMockSetup(t)
+		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("", errors.New("api error")).Times(1)
+		mockLogger.EXPECT().With(gomock.Any()).Return(mockLogger).Times(1)
+		mockLogger.EXPECT().Debugf(gomock.Any()).Times(1)
+
+		tf := mscalendar.GetUserTimeFormat("user_1")
+		require.Equal(t, views.TimeFormat12Hour, tf)
+	})
+
+	t.Run("empty user id defaults to 12-hour format", func(t *testing.T) {
+		mscalendar, _, _, _, _, _, _ := GetMockSetup(t)
+		tf := mscalendar.GetUserTimeFormat("")
+		require.Equal(t, views.TimeFormat12Hour, tf)
+	})
+
+	t.Run("nil PluginAPI defaults to 12-hour format", func(t *testing.T) {
+		m := &mscalendar{}
+		tf := m.GetUserTimeFormat("user_1")
+		require.Equal(t, views.TimeFormat12Hour, tf)
+	})
 }
