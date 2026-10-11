@@ -1272,6 +1272,30 @@ func TestRefreshAndStoreToken_UserStoreError(t *testing.T) {
 	mockAPI.AssertExpectations(t)
 }
 
+func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	serverCalled := false
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		serverCalled = true
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"same-access","refresh_token":"same-refresh","expires_in":3600,"token_type":"Bearer"}`))
+	})
+	defer ts.Close()
+
+	expiredToken := newMockToken("same-access", "same-refresh", time.Now().Add(-1*time.Hour))
+
+	newToken, err := store.RefreshAndStoreToken(expiredToken, oconf, MockMMUserID)
+
+	require.NoError(t, err)
+	require.NotNil(t, newToken)
+	require.True(t, serverCalled)
+	require.Equal(t, "same-access", newToken.AccessToken)
+	require.Equal(t, "same-refresh", newToken.RefreshToken)
+	mockAPI.AssertExpectations(t)
+}
+
+
 
 
 
