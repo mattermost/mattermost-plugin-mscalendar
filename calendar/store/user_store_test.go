@@ -1195,4 +1195,28 @@ func TestRefreshAndStoreToken_SuccessfulRefreshAndStore(t *testing.T) {
 	mockAPI.AssertExpectations(t)
 }
 
+func TestRefreshAndStoreToken_FailedTokenRefresh(t *testing.T) {
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	serverCalled := false
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		serverCalled = true
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"error":"invalid_grant","error_description":"refresh token expired"}`))
+	})
+	defer ts.Close()
+
+	expiredToken := newMockToken("old-access", "old-refresh", time.Now().Add(-1*time.Hour))
+
+	newToken, err := store.RefreshAndStoreToken(expiredToken, oconf, MockMMUserID)
+
+	require.Error(t, err)
+	require.Nil(t, newToken)
+	require.True(t, serverCalled)
+	require.Contains(t, err.Error(), "unable to get the new refreshed token")
+	mockAPI.AssertExpectations(t)
+}
+
+
 
