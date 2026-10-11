@@ -5,11 +5,15 @@ package store
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/testutil"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
@@ -17,6 +21,28 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 )
+
+func newMockOAuth2Server(handler http.HandlerFunc) (*httptest.Server, *oauth2.Config) {
+	ts := httptest.NewServer(handler)
+	conf := &oauth2.Config{
+		ClientID:     "mock-client-id",
+		ClientSecret: "mock-client-secret",
+		Endpoint: oauth2.Endpoint{
+			TokenURL: ts.URL,
+		},
+	}
+	return ts, conf
+}
+
+func newMockToken(accessToken, refreshToken string, expiry time.Time) *oauth2.Token {
+	return &oauth2.Token{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		Expiry:       expiry,
+	}
+}
+
 
 func TestLoadUser(t *testing.T) {
 	tests := []struct {
