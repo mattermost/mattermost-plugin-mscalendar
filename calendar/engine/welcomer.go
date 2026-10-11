@@ -120,8 +120,8 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 }
 
 func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
-	title := "Connect"
-	text := fmt.Sprintf(WelcomeMessage, bot.Provider.DisplayName, bot.pluginURL)
+	title := fmt.Sprintf(ConnectMessageTitleTemplate, bot.Provider.DisplayName)
+	text := ConnectMessageBody
 	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     text,
@@ -130,6 +130,7 @@ func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
 
 	return &sa
 }
+
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.MessageAttachment {
 	title := "Connect"
