@@ -139,8 +139,9 @@ func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
 		Title:    title,
 		Text:     text,
 		Actions:  actions,
-		Fallback: fmt.Sprintf("%s: %s", title, text),
+		Fallback: fmt.Sprintf("%s\n%s\n[%s](%s)", title, text, ConnectButtonTitle, connectURL),
 	}
+
 
 	return &sa
 }
