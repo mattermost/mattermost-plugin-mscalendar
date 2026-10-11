@@ -1295,6 +1295,44 @@ func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
 	mockAPI.AssertExpectations(t)
 }
 
+func TestCheckUserConnected(t *testing.T) {
+	const userKey = "user_c3b5020d58a049787bc969768465b890"
+
+	t.Run("user is connected with active token", func(t *testing.T) {
+		mockAPI, store, _, _, _ := GetMockSetup(t)
+		connectedJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"valid"}}`
+		mockAPI.On("KVGet", userKey).Return([]byte(connectedJSON), nil).Once()
+
+		connected := store.CheckUserConnected(MockMMUserID)
+
+		require.True(t, connected)
+		mockAPI.AssertExpectations(t)
+	})
+
+	t.Run("user is inactive with nil token", func(t *testing.T) {
+		mockAPI, store, _, _, _ := GetMockSetup(t)
+		inactiveJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":null}`
+		mockAPI.On("KVGet", userKey).Return([]byte(inactiveJSON), nil).Once()
+
+		connected := store.CheckUserConnected(MockMMUserID)
+
+		require.False(t, connected)
+		mockAPI.AssertExpectations(t)
+	})
+
+	t.Run("load user error returns false and logs", func(t *testing.T) {
+		mockAPI, store, mockLogger, _, _ := GetMockSetup(t)
+		mockAPI.On("KVGet", userKey).Return(nil, &model.AppError{Message: "not found"}).Once()
+		mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+
+		connected := store.CheckUserConnected(MockMMUserID)
+
+		require.False(t, connected)
+		mockAPI.AssertExpectations(t)
+	})
+}
+
+
 
 
 
