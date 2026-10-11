@@ -601,7 +601,8 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
+			timeFormat := m.GetUserTimeFormat(mattermostUserID)
+			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone, views.TimeFormatOption(timeFormat, timezone))
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
