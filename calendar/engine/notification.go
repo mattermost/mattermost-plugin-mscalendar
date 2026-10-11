@@ -186,10 +186,11 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return err
 	}
 	timezone := mailSettings.TimeZone
+	timeFormat := processor.getUserTimeFormat(creator.MattermostUserID)
 
 	if prior != nil {
 		var changed bool
-		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote, timezone)
+		changed, sa = processor.updatedEventSlackAttachment(n, prior.Remote, timezone, timeFormat)
 		if !changed {
 			processor.Logger.With(bot.LogContext{
 				"MattermostUserID": creator.MattermostUserID,
@@ -201,7 +202,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 			return nil
 		}
 	} else {
-		sa = processor.newEventSlackAttachment(n, timezone)
+		sa = processor.newEventSlackAttachment(n, timezone, timeFormat)
 		prior = &store.Event{}
 	}
 
