@@ -226,7 +226,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 }
 
 func (processor *notificationProcessor) getUserTimeFormat(mattermostUserID string) string {
-	if processor.PluginAPI == nil || mattermostUserID == "" {
+	if processor.Dependencies == nil || processor.PluginAPI == nil || mattermostUserID == "" {
 		return views.TimeFormat12Hour
 	}
 

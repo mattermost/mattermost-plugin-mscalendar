@@ -247,7 +247,7 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 }
 
 func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
-	if m.PluginAPI == nil || mattermostUserID == "" {
+	if m.Dependencies == nil || m.PluginAPI == nil || mattermostUserID == "" {
 		return views.TimeFormat12Hour
 	}
 

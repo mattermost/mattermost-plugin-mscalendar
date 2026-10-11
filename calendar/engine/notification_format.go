@@ -244,6 +244,11 @@ func eventToFields(e *remote.Event, timezone string, timeFormat ...string) field
 		attendees = append(attendees, fields.NewStringValue("None"))
 	}
 
+	locationName := ""
+	if e.Location != nil {
+		locationName = e.Location.DisplayName
+	}
+
 	ff := fields.Fields{
 		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.BodyPreview))),
@@ -253,7 +258,7 @@ func eventToFields(e *remote.Event, timezone string, timeFormat ...string) field
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),
-		FieldLocation:       fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.Location.DisplayName))),
+		FieldLocation:       fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(locationName))),
 		FieldResponseStatus: fields.NewStringValue(e.ResponseStatus.Response),
 		FieldAttendees:      fields.NewMultiValue(attendees...),
 	}
