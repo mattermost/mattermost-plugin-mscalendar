@@ -137,6 +137,21 @@ func (mr *MockPluginAPIMockRecorder) GetMattermostUserTeams(arg0 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMattermostUserTeams", reflect.TypeOf((*MockPluginAPI)(nil).GetMattermostUserTeams), arg0)
 }
 
+// GetUserPreference mocks base method.
+func (m *MockPluginAPI) GetUserPreference(arg0, arg1, arg2 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserPreference", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserPreference indicates an expected call of GetUserPreference.
+func (mr *MockPluginAPIMockRecorder) GetUserPreference(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPreference", reflect.TypeOf((*MockPluginAPI)(nil).GetUserPreference), arg0, arg1, arg2)
+}
+
 // GetPost mocks base method.
 func (m *MockPluginAPI) GetPost(arg0 string) (*model.Post, error) {
 	m.ctrl.T.Helper()
