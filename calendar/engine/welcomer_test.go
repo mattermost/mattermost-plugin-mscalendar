@@ -13,10 +13,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/mock_plugin_api"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store/mock_store"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/tracker/mock_tracker"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
+
 
 
 
@@ -116,6 +119,9 @@ type testWelcomeBotWrapper struct {
 	bot.Bot
 	dmWithAttachments func(userID string, attachments ...*model.MessageAttachment) (string, error)
 	deletePost        func(postID string) error
+	updatePost        func(post *model.Post) error
+	startFlow         func(userID string) error
+	cancelFlow        func(userID string) error
 	errorf            func(format string, args ...interface{})
 }
 
@@ -133,11 +139,33 @@ func (w *testWelcomeBotWrapper) DeletePost(postID string) error {
 	return nil
 }
 
+func (w *testWelcomeBotWrapper) UpdatePost(post *model.Post) error {
+	if w.updatePost != nil {
+		return w.updatePost(post)
+	}
+	return nil
+}
+
+func (w *testWelcomeBotWrapper) Start(userID string) error {
+	if w.startFlow != nil {
+		return w.startFlow(userID)
+	}
+	return nil
+}
+
+func (w *testWelcomeBotWrapper) Cancel(userID string) error {
+	if w.cancelFlow != nil {
+		return w.cancelFlow(userID)
+	}
+	return nil
+}
+
 func (w *testWelcomeBotWrapper) Errorf(format string, args ...interface{}) {
 	if w.errorf != nil {
 		w.errorf(format, args...)
 	}
 }
+
 
 func TestWelcome_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -222,5 +250,106 @@ func TestWelcome_DMError(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "DM failure")
 }
+
+func TestAfterSuccessfullyConnect(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+	mockTracker := mock_tracker.NewMockTracker(ctrl)
+	mockStore := mock_store.NewMockStore(ctrl)
+
+	postUpdated := false
+	flowStarted := false
+
+	testBot := &testWelcomeBotWrapper{
+		updatePost: func(post *model.Post) error {
+			if post.Id == "welcome_post_1" {
+				postUpdated = true
+			}
+			return nil
+		},
+		startFlow: func(userID string) error {
+			if userID == "user_123" {
+				flowStarted = true
+			}
+			return nil
+		},
+	}
+
+	b := &mscBot{
+		Bot: testBot,
+		Env: Env{
+			Config: &config.Config{
+				Provider: config.ProviderConfig{
+					DisplayName:    "Microsoft Calendar",
+					CommandTrigger: "mscalendar",
+				},
+			},
+			Dependencies: &Dependencies{
+				PluginAPI: mockPluginAPI,
+				Tracker:   mockTracker,
+				Store:     mockStore,
+			},
+		},
+	}
+
+	mockPluginAPI.EXPECT().PublishWebsocketEvent("user_123", "connected", map[string]any{"action": "connected"}).Times(1)
+	mockTracker.EXPECT().TrackUserAuthenticated("user_123").Times(1)
+	mockStore.EXPECT().DeleteUserWelcomePost("user_123").Return("welcome_post_1", nil).Times(1)
+
+	err := b.AfterSuccessfullyConnect("user_123", "user@example.com")
+	require.NoError(t, err)
+	require.True(t, postUpdated)
+	require.True(t, flowStarted)
+}
+
+func TestAfterDisconnect(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+	mockTracker := mock_tracker.NewMockTracker(ctrl)
+	mockStore := mock_store.NewMockStore(ctrl)
+
+	flowCancelled := false
+	postDeleted := false
+
+	testBot := &testWelcomeBotWrapper{
+		cancelFlow: func(userID string) error {
+			if userID == "user_123" {
+				flowCancelled = true
+			}
+			return nil
+		},
+		deletePost: func(postID string) error {
+			if postID == "welcome_post_1" {
+				postDeleted = true
+			}
+			return nil
+		},
+	}
+
+	b := &mscBot{
+		Bot: testBot,
+		Env: Env{
+			Dependencies: &Dependencies{
+				PluginAPI: mockPluginAPI,
+				Tracker:   mockTracker,
+				Store:     mockStore,
+			},
+		},
+	}
+
+	mockPluginAPI.EXPECT().PublishWebsocketEvent("user_123", "disconnected", map[string]any{"action": "disconnected"}).Times(1)
+	mockTracker.EXPECT().TrackUserDeauthenticated("user_123").Times(1)
+	mockStore.EXPECT().DeleteUserWelcomePost("user_123").Return("welcome_post_1", nil).Times(1)
+
+	err := b.AfterDisconnect("user_123")
+	require.NoError(t, err)
+	require.True(t, flowCancelled)
+	require.True(t, postDeleted)
+}
+
 
 
