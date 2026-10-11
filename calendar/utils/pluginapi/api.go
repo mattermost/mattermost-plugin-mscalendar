@@ -170,3 +170,19 @@ func (a *API) PublishWebsocketEvent(mattermostUserID, event string, payload map[
 func (a *API) LogAuditRec(rec *model.AuditRecord) {
 	a.api.LogAuditRec(rec)
 }
+
+func (a *API) GetUserPreference(userID, category, name string) (string, error) {
+	preferences, appErr := a.api.GetPreferencesForUser(userID)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	for _, pref := range preferences {
+		if pref.Category == category && pref.Name == name {
+			return pref.Value, nil
+		}
+	}
+
+	return "", nil
+}
+

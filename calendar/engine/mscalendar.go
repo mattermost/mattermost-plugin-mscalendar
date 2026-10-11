@@ -54,6 +54,7 @@ type PluginAPI interface {
 	GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error)
 	PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any)
 	LogAuditRec(rec *model.AuditRecord)
+	GetUserPreference(userID, category, name string) (string, error)
 }
 
 type Env struct {
