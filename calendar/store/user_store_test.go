@@ -1134,3 +1134,24 @@ func TestDisconnectUserFromStoreIfNecessary_Idempotent(t *testing.T) {
 
 	mockAPI.AssertExpectations(t)
 }
+
+func TestRefreshAndStoreToken_ValidTokenNotExpired(t *testing.T) {
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	serverCalled := false
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		serverCalled = true
+		w.WriteHeader(http.StatusOK)
+	})
+	defer ts.Close()
+
+	originalToken := newMockToken("initial-access", "initial-refresh", time.Now().Add(1*time.Hour))
+
+	token, err := store.RefreshAndStoreToken(originalToken, oconf, MockMMUserID)
+
+	require.NoError(t, err)
+	require.Equal(t, originalToken, token)
+	require.False(t, serverCalled, "expected no HTTP call when token is far from expiration")
+	mockAPI.AssertExpectations(t)
+}
+
