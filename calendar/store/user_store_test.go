@@ -1371,6 +1371,72 @@ func TestTokenHelperWorkflow(t *testing.T) {
 	})
 }
 
+func TestRefreshAndStoreToken_ExpiringSoonWithinBuffer(t *testing.T) {
+	const (
+		userKey  = "user_c3b5020d58a049787bc969768465b890"
+		mmuidKey = "mmuid_e138a0f218087f9324d8c77f87d5f3a0"
+	)
+
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	serverCalled := false
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		serverCalled = true
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"new-buffer-access","refresh_token":"new-buffer-refresh","expires_in":3600,"token_type":"Bearer"}`))
+	})
+	defer ts.Close()
+
+	// Token expires in 2 minutes, which is within the 5-minute buffer threshold
+	nearExpiryToken := newMockToken("old-access", "old-refresh", time.Now().Add(2*time.Minute))
+	userJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"old-access","refresh_token":"old-refresh"}}`
+
+	mockAPI.On("KVGet", userKey).Return([]byte(userJSON), nil).Once()
+	mockAPI.On("KVSet", userKey, mock.MatchedBy(func(data []byte) bool {
+		var u User
+		if err := json.Unmarshal(data, &u); err != nil {
+			return false
+		}
+		return u.OAuth2Token != nil && u.OAuth2Token.AccessToken == "new-buffer-access" && u.OAuth2Token.RefreshToken == "new-buffer-refresh"
+	})).Return(nil).Once()
+	mockAPI.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil).Once()
+
+	newToken, err := store.RefreshAndStoreToken(nearExpiryToken, oconf, MockMMUserID)
+
+	require.NoError(t, err)
+	require.NotNil(t, newToken)
+	require.True(t, serverCalled, "expected refresh call when token is within 5 minute buffer")
+	require.Equal(t, "new-buffer-access", newToken.AccessToken)
+	require.Equal(t, "new-buffer-refresh", newToken.RefreshToken)
+	mockAPI.AssertExpectations(t)
+}
+
+func TestRefreshAndStoreToken_NilToken(t *testing.T) {
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	})
+	defer ts.Close()
+
+	newToken, err := store.RefreshAndStoreToken(nil, oconf, MockMMUserID)
+
+	require.Error(t, err)
+	require.Nil(t, newToken)
+	require.Contains(t, err.Error(), "unable to get the new refreshed token")
+	mockAPI.AssertExpectations(t)
+}
+
+func TestCheckUserConnected_EmptyUserID(t *testing.T) {
+	mockAPI, store, mockLogger, _, _ := GetMockSetup(t)
+	mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "not found"}).Once()
+	mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+
+	connected := store.CheckUserConnected(MockMMUserID)
+	require.False(t, connected)
+	mockAPI.AssertExpectations(t)
+}
+
 
 
 
