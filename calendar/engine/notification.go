@@ -232,10 +232,12 @@ func (processor *notificationProcessor) getUserTimeFormat(mattermostUserID strin
 
 	useMilitaryTime, err := processor.PluginAPI.GetUserPreference(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
 	if err != nil {
-		processor.Logger.With(bot.LogContext{
-			"mattermostUserID": mattermostUserID,
-			"err":              err.Error(),
-		}).Debugf("failed to get military time preference, using default format")
+		if processor.Logger != nil {
+			processor.Logger.With(bot.LogContext{
+				"mattermostUserID": mattermostUserID,
+				"err":              err.Error(),
+			}).Debugf("failed to get military time preference, using default format")
+		}
 		return views.TimeFormat12Hour
 	}
 

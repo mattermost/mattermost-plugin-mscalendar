@@ -42,6 +42,13 @@ func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.Mess
 		event.End.In(tzOpt.timezone).Time().Format(tf),
 		tzOpt.timezone,
 	)
+	attachment.Fallback = fmt.Sprintf(
+		"%s\n%s - %s (%s)",
+		attachment.Title,
+		event.Start.In(tzOpt.timezone).Time().Format(tf),
+		event.End.In(tzOpt.timezone).Time().Format(tf),
+		tzOpt.timezone,
+	)
 }
 
 func ShowTimezoneOption(timezone string, timeFormat ...string) Option {

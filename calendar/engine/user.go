@@ -253,10 +253,12 @@ func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
 
 	useMilitaryTime, err := m.PluginAPI.GetUserPreference(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
 	if err != nil {
-		m.Logger.With(bot.LogContext{
-			"mattermostUserID": mattermostUserID,
-			"err":              err.Error(),
-		}).Debugf("failed to get military time preference, using default format")
+		if m.Logger != nil {
+			m.Logger.With(bot.LogContext{
+				"mattermostUserID": mattermostUserID,
+				"err":              err.Error(),
+			}).Debugf("failed to get military time preference, using default format")
+		}
 		return views.TimeFormat12Hour
 	}
 
