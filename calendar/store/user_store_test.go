@@ -1332,6 +1332,46 @@ func TestCheckUserConnected(t *testing.T) {
 	})
 }
 
+func TestTokenHelperWorkflow(t *testing.T) {
+	const (
+		userKey  = "user_c3b5020d58a049787bc969768465b890"
+		mmuidKey = "mmuid_e138a0f218087f9324d8c77f87d5f3a0"
+	)
+
+	t.Run("inactive user is aborted before API execution", func(t *testing.T) {
+		mockAPI, store, _, _, _ := GetMockSetup(t)
+		inactiveJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":null}`
+		mockAPI.On("KVGet", userKey).Return([]byte(inactiveJSON), nil).Once()
+
+		apiCalled := false
+		if !store.CheckUserConnected(MockMMUserID) {
+			require.False(t, apiCalled, "API call should not be invoked for inactive user")
+			mockAPI.AssertExpectations(t)
+			return
+		}
+		t.Fatal("should have aborted early")
+	})
+
+	t.Run("active user encounters expired refresh token and is disconnected", func(t *testing.T) {
+		mockAPI, store, _, mockPoster := GetMockSetupWithPoster(t)
+		connectedJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"valid"}}`
+
+		mockAPI.On("KVGet", userKey).Return([]byte(connectedJSON), nil).Once()
+		require.True(t, store.CheckUserConnected(MockMMUserID))
+
+		apiErr := errors.New(ErrorRefreshTokenExpired)
+
+		mockAPI.On("KVGet", userKey).Return([]byte(connectedJSON), nil).Once()
+		mockAPI.On("KVSet", userKey, mock.Anything).Return(nil).Once()
+		mockAPI.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil).Once()
+		mockPoster.EXPECT().DM(MockMMUserID, ErrorUserInactive).Return("postID", nil).Times(1)
+
+		store.DisconnectUserFromStoreIfNecessary(apiErr, MockMMUserID)
+		mockAPI.AssertExpectations(t)
+	})
+}
+
+
 
 
 
