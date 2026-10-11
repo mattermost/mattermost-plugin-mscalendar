@@ -1244,6 +1244,35 @@ func TestRefreshAndStoreToken_UserLoadError(t *testing.T) {
 	mockAPI.AssertExpectations(t)
 }
 
+func TestRefreshAndStoreToken_UserStoreError(t *testing.T) {
+	const userKey = "user_c3b5020d58a049787bc969768465b890"
+
+	mockAPI, store, _, _, _ := GetMockSetup(t)
+
+	serverCalled := false
+	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
+		serverCalled = true
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"access_token":"refreshed-access","refresh_token":"refreshed-refresh","expires_in":3600,"token_type":"Bearer"}`))
+	})
+	defer ts.Close()
+
+	expiredToken := newMockToken("old-access", "old-refresh", time.Now().Add(-1*time.Hour))
+	userJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"old-access","refresh_token":"old-refresh"}}`
+
+	mockAPI.On("KVGet", userKey).Return([]byte(userJSON), nil).Once()
+	mockAPI.On("KVSet", userKey, mock.Anything).Return(&model.AppError{Message: "store error"}).Once()
+
+	newToken, err := store.RefreshAndStoreToken(expiredToken, oconf, MockMMUserID)
+
+	require.Error(t, err)
+	require.Nil(t, newToken)
+	require.True(t, serverCalled)
+	require.Contains(t, err.Error(), "unable to store the user")
+	mockAPI.AssertExpectations(t)
+}
+
+
 
 
 
