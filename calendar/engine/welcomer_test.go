@@ -54,7 +54,7 @@ func TestNewConnectAttachment(t *testing.T) {
 	require.NotNil(t, action.Integration)
 	require.Equal(t, pluginURL+"/oauth2/connect", action.Integration.URL)
 
-	expectedFallback := fmt.Sprintf("Connect your Microsoft Calendar account\n%s\n[Connect account](%s/oauth2/connect)", ConnectMessageBody, pluginURL)
+	expectedFallback := fmt.Sprintf("Connect your Microsoft Calendar account\n%s\n%s: %s/oauth2/connect", ConnectMessageBody, ConnectButtonTitle, pluginURL)
 	require.Equal(t, expectedFallback, attachment.Fallback)
 }
 
