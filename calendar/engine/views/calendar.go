@@ -26,25 +26,70 @@ type Option interface {
 }
 
 type showTimezoneOption struct {
-	timezone string
+	timezone   string
+	timeFormat string
 }
 
 func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.MessageAttachment) {
+	tf := TimeFormat12Hour
+	if tzOpt.timeFormat != "" {
+		tf = tzOpt.timeFormat
+	}
+
 	attachment.Text = fmt.Sprintf(
 		"%s - %s (%s)",
-		event.Start.In(tzOpt.timezone).Time().Format(time.Kitchen),
-		event.End.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		event.Start.In(tzOpt.timezone).Time().Format(tf),
+		event.End.In(tzOpt.timezone).Time().Format(tf),
 		tzOpt.timezone,
 	)
 }
 
-func ShowTimezoneOption(timezone string) Option {
+func ShowTimezoneOption(timezone string, timeFormat ...string) Option {
 	if timezone == "" {
 		timezone = "UTC"
 	}
 
+	tf := ""
+	if len(timeFormat) > 0 {
+		tf = timeFormat[0]
+	}
+
 	return showTimezoneOption{
-		timezone: timezone,
+		timezone:   timezone,
+		timeFormat: tf,
+	}
+}
+
+type timeFormatOption struct {
+	timeFormat string
+	timezone   string
+}
+
+func (opt timeFormatOption) Apply(event remote.Event, attachment *model.MessageAttachment) {
+	if opt.timeFormat == "" {
+		return
+	}
+
+	start := event.Start
+	end := event.End
+	if opt.timezone != "" {
+		start = start.In(opt.timezone)
+		end = end.In(opt.timezone)
+	}
+
+	attachment.Text = fmt.Sprintf("%s - %s", start.Time().Format(opt.timeFormat), end.Time().Format(opt.timeFormat))
+	attachment.Fallback = fmt.Sprintf("%s\n%s - %s", attachment.Title, start.Time().Format(opt.timeFormat), end.Time().Format(opt.timeFormat))
+}
+
+func TimeFormatOption(timeFormat string, timezone ...string) Option {
+	tz := ""
+	if len(timezone) > 0 {
+		tz = timezone[0]
+	}
+
+	return timeFormatOption{
+		timeFormat: timeFormat,
+		timezone:   tz,
 	}
 }
 
