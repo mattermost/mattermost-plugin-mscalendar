@@ -120,7 +120,11 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 }
 
 func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
-	title := fmt.Sprintf(ConnectMessageTitleTemplate, bot.Provider.DisplayName)
+	displayName := bot.Provider.DisplayName
+	if displayName == "" {
+		displayName = "Microsoft Calendar"
+	}
+	title := fmt.Sprintf(ConnectMessageTitleTemplate, displayName)
 	text := ConnectMessageBody
 	connectURL := fmt.Sprintf("%s/oauth2/connect", bot.pluginURL)
 
@@ -142,15 +146,16 @@ func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
 		Fallback: fmt.Sprintf("%s\n%s\n[%s](%s)", title, text, ConnectButtonTitle, connectURL),
 	}
 
-
 	return &sa
 }
 
-
-
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.MessageAttachment {
+	displayName := bot.Provider.DisplayName
+	if displayName == "" {
+		displayName = "Microsoft Calendar"
+	}
 	title := "Connect"
-	text := ":tada: Congratulations! Your " + bot.Provider.DisplayName + " account (*" + userLogin + "*) has been connected to Mattermost."
+	text := ":tada: Congratulations! Your " + displayName + " account (*" + userLogin + "*) has been connected to Mattermost."
 	return &model.MessageAttachment{
 		Title:    title,
 		Text:     text,

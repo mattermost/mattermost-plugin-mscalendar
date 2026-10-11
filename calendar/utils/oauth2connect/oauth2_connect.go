@@ -4,7 +4,10 @@
 package oauth2connect
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/httputils"
 )
@@ -21,5 +24,17 @@ func (oa *oa) oauth2Connect(w http.ResponseWriter, r *http.Request) {
 		httputils.WriteInternalServerError(w, err)
 		return
 	}
+
+	if r.Method == http.MethodPost {
+		resp := &model.PostActionIntegrationResponse{
+			GotoLocation: redirectURL,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			httputils.WriteInternalServerError(w, err)
+		}
+		return
+	}
+
 	http.Redirect(w, r, redirectURL, http.StatusFound) //nolint:gosec // G710: redirect URL is from plugin OAuth2 config, not user input
 }
