@@ -4,6 +4,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -12,9 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store/mock_store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
+
 
 
 func TestNewConnectAttachment(t *testing.T) {
@@ -108,4 +111,116 @@ func TestNotifySettings(t *testing.T) {
 	err := b.notifySettings("test_user_id")
 	require.NoError(t, err)
 }
+
+type testWelcomeBotWrapper struct {
+	bot.Bot
+	dmWithAttachments func(userID string, attachments ...*model.MessageAttachment) (string, error)
+	deletePost        func(postID string) error
+	errorf            func(format string, args ...interface{})
+}
+
+func (w *testWelcomeBotWrapper) DMWithAttachments(userID string, attachments ...*model.MessageAttachment) (string, error) {
+	if w.dmWithAttachments != nil {
+		return w.dmWithAttachments(userID, attachments...)
+	}
+	return "", nil
+}
+
+func (w *testWelcomeBotWrapper) DeletePost(postID string) error {
+	if w.deletePost != nil {
+		return w.deletePost(postID)
+	}
+	return nil
+}
+
+func (w *testWelcomeBotWrapper) Errorf(format string, args ...interface{}) {
+	if w.errorf != nil {
+		w.errorf(format, args...)
+	}
+}
+
+func TestWelcome_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStore := mock_store.NewMockStore(ctrl)
+	postDeleted := false
+	dmCalled := false
+
+	testBot := &testWelcomeBotWrapper{
+		deletePost: func(postID string) error {
+			if postID == "old_post" {
+				postDeleted = true
+			}
+			return nil
+		},
+		dmWithAttachments: func(userID string, attachments ...*model.MessageAttachment) (string, error) {
+			dmCalled = true
+			require.Equal(t, "user_123", userID)
+			require.Len(t, attachments, 1)
+			require.Equal(t, "Connect your Microsoft Calendar account", attachments[0].Title)
+			return "new_post_id", nil
+		},
+	}
+
+	b := &mscBot{
+		Bot: testBot,
+		Env: Env{
+			Config: &config.Config{
+				Provider: config.ProviderConfig{
+					DisplayName:    "Microsoft Calendar",
+					CommandTrigger: "mscalendar",
+				},
+			},
+			Dependencies: &Dependencies{
+				Store: mockStore,
+			},
+		},
+		pluginURL: "http://localhost:8065/plugins/com.mattermost.mscalendar",
+	}
+
+	mockStore.EXPECT().DeleteUserWelcomePost("user_123").Return("old_post", nil).Times(1)
+	mockStore.EXPECT().StoreUserWelcomePost("user_123", "new_post_id").Return(nil).Times(1)
+
+	err := b.Welcome("user_123")
+	require.NoError(t, err)
+	require.True(t, postDeleted)
+	require.True(t, dmCalled)
+}
+
+func TestWelcome_DMError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockStore := mock_store.NewMockStore(ctrl)
+
+	testBot := &testWelcomeBotWrapper{
+		dmWithAttachments: func(userID string, attachments ...*model.MessageAttachment) (string, error) {
+			return "", errors.New("DM failure")
+		},
+	}
+
+	b := &mscBot{
+		Bot: testBot,
+		Env: Env{
+			Config: &config.Config{
+				Provider: config.ProviderConfig{
+					DisplayName:    "Microsoft Calendar",
+					CommandTrigger: "mscalendar",
+				},
+			},
+			Dependencies: &Dependencies{
+				Store: mockStore,
+			},
+		},
+		pluginURL: "http://localhost:8065/plugins/com.mattermost.mscalendar",
+	}
+
+	mockStore.EXPECT().DeleteUserWelcomePost("user_123").Return("", nil).Times(1)
+
+	err := b.Welcome("user_123")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "DM failure")
+}
+
 
