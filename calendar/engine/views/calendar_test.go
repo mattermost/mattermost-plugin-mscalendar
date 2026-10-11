@@ -203,11 +203,13 @@ func TestAttachmentOptions(t *testing.T) {
 		att, err := RenderEventAsAttachment(event, "UTC", ShowTimezoneOption("UTC", TimeFormat24Hour))
 		require.NoError(t, err)
 		require.Equal(t, "13:00 - 14:00 (UTC)", att.Text)
+		require.Equal(t, "Product Demo\n13:00 - 14:00 (UTC)", att.Fallback)
 	})
 
 	t.Run("ShowTimezoneOption with 12-hour default", func(t *testing.T) {
 		att, err := RenderEventAsAttachment(event, "UTC", ShowTimezoneOption("UTC"))
 		require.NoError(t, err)
 		require.Equal(t, "1:00PM - 2:00PM (UTC)", att.Text)
+		require.Equal(t, "Product Demo\n1:00PM - 2:00PM (UTC)", att.Fallback)
 	})
 }

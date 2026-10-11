@@ -689,4 +689,22 @@ func TestGetUserTimeFormat(t *testing.T) {
 		tf := m.GetUserTimeFormat("user_1")
 		require.Equal(t, views.TimeFormat12Hour, tf)
 	})
+
+	t.Run("preference lookup error with nil Logger does not panic", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("", errors.New("api error")).Times(1)
+
+		m := &mscalendar{
+			Env: Env{
+				Dependencies: &Dependencies{
+					PluginAPI: mockPluginAPI,
+					Logger:    nil,
+				},
+			},
+		}
+		tf := m.GetUserTimeFormat("user_1")
+		require.Equal(t, views.TimeFormat12Hour, tf)
+	})
 }
