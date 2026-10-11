@@ -122,14 +122,29 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
 	title := fmt.Sprintf(ConnectMessageTitleTemplate, bot.Provider.DisplayName)
 	text := ConnectMessageBody
+	connectURL := fmt.Sprintf("%s/oauth2/connect", bot.pluginURL)
+
+	actions := []*model.PostAction{
+		{
+			Id:   ConnectActionID,
+			Name: ConnectButtonTitle,
+			Type: model.PostActionTypeButton,
+			Integration: &model.PostActionIntegration{
+				URL: connectURL,
+			},
+		},
+	}
+
 	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     text,
+		Actions:  actions,
 		Fallback: fmt.Sprintf("%s: %s", title, text),
 	}
 
 	return &sa
 }
+
 
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.MessageAttachment {
