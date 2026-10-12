@@ -1292,6 +1292,9 @@ func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
 	require.True(t, serverCalled)
 	require.Equal(t, "same-access", newToken.AccessToken)
 	require.Equal(t, "same-refresh", newToken.RefreshToken)
+	// When both access and refresh tokens remain unchanged, the existing store implementation
+	// skips re-storing and returns the original token.
+	require.Equal(t, expiredToken.Expiry, newToken.Expiry)
 	mockAPI.AssertExpectations(t)
 }
 
@@ -1344,12 +1347,12 @@ func TestTokenHelperWorkflow(t *testing.T) {
 		mockAPI.On("KVGet", userKey).Return([]byte(inactiveJSON), nil).Once()
 
 		apiCalled := false
-		if !store.CheckUserConnected(MockMMUserID) {
-			require.False(t, apiCalled, "API call should not be invoked for inactive user")
-			mockAPI.AssertExpectations(t)
-			return
+		if store.CheckUserConnected(MockMMUserID) {
+			apiCalled = true
 		}
-		t.Fatal("should have aborted early")
+
+		require.False(t, apiCalled, "API call should not be invoked for inactive user")
+		mockAPI.AssertExpectations(t)
 	})
 
 	t.Run("active user encounters expired refresh token and is disconnected", func(t *testing.T) {
@@ -1429,10 +1432,10 @@ func TestRefreshAndStoreToken_NilToken(t *testing.T) {
 
 func TestCheckUserConnected_EmptyUserID(t *testing.T) {
 	mockAPI, store, mockLogger, _, _ := GetMockSetup(t)
-	mockAPI.On("KVGet", "user_c3b5020d58a049787bc969768465b890").Return(nil, &model.AppError{Message: "not found"}).Once()
+	mockAPI.On("KVGet", "user_").Return(nil, &model.AppError{Message: "not found"}).Once()
 	mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
-	connected := store.CheckUserConnected(MockMMUserID)
+	connected := store.CheckUserConnected("")
 	require.False(t, connected)
 	mockAPI.AssertExpectations(t)
 }
