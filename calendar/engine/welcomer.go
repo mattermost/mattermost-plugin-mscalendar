@@ -41,7 +41,6 @@ const (
 	WelcomeMessage              = `Welcome to the %s plugin. [Click here to link your account.](%s/oauth2/connect)`
 )
 
-
 func (m *mscalendar) Welcome(userID string) error {
 	return m.Welcomer.Welcome(userID)
 }

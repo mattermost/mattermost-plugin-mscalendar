@@ -20,9 +20,6 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
 
-
-
-
 func TestNewConnectAttachment(t *testing.T) {
 	env := Env{
 		Config: &config.Config{
@@ -165,7 +162,6 @@ func (w *testWelcomeBotWrapper) Errorf(format string, args ...interface{}) {
 		w.errorf(format, args...)
 	}
 }
-
 
 func TestWelcome_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -350,6 +346,3 @@ func TestAfterDisconnect(t *testing.T) {
 	require.True(t, flowCancelled)
 	require.True(t, postDeleted)
 }
-
-
-
