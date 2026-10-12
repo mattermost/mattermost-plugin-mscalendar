@@ -268,4 +268,3 @@ func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
 
 	return views.TimeFormat12Hour
 }
-

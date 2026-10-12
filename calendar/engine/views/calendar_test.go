@@ -111,11 +111,11 @@ func TestRenderCalendarView(t *testing.T) {
 	t.Run("all day event", func(t *testing.T) {
 		allDayEvents := []*remote.Event{
 			{
-				ID:        "event-2",
-				Subject:   "Hackathon Day",
-				IsAllDay:  true,
-				Start:     remote.NewDateTime(start, "UTC"),
-				End:       remote.NewDateTime(end, "UTC"),
+				ID:       "event-2",
+				Subject:  "Hackathon Day",
+				IsAllDay: true,
+				Start:    remote.NewDateTime(start, "UTC"),
+				End:      remote.NewDateTime(end, "UTC"),
 			},
 		}
 		res, err := RenderCalendarView(allDayEvents, "UTC", TimeFormat24Hour)

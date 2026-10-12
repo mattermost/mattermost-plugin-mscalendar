@@ -247,4 +247,3 @@ func (processor *notificationProcessor) getUserTimeFormat(mattermostUserID strin
 
 	return views.TimeFormat12Hour
 }
-
