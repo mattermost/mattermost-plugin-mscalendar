@@ -14,6 +14,8 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 )
 
+// TimeFormat specifies the canonical 12-hour display format for calendar events ("3:04 PM"),
+// ensuring standard spacing between the time and the AM/PM meridiem designator across views and notifications.
 const TimeFormat = "3:04 PM"
 
 type Option interface {
