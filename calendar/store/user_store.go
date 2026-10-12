@@ -384,11 +384,9 @@ func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Co
 		if err := s.StoreUser(user); err != nil {
 			return nil, errors.Wrap(err, "unable to store the user")
 		}
-
-		return newToken, nil
 	}
 
-	return token, nil
+	return newToken, nil
 }
 
 func (s *pluginStore) CheckUserConnected(mattermostUserID string) bool {

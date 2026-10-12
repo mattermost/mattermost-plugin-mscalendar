@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -43,7 +44,6 @@ func newMockToken(accessToken, refreshToken string, expiry time.Time) *oauth2.To
 		Expiry:       expiry,
 	}
 }
-
 
 func TestLoadUser(t *testing.T) {
 	tests := []struct {
@@ -1139,9 +1139,9 @@ func TestDisconnectUserFromStoreIfNecessary_Idempotent(t *testing.T) {
 func TestRefreshAndStoreToken_ValidTokenNotExpired(t *testing.T) {
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.WriteHeader(http.StatusOK)
 	})
 	defer ts.Close()
@@ -1152,7 +1152,7 @@ func TestRefreshAndStoreToken_ValidTokenNotExpired(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, originalToken, token)
-	require.False(t, serverCalled, "expected no HTTP call when token is far from expiration")
+	require.False(t, serverCalled.Load(), "expected no HTTP call when token is far from expiration")
 	mockAPI.AssertExpectations(t)
 }
 
@@ -1164,9 +1164,9 @@ func TestRefreshAndStoreToken_SuccessfulRefreshAndStore(t *testing.T) {
 
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"access_token":"refreshed-access","refresh_token":"refreshed-refresh","expires_in":3600,"token_type":"Bearer"}`))
 	})
@@ -1189,18 +1189,19 @@ func TestRefreshAndStoreToken_SuccessfulRefreshAndStore(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, newToken)
-	require.True(t, serverCalled)
+	require.True(t, serverCalled.Load())
 	require.Equal(t, "refreshed-access", newToken.AccessToken)
 	require.Equal(t, "refreshed-refresh", newToken.RefreshToken)
+	require.True(t, newToken.Expiry.After(time.Now()))
 	mockAPI.AssertExpectations(t)
 }
 
 func TestRefreshAndStoreToken_FailedTokenRefresh(t *testing.T) {
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(`{"error":"invalid_grant","error_description":"refresh token expired"}`))
@@ -1213,7 +1214,7 @@ func TestRefreshAndStoreToken_FailedTokenRefresh(t *testing.T) {
 
 	require.Error(t, err)
 	require.Nil(t, newToken)
-	require.True(t, serverCalled)
+	require.True(t, serverCalled.Load())
 	require.Contains(t, err.Error(), "unable to get the new refreshed token")
 	mockAPI.AssertExpectations(t)
 }
@@ -1223,9 +1224,9 @@ func TestRefreshAndStoreToken_UserLoadError(t *testing.T) {
 
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"access_token":"refreshed-access","refresh_token":"refreshed-refresh","expires_in":3600,"token_type":"Bearer"}`))
 	})
@@ -1239,7 +1240,7 @@ func TestRefreshAndStoreToken_UserLoadError(t *testing.T) {
 
 	require.Error(t, err)
 	require.Nil(t, newToken)
-	require.True(t, serverCalled)
+	require.True(t, serverCalled.Load())
 	require.Contains(t, err.Error(), "unable to load the user")
 	mockAPI.AssertExpectations(t)
 }
@@ -1249,9 +1250,9 @@ func TestRefreshAndStoreToken_UserStoreError(t *testing.T) {
 
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"access_token":"refreshed-access","refresh_token":"refreshed-refresh","expires_in":3600,"token_type":"Bearer"}`))
 	})
@@ -1267,7 +1268,7 @@ func TestRefreshAndStoreToken_UserStoreError(t *testing.T) {
 
 	require.Error(t, err)
 	require.Nil(t, newToken)
-	require.True(t, serverCalled)
+	require.True(t, serverCalled.Load())
 	require.Contains(t, err.Error(), "unable to store the user")
 	mockAPI.AssertExpectations(t)
 }
@@ -1275,9 +1276,9 @@ func TestRefreshAndStoreToken_UserStoreError(t *testing.T) {
 func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"access_token":"same-access","refresh_token":"same-refresh","expires_in":3600,"token_type":"Bearer"}`))
 	})
@@ -1289,12 +1290,10 @@ func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, newToken)
-	require.True(t, serverCalled)
+	require.True(t, serverCalled.Load())
 	require.Equal(t, "same-access", newToken.AccessToken)
 	require.Equal(t, "same-refresh", newToken.RefreshToken)
-	// When both access and refresh tokens remain unchanged, the existing store implementation
-	// skips re-storing and returns the original token.
-	require.Equal(t, expiredToken.Expiry, newToken.Expiry)
+	require.True(t, newToken.Expiry.After(time.Now()))
 	mockAPI.AssertExpectations(t)
 }
 
@@ -1365,7 +1364,13 @@ func TestTokenHelperWorkflow(t *testing.T) {
 		apiErr := errors.New(ErrorRefreshTokenExpired)
 
 		mockAPI.On("KVGet", userKey).Return([]byte(connectedJSON), nil).Once()
-		mockAPI.On("KVSet", userKey, mock.Anything).Return(nil).Once()
+		mockAPI.On("KVSet", userKey, mock.MatchedBy(func(data []byte) bool {
+			var user User
+			if err := json.Unmarshal(data, &user); err != nil {
+				return false
+			}
+			return user.OAuth2Token == nil
+		})).Return(nil).Once()
 		mockAPI.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil).Once()
 		mockPoster.EXPECT().DM(MockMMUserID, ErrorUserInactive).Return("postID", nil).Times(1)
 
@@ -1382,9 +1387,9 @@ func TestRefreshAndStoreToken_ExpiringSoonWithinBuffer(t *testing.T) {
 
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
-	serverCalled := false
+	var serverCalled atomic.Bool
 	ts, oconf := newMockOAuth2Server(func(w http.ResponseWriter, r *http.Request) {
-		serverCalled = true
+		serverCalled.Store(true)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"access_token":"new-buffer-access","refresh_token":"new-buffer-refresh","expires_in":3600,"token_type":"Bearer"}`))
 	})
@@ -1408,9 +1413,10 @@ func TestRefreshAndStoreToken_ExpiringSoonWithinBuffer(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, newToken)
-	require.True(t, serverCalled, "expected refresh call when token is within 5 minute buffer")
+	require.True(t, serverCalled.Load(), "expected refresh call when token is within 5 minute buffer")
 	require.Equal(t, "new-buffer-access", newToken.AccessToken)
 	require.Equal(t, "new-buffer-refresh", newToken.RefreshToken)
+	require.True(t, newToken.Expiry.After(time.Now()))
 	mockAPI.AssertExpectations(t)
 }
 
@@ -1439,11 +1445,3 @@ func TestCheckUserConnected_EmptyUserID(t *testing.T) {
 	require.False(t, connected)
 	mockAPI.AssertExpectations(t)
 }
-
-
-
-
-
-
-
-
