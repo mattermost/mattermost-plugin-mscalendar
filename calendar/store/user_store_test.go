@@ -1274,6 +1274,11 @@ func TestRefreshAndStoreToken_UserStoreError(t *testing.T) {
 }
 
 func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
+	const (
+		userKey  = "user_c3b5020d58a049787bc969768465b890"
+		mmuidKey = "mmuid_e138a0f218087f9324d8c77f87d5f3a0"
+	)
+
 	mockAPI, store, _, _, _ := GetMockSetup(t)
 
 	var serverCalled atomic.Bool
@@ -1285,6 +1290,19 @@ func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
 	defer ts.Close()
 
 	expiredToken := newMockToken("same-access", "same-refresh", time.Now().Add(-1*time.Hour))
+	userJSON := `{"MattermostUserID":"mockMMUserID","Remote":{"id":"mockRemoteID"},"OAuth2Token":{"access_token":"same-access","refresh_token":"same-refresh"}}`
+
+	var storedExpiry time.Time
+	mockAPI.On("KVGet", userKey).Return([]byte(userJSON), nil).Once()
+	mockAPI.On("KVSet", userKey, mock.MatchedBy(func(data []byte) bool {
+		var u User
+		if err := json.Unmarshal(data, &u); err != nil || u.OAuth2Token == nil {
+			return false
+		}
+		storedExpiry = u.OAuth2Token.Expiry
+		return u.OAuth2Token.AccessToken == "same-access" && u.OAuth2Token.RefreshToken == "same-refresh"
+	})).Return(nil).Once()
+	mockAPI.On("KVSet", mmuidKey, []byte(MockMMUserID)).Return(nil).Once()
 
 	newToken, err := store.RefreshAndStoreToken(expiredToken, oconf, MockMMUserID)
 
@@ -1294,6 +1312,7 @@ func TestRefreshAndStoreToken_TokenUnchanged(t *testing.T) {
 	require.Equal(t, "same-access", newToken.AccessToken)
 	require.Equal(t, "same-refresh", newToken.RefreshToken)
 	require.True(t, newToken.Expiry.After(time.Now()))
+	require.True(t, storedExpiry.Equal(newToken.Expiry))
 	mockAPI.AssertExpectations(t)
 }
 
