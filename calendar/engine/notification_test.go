@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -215,4 +216,34 @@ func TestProcessNotificationOverflow(t *testing.T) {
 		err := processor.Enqueue(&remote.Notification{})
 		require.Error(t, err)
 	})
+}
+
+func TestEventToFieldsTimeFormat(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Madrid")
+	require.NoError(t, err)
+
+	now := time.Now()
+	startTime := time.Date(now.Year(), 8, 9, 18, 0, 0, 0, loc)
+	endTime := time.Date(now.Year(), 8, 9, 18, 15, 0, 0, loc)
+
+	event := &remote.Event{
+		Subject: "Team Sync",
+		Start:   remote.NewDateTime(startTime, "Europe/Madrid"),
+		End:     remote.NewDateTime(endTime, "Europe/Madrid"),
+		Organizer: &remote.Attendee{
+			EmailAddress: &remote.EmailAddress{
+				Address: "organizer@example.com",
+				Name:    "Organizer",
+			},
+		},
+		Location: &remote.Location{
+			DisplayName: "Room 101",
+		},
+		ResponseStatus: &remote.EventResponseStatus{
+			Response: remote.EventResponseStatusAccepted,
+		},
+	}
+
+	ff := eventToFields(event, "Europe/Madrid")
+	require.Contains(t, ff[FieldWhen].Strings()[0], "6:00 PM - 6:15 PM")
 }

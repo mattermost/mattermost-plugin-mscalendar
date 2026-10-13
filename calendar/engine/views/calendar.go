@@ -8,12 +8,15 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 )
+
+// TimeFormat specifies the canonical 12-hour display format for calendar events ("3:04 PM"),
+// ensuring standard spacing between the time and the AM/PM meridiem designator across views and notifications.
+const TimeFormat = "3:04 PM"
 
 type Option interface {
 	Apply(remote.Event, *model.MessageAttachment)
@@ -26,8 +29,8 @@ type showTimezoneOption struct {
 func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.MessageAttachment) {
 	attachment.Text = fmt.Sprintf(
 		"%s - %s (%s)",
-		event.Start.In(tzOpt.timezone).Time().Format(time.Kitchen),
-		event.End.In(tzOpt.timezone).Time().Format(time.Kitchen),
+		event.Start.In(tzOpt.timezone).Time().Format(TimeFormat),
+		event.End.In(tzOpt.timezone).Time().Format(TimeFormat),
 		tzOpt.timezone,
 	)
 }
@@ -104,7 +107,7 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 		attachments = append(attachments, &model.MessageAttachment{
 			Title: event.Subject,
 			// Text:    event.BodyPreview,
-			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(TimeFormat), event.End.In(timezone).Time().Format(TimeFormat)),
 			Fields:  fields,
 			Actions: actions,
 		})
@@ -170,8 +173,8 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 		return fmt.Sprintf(format, MarkdownToHTMLEntities(subject), link), nil
 	}
 
-	start := event.Start.In(timeZone).Time().Format(time.Kitchen)
-	end := event.End.In(timeZone).Time().Format(time.Kitchen)
+	start := event.Start.In(timeZone).Time().Format(TimeFormat)
+	end := event.End.In(timeZone).Time().Format(TimeFormat)
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
@@ -213,10 +216,10 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	attachment := &model.MessageAttachment{
 		Title:     MarkdownToHTMLEntities(event.Subject),
 		TitleLink: titleLink,
-		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(TimeFormat), event.End.In(timezone).Time().Format(TimeFormat)),
 		Fields:    fields,
 		Actions:   actions,
-		Fallback:  fmt.Sprintf("%s\n%s - %s", MarkdownToHTMLEntities(event.Subject), event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Fallback:  fmt.Sprintf("%s\n%s - %s", MarkdownToHTMLEntities(event.Subject), event.Start.In(timezone).Time().Format(TimeFormat), event.End.In(timezone).Time().Format(TimeFormat)),
 	}
 
 	for _, opt := range options {
