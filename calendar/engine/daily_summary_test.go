@@ -100,7 +100,7 @@ Wednesday February 12, 2020
 
 | Time | Subject |
 | :-- | :-- |
-| 9:00AM - 11:00AM | [The subject]() |`)
+| 9:00 AM - 11:00 AM | [The subject]() |`)
 	})
 }
 
@@ -240,7 +240,7 @@ Wednesday February 12, 2020
 
 | Time | Subject |
 | :-- | :-- |
-| 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
+| 9:00 AM - 11:00 AM | [The subject]() |`).Return("postID2", nil).Times(1),
 				)
 
 				s.EXPECT().StoreUser(gomock.Any()).Times(2).DoAndReturn(func(u *store.User) error {
@@ -347,7 +347,7 @@ Wednesday February 12, 2020
 
 | Time | Subject |
 | :-- | :-- |
-| 9:00AM - 11:00AM | [The subject]() |`).Return("postID2", nil).Times(1),
+| 9:00 AM - 11:00 AM | [The subject]() |`).Return("postID2", nil).Times(1),
 				)
 
 				s.EXPECT().StoreUser(gomock.Any()).Times(2).DoAndReturn(func(u *store.User) error {

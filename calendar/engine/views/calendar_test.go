@@ -5,6 +5,11 @@ package views
 
 import (
 	"testing"
+	"time"
+
+	"github.com/mattermost/mattermost/server/public/model"
+
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 
 	"github.com/stretchr/testify/require"
 )
@@ -71,4 +76,24 @@ func TestMarkdownToHTMLEntities(t *testing.T) {
 			require.EqualValues(t, testCase.expectedOutput, res)
 		})
 	}
+}
+
+func TestEventTimeFormat(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Madrid")
+	require.NoError(t, err)
+
+	startTime := time.Date(2023, 8, 9, 18, 0, 0, 0, loc)
+	endTime := time.Date(2023, 8, 9, 18, 15, 0, 0, loc)
+
+	event := &remote.Event{
+		Subject: "Team Sync",
+		Start:   remote.NewDateTime(startTime, "Europe/Madrid"),
+		End:     remote.NewDateTime(endTime, "Europe/Madrid"),
+	}
+
+	opt := ShowTimezoneOption("Europe/Madrid")
+	attachment := &model.MessageAttachment{}
+	opt.Apply(*event, attachment)
+
+	require.Equal(t, "6:00 PM - 6:15 PM (Europe/Madrid)", attachment.Text)
 }
