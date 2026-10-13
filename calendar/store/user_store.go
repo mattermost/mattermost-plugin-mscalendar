@@ -373,7 +373,7 @@ func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Co
 		return nil, errors.Wrap(err, "unable to get the new refreshed token")
 	}
 
-	if newToken.AccessToken != token.AccessToken || newToken.RefreshToken != token.RefreshToken {
+	if newToken.AccessToken != token.AccessToken || newToken.RefreshToken != token.RefreshToken || !newToken.Expiry.Equal(token.Expiry) {
 		user, err := s.LoadUser(mattermostUserID)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to load the user")
@@ -384,11 +384,9 @@ func (s *pluginStore) RefreshAndStoreToken(token *oauth2.Token, oconf *oauth2.Co
 		if err := s.StoreUser(user); err != nil {
 			return nil, errors.Wrap(err, "unable to store the user")
 		}
-
-		return newToken, nil
 	}
 
-	return token, nil
+	return newToken, nil
 }
 
 func (s *pluginStore) CheckUserConnected(mattermostUserID string) bool {
