@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
@@ -98,7 +99,7 @@ func TestRenderCalendarView(t *testing.T) {
 		res, err := RenderCalendarView(events, "UTC")
 		require.NoError(t, err)
 		require.Contains(t, res, "Sprint Planning")
-		require.Contains(t, res, "2:30PM - 4:00PM")
+		require.Contains(t, res, "2:30 PM - 4:00 PM")
 	})
 
 	t.Run("explicit 24-hour military time format", func(t *testing.T) {
@@ -148,7 +149,7 @@ func TestRenderDaySummary(t *testing.T) {
 		_, atts, err := RenderDaySummary(events, "UTC")
 		require.NoError(t, err)
 		require.Len(t, atts, 1)
-		require.Contains(t, atts[0].Text, "9:15AM - 10:45AM")
+		require.Contains(t, atts[0].Text, "9:15 AM - 10:45 AM")
 	})
 
 	t.Run("24-hour military format", func(t *testing.T) {
@@ -172,7 +173,7 @@ func TestRenderUpcomingEvent(t *testing.T) {
 	t.Run("default 12-hour format", func(t *testing.T) {
 		res, err := RenderUpcomingEvent(event, "UTC")
 		require.NoError(t, err)
-		require.Contains(t, res, "5:00PM - 6:00PM")
+		require.Contains(t, res, "5:00 PM - 6:00 PM")
 	})
 
 	t.Run("24-hour military format", func(t *testing.T) {
@@ -209,7 +210,27 @@ func TestAttachmentOptions(t *testing.T) {
 	t.Run("ShowTimezoneOption with 12-hour default", func(t *testing.T) {
 		att, err := RenderEventAsAttachment(event, "UTC", ShowTimezoneOption("UTC"))
 		require.NoError(t, err)
-		require.Equal(t, "1:00PM - 2:00PM (UTC)", att.Text)
-		require.Equal(t, "Product Demo\n1:00PM - 2:00PM (UTC)", att.Fallback)
+		require.Equal(t, "1:00 PM - 2:00 PM (UTC)", att.Text)
+		require.Equal(t, "Product Demo\n1:00 PM - 2:00 PM (UTC)", att.Fallback)
 	})
+}
+
+func TestEventTimeFormat(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Madrid")
+	require.NoError(t, err)
+
+	startTime := time.Date(2023, 8, 9, 18, 0, 0, 0, loc)
+	endTime := time.Date(2023, 8, 9, 18, 15, 0, 0, loc)
+
+	event := &remote.Event{
+		Subject: "Team Sync",
+		Start:   remote.NewDateTime(startTime, "Europe/Madrid"),
+		End:     remote.NewDateTime(endTime, "Europe/Madrid"),
+	}
+
+	opt := ShowTimezoneOption("Europe/Madrid")
+	attachment := &model.MessageAttachment{}
+	opt.Apply(*event, attachment)
+
+	require.Equal(t, "6:00 PM - 6:15 PM (Europe/Madrid)", attachment.Text)
 }

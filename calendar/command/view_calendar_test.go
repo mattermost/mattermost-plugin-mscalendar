@@ -75,7 +75,7 @@ func TestViewCalendar(t *testing.T) {
 				require.NoError(t, err)
 				require.False(t, isUserErr)
 				require.Contains(t, output, "Team Sync")
-				require.Contains(t, output, "2:30PM")
+				require.Contains(t, output, "2:30 PM")
 			},
 		},
 		{

@@ -19,7 +19,7 @@ import (
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot/mock_bot"
 )
 
-func TestEventToFieldsTimeFormat(t *testing.T) {
+func TestEventToFieldsUserTimeFormatPreference(t *testing.T) {
 	start := time.Date(2026, 10, 11, 14, 30, 0, 0, time.UTC)
 	end := time.Date(2026, 10, 11, 16, 0, 0, 0, time.UTC)
 	event := &remote.Event{
@@ -42,7 +42,7 @@ func TestEventToFieldsTimeFormat(t *testing.T) {
 		f := eventToFields(event, "UTC")
 		dateField := f[FieldWhen]
 		require.NotNil(t, dateField)
-		require.Contains(t, strings.Join(dateField.Strings(), ", "), "2:30PM - 4:00PM")
+		require.Contains(t, strings.Join(dateField.Strings(), ", "), "2:30 PM - 4:00 PM")
 	})
 
 	t.Run("explicit 24-hour military format in eventToFields", func(t *testing.T) {

@@ -8,15 +8,16 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 )
 
+// TimeFormat specifies the canonical 12-hour display format for calendar events ("3:04 PM"),
+// ensuring standard spacing between the time and the AM/PM meridiem designator across views and notifications.
 const (
-	TimeFormat12Hour = time.Kitchen
+	TimeFormat12Hour = "3:04 PM"
 	TimeFormat24Hour = "15:04"
 	TimeFormat       = TimeFormat12Hour
 )
@@ -286,10 +287,10 @@ func RenderEventAsAttachment(event *remote.Event, timezone string, options ...Op
 	attachment := &model.MessageAttachment{
 		Title:     MarkdownToHTMLEntities(event.Subject),
 		TitleLink: titleLink,
-		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Text:      fmt.Sprintf("%s - %s", event.Start.In(timezone).Time().Format(TimeFormat), event.End.In(timezone).Time().Format(TimeFormat)),
 		Fields:    fields,
 		Actions:   actions,
-		Fallback:  fmt.Sprintf("%s\n%s - %s", MarkdownToHTMLEntities(event.Subject), event.Start.In(timezone).Time().Format(time.Kitchen), event.End.In(timezone).Time().Format(time.Kitchen)),
+		Fallback:  fmt.Sprintf("%s\n%s - %s", MarkdownToHTMLEntities(event.Subject), event.Start.In(timezone).Time().Format(TimeFormat), event.End.In(timezone).Time().Format(TimeFormat)),
 	}
 
 	for _, opt := range options {
