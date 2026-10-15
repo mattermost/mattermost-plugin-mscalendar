@@ -66,6 +66,18 @@ interface DateRange {
     end: Date;
 }
 
+type CalendarTimeFormat = {
+    hour: 'numeric' | '2-digit';
+    minute: 'numeric' | '2-digit';
+    hour12: boolean;
+    meridiem?: boolean;
+};
+
+type TimeFormatProps = {
+    slotLabelFormat?: CalendarTimeFormat;
+    eventTimeFormat?: CalendarTimeFormat;
+};
+
 const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pluginServerRoute, useMilitaryTime = false, actions}: CalendarSidebarProps) => {
     const calendarRef = useRef<FullCalendar>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -206,27 +218,18 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     const containerStyle = useMemo(() => getContainerStyle(theme), [theme]);
     const scrollTime = useMemo(() => getCurrentScrollTime(timezone), [timezone]);
 
-    const slotLabelFormat = useMemo(() => {
-        if (useMilitaryTime) {
-            return {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
-            };
+    // When the user prefers 24-hour (military) time, override FullCalendar's
+    // time formatting for both the slot labels and the event blocks. For the
+    // 12-hour preference the calendar defaults are kept.
+    const timeFormatProps = useMemo((): TimeFormatProps => {
+        if (!useMilitaryTime) {
+            return {};
         }
-        return undefined;
-    }, [useMilitaryTime]);
 
-    const eventTimeFormat = useMemo(() => {
-        if (useMilitaryTime) {
-            return {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
-                meridiem: false,
-            };
-        }
-        return undefined;
+        return {
+            slotLabelFormat: {hour: '2-digit', minute: '2-digit', hour12: false},
+            eventTimeFormat: {hour: '2-digit', minute: '2-digit', hour12: false, meridiem: false},
+        };
     }, [useMilitaryTime]);
 
     if (connected === null) {
@@ -295,8 +298,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
                     allDaySlot={true}
                     slotDuration='00:30:00'
                     scrollTime={scrollTime}
-                    slotLabelFormat={slotLabelFormat}
-                    eventTimeFormat={eventTimeFormat}
+                    {...timeFormatProps}
                     height='100%'
                     events={fullCalendarEvents}
                     eventDisplay='block'
