@@ -185,7 +185,7 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 		return err
 	}
 	timezone := mailSettings.TimeZone
-	timeFormat := processor.getUserTimeFormat(creator.MattermostUserID)
+	timeFormat := TimeFormatForUser(processor.Env, creator.MattermostUserID)
 
 	if prior != nil {
 		var changed bool
@@ -222,8 +222,4 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 	}).Debugf("Notified: %s.", sa.Title)
 
 	return nil
-}
-
-func (processor *notificationProcessor) getUserTimeFormat(mattermostUserID string) string {
-	return TimeFormatForUser(processor.Env, mattermostUserID)
 }
