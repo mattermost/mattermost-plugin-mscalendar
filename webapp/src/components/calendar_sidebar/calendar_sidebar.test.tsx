@@ -1,5 +1,6 @@
 import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom';
+import FullCalendar from '@fullcalendar/react';
 
 import {mockTheme} from '@/testutils/theme';
 
@@ -154,5 +155,30 @@ describe('CalendarSidebar', () => {
         rerender(<CalendarSidebar {...makeProps({theme: altTheme})}/>);
         sidebar = container.querySelector('.mscalendar-sidebar');
         expect(sidebar).toHaveStyle({backgroundColor: altTheme.centerChannelBg});
+    });
+
+    it('passes 24-hour time format props to FullCalendar when useMilitaryTime is true', () => {
+        render(<CalendarSidebar {...makeProps({useMilitaryTime: true})}/>);
+        const props = (FullCalendar as unknown as jest.Mock).mock.calls[0][0];
+        expect(props).toMatchObject({
+            slotLabelFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            },
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                meridiem: false,
+            },
+        });
+    });
+
+    it('passes default undefined time format props to FullCalendar when useMilitaryTime is false', () => {
+        render(<CalendarSidebar {...makeProps({useMilitaryTime: false})}/>);
+        const props = (FullCalendar as unknown as jest.Mock).mock.calls[0][0];
+        expect(props.slotLabelFormat).toBeUndefined();
+        expect(props.eventTimeFormat).toBeUndefined();
     });
 });
