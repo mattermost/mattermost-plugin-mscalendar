@@ -654,7 +654,7 @@ func TestGetUserSettings(t *testing.T) {
 func TestGetUserTimeFormat(t *testing.T) {
 	t.Run("military time enabled returns 24-hour format", func(t *testing.T) {
 		mscalendar, _, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("true", nil).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(&model.Preference{Value: "true"}, nil).Times(1)
 
 		tf := mscalendar.GetUserTimeFormat("user_1")
 		require.Equal(t, views.TimeFormat24Hour, tf)
@@ -662,7 +662,7 @@ func TestGetUserTimeFormat(t *testing.T) {
 
 	t.Run("military time disabled returns 12-hour format", func(t *testing.T) {
 		mscalendar, _, _, _, mockPluginAPI, _, _ := GetMockSetup(t)
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("false", nil).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(&model.Preference{Value: "false"}, nil).Times(1)
 
 		tf := mscalendar.GetUserTimeFormat("user_1")
 		require.Equal(t, views.TimeFormat12Hour, tf)
@@ -670,7 +670,7 @@ func TestGetUserTimeFormat(t *testing.T) {
 
 	t.Run("preference lookup error defaults to 12-hour format", func(t *testing.T) {
 		mscalendar, _, _, _, mockPluginAPI, _, mockLogger := GetMockSetup(t)
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("", errors.New("api error")).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(nil, errors.New("api error")).Times(1)
 		mockLogger.EXPECT().With(gomock.Any()).Return(mockLogger).Times(1)
 		mockLogger.EXPECT().Debugf(gomock.Any()).Times(1)
 
@@ -694,7 +694,7 @@ func TestGetUserTimeFormat(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("", errors.New("api error")).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(nil, errors.New("api error")).Times(1)
 
 		m := &mscalendar{
 			Env: Env{
@@ -708,3 +708,4 @@ func TestGetUserTimeFormat(t *testing.T) {
 		require.Equal(t, views.TimeFormat12Hour, tf)
 	})
 }
+

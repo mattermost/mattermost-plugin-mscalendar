@@ -11,7 +11,6 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 
-	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
@@ -226,24 +225,5 @@ func (processor *notificationProcessor) processNotification(n *remote.Notificati
 }
 
 func (processor *notificationProcessor) getUserTimeFormat(mattermostUserID string) string {
-	if processor.Dependencies == nil || processor.PluginAPI == nil || mattermostUserID == "" {
-		return views.TimeFormat12Hour
-	}
-
-	useMilitaryTime, err := processor.PluginAPI.GetUserPreference(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
-	if err != nil {
-		if processor.Logger != nil {
-			processor.Logger.With(bot.LogContext{
-				"mattermostUserID": mattermostUserID,
-				"err":              err.Error(),
-			}).Debugf("failed to get military time preference, using default format")
-		}
-		return views.TimeFormat12Hour
-	}
-
-	if useMilitaryTime == "true" {
-		return views.TimeFormat24Hour
-	}
-
-	return views.TimeFormat12Hour
+	return TimeFormatForUser(processor.Env, mattermostUserID)
 }

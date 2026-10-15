@@ -93,19 +93,19 @@ func TestNotificationProcessorGetUserTimeFormat(t *testing.T) {
 	}
 
 	t.Run("military time enabled", func(t *testing.T) {
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("true", nil).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(&model.Preference{Value: "true"}, nil).Times(1)
 		tf := processor.getUserTimeFormat("user_1")
 		require.Equal(t, views.TimeFormat24Hour, tf)
 	})
 
 	t.Run("military time disabled", func(t *testing.T) {
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("false", nil).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(&model.Preference{Value: "false"}, nil).Times(1)
 		tf := processor.getUserTimeFormat("user_1")
 		require.Equal(t, views.TimeFormat12Hour, tf)
 	})
 
 	t.Run("error looking up preference defaults to 12-hour", func(t *testing.T) {
-		mockPluginAPI.EXPECT().GetUserPreference("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return("", errors.New("lookup error")).Times(1)
+		mockPluginAPI.EXPECT().GetPreferenceForUser("user_1", model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(nil, errors.New("lookup error")).Times(1)
 		logger.EXPECT().With(gomock.Any()).Return(logger).Times(1)
 		logger.EXPECT().Debugf(gomock.Any()).Times(1)
 

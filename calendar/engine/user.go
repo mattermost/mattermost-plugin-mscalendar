@@ -247,14 +247,23 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 }
 
 func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
-	if m.Dependencies == nil || m.PluginAPI == nil || mattermostUserID == "" {
+	return TimeFormatForUser(m.Env, mattermostUserID)
+}
+
+// TimeFormatForUser is the single source of truth for resolving the time
+// format preferred by a user across views, commands, and notifications.
+// It reads the "use_military_time" display setting and falls back to the
+// 12-hour format when the preference is missing, cannot be retrieved, or
+// the dependencies are not available.
+func TimeFormatForUser(env Env, mattermostUserID string) string {
+	if env.Dependencies == nil || env.PluginAPI == nil || mattermostUserID == "" {
 		return views.TimeFormat12Hour
 	}
 
-	useMilitaryTime, err := m.PluginAPI.GetUserPreference(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
+	preference, err := env.PluginAPI.GetPreferenceForUser(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
 	if err != nil {
-		if m.Logger != nil {
-			m.Logger.With(bot.LogContext{
+		if env.Logger != nil {
+			env.Logger.With(bot.LogContext{
 				"mattermostUserID": mattermostUserID,
 				"err":              err.Error(),
 			}).Debugf("failed to get military time preference, using default format")
@@ -262,7 +271,7 @@ func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
 		return views.TimeFormat12Hour
 	}
 
-	if useMilitaryTime == "true" {
+	if preference != nil && preference.Value == "true" {
 		return views.TimeFormat24Hour
 	}
 

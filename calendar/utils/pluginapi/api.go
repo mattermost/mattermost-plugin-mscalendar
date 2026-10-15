@@ -171,18 +171,11 @@ func (a *API) LogAuditRec(rec *model.AuditRecord) {
 	a.api.LogAuditRec(rec)
 }
 
-func (a *API) GetUserPreference(userID, category, name string) (string, error) {
-	preferences, appErr := a.api.GetPreferencesForUser(userID)
+func (a *API) GetPreferenceForUser(userID, category, name string) (*model.Preference, error) {
+	pref, appErr := a.api.GetPreferenceForUser(userID, category, name)
 	if appErr != nil {
-		return "", appErr
+		return nil, appErr
 	}
-
-	for _, pref := range preferences {
-		if pref.Category == category && pref.Name == name {
-			return pref.Value, nil
-		}
-	}
-
-	return "", nil
+	return &pref, nil
 }
 
