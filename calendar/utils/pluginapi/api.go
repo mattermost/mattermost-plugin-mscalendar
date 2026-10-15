@@ -178,4 +178,3 @@ func (a *API) GetPreferenceForUser(userID, category, name string) (*model.Prefer
 	}
 	return &pref, nil
 }
-

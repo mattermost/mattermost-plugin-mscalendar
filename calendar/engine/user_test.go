@@ -708,4 +708,3 @@ func TestGetUserTimeFormat(t *testing.T) {
 		require.Equal(t, views.TimeFormat12Hour, tf)
 	})
 }
-
