@@ -182,14 +182,14 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 			endDateFormat += ", 2006"
 		}
 
-		startFormat += " · " + time.Kitchen
+		startFormat += " · " + views.TimeFormat
 
 		var formatted string
 		if tStart.Year() != tEnd.Year() || tStart.Month() != tEnd.Month() || tStart.Day() != tEnd.Day() {
-			endDateFormat += " · " + time.Kitchen
+			endDateFormat += " · " + views.TimeFormat
 			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(endDateFormat)
 		} else {
-			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(time.Kitchen)
+			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(views.TimeFormat)
 		}
 
 		return tStart, tEnd, formatted
