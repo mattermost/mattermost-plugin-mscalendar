@@ -206,7 +206,8 @@ func (m *mscalendar) ProcessAllDailySummary(now time.Time) error {
 			// Should never reach this point
 			continue
 		}
-		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone)
+		timeFormat := m.GetUserTimeFormat(user.MattermostUserID)
+		postStr, err := views.RenderCalendarView(res.Events, dsum.Timezone, timeFormat)
 		if err != nil {
 			m.Logger.Warnf("Error rendering user %s calendar. err=%v", user.MattermostUserID, err)
 		}
@@ -238,7 +239,8 @@ func (m *mscalendar) GetDaySummaryForUser(day time.Time, user *User) (string, er
 
 	events := m.excludeDeclinedEvents(calendarData)
 
-	messageString, err := views.RenderCalendarView(events, timezone)
+	timeFormat := m.GetUserTimeFormat(user.MattermostUserID)
+	messageString, err := views.RenderCalendarView(events, timezone, timeFormat)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to render daily summary")
 	}

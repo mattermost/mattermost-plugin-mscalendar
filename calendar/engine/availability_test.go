@@ -1010,6 +1010,7 @@ func makeStatusSyncTestEnv(ctrl *gomock.Controller) (Env, remote.Client) {
 	mockRemote := mock_remote.NewMockRemote(ctrl)
 	mockClient := mock_remote.NewMockClient(ctrl)
 	mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+	mockPluginAPI.EXPECT().GetPreferenceForUser(gomock.Any(), model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(nil, nil).AnyTimes()
 	logger := mock_bot.NewMockLogger(ctrl)
 
 	env := Env{
