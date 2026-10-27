@@ -382,7 +382,7 @@ func TestCreateEvent(t *testing.T) {
 					return nil, errors.New("failed to create event")
 				}).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(2)
-				mockLoggerWith.EXPECT().Errorf("skipping attendee").Times(1)
+				mockLoggerWith.EXPECT().Warnf("createEvent, skipping attendee").Times(1)
 				mockLoggerWith.EXPECT().Errorf("createEvent, error occurred while creating event").Times(1)
 			},
 			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
