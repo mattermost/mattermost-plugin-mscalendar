@@ -62,6 +62,21 @@ func (mr *MockPluginAPIMockRecorder) CanReadChannel(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanReadChannel", reflect.TypeOf((*MockPluginAPI)(nil).CanReadChannel), arg0, arg1)
 }
 
+// FilterVisibleUsers mocks base method.
+func (m *MockPluginAPI) FilterVisibleUsers(arg0 string, arg1 *model.ViewUsersRestrictions, arg2 []string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilterVisibleUsers", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterVisibleUsers indicates an expected call of FilterVisibleUsers.
+func (mr *MockPluginAPIMockRecorder) FilterVisibleUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilterVisibleUsers", reflect.TypeOf((*MockPluginAPI)(nil).FilterVisibleUsers), arg0, arg1, arg2)
+}
+
 // GetMattermostUser mocks base method.
 func (m *MockPluginAPI) GetMattermostUser(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -152,16 +167,19 @@ func (mr *MockPluginAPIMockRecorder) GetPost(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPost", reflect.TypeOf((*MockPluginAPI)(nil).GetPost), arg0)
 }
 
-// LogAuditRec mocks base method.
-func (m *MockPluginAPI) LogAuditRec(arg0 *model.AuditRecord) {
+// GetViewUsersRestrictions mocks base method.
+func (m *MockPluginAPI) GetViewUsersRestrictions(arg0 string) (*model.ViewUsersRestrictions, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "LogAuditRec", arg0)
+	ret := m.ctrl.Call(m, "GetViewUsersRestrictions", arg0)
+	ret0, _ := ret[0].(*model.ViewUsersRestrictions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// LogAuditRec indicates an expected call of LogAuditRec.
-func (mr *MockPluginAPIMockRecorder) LogAuditRec(arg0 interface{}) *gomock.Call {
+// GetViewUsersRestrictions indicates an expected call of GetViewUsersRestrictions.
+func (mr *MockPluginAPIMockRecorder) GetViewUsersRestrictions(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogAuditRec", reflect.TypeOf((*MockPluginAPI)(nil).LogAuditRec), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetViewUsersRestrictions", reflect.TypeOf((*MockPluginAPI)(nil).GetViewUsersRestrictions), arg0)
 }
 
 // IsSysAdmin mocks base method.
@@ -177,6 +195,18 @@ func (m *MockPluginAPI) IsSysAdmin(arg0 string) (bool, error) {
 func (mr *MockPluginAPIMockRecorder) IsSysAdmin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSysAdmin", reflect.TypeOf((*MockPluginAPI)(nil).IsSysAdmin), arg0)
+}
+
+// LogAuditRec mocks base method.
+func (m *MockPluginAPI) LogAuditRec(arg0 *model.AuditRecord) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogAuditRec", arg0)
+}
+
+// LogAuditRec indicates an expected call of LogAuditRec.
+func (mr *MockPluginAPIMockRecorder) LogAuditRec(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogAuditRec", reflect.TypeOf((*MockPluginAPI)(nil).LogAuditRec), arg0)
 }
 
 // PublishWebsocketEvent mocks base method.
