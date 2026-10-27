@@ -6,6 +6,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -17,9 +18,8 @@ import (
 )
 
 const (
-	autocompleteLimit       = 10
-	visibilityBatchSize     = 100
-	maxRestrictedCandidates = 200
+	autocompleteLimit   = 10
+	visibilityBatchSize = 100
 )
 
 func (api *api) autocompleteConnectedUsers(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,7 @@ func (api *api) autocompleteConnectedUsers(w http.ResponseWriter, r *http.Reques
 
 	searchLimit := autocompleteLimit
 	if restrictions != nil {
-		searchLimit = maxRestrictedCandidates
+		searchLimit = math.MaxInt
 	}
 
 	searchString := r.URL.Query().Get("search")

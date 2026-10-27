@@ -279,7 +279,7 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 			emailAddress = pa
 		} else {
 			if !visibleAttendees[pa] {
-				api.Logger.With(bot.LogContext{"attendee_mm_id": pa}).Errorf("skipping attendee")
+				api.Logger.With(bot.LogContext{"attendee_mm_id": pa}).Warnf("createEvent, skipping attendee")
 				continue
 			}
 			attendeeUser, err := api.Store.LoadUser(pa)

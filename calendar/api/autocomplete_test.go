@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -100,7 +101,7 @@ func TestAutocompleteConnectedUsers(t *testing.T) {
 			setup: func() {
 				mockStore.EXPECT().LoadUser(gomock.Any()).Return(&store.User{}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(restrictions, nil).Times(1)
-				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), maxRestrictedCandidates).Return(store.UserIndex{{MattermostUserID: "userA"}, {MattermostUserID: "userB"}}, nil).Times(1)
+				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), math.MaxInt).Return(store.UserIndex{{MattermostUserID: "userA"}, {MattermostUserID: "userB"}}, nil).Times(1)
 				mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, []string{"userA", "userB"}).Return([]string{"userA"}, nil).Times(1)
 			},
 			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
@@ -116,7 +117,7 @@ func TestAutocompleteConnectedUsers(t *testing.T) {
 				index, ids := mockUserIndex(autocompleteLimit + 2)
 				mockStore.EXPECT().LoadUser(gomock.Any()).Return(&store.User{}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(restrictions, nil).Times(1)
-				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), maxRestrictedCandidates).Return(index, nil).Times(1)
+				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), math.MaxInt).Return(index, nil).Times(1)
 				mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids).Return(ids[1:], nil).Times(1)
 			},
 			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
@@ -133,7 +134,7 @@ func TestAutocompleteConnectedUsers(t *testing.T) {
 				index, ids := mockUserIndex(visibilityBatchSize + 5)
 				mockStore.EXPECT().LoadUser(gomock.Any()).Return(&store.User{}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(restrictions, nil).Times(1)
-				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), maxRestrictedCandidates).Return(index, nil).Times(1)
+				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), math.MaxInt).Return(index, nil).Times(1)
 				mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids[:visibilityBatchSize]).Return(ids[:visibilityBatchSize], nil).Times(1)
 			},
 			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
@@ -149,7 +150,7 @@ func TestAutocompleteConnectedUsers(t *testing.T) {
 				index, ids := mockUserIndex(visibilityBatchSize + 5)
 				mockStore.EXPECT().LoadUser(gomock.Any()).Return(&store.User{}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(restrictions, nil).Times(1)
-				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), maxRestrictedCandidates).Return(index, nil).Times(1)
+				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), math.MaxInt).Return(index, nil).Times(1)
 				gomock.InOrder(
 					mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids[:visibilityBatchSize]).Return([]string{"user3"}, nil),
 					mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids[visibilityBatchSize:]).Return(ids[visibilityBatchSize:visibilityBatchSize+2], nil),
@@ -166,11 +167,31 @@ func TestAutocompleteConnectedUsers(t *testing.T) {
 			},
 		},
 		{
+			name: "Visible users beyond the first batches are still found",
+			setup: func() {
+				index, ids := mockUserIndex(2*visibilityBatchSize + 50)
+				last := 2*visibilityBatchSize + 40
+				mockStore.EXPECT().LoadUser(gomock.Any()).Return(&store.User{}, nil).Times(1)
+				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(restrictions, nil).Times(1)
+				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), math.MaxInt).Return(index, nil).Times(1)
+				gomock.InOrder(
+					mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids[:visibilityBatchSize]).Return([]string{}, nil),
+					mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids[visibilityBatchSize:2*visibilityBatchSize]).Return([]string{}, nil),
+					mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, ids[2*visibilityBatchSize:]).Return([]string{ids[last]}, nil),
+				)
+			},
+			assertions: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				var dto []store.UserShortDTO
+				assert.NoError(t, json.NewDecoder(rec.Body).Decode(&dto))
+				assert.Equal(t, []store.UserShortDTO{{MattermostUserID: fmt.Sprintf("user%d", 2*visibilityBatchSize+40)}}, dto)
+			},
+		},
+		{
 			name: "Filter error",
 			setup: func() {
 				mockStore.EXPECT().LoadUser(gomock.Any()).Return(&store.User{}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(restrictions, nil).Times(1)
-				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), maxRestrictedCandidates).Return(store.UserIndex{{MattermostUserID: "userA"}}, nil).Times(1)
+				mockStore.EXPECT().SearchInUserIndex(gomock.Any(), math.MaxInt).Return(store.UserIndex{{MattermostUserID: "userA"}}, nil).Times(1)
 				mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, restrictions, []string{"userA"}).Return(nil, errors.New("filter error")).Times(1)
 				mockLogger.EXPECT().With(gomock.Any()).Return(mockLoggerWith).Times(1)
 				mockLoggerWith.EXPECT().Errorf("unable to filter users").Times(1)
