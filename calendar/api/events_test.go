@@ -372,7 +372,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(attendeeRestrictions, nil).Times(1)
 				mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, attendeeRestrictions, []string{"userA", "userB"}).Return([]string{"userA"}, nil).Times(1)
@@ -403,7 +403,7 @@ func TestCreateEvent(t *testing.T) {
 				mockOAauthToken := oauth2.Token{}
 				mockStore.EXPECT().LoadUser(MockUserID).Return(&store.User{MattermostUserID: MockUserID, OAuth2Token: &mockOAauthToken, Remote: &remote.User{ID: MockRemoteUserID}}, nil).Times(1)
 				mockPluginAPI.EXPECT().CanLinkEventToChannel(MockChannelID, MockUserID).Return(true).Times(1)
-				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient, nil).Times(1)
+				mockRemote.EXPECT().MakeUserClient(gomock.Any(), &mockOAauthToken, gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRemoteClient).Times(1)
 				mockRemoteClient.EXPECT().GetMailboxSettings(MockRemoteUserID).Return(&remote.MailboxSettings{TimeZone: "UTC"}, nil).Times(1)
 				mockPluginAPI.EXPECT().GetViewUsersRestrictions(MockUserID).Return(attendeeRestrictions, nil).Times(1)
 				mockPluginAPI.EXPECT().FilterVisibleUsers(MockUserID, attendeeRestrictions, []string{"userA", "userB"}).Return(nil, errors.New("lookup error")).Times(1)
