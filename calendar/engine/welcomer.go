@@ -34,7 +34,11 @@ type mscBot struct {
 }
 
 const (
-	WelcomeMessage = `Welcome to the %s plugin. [Click here to link your account.](%s/oauth2/connect)`
+	ConnectMessageTitleTemplate = "Connect your %s account"
+	ConnectMessageBody          = "You can get reminders about upcoming meetings, create new meetings or view your schedule for the day. Notifications of events and invites from your calendar will be posted here."
+	ConnectButtonTitle          = "Connect account"
+	ConnectActionID             = "connect_account"
+	WelcomeMessage              = `Welcome to the %s plugin. [Click here to link your account.](%s/oauth2/connect)`
 )
 
 func (m *mscalendar) Welcome(userID string) error {
@@ -115,20 +119,42 @@ func (bot *mscBot) WelcomeFlowEnd(userID string) {
 }
 
 func (bot *mscBot) newConnectAttachment() *model.MessageAttachment {
-	title := "Connect"
-	text := fmt.Sprintf(WelcomeMessage, bot.Provider.DisplayName, bot.pluginURL)
+	displayName := bot.Provider.DisplayName
+	if displayName == "" {
+		displayName = "Microsoft Calendar"
+	}
+	title := fmt.Sprintf(ConnectMessageTitleTemplate, displayName)
+	text := ConnectMessageBody
+	connectURL := fmt.Sprintf("%s/oauth2/connect", bot.pluginURL)
+
+	actions := []*model.PostAction{
+		{
+			Id:   ConnectActionID,
+			Name: ConnectButtonTitle,
+			Type: model.PostActionTypeButton,
+			Integration: &model.PostActionIntegration{
+				URL: connectURL,
+			},
+		},
+	}
+
 	sa := model.MessageAttachment{
 		Title:    title,
 		Text:     text,
-		Fallback: fmt.Sprintf("%s: %s", title, text),
+		Actions:  actions,
+		Fallback: fmt.Sprintf("%s\n%s\n%s: %s", title, text, ConnectButtonTitle, connectURL),
 	}
 
 	return &sa
 }
 
 func (bot *mscBot) newConnectedAttachment(userLogin string) *model.MessageAttachment {
+	displayName := bot.Provider.DisplayName
+	if displayName == "" {
+		displayName = "Microsoft Calendar"
+	}
 	title := "Connect"
-	text := ":tada: Congratulations! Your " + bot.Provider.DisplayName + " account (*" + userLogin + "*) has been connected to Mattermost."
+	text := ":tada: Congratulations! Your " + displayName + " account (*" + userLogin + "*) has been connected to Mattermost."
 	return &model.MessageAttachment{
 		Title:    title,
 		Text:     text,

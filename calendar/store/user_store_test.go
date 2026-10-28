@@ -643,6 +643,18 @@ func TestSearchInUserIndex(t *testing.T) {
 		assertions func(*testing.T, UserIndex, error)
 	}{
 		{
+			name: "Term matching only the email does not match",
+			setup: func(mockAPI *testutil.MockPluginAPI) {
+				mockAPI.On("KVGet", "userindex_").Return([]byte(GetRemoteUserJSON(2)), nil).Times(1)
+			},
+			term:  "example.com",
+			limit: 5,
+			assertions: func(t *testing.T, result UserIndex, err error) {
+				require.NoError(t, err)
+				require.Empty(t, result)
+			},
+		},
+		{
 			name: "Error loading user index",
 			setup: func(mockAPI *testutil.MockPluginAPI) {
 				mockAPI.On("KVGet", "userindex_").Return(nil, &model.AppError{Message: "KVGet failed"}).Times(1)

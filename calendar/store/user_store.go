@@ -58,7 +58,7 @@ type UserShort struct {
 }
 
 func (us UserShort) Matches(term string) bool {
-	return strings.Contains(us.MattermostUsername, term) || strings.Contains(us.MattermostDisplayName, term) || strings.Contains(us.Email, term)
+	return strings.Contains(us.MattermostUsername, term) || strings.Contains(us.MattermostDisplayName, term)
 }
 
 func (us UserShort) ToDTO() UserShortDTO {
