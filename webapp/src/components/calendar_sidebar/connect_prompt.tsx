@@ -46,6 +46,7 @@ const ConnectPrompt = ({theme, pluginServerRoute, sendEphemeralPost}: ConnectPro
                 {'to get started'}
             </div>
             <a
+                data-testid='mscalendar-sidebar-connect'
                 className='mscalendar-sidebar__connect-btn'
                 href={`${pluginServerRoute}/oauth2/connect`}
                 onClick={handleConnect}

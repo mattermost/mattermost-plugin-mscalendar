@@ -136,6 +136,7 @@ export default function CreateEventForm(props: Props) {
     if (storedError) {
         error = (
             <p
+                data-testid='mscalendar-create-event-error'
                 className='alert alert-danger'
                 role='alert'
             >
@@ -151,6 +152,7 @@ export default function CreateEventForm(props: Props) {
 
     return (
         <form
+            data-testid='mscalendar-create-event-form'
             role='form'
             onSubmit={handleSubmit}
         >
