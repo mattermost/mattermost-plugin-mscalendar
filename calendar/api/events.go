@@ -215,12 +215,22 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	visibleAttendees, errVisible := api.visibleAttendeeIDs(user.MattermostUserID, payload.Attendees)
+	if errVisible != nil {
+		api.Logger.With(bot.LogContext{"err": errVisible.Error()}).Errorf("createEvent, error occurred while resolving attendees")
+		httputils.WriteInternalServerError(w, errVisible)
+		return
+	}
 	for _, pa := range payload.Attendees {
 		var emailAddress string
 
 		if strings.Contains(pa, "@") {
 			emailAddress = pa
 		} else {
+			if !visibleAttendees[pa] {
+				api.Logger.With(bot.LogContext{"attendee_mm_id": pa}).Warnf("createEvent, skipping attendee")
+				continue
+			}
 			attendeeUser, err := api.Store.LoadUser(pa)
 			if err != nil {
 				api.Logger.With(bot.LogContext{"err": err.Error(), "attendee_mm_id": pa}).Errorf("error loading attendee from mattermost user id")
@@ -284,4 +294,31 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httputils.WriteJSONResponse(w, `{"ok": true}`, http.StatusCreated)
+}
+
+func (api *api) visibleAttendeeIDs(viewerID string, attendees []string) (map[string]bool, error) {
+	var ids []string
+	for _, pa := range attendees {
+		if !strings.Contains(pa, "@") {
+			ids = append(ids, pa)
+		}
+	}
+
+	visible := map[string]bool{}
+	if len(ids) == 0 {
+		return visible, nil
+	}
+
+	restrictions, err := api.PluginAPI.GetViewUsersRestrictions(viewerID)
+	if err != nil {
+		return nil, err
+	}
+	visibleIDs, err := api.PluginAPI.FilterVisibleUsers(viewerID, restrictions, ids)
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range visibleIDs {
+		visible[id] = true
+	}
+	return visible, nil
 }

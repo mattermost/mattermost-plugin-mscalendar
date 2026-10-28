@@ -50,6 +50,8 @@ type PluginAPI interface {
 	GetPost(postID string) (*model.Post, error)
 	CanLinkEventToChannel(channelID, userID string) bool
 	CanReadChannel(channelID, userID string) bool
+	GetViewUsersRestrictions(viewerID string) (*model.ViewUsersRestrictions, error)
+	FilterVisibleUsers(viewerID string, restrictions *model.ViewUsersRestrictions, userIDs []string) ([]string, error)
 	SearchLinkableChannelForUser(teamID, mattermostUserID, search string) ([]*model.Channel, error)
 	GetMattermostUserTeams(mattermostUserID string) ([]*model.Team, error)
 	PublishWebsocketEvent(mattermostUserID, event string, payload map[string]any)

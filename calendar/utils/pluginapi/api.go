@@ -138,6 +138,116 @@ func (a *API) CanReadChannel(channelID, userID string) bool {
 	return false
 }
 
+const membershipsPageSize = 200
+
+// GetViewUsersRestrictions returns the teams and channels that limit which users
+// the viewer can see, mirroring core. A nil result means the viewer can see everyone.
+func (a *API) GetViewUsersRestrictions(viewerID string) (*model.ViewUsersRestrictions, error) {
+	if a.api.HasPermissionTo(viewerID, model.PermissionViewMembers) {
+		return nil, nil
+	}
+
+	teams, appErr := a.api.GetTeamsForUser(viewerID)
+	if appErr != nil {
+		return nil, appErr
+	}
+	restrictions := &model.ViewUsersRestrictions{Teams: []string{}, Channels: []string{}}
+	for _, team := range teams {
+		if a.api.HasPermissionToTeam(viewerID, team.Id, model.PermissionViewMembers) {
+			restrictions.Teams = append(restrictions.Teams, team.Id)
+		}
+	}
+
+	for page := 0; ; page++ {
+		memberships, appErr := a.api.GetChannelMembersForUser("", viewerID, page, membershipsPageSize)
+		if appErr != nil {
+			return nil, appErr
+		}
+		for _, m := range memberships {
+			restrictions.Channels = append(restrictions.Channels, m.ChannelId)
+		}
+		if len(memberships) < membershipsPageSize {
+			break
+		}
+	}
+
+	return restrictions, nil
+}
+
+// FilterVisibleUsers returns the subset of userIDs allowed by the viewer's
+// restrictions, preserving order. Nil restrictions allow every user.
+func (a *API) FilterVisibleUsers(viewerID string, restrictions *model.ViewUsersRestrictions, userIDs []string) ([]string, error) {
+	if restrictions == nil || len(userIDs) == 0 {
+		return userIDs, nil
+	}
+
+	visible := map[string]bool{viewerID: true}
+	pending := func() []string {
+		var ids []string
+		for _, id := range userIDs {
+			if !visible[id] {
+				ids = append(ids, id)
+			}
+		}
+		return ids
+	}
+
+	if len(restrictions.Teams) > 0 {
+		permittedTeams := make(map[string]bool, len(restrictions.Teams))
+		for _, teamID := range restrictions.Teams {
+			permittedTeams[teamID] = true
+		}
+		for _, id := range pending() {
+			inTeam, err := a.isActiveMemberOfAnyTeam(id, permittedTeams)
+			if err != nil {
+				return nil, err
+			}
+			if inTeam {
+				visible[id] = true
+			}
+		}
+	}
+
+	for _, channelID := range restrictions.Channels {
+		remaining := pending()
+		if len(remaining) == 0 {
+			break
+		}
+		members, appErr := a.api.GetChannelMembersByIds(channelID, remaining)
+		if appErr != nil {
+			return nil, appErr
+		}
+		for _, member := range members {
+			visible[member.UserId] = true
+		}
+	}
+
+	result := make([]string, 0, len(userIDs))
+	for _, id := range userIDs {
+		if visible[id] {
+			result = append(result, id)
+		}
+	}
+	return result, nil
+}
+
+func (a *API) isActiveMemberOfAnyTeam(userID string, teamIDs map[string]bool) (bool, error) {
+	for page := 0; ; page++ {
+		members, appErr := a.api.GetTeamMembersForUser(userID, page, membershipsPageSize)
+		if appErr != nil {
+			return false, appErr
+		}
+		for _, m := range members {
+			if m.DeleteAt == 0 && teamIDs[m.TeamId] {
+				return true, nil
+			}
+		}
+		if len(members) < membershipsPageSize {
+			return false, nil
+		}
+	}
+}
+
 func (a *API) CleanKVStore() error {
 	appErr := a.api.KVDeleteAll()
 	if appErr != nil {
