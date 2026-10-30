@@ -223,12 +223,16 @@ function issueTokens(user: User | null, scope: string, withRefresh: boolean): Re
     const ttl = state.config.accessTokenTtlSeconds;
     state.accessTokens.set(accessToken, {user, expires: Date.now() + (ttl * 1000)});
 
-    const body: Json = {token_type: 'Bearer', scope, expires_in: ttl, ext_expires_in: ttl, access_token: accessToken};
+    // Entra omits scope from client-credentials responses.
+    const body: Json = {token_type: 'Bearer', expires_in: ttl, ext_expires_in: ttl, access_token: accessToken};
+    if (user) {
+        body.scope = scope;
+    }
     if (withRefresh && user) {
         body.refresh_token = token('rt');
         state.refreshTokens.set(body.refresh_token, {user, scope});
     }
-    validate('token', body, 'token endpoint');
+    validate(user ? 'token' : 'appToken', body, 'token endpoint');
     return {status: 200, body};
 }
 

@@ -76,7 +76,7 @@ async function runScenarios(target: Target): Promise<Step[]> {
     let eventId = '';
 
     const tokenResult = await appToken(target);
-    steps.push(check('client credentials token', tokenResult.status, 'token', tokenResult.body));
+    steps.push(check('client credentials token', tokenResult.status, 'appToken', tokenResult.body));
     const token = tokenResult.body.access_token as string;
 
     try {

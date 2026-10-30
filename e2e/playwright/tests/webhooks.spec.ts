@@ -65,13 +65,15 @@ test.describe('webhook notifications', () => {
         const channelsPage = await ensureConnected(pw);
         const start = new Date(Date.now() + (5 * HOUR_MS));
 
+        // The genuine creation notification makes the plugin fetch the event; let that settle first.
         const created = await fake.createEvent(USER1.email, subject, start, new Date(start.getTime() + HOUR_MS), [USER2.email]);
+        const eventFetches = async () => (await fake.requests()).filter((request) => request.method === 'GET' && request.path?.toLowerCase().endsWith(`/events/${created.id.toLowerCase()}`));
+        await expect.poll(async () => (await eventFetches()).length).toBeGreaterThan(0);
         await fake.clearRequests();
-        await fake.notify((await subscription()).id, {eventId: created.id, clientState: 'forged'});
 
+        await fake.notify((await subscription()).id, {eventId: created.id, clientState: 'forged'});
         await channelsPage.page.waitForTimeout(3000);
-        const fetched = (await fake.requests()).filter((request) => request.method === 'GET' && request.path?.includes('/events/'));
-        expect(fetched).toHaveLength(0);
+        expect(await eventFetches()).toHaveLength(0);
     });
 
     test('renews the subscription when Microsoft recommends it', async () => {

@@ -26,7 +26,7 @@ RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-l
 ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 
 # Playwright's browser dependencies are installed with the browser in environment.json.
-RUN useradd -m -s /bin/bash ubuntu \
+RUN (id -u ubuntu >/dev/null 2>&1 || useradd -m -s /bin/bash ubuntu) \
     && usermod -aG docker,sudo ubuntu \
     && echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ubuntu
 

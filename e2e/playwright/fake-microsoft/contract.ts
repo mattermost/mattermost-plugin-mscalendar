@@ -7,6 +7,7 @@ export type Contract = {name: string; required: string[]};
 
 export const CONTRACTS: Record<string, Contract> = {
     token: {name: 'token response', required: ['token_type', 'access_token', 'expires_in', 'scope']},
+    appToken: {name: 'app-only token response', required: ['token_type', 'access_token', 'expires_in']},
     user: {name: 'user', required: ['id', 'displayName', 'userPrincipalName', 'mail']},
     event: {
         name: 'event',
