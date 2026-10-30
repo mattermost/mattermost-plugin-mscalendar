@@ -91,8 +91,8 @@ export async function ensureDisconnected(pw: PlaywrightExtended) {
     return channelsPage;
 }
 
-// Context routes attach to a new popup asynchronously, so the popup's own first navigation could
-// follow the plugin's redirect to the real login host. Open it blank and navigate it ourselves.
+// Playwright routes never see redirect targets, so letting the popup follow the plugin's redirect
+// would reach the real login host. Open it blank, resolve the redirect here, and navigate directly.
 export async function openConnectPopup(page: Page) {
     await page.evaluate(() => {
         const open = window.open.bind(window);
@@ -106,6 +106,13 @@ export async function openConnectPopup(page: Page) {
     await page.getByTestId(SIDEBAR_CONNECT).click();
     const popup = await popupPromise;
 
-    await popup.goto(await page.evaluate(() => (window as unknown as {connectUrl: string}).connectUrl));
+    const connectUrl = await page.evaluate(() => (window as unknown as {connectUrl: string}).connectUrl);
+    const connect = await page.request.get(connectUrl, {maxRedirects: 0});
+    const authorizeUrl = connect.headers().location;
+    if (connect.status() !== 302 || !authorizeUrl) {
+        throw new Error(`Expected a redirect from ${connectUrl}, got ${connect.status()}`);
+    }
+
+    await popup.goto(authorizeUrl);
     return popup;
 }
