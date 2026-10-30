@@ -91,14 +91,21 @@ export async function ensureDisconnected(pw: PlaywrightExtended) {
     return channelsPage;
 }
 
-// Context routes attach to a new popup asynchronously, so its first redirect can reach the
-// real login host. Reloading the authorize URL once the popup exists goes through the route.
+// Context routes attach to a new popup asynchronously, so the popup's own first navigation could
+// follow the plugin's redirect to the real login host. Open it blank and navigate it ourselves.
 export async function openConnectPopup(page: Page) {
+    await page.evaluate(() => {
+        const open = window.open.bind(window);
+        window.open = (url, ...rest) => {
+            (window as unknown as {connectUrl: string}).connectUrl = new URL(String(url), window.location.href).href;
+            return open('about:blank', ...rest);
+        };
+    });
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByTestId(SIDEBAR_CONNECT).click();
     const popup = await popupPromise;
 
-    await popup.waitForURL(/^https:\/\/login\.microsoftonline\.com\/.*\/authorize/, {waitUntil: 'commit'});
-    await popup.goto(popup.url());
+    await popup.goto(await page.evaluate(() => (window as unknown as {connectUrl: string}).connectUrl));
     return popup;
 }
