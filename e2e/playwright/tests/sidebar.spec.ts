@@ -5,7 +5,7 @@ import {expect, test} from '@mattermost/playwright-lib';
 
 import {APP_BAR_ICON} from '../support/constants';
 import {eventSubject, loadCredentials} from '../support/credentials';
-import {createEvent, deleteEventsWithPrefix} from '../support/graph';
+import {createEvent, deleteEventsWithPrefix} from '../support/fake';
 import {ensureConnected, openSidebar, openTownSquare} from '../support/ui';
 
 const MINUTE_MS = 60 * 1000;

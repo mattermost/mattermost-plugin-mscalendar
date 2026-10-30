@@ -6,7 +6,7 @@ import {expect, test} from '@mattermost/playwright-lib';
 import {loginRegularUser} from '../support/admin';
 import {BOT_USERNAME, COMMAND, TEAM_NAME} from '../support/constants';
 import {eventSubject, loadCredentials} from '../support/credentials';
-import {createEvent, deleteEventsWithPrefix} from '../support/graph';
+import {createEvent, deleteEventsWithPrefix} from '../support/fake';
 import {ensureConnected, runSlashCommand} from '../support/ui';
 
 const MINUTE_MS = 60 * 1000;
@@ -28,13 +28,14 @@ test.describe('availability', () => {
 
         await runSlashCommand(channelsPage, `${COMMAND} settings`);
         await page.goto(`/${TEAM_NAME}/messages/@${BOT_USERNAME}`);
-        const setting = page.locator('.attachment').filter({hasText: 'Setting: Update Status'}).last();
+        const setting = page.getByText('Setting: Update Status').last().locator('xpath=ancestor::div[.//input][1]');
         await expect(setting).toBeVisible();
         await setting.locator('input').first().click();
         await page.getByText('Do Not Disturb', {exact: true}).last().click();
         await expect(setting).toContainText('Do Not Disturb');
 
-        await createEvent(user1().email, subject(), new Date(Date.now() - (5 * MINUTE_MS)), new Date(Date.now() + (25 * MINUTE_MS)));
+        // The plugin ignores events without attendees, since those are unlikely to be meetings.
+        await createEvent(user1().email, subject(), new Date(Date.now() - (5 * MINUTE_MS)), new Date(Date.now() + (25 * MINUTE_MS)), [loadCredentials().user2.email]);
 
         const {client, user} = await loginRegularUser();
         await client.updateStatus({user_id: user.id, status: 'online'});

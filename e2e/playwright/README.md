@@ -1,85 +1,91 @@
 # Microsoft Calendar plugin E2E tests
 
-Playwright suite that drives the plugin in a real browser against a disposable Mattermost server and a real Microsoft Entra ID tenant. Unlike the GitLab plugin suite, the identity provider cannot run in a container, so the suite signs in as dedicated test users in a dedicated tenant and reads and writes their real calendars through Microsoft Graph.
+Playwright suite that drives the plugin in a real browser against a disposable Mattermost server. Microsoft Entra ID and Microsoft Graph cannot run in a container, so the suite talks to a **fake** that implements the parts of both the plugin uses. A nightly **contract check** keeps the fake honest against a real tenant.
 
-Built on [`@mattermost/playwright-lib`](https://www.npmjs.com/package/@mattermost/playwright-lib), so no `mattermost` monorepo checkout is needed.
+Built on [`@mattermost/playwright-lib`](https://www.npmjs.com/package/@mattermost/playwright-lib), so no `mattermost` monorepo checkout is needed. No secrets are required to run the suite, so it works for forks and Cursor Cloud Agents.
 
 ## How it works
 
-One pre-registered Entra app (the test app) supplies the OAuth client ID and secret. Its only redirect URI is `http://localhost:8065/plugins/com.mattermost.mscalendar/oauth2/complete`, and Mattermost's `SiteURL` is `http://localhost:8065` everywhere (local, CI, Cursor Cloud Agents). The suite never modifies the Entra app.
+```
+ browser ──login.microsoftonline.com (rewritten by Playwright)──┐
+                                                                ▼
+ Mattermost + plugin ──https://login.microsoftonline.com ──▶  fake-microsoft
+                     ──https://graph.microsoft.com ───────▶  (Node, no dependencies)
+                     ◀── change notifications ─────────────
+```
 
-Setup writes the app credentials into the plugin settings. Specs sign in to Mattermost as a regular member, connect that member to test user 1 through the real Microsoft login page, and create fixture events with an app-only Graph token. Every fixture event subject starts with `[e2e-<runId>]`, and teardown deletes only the events of its own run.
+- `fake-microsoft/server.ts` serves OAuth v2 (authorize with login, consent and "stay signed in" pages; the authorization-code, refresh-token and client-credentials grants; AADSTS errors) and the Graph v1.0 calls the plugin makes (profile, mailbox settings, calendars, calendar view, events and responses, `getSchedule`, `findMeetingTimes`, `$batch`, subscriptions with the validation handshake, `clientState` and expiry limits). It delivers change notifications to Mattermost like Microsoft does.
+- The plugin hardcodes the Microsoft hosts, so Docker Compose gives the fake the network aliases `login.microsoftonline.com` and `graph.microsoft.com`. A throwaway CA, created by `fake-microsoft/gen-certs.sh`, is trusted by Mattermost through `SSL_CERT_FILE`. The browser is redirected to the fake by a Playwright route (`routeMicrosoftToFake` in `support/ui.ts`). Mattermost's `SiteURL` stays `http://localhost:8065`.
+- The fake exposes a control API under `/__control/` (reset, config, token expiry and revocation, subscriptions and notifications, requests log, events per user). `support/fake.ts` wraps it.
+- `fake-microsoft/contract.ts` lists the fields each response must contain. The fake validates its own responses and the plugin's requests against it. Violations are listed at `/__control/violations`, and global teardown fails the run if there are any.
 
-### Out of scope: Graph change notifications
-
-Microsoft Graph only creates a subscription when it can reach the notification URL, and GitHub-hosted runners cannot receive inbound traffic. Subscriptions, event DMs and renewals are therefore not covered here; the Go unit tests in `msgraph/handle_webhook_test.go` and `calendar/engine/notification_test.go` cover them. Specs never enable event subscriptions.
-
-## Prerequisites (one-time, by a tenant admin)
-
-Use a **dedicated** tenant, never the corporate one.
-
-1. **Tenant:** disable Security defaults (Entra admin center > Identity > Overview > Properties > Manage security defaults), so test users can sign in with a password only. Make sure no Conditional Access policy requires MFA for the test users or the app.
-2. **Test users:** create two users, each with an Exchange Online license (for example Microsoft 365 Business Basic). Without a license Graph returns `MailboxNotEnabledForRESTAPI`. User 2 is only invited to events.
-3. **Test app:** register an app (single tenant) with:
-   - Redirect URI of type **Web**: `http://localhost:8065/plugins/com.mattermost.mscalendar/oauth2/complete`
-   - A client secret (note its expiry date)
-   - Delegated permissions: `offline_access`, `User.Read`, `Calendars.ReadWrite`, `Calendars.ReadWrite.Shared`, `MailboxSettings.Read`
-   - Application permissions: `Calendars.Read`, `MailboxSettings.Read` (status sync and the daily summary) and `Calendars.ReadWrite` (fixture events)
-   - Admin consent granted for all of the above
-4. **Optional hardening:** limit the app's application permissions to the two test mailboxes with an Exchange Online RBAC for Applications management scope.
-5. **Secrets:** the GitHub environment `e2e-entra` and, for Cursor Cloud Agents, an environment-scoped Runtime Secret set, both holding:
-
-| Variable | Value |
-| --- | --- |
-| `MSCAL_E2E_TENANT_ID` | Directory (tenant) ID |
-| `MSCAL_E2E_CLIENT_ID` | Test app client ID |
-| `MSCAL_E2E_CLIENT_SECRET` | Test app client secret |
-| `MSCAL_E2E_USER1_EMAIL` / `MSCAL_E2E_USER1_PASSWORD` | Test user 1 (connected to Mattermost) |
-| `MSCAL_E2E_USER2_EMAIL` / `MSCAL_E2E_USER2_PASSWORD` | Test user 2 (invited to events) |
-
-For local runs, put the same variables in an untracked `e2e/playwright/.env`.
-
-### Rotating the client secret
-
-Create a new secret on the test app, update `MSCAL_E2E_CLIENT_SECRET` in the GitHub environment and in Cursor, then delete the old secret.
+Test users are `alice@contoso.test` (connected to Mattermost) and `bob@contoso.test` (invited to events).
 
 ## Running
 
 From the repo root:
 
 ```sh
-make e2e-start   # Postgres and Mattermost on http://localhost:8065
-make e2e-test    # build the plugin bundle, install deps, run the suite
-make e2e-stop    # stop and wipe the server
+make e2e-env-up   # Postgres, the fake and Mattermost on http://localhost:8065
+make e2e    # build the plugin bundle, install deps, run the suite
+make e2e-env-down    # stop and wipe the server
 ```
 
-Or from this directory, after `make dist` and `make e2e-start`:
+Or from this directory, after `make dist` and `make e2e-env-up`:
 
 ```sh
 npm ci && npx playwright install chromium
 npm test              # headless
-npm run test:headed   # watch the browser
-npm run test:ui       # Playwright UI mode
-npm run show-report   # open the last HTML report
-npm run cleanup       # delete leftover [e2e-*] events older than 24 hours
+npm run test:headed
+npm run test:ui
 ```
 
-Port 8065 must be free, because the Microsoft redirect URI is fixed to `http://localhost:8065`. Setup deletes every other team the sysadmin belongs to, but only on `http://localhost:8065` unless `PW_DELETE_OTHER_TEAMS=true` is set.
-
-### Parallel runs
-
-All runs share the same two mailboxes. CI serializes runs with a `concurrency` group. Local and Cloud Agent runs should not overlap: the availability spec reads the user's status, which another run's "happening now" event can change.
+Fixture events live in the fake and are removed by each spec. `POST /__control/reset` clears everything, and global setup calls it.
 
 ### Coverage
 
 | Spec | Covers |
 | --- | --- |
-| `connect` | OAuth connect and disconnect, including the forced-consent screen |
-| `commands` | `help`, `info`, `settings`, `today`, `tomorrow`, `summary`, `viewcal`, `showcals`, usage errors |
-| `events` | Create an event from the modal and `/mscalendar event create`, invite user 2 |
-| `availability` | `/mscalendar avail` sets the status from a running event |
-| `sidebar` | Experimental calendar sidebar and channel header button |
+| `connect` | Connect and disconnect through the login popup, forced consent |
+| `behavior` | Wrong password, denied consent, access-token refresh, revoked refresh token |
+| `commands` | `help`, `info`, `connect`, `today`, `tomorrow`, `viewcal`, `settings`, `showcals` |
+| `events` | Create-event modal, invitation reaching the attendee, form validation |
+| `availability` | Status sync (`avail`) sets Do Not Disturb from a running meeting |
+| `sidebar` | Channel header button and the experimental calendar sidebar |
+| `webhooks` | Subscription handshake and `clientState`, new and updated event DMs, forged notification rejected, renewal |
 
-### Cursor Cloud Agents
+## Contract check against the real service
 
-`.cursor/environment.json` builds an Ubuntu image with Docker, Go, Node and Playwright, forwards port 8065 and starts the Compose stack. Add the variables above as Runtime Secrets scoped to the environment. If your team restricts egress, allow `login.microsoftonline.com`, `login.live.com`, `aadcdn.msauth.net`, `aadcdn.msftauth.net`, `graph.microsoft.com` and Docker Hub.
+`npm run contract:compare` runs the same Graph scenarios (token, create, get and list events, mailbox settings, calendars, batch `getSchedule`, error shapes, delete) against the fake and a live tenant. It fails when a response is missing a contract field or when the fake and the live service answer with different status codes. The nightly workflow `e2e-contract.yml` runs it.
+
+```sh
+npm run fake              # start the fake on http://127.0.0.1:8080
+npm run contract:fake     # scenarios against the fake only
+npm run contract:live     # scenarios against the live tenant only
+npm run contract:compare  # both, and report drift
+```
+
+When Microsoft changes a response, the nightly job goes red. Update the fake and `fake-microsoft/contract.ts` together, then rerun the suite.
+
+### Live tenant setup (one-time, by a tenant admin)
+
+Use a **dedicated** tenant, never the corporate one.
+
+1. Create two licensed users (Exchange Online) so Graph does not return `MailboxNotEnabledForRESTAPI`.
+2. Register an app with the application permissions `Calendars.ReadWrite` and `MailboxSettings.Read`, and grant admin consent.
+3. Store these in the GitHub environment `e2e-entra`, or in an untracked `e2e/playwright/.env` for local runs:
+
+| Variable | Value |
+| --- | --- |
+| `MSCAL_E2E_TENANT_ID` | Directory (tenant) ID |
+| `MSCAL_E2E_CLIENT_ID` | App client ID |
+| `MSCAL_E2E_CLIENT_SECRET` | App client secret |
+| `MSCAL_E2E_USER1_EMAIL` / `MSCAL_E2E_USER2_EMAIL` | The two test mailboxes |
+
+Rotate the secret by creating a new one on the app and updating `MSCAL_E2E_CLIENT_SECRET`.
+
+## Notes
+
+- Do not run the suite against a Mattermost server you care about. Setup installs the plugin, rewrites its settings and, unless the server is `localhost`, refuses to delete other teams.
+- The plugin refreshes access tokens that expire within five minutes, so the token specs use a 330 second token and wait about 35 seconds.
+- `make dist` can leave `plugin.json` owner-only inside the bundle. `installPlugin` repacks the bundle with readable permissions before uploading.

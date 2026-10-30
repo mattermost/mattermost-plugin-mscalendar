@@ -5,40 +5,25 @@ on:
     paths-ignore:
       - "**.md"
       - "docs/**"
-  schedule:
-    # Mondays at 06:00 UTC
-    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# All runs share the same two Microsoft test mailboxes, so they must not overlap.
 concurrency:
-  group: mscal-e2e
-  cancel-in-progress: false
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   playwright:
-    name: Playwright against Microsoft Entra ID
-    # Secrets are not available to pull requests from forks.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    name: Playwright against the fake Microsoft services
     runs-on: ubuntu-latest
-    environment: e2e-entra
     timeout-minutes: 45
     defaults:
       run:
         shell: bash
     env:
       E2E_DIR: e2e/playwright
-      MSCAL_E2E_RUN_ID: gh-${{ github.run_id }}-${{ github.run_attempt }}
-      MSCAL_E2E_TENANT_ID: ${{ secrets.MSCAL_E2E_TENANT_ID }}
-      MSCAL_E2E_CLIENT_ID: ${{ secrets.MSCAL_E2E_CLIENT_ID }}
-      MSCAL_E2E_CLIENT_SECRET: ${{ secrets.MSCAL_E2E_CLIENT_SECRET }}
-      MSCAL_E2E_USER1_EMAIL: ${{ secrets.MSCAL_E2E_USER1_EMAIL }}
-      MSCAL_E2E_USER1_PASSWORD: ${{ secrets.MSCAL_E2E_USER1_PASSWORD }}
-      MSCAL_E2E_USER2_EMAIL: ${{ secrets.MSCAL_E2E_USER2_EMAIL }}
-      MSCAL_E2E_USER2_PASSWORD: ${{ secrets.MSCAL_E2E_USER2_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +47,7 @@ jobs:
       # Runs in the background so the image pull overlaps with the plugin build.
       - name: Start Mattermost
         run: |
-          (make e2e-start > "$RUNNER_TEMP/server-up.log" 2>&1; echo $? > "$RUNNER_TEMP/server-up.exit") &
+          (make e2e-env-up > "$RUNNER_TEMP/server-up.log" 2>&1; echo $? > "$RUNNER_TEMP/server-up.exit") &
 
       - name: Build the plugin bundle
         run: make dist
@@ -106,13 +91,6 @@ jobs:
           path: e2e/playwright/results
           retention-days: 14
 
-      # Global teardown already does this. This covers a crashed or cancelled run.
-      - name: Delete this run's calendar events
-        if: always()
-        run: |
-          cd "$E2E_DIR"
-          npm run cleanup -- --run-id "$MSCAL_E2E_RUN_ID"
-
       - name: Stop Mattermost
         if: always()
-        run: make e2e-stop
+        run: make e2e-env-down

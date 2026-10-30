@@ -8,8 +8,11 @@
     "show-report": "playwright show-report results/reporter",
     "server:up": "docker compose up -d --wait",
     "server:down": "docker compose down -v",
-    "cleanup": "tsx scripts/cleanup.ts",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "contract:fake": "tsx contract/run.ts fake",
+    "contract:live": "tsx contract/run.ts live",
+    "contract:compare": "tsx contract/run.ts compare",
+    "fake": "node fake-microsoft/server.ts"
   },
   "devDependencies": {
     "@mattermost/client": "11.4.0",

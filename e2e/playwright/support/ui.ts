@@ -2,20 +2,31 @@
 // See LICENSE.txt for license information.
 
 import {expect, type ChannelsPage, type PlaywrightExtended} from '@mattermost/playwright-lib';
-import type {Page} from '@playwright/test';
+import type {BrowserContext, Page} from '@playwright/test';
 
 import {loginRegularUser} from './admin';
 import {APP_BAR_ICON, COMMAND, TEAM_NAME, TOWN_SQUARE} from './constants';
-import {loadCredentials} from './credentials';
+import {USER1} from './credentials';
+import {FAKE_URL} from './fake';
 import {signInToMicrosoft} from './ms_login';
 
 const SIDEBAR_CONNECT = 'mscalendar-sidebar-connect';
 const SIDEBAR = 'mscalendar-sidebar';
 
+// The plugin sends the browser to the real login host, so serve it from the fake instead.
+export async function routeMicrosoftToFake(context: BrowserContext) {
+    await context.route(/^https:\/\/login\.microsoftonline\.com\//, async (route) => {
+        const url = route.request().url().replace('https://login.microsoftonline.com', FAKE_URL);
+        const response = await route.fetch({url, maxRedirects: 0});
+        await route.fulfill({response});
+    });
+}
+
 // Specs act as a regular member. The plugin treats this member as a plugin admin for admin-only commands.
 export async function openTownSquare(pw: PlaywrightExtended) {
     const {user} = await loginRegularUser();
     const {channelsPage} = await pw.testBrowser.login(user);
+    await routeMicrosoftToFake(channelsPage.page.context());
     await channelsPage.goto(TEAM_NAME, TOWN_SQUARE);
     await channelsPage.toBeVisible();
     return channelsPage;
@@ -51,12 +62,11 @@ export async function runCommandExpecting(channelsPage: ChannelsPage, command: s
 }
 
 export async function connectAccount(page: Page) {
-    const {user1} = loadCredentials();
     const popupPromise = page.waitForEvent('popup');
     await page.getByTestId(SIDEBAR_CONNECT).click();
     const popup = await popupPromise;
 
-    await signInToMicrosoft(popup, user1);
+    await signInToMicrosoft(popup, USER1);
     await expect(page.getByTestId(SIDEBAR)).toBeVisible({timeout: 30000});
 }
 
@@ -73,4 +83,19 @@ export async function ensureConnected(pw: PlaywrightExtended) {
     }
     await expect(channelsPage.page.getByTestId(SIDEBAR)).toBeVisible();
     return channelsPage;
+}
+
+export async function ensureDisconnected(pw: PlaywrightExtended) {
+    const channelsPage = await openTownSquare(pw);
+    await openSidebar(channelsPage.page);
+    if (await channelsPage.page.getByTestId(SIDEBAR).isVisible().catch(() => false)) {
+        await disconnectAccount(channelsPage);
+    }
+    return channelsPage;
+}
+
+export async function openConnectPopup(page: Page) {
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByTestId(SIDEBAR_CONNECT).click();
+    return popupPromise;
 }

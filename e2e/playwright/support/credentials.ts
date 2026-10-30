@@ -8,35 +8,15 @@ import path from 'node:path';
 
 export type TestUser = {email: string; password: string};
 
-export type Credentials = {
-    tenantId: string;
-    clientId: string;
-    clientSecret: string;
-    user1: TestUser;
-    user2: TestUser;
-};
+// These match the defaults baked into fake-microsoft/server.ts.
+export const FAKE_TENANT_ID = 'fake-tenant';
+export const FAKE_CLIENT_ID = 'fake-client-id';
+export const FAKE_CLIENT_SECRET = 'fake-client-secret';
+export const USER1: TestUser = {email: 'alice@contoso.test', password: 'Alice-Fake-Pass1'};
+export const USER2: TestUser = {email: 'bob@contoso.test', password: 'Bob-Fake-Pass1'};
 
 const RUN_STATE_FILE = path.resolve(__dirname, '../results/run-state.json');
 
-function required(name: string): string {
-    const value = process.env[name];
-    if (!value) {
-        throw new Error(`Set ${name} (see e2e/playwright/README.md).`);
-    }
-    return value;
-}
-
-export function loadCredentials(): Credentials {
-    return {
-        tenantId: required('MSCAL_E2E_TENANT_ID'),
-        clientId: required('MSCAL_E2E_CLIENT_ID'),
-        clientSecret: required('MSCAL_E2E_CLIENT_SECRET'),
-        user1: {email: required('MSCAL_E2E_USER1_EMAIL'), password: required('MSCAL_E2E_USER1_PASSWORD')},
-        user2: {email: required('MSCAL_E2E_USER2_EMAIL'), password: required('MSCAL_E2E_USER2_PASSWORD')},
-    };
-}
-
-// CI sets MSCAL_E2E_RUN_ID so its always-run cleanup step can find this run's events.
 export function currentRunId(): string {
     return process.env.MSCAL_E2E_RUN_ID || '';
 }
@@ -62,4 +42,8 @@ export function lastRunId(): string | undefined {
 
 export function eventSubject(title: string): string {
     return `[e2e-${currentRunId()}] ${title}`;
+}
+
+export function loadCredentials() {
+    return {user1: USER1, user2: USER2};
 }

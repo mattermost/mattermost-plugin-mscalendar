@@ -5,7 +5,7 @@ import {test} from '@mattermost/playwright-lib';
 
 import {COMMAND} from '../support/constants';
 import {currentRunId, eventSubject, loadCredentials} from '../support/credentials';
-import {createEvent, deleteEventsWithPrefix} from '../support/graph';
+import {createEvent, deleteEventsWithPrefix} from '../support/fake';
 import {ensureConnected, runCommandExpecting} from '../support/ui';
 
 const MINUTE_MS = 60 * 1000;
@@ -38,8 +38,8 @@ test.describe('commands', () => {
     test('shows the agenda for today and tomorrow', async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
-        await runCommandExpecting(channelsPage, `${COMMAND} today`, /Agenda for|no events for that day/);
-        await runCommandExpecting(channelsPage, `${COMMAND} tomorrow`, /Agenda for|no events for that day/);
+        await runCommandExpecting(channelsPage, `${COMMAND} today`, /Times are shown in|no upcoming events|no events for that day/);
+        await runCommandExpecting(channelsPage, `${COMMAND} tomorrow`, /Times are shown in|no upcoming events|no events for that day/);
     });
 
     test('lists upcoming events with viewcal', async ({pw}) => {

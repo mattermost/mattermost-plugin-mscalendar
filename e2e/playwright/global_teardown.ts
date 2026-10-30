@@ -3,17 +3,14 @@
 
 import './support/env';
 
-import {currentRunId, loadCredentials} from './support/credentials';
-import {deleteEventsWithPrefix} from './support/graph';
+import {fake} from './support/fake';
 import {disconnectRegularUser} from './support/plugin';
 
 export default async function globalTeardown() {
-    const runId = currentRunId();
-    if (!runId) {
-        return;
-    }
-
-    const {user1, user2} = loadCredentials();
-    await Promise.all([user1, user2].map((user) => deleteEventsWithPrefix(user.email, `[e2e-${runId}]`)));
     await disconnectRegularUser();
+
+    const violations = await fake.violations();
+    if (violations.length > 0) {
+        throw new Error(`The fake saw requests or produced responses that break the Graph contract:\n${violations.join('\n')}`);
+    }
 }

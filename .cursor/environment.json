@@ -9,8 +9,8 @@
   "terminals": [
     {
       "name": "e2e-server",
-      "command": "make e2e-start",
-      "description": "Mattermost for the E2E suite on localhost:8065. Run make e2e-test once it is healthy."
+      "command": "make e2e-env-up",
+      "description": "Mattermost for the E2E suite on localhost:8065. Run make e2e once it is healthy."
     }
   ],
   "ports": [

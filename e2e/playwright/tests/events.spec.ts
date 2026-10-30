@@ -5,7 +5,7 @@ import {expect, test} from '@mattermost/playwright-lib';
 
 import {COMMAND} from '../support/constants';
 import {eventSubject, loadCredentials} from '../support/credentials';
-import {deleteEventsWithPrefix, waitForEvent} from '../support/graph';
+import {deleteEventsWithPrefix, waitForEvent} from '../support/fake';
 import {ensureConnected, runSlashCommand} from '../support/ui';
 
 const INVITE_TIMEOUT_MS = 90_000;
@@ -42,8 +42,11 @@ test.describe('events', () => {
 
         // The attendee selector accepts plain email addresses.
         await form.locator('#attendees').click();
+        const lookup = page.waitForResponse((response) => response.url().includes('/autocomplete/users'));
         await page.keyboard.type(user2().email);
+        await lookup;
         await page.keyboard.press('Enter');
+        await expect(form.getByText(user2().email).first()).toBeVisible();
 
         await form.locator('#submit-button').click();
         await expect(form).toBeHidden();

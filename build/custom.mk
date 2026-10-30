@@ -7,18 +7,18 @@ $(E2E_DIR)/node_modules: $(E2E_DIR)/package.json $(E2E_DIR)/package-lock.json
 	touch $@
 
 ## Starts the disposable Mattermost server used by the E2E suite.
-.PHONY: e2e-start
-e2e-start:
+.PHONY: e2e-env-up
+e2e-env-up:
 	cd $(E2E_DIR) && docker compose up -d --wait
 
 ## Stops the E2E server and wipes its data.
-.PHONY: e2e-stop
-e2e-stop:
+.PHONY: e2e-env-down
+e2e-env-down:
 	cd $(E2E_DIR) && docker compose down -v
 
 ## Builds the plugin and runs the Playwright E2E suite against PW_BASE_URL (default http://localhost:8065).
-.PHONY: e2e-test
-e2e-test: dist $(E2E_DIR)/node_modules
+.PHONY: e2e
+e2e: dist $(E2E_DIR)/node_modules
 	cd $(E2E_DIR) && npm run tsc && npm test
 
 # If there's no MM_RUDDER_PLUGINS_PROD, add DEV data

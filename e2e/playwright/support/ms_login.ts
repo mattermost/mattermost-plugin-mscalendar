@@ -9,8 +9,13 @@ const FLOW_TIMEOUT_MS = 45_000;
 
 // Walks the Microsoft sign-in popup: email, password, then the optional
 // "Stay signed in?" and consent screens, until the plugin closes the popup.
-// Every Microsoft page uses the same primary button id.
 export async function signInToMicrosoft(popup: Page, user: TestUser) {
+    await submitCredentials(popup, user);
+    await finishSignIn(popup);
+}
+
+// Every Microsoft page uses the same primary button id.
+export async function submitCredentials(popup: Page, user: TestUser) {
     const primary = popup.locator('#idSIButton9');
 
     await popup.locator('input[name="loginfmt"]').fill(user.email);
@@ -18,7 +23,9 @@ export async function signInToMicrosoft(popup: Page, user: TestUser) {
 
     await popup.locator('input[name="passwd"]').fill(user.password);
     await primary.click();
+}
 
+export async function finishSignIn(popup: Page) {
     const deadline = Date.now() + FLOW_TIMEOUT_MS;
     while (!popup.isClosed() && Date.now() < deadline) {
         // eslint-disable-next-line no-await-in-loop

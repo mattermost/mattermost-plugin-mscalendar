@@ -1,7 +1,9 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import './env';
@@ -11,8 +13,8 @@ import {testConfig} from '@mattermost/playwright-lib';
 
 import {ensureRegularUser, isDisposableServer, loginAdmin, loginRegularUser} from './admin';
 import {COMMAND, PLUGIN_ID, TEAM_NAME, TOWN_SQUARE} from './constants';
-import {loadCredentials} from './credentials';
-import {deleteEventsWithPrefix} from './graph';
+import {FAKE_CLIENT_ID, FAKE_CLIENT_SECRET, FAKE_TENANT_ID} from './credentials';
+import {fake} from './fake';
 
 const DIST_DIR = path.resolve(__dirname, '../../../dist');
 type PluginSettingValues = Record<string, unknown>;
@@ -28,8 +30,18 @@ export function findPluginBundle(): string {
         sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
 }
 
+// `make dist` can leave plugin.json owner-only (0600), which the server then fails to read.
+function withReadablePermissions(bundlePath: string): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mscal-bundle-'));
+    execFileSync('tar', ['xzf', bundlePath, '-C', dir]);
+    execFileSync('chmod', ['-R', 'u+rwX,go+rX', dir]);
+    const fixed = path.join(dir, path.basename(bundlePath));
+    execFileSync('tar', ['czf', fixed, '-C', dir, PLUGIN_ID], {env: {...process.env, COPYFILE_DISABLE: '1'}});
+    return fixed;
+}
+
 export async function installPlugin(client: Client4, bundlePath: string) {
-    const bytes = fs.readFileSync(bundlePath);
+    const bytes = fs.readFileSync(withReadablePermissions(bundlePath));
     const file = new File([bytes], path.basename(bundlePath), {type: 'application/gzip'});
     await client.uploadPlugin(file, true);
 }
@@ -64,11 +76,10 @@ export async function patchPluginSettings(client: Client4, patch: PluginSettingV
 // The plugin restarts with the new settings, so callers that need it running
 // afterwards should use restartPlugin or wait.
 export async function configurePlugin(client: Client4, adminUserId: string, forceConsent = false) {
-    const credentials = loadCredentials();
     await patchPluginSettings(client, {
-        oauth2authority: credentials.tenantId,
-        oauth2clientid: credentials.clientId,
-        oauth2clientsecret: credentials.clientSecret,
+        oauth2authority: FAKE_TENANT_ID,
+        oauth2clientid: FAKE_CLIENT_ID,
+        oauth2clientsecret: FAKE_CLIENT_SECRET,
         oauth2forceconsent: forceConsent,
         enableexperimentalui: true,
 
@@ -115,15 +126,8 @@ export async function disconnectRegularUser() {
     }
 }
 
-const STALE_EVENT_AGE_MS = 24 * 60 * 60 * 1000;
-
-// Removes fixtures that cancelled runs left behind, keeping anything a concurrent run just created.
-export async function sweepStaleEvents() {
-    const {user1, user2} = loadCredentials();
-    await Promise.all([user1, user2].map((user) => deleteEventsWithPrefix(user.email, '[e2e-', STALE_EVENT_AGE_MS)));
-}
-
 export async function prepareServer() {
+    await fake.reset();
     const {client} = await loginAdmin();
     await ensureTeam(client);
     const regularUser = await ensureRegularUser(client);
@@ -137,5 +141,4 @@ export async function prepareServer() {
 
     // A previous run may have left the member connected to Microsoft.
     await disconnectRegularUser();
-    await sweepStaleEvents();
 }

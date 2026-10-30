@@ -1,31 +1,29 @@
-name: e2e-cleanup
+name: e2e-contract
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "0 5 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: mscal-e2e
+  group: mscal-e2e-contract
   cancel-in-progress: false
 
 jobs:
-  cleanup:
-    name: Delete leftover E2E calendar events
+  contract:
+    name: Fake Microsoft services vs the live tenant
     runs-on: ubuntu-latest
     environment: e2e-entra
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       MSCAL_E2E_TENANT_ID: ${{ secrets.MSCAL_E2E_TENANT_ID }}
       MSCAL_E2E_CLIENT_ID: ${{ secrets.MSCAL_E2E_CLIENT_ID }}
       MSCAL_E2E_CLIENT_SECRET: ${{ secrets.MSCAL_E2E_CLIENT_SECRET }}
       MSCAL_E2E_USER1_EMAIL: ${{ secrets.MSCAL_E2E_USER1_EMAIL }}
-      MSCAL_E2E_USER1_PASSWORD: ${{ secrets.MSCAL_E2E_USER1_PASSWORD }}
       MSCAL_E2E_USER2_EMAIL: ${{ secrets.MSCAL_E2E_USER2_EMAIL }}
-      MSCAL_E2E_USER2_PASSWORD: ${{ secrets.MSCAL_E2E_USER2_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,8 +37,21 @@ jobs:
           cache: npm
           cache-dependency-path: e2e/playwright/package-lock.json
 
-      - name: Delete [e2e-*] events older than 24 hours
+      - name: Install dependencies
+        run: cd e2e/playwright && npm ci
+
+      - name: Start the fake
         run: |
           cd e2e/playwright
-          npm ci
-          npm run cleanup
+          npm run fake > "$RUNNER_TEMP/fake.log" 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -fs http://127.0.0.1:8080/__control/health && break
+            sleep 1
+          done
+
+      - name: Compare the fake with the live tenant
+        run: cd e2e/playwright && npm run contract:compare
+
+      - name: Show the fake log
+        if: failure()
+        run: cat "$RUNNER_TEMP/fake.log"
