@@ -15,6 +15,7 @@ import (
 	"github.com/mattermost/mattermost/server/public/plugin"
 	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
@@ -312,7 +313,9 @@ func (api *api) createEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	auditRec.AddEventResultState(auditResult)
 
-	attachment, err := views.RenderEventAsAttachment(event, mailbox.TimeZone, views.ShowTimezoneOption(mailbox.TimeZone))
+	timeFormat := engine.TimeFormatForUser(api.Env, mattermostUserID)
+
+	attachment, err := views.RenderEventAsAttachment(event, mailbox.TimeZone, views.ShowTimezoneOption(mailbox.TimeZone, timeFormat))
 	if err != nil {
 		api.Logger.With(bot.LogContext{"err": err.Error()}).Errorf("createEvent, error rendering event as attachment")
 	}

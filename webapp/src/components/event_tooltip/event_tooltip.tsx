@@ -11,6 +11,7 @@ interface EventTooltipProps {
     anchorRect: DOMRect;
     timezone: string;
     theme: MattermostTheme;
+    useMilitaryTime?: boolean;
     onClose: () => void;
 }
 
@@ -43,15 +44,16 @@ function buildTzOptions(timezone: string): Intl.DateTimeFormatOptions {
     }
 }
 
-function formatEventTime(event: RemoteEvent, timezone: string): string {
+function formatEventTime(event: RemoteEvent, timezone: string, useMilitaryTime?: boolean): string {
     if (event.isAllDay) {
         return 'All day';
     }
 
     const tzProp = buildTzOptions(timezone);
     const options: Intl.DateTimeFormatOptions = {
-        hour: 'numeric',
+        hour: useMilitaryTime ? '2-digit' : 'numeric',
         minute: '2-digit',
+        hour12: !useMilitaryTime,
         ...tzProp,
     };
     const dateOptions: Intl.DateTimeFormatOptions = {
@@ -85,7 +87,7 @@ function formatEventTime(event: RemoteEvent, timezone: string): string {
     return `${start.toLocaleString([], dateOptions)} - ${end.toLocaleString([], dateOptions)}`;
 }
 
-const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventTooltipProps) => {
+const EventTooltip = ({event, anchorRect, timezone, theme, useMilitaryTime, onClose}: EventTooltipProps) => {
     const tooltipRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -117,7 +119,7 @@ const EventTooltip = ({event, anchorRect, timezone, theme, onClose}: EventToolti
     const right = Math.max(8, window.innerWidth - anchorRect.right);
 
     const status = formatResponseStatus(event.responseStatus?.response);
-    const timeDisplay = formatEventTime(event, timezone);
+    const timeDisplay = formatEventTime(event, timezone, useMilitaryTime);
     const locationName = event.location?.displayName;
     const conferenceUrl = event.conference?.url;
     const conferenceName = event.conference?.application;
