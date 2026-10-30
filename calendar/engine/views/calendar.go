@@ -16,38 +16,99 @@ import (
 
 // TimeFormat specifies the canonical 12-hour display format for calendar events ("3:04 PM"),
 // ensuring standard spacing between the time and the AM/PM meridiem designator across views and notifications.
-const TimeFormat = "3:04 PM"
+const (
+	TimeFormat12Hour = "3:04 PM"
+	TimeFormat24Hour = "15:04"
+	TimeFormat       = TimeFormat12Hour
+)
 
 type Option interface {
 	Apply(remote.Event, *model.MessageAttachment)
 }
 
 type showTimezoneOption struct {
-	timezone string
+	timezone   string
+	timeFormat string
 }
 
 func (tzOpt showTimezoneOption) Apply(event remote.Event, attachment *model.MessageAttachment) {
+	tf := TimeFormat12Hour
+	if tzOpt.timeFormat != "" {
+		tf = tzOpt.timeFormat
+	}
+
 	attachment.Text = fmt.Sprintf(
 		"%s - %s (%s)",
-		event.Start.In(tzOpt.timezone).Time().Format(TimeFormat),
-		event.End.In(tzOpt.timezone).Time().Format(TimeFormat),
+		event.Start.In(tzOpt.timezone).Time().Format(tf),
+		event.End.In(tzOpt.timezone).Time().Format(tf),
+		tzOpt.timezone,
+	)
+	attachment.Fallback = fmt.Sprintf(
+		"%s\n%s - %s (%s)",
+		attachment.Title,
+		event.Start.In(tzOpt.timezone).Time().Format(tf),
+		event.End.In(tzOpt.timezone).Time().Format(tf),
 		tzOpt.timezone,
 	)
 }
 
-func ShowTimezoneOption(timezone string) Option {
+func ShowTimezoneOption(timezone string, timeFormat ...string) Option {
 	if timezone == "" {
 		timezone = "UTC"
 	}
 
+	tf := ""
+	if len(timeFormat) > 0 {
+		tf = timeFormat[0]
+	}
+
 	return showTimezoneOption{
-		timezone: timezone,
+		timezone:   timezone,
+		timeFormat: tf,
 	}
 }
 
-func RenderCalendarView(events []*remote.Event, timeZone string) (string, error) {
+type timeFormatOption struct {
+	timeFormat string
+	timezone   string
+}
+
+func (opt timeFormatOption) Apply(event remote.Event, attachment *model.MessageAttachment) {
+	if opt.timeFormat == "" {
+		return
+	}
+
+	start := event.Start
+	end := event.End
+	if opt.timezone != "" {
+		start = start.In(opt.timezone)
+		end = end.In(opt.timezone)
+	}
+
+	attachment.Text = fmt.Sprintf("%s - %s", start.Time().Format(opt.timeFormat), end.Time().Format(opt.timeFormat))
+	attachment.Fallback = fmt.Sprintf("%s\n%s - %s", attachment.Title, start.Time().Format(opt.timeFormat), end.Time().Format(opt.timeFormat))
+}
+
+func TimeFormatOption(timeFormat string, timezone ...string) Option {
+	tz := ""
+	if len(timezone) > 0 {
+		tz = timezone[0]
+	}
+
+	return timeFormatOption{
+		timeFormat: timeFormat,
+		timezone:   tz,
+	}
+}
+
+func RenderCalendarView(events []*remote.Event, timeZone string, timeFormat ...string) (string, error) {
 	if len(events) == 0 {
 		return "You have no upcoming events.", nil
+	}
+
+	tf := TimeFormat12Hour
+	if len(timeFormat) > 0 && timeFormat[0] != "" {
+		tf = timeFormat[0]
 	}
 
 	if timeZone != "" {
@@ -66,7 +127,7 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 		resp += "\n" + group[0].Start.Time().Format("Monday January 02, 2006") + "\n\n"
 		resp += renderTableHeader()
 		for _, e := range group {
-			eventString, err := renderEvent(e, true, timeZone)
+			eventString, err := renderEvent(e, true, timeZone, tf)
 			if err != nil {
 				return "", err
 			}
@@ -77,9 +138,14 @@ func RenderCalendarView(events []*remote.Event, timeZone string) (string, error)
 	return resp, nil
 }
 
-func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model.MessageAttachment, error) {
+func RenderDaySummary(events []*remote.Event, timezone string, timeFormat ...string) (string, []*model.MessageAttachment, error) {
 	if len(events) == 0 {
 		return "You have no events for that day", nil, nil
+	}
+
+	tf := TimeFormat12Hour
+	if len(timeFormat) > 0 && timeFormat[0] != "" {
+		tf = timeFormat[0]
 	}
 
 	if timezone != "" {
@@ -107,7 +173,7 @@ func RenderDaySummary(events []*remote.Event, timezone string) (string, []*model
 		attachments = append(attachments, &model.MessageAttachment{
 			Title: event.Subject,
 			// Text:    event.BodyPreview,
-			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(TimeFormat), event.End.In(timezone).Time().Format(TimeFormat)),
+			Text:    fmt.Sprintf("(%s - %s)", event.Start.In(timezone).Time().Format(tf), event.End.In(timezone).Time().Format(tf)),
 			Fields:  fields,
 			Actions: actions,
 		})
@@ -156,10 +222,15 @@ func MarkdownToHTMLEntities(input string) string {
 	return builder.String()
 }
 
-func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, error) {
+func renderEvent(event *remote.Event, asRow bool, timeZone string, timeFormat ...string) (string, error) {
 	link, err := url.QueryUnescape(event.Weblink)
 	if err != nil {
 		return "", err
+	}
+
+	tf := TimeFormat12Hour
+	if len(timeFormat) > 0 && timeFormat[0] != "" {
+		tf = timeFormat[0]
 	}
 
 	subject := EnsureSubject(event.Subject)
@@ -173,8 +244,8 @@ func renderEvent(event *remote.Event, asRow bool, timeZone string) (string, erro
 		return fmt.Sprintf(format, MarkdownToHTMLEntities(subject), link), nil
 	}
 
-	start := event.Start.In(timeZone).Time().Format(TimeFormat)
-	end := event.End.In(timeZone).Time().Format(TimeFormat)
+	start := event.Start.In(timeZone).Time().Format(tf)
+	end := event.End.In(timeZone).Time().Format(tf)
 
 	format := "(%s - %s) [%s](%s)"
 	if asRow {
@@ -256,9 +327,9 @@ func groupEventsByDate(events []*remote.Event) [][]*remote.Event {
 	return result
 }
 
-func RenderUpcomingEvent(event *remote.Event, timeZone string) (string, error) {
+func RenderUpcomingEvent(event *remote.Event, timeZone string, timeFormat ...string) (string, error) {
 	message := "You have an upcoming event:\n"
-	eventString, err := renderEvent(event, false, timeZone)
+	eventString, err := renderEvent(event, false, timeZone, timeFormat...)
 	if err != nil {
 		return "", err
 	}

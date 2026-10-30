@@ -24,6 +24,7 @@ export interface CalendarSidebarProps {
     timezone: string;
     connected: boolean | null;
     pluginServerRoute: string;
+    useMilitaryTime?: boolean;
     actions: {
         fetchCalendarEvents: (from: string, to: string) => void;
         refreshCalendarEvents: (from: string, to: string) => void;
@@ -65,7 +66,19 @@ interface DateRange {
     end: Date;
 }
 
-const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pluginServerRoute, actions}: CalendarSidebarProps) => {
+type CalendarTimeFormat = {
+    hour: 'numeric' | '2-digit';
+    minute: 'numeric' | '2-digit';
+    hour12: boolean;
+    meridiem?: boolean;
+};
+
+type TimeFormatProps = {
+    slotLabelFormat?: CalendarTimeFormat;
+    eventTimeFormat?: CalendarTimeFormat;
+};
+
+const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pluginServerRoute, useMilitaryTime = false, actions}: CalendarSidebarProps) => {
     const calendarRef = useRef<FullCalendar>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -205,6 +218,20 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     const containerStyle = useMemo(() => getContainerStyle(theme), [theme]);
     const scrollTime = useMemo(() => getCurrentScrollTime(timezone), [timezone]);
 
+    // When the user prefers 24-hour (military) time, override FullCalendar's
+    // time formatting for both the slot labels and the event blocks. For the
+    // 12-hour preference the calendar defaults are kept.
+    const timeFormatProps = useMemo((): TimeFormatProps => {
+        if (!useMilitaryTime) {
+            return {};
+        }
+
+        return {
+            slotLabelFormat: {hour: '2-digit', minute: '2-digit', hour12: false},
+            eventTimeFormat: {hour: '2-digit', minute: '2-digit', hour12: false, meridiem: false},
+        };
+    }, [useMilitaryTime]);
+
     if (connected === null) {
         return (
             <div
@@ -272,6 +299,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
                     allDaySlot={true}
                     slotDuration='00:30:00'
                     scrollTime={scrollTime}
+                    {...timeFormatProps}
                     height='100%'
                     events={fullCalendarEvents}
                     eventDisplay='block'
@@ -289,6 +317,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
                     anchorRect={tooltip.anchorRect}
                     timezone={timezone}
                     theme={theme}
+                    useMilitaryTime={useMilitaryTime}
                     onClose={handleTooltipClose}
                 />
             )}
