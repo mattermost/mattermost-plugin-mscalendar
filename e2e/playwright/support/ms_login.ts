@@ -1,76 +1,97 @@
 // Copyright (c) 2019-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import type {Page} from '@playwright/test';
+import type {Locator, Page} from '@playwright/test';
 
 import type {TestUser} from './credentials';
 
 const FLOW_TIMEOUT_MS = 45_000;
 
-// Walks the Microsoft sign-in popup: email, password, then the optional
-// "Stay signed in?" and consent screens, until the plugin closes the popup.
-export async function signInToMicrosoft(popup: Page, user: TestUser) {
-    await submitCredentials(popup, user);
-    await finishSignIn(popup);
-}
+// The Microsoft sign-in popup: email, password, then the optional "Stay signed in?" and consent screens.
+export class MicrosoftLoginPage {
+    readonly page: Page;
+    readonly emailInput: Locator;
+    readonly passwordInput: Locator;
+    readonly nextButton: Locator;
+    readonly signInButton: Locator;
+    readonly error: Locator;
+    readonly consentHeading: Locator;
+    readonly acceptConsentButton: Locator;
+    readonly cancelConsentButton: Locator;
+    readonly staySignedInHeading: Locator;
+    readonly staySignedInNoButton: Locator;
 
-// Every Microsoft page uses the same primary button id.
-export async function submitCredentials(popup: Page, user: TestUser) {
-    const primary = popup.locator('#idSIButton9');
-    const email = popup.locator('input[name="loginfmt"]');
-
-    await email.waitFor({timeout: 15_000}).catch(async () => {
-        throw new Error(`Microsoft sign-in page did not load. Last page: ${await describePage(popup)}`);
-    });
-    await email.fill(user.email);
-    await primary.click();
-
-    await popup.locator('input[name="passwd"]').fill(user.password);
-    await primary.click();
-}
-
-export async function finishSignIn(popup: Page) {
-    const deadline = Date.now() + FLOW_TIMEOUT_MS;
-    while (!popup.isClosed() && Date.now() < deadline) {
-        // eslint-disable-next-line no-await-in-loop
-        await handleOptionalScreen(popup);
-        // eslint-disable-next-line no-await-in-loop
-        await popup.waitForTimeout(500).catch(() => undefined);
+    constructor(page: Page) {
+        this.page = page;
+        this.emailInput = page.getByPlaceholder('Email, phone, or Skype');
+        this.passwordInput = page.getByPlaceholder('Password');
+        this.nextButton = page.getByRole('button', {name: 'Next'});
+        this.signInButton = page.getByRole('button', {name: 'Sign in'});
+        this.error = page.getByRole('alert');
+        this.consentHeading = page.getByRole('heading', {name: 'Permissions requested'});
+        this.acceptConsentButton = page.getByRole('button', {name: 'Accept'});
+        this.cancelConsentButton = page.getByRole('button', {name: 'Cancel'});
+        this.staySignedInHeading = page.getByRole('heading', {name: 'Stay signed in?'});
+        this.staySignedInNoButton = page.getByRole('button', {name: 'No', exact: true});
     }
 
-    if (!popup.isClosed()) {
-        throw new Error(`Microsoft sign-in did not finish. Last page: ${await describePage(popup)}`);
+    async submitCredentials(user: TestUser) {
+        await this.emailInput.waitFor({timeout: 15_000}).catch(async () => {
+            throw new Error(`Microsoft sign-in page did not load. Last page: ${await this.describe()}`);
+        });
+        await this.emailInput.fill(user.email);
+        await this.nextButton.click();
+
+        await this.passwordInput.fill(user.password);
+        await this.signInButton.click();
     }
-}
 
-async function handleOptionalScreen(popup: Page) {
-    try {
-        const decline = popup.locator('#idBtn_Back');
-        if (await decline.isVisible()) {
-            // "Stay signed in?" keeps sessions out of later specs.
-            await decline.click();
-            return;
+    async signIn(user: TestUser) {
+        await this.submitCredentials(user);
+        await this.finishSignIn();
+    }
+
+    // Answers the optional screens until the plugin closes the popup.
+    async finishSignIn() {
+        const deadline = Date.now() + FLOW_TIMEOUT_MS;
+        while (!this.page.isClosed() && Date.now() < deadline) {
+            // eslint-disable-next-line no-await-in-loop
+            await this.handleOptionalScreen();
+            // eslint-disable-next-line no-await-in-loop
+            await this.page.waitForTimeout(500).catch(() => undefined);
         }
 
-        const consent = popup.getByText(/Permissions requested|Let this app access/i);
-        if (await consent.first().isVisible()) {
-            await popup.locator('#idSIButton9').click();
-            return;
-        }
-
-        const error = popup.locator('#usernameError, #passwordError, #service_exception_message');
-        if (await error.first().isVisible()) {
-            throw new Error(`Microsoft sign-in failed: ${await error.first().innerText()}`);
-        }
-    } catch (err) {
-        // The popup closing mid-check is the success path.
-        if (!popup.isClosed()) {
-            throw err;
+        if (!this.page.isClosed()) {
+            throw new Error(`Microsoft sign-in did not finish. Last page: ${await this.describe()}`);
         }
     }
-}
 
-async function describePage(popup: Page) {
-    const text = await popup.locator('body').innerText().catch(() => '');
-    return `${popup.url()} ${text.replace(/\s+/g, ' ').slice(0, 300)}`;
+    private async handleOptionalScreen() {
+        try {
+            if (await this.staySignedInHeading.isVisible()) {
+                // Declining keeps sessions out of later specs.
+                await this.staySignedInNoButton.click();
+                return;
+            }
+
+            if (await this.consentHeading.isVisible()) {
+                await this.acceptConsentButton.click();
+                return;
+            }
+
+            if (await this.error.first().isVisible()) {
+                throw new Error(`Microsoft sign-in failed: ${await this.error.first().innerText()}`);
+            }
+        } catch (err) {
+            // The popup closing mid-check is the success path.
+            if (!this.page.isClosed()) {
+                throw err;
+            }
+        }
+    }
+
+    private async describe() {
+        const text = await this.page.locator('body').innerText().catch(() => '');
+        return `${this.page.url()} ${text.replace(/\s+/g, ' ').slice(0, 300)}`;
+    }
 }

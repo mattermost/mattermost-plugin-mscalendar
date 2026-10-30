@@ -3,10 +3,10 @@
 
 import {expect, test} from '@mattermost/playwright-lib';
 
-import {COMMAND} from '../support/constants';
+import {CreateEventModal} from '../support/create_event_modal';
 import {eventSubject, loadCredentials} from '../support/credentials';
 import {deleteEventsWithPrefix, waitForEvent} from '../support/fake';
-import {ensureConnected, runSlashCommand} from '../support/ui';
+import {ensureConnected} from '../support/ui';
 
 const INVITE_TIMEOUT_MS = 90_000;
 
@@ -24,51 +24,53 @@ test.describe('events', () => {
         await Promise.all([user1(), user2()].map((user) => deleteEventsWithPrefix(user.email, eventSubject('create'))));
     });
 
-    test('creates an event from the modal and invites the second user', async ({pw}) => {
+    /**
+     * @objective Verify that the create event modal creates a Microsoft event and invites the guest
+     */
+    test('creates an event from the modal and invites the second user', {tag: '@mscalendar_events'}, async ({pw}) => {
         const subject = eventSubject('create');
         const channelsPage = await ensureConnected(pw);
-        const page = channelsPage.page;
+        const modal = new CreateEventModal(channelsPage);
 
-        await runSlashCommand(channelsPage, `${COMMAND} event create`);
-        const form = page.getByTestId('mscalendar-create-event-form');
-        await expect(form).toBeVisible();
+        // # Open the modal and fill in the event
+        await modal.open(channelsPage);
+        await modal.subjectInput.fill(subject);
+        await modal.dateInput.fill(tomorrow());
+        await modal.chooseStartTime('10:00');
+        await modal.addGuest(user2().email);
 
-        await form.locator('#subject').fill(subject);
-        await form.locator('#date').fill(tomorrow());
+        // # Create the event
+        await modal.createButton.click();
 
-        await form.locator('#start_time').click();
-        await page.keyboard.type('10:00');
-        await page.keyboard.press('Enter');
+        // * Verify the modal closes without an error
+        await expect(modal.container).toBeHidden();
+        await expect(modal.error).toHaveCount(0);
 
-        // The attendee selector accepts plain email addresses.
-        await form.locator('#attendees').click();
-        const lookup = page.waitForResponse((response) => response.url().includes('/autocomplete/users'));
-        await page.keyboard.type(user2().email);
-        await lookup;
-        await page.keyboard.press('Enter');
-        await expect(form.getByText(user2().email).first()).toBeVisible();
-
-        await form.locator('#submit-button').click();
-        await expect(form).toBeHidden();
-        await expect(page.getByTestId('mscalendar-create-event-error')).toHaveCount(0);
-
+        // * Verify the event is on the organizer's calendar
         const created = await waitForEvent(user1().email, subject);
         expect(created.subject).toBe(subject);
 
-        // The invitation reaches the attendee's calendar through Exchange, which can lag.
+        // * Verify the invitation reaches the guest's calendar, which can lag behind
         await waitForEvent(user2().email, subject, INVITE_TIMEOUT_MS);
     });
 
-    test('keeps the create button disabled until the form is valid', async ({pw}) => {
+    /**
+     * @objective Verify that the create button stays disabled until the required fields are filled in
+     */
+    test('keeps the create button disabled until the form is valid', {tag: '@mscalendar_events'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
-        const page = channelsPage.page;
+        const modal = new CreateEventModal(channelsPage);
 
-        await runSlashCommand(channelsPage, `${COMMAND} event create`);
-        const form = page.getByTestId('mscalendar-create-event-form');
-        await expect(form).toBeVisible();
-        await expect(form.locator('#submit-button')).toBeDisabled();
+        // # Open the modal
+        await modal.open(channelsPage);
 
-        await form.locator('#subject').fill(eventSubject('invalid'));
-        await expect(form.locator('#submit-button')).toBeDisabled();
+        // * Verify the create button is disabled
+        await expect(modal.createButton).toBeDisabled();
+
+        // # Fill in only the subject
+        await modal.subjectInput.fill(eventSubject('invalid'));
+
+        // * Verify the create button is still disabled
+        await expect(modal.createButton).toBeDisabled();
     });
 });

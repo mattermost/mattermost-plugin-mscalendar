@@ -9,6 +9,7 @@ import {createEvent, deleteEventsWithPrefix} from '../support/fake';
 import {ensureConnected, runCommandExpecting} from '../support/ui';
 
 const MINUTE_MS = 60 * 1000;
+const AGENDA_REPLY = /Times are shown in|no upcoming events|no events for that day/;
 
 test.describe('commands', () => {
     const user1 = () => loadCredentials().user1;
@@ -22,47 +23,82 @@ test.describe('commands', () => {
         await deleteEventsWithPrefix(user1().email, eventSubject('commands fixture'));
     });
 
-    test('prints help and plugin info', async ({pw}) => {
+    /**
+     * @objective Verify that the help and info subcommands reply with their content
+     */
+    test('prints help and plugin info', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
+        // # Run help and info
+        // * Verify each reply
         await runCommandExpecting(channelsPage, `${COMMAND} help`, 'Read help text for the commands');
         await runCommandExpecting(channelsPage, `${COMMAND} info`, /plugin version/i);
     });
 
-    test('reports that the account is already connected', async ({pw}) => {
+    /**
+     * @objective Verify that connect reports the linked Microsoft account when already connected
+     */
+    test('reports that the account is already connected', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
+        // # Run connect
+        // * Verify the reply names the connected mailbox
         await runCommandExpecting(channelsPage, `${COMMAND} connect`, user1().email);
     });
 
-    test('shows the agenda for today and tomorrow', async ({pw}) => {
+    /**
+     * @objective Verify that the today and tomorrow subcommands reply with an agenda
+     */
+    test('shows the agenda for today and tomorrow', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
-        await runCommandExpecting(channelsPage, `${COMMAND} today`, /Times are shown in|no upcoming events|no events for that day/);
-        await runCommandExpecting(channelsPage, `${COMMAND} tomorrow`, /Times are shown in|no upcoming events|no events for that day/);
+        // # Run today and tomorrow
+        // * Verify each reply is an agenda
+        await runCommandExpecting(channelsPage, `${COMMAND} today`, AGENDA_REPLY);
+        await runCommandExpecting(channelsPage, `${COMMAND} tomorrow`, AGENDA_REPLY);
     });
 
-    test('lists upcoming events with viewcal', async ({pw}) => {
+    /**
+     * @objective Verify that viewcal lists an upcoming Microsoft event
+     */
+    test('lists upcoming events with viewcal', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
+        // # Run viewcal
+        // * Verify the reply contains this run's fixture event
         await runCommandExpecting(channelsPage, `${COMMAND} viewcal`, `e2e-${currentRunId()}`);
     });
 
-    test('shows the daily summary settings', async ({pw}) => {
+    /**
+     * @objective Verify that summary settings replies with the daily summary configuration
+     */
+    test('shows the daily summary settings', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
+        // # Run summary settings
+        // * Verify the reply describes the daily summary
         await runCommandExpecting(channelsPage, `${COMMAND} summary settings`, /daily summary/i);
     });
 
-    test('lists the calendars as a plugin admin', async ({pw}) => {
+    /**
+     * @objective Verify that showcals lists the connected user's calendars
+     */
+    test('lists the calendars as a plugin admin', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
+        // # Run showcals
+        // * Verify the reply contains calendar data
         await runCommandExpecting(channelsPage, `${COMMAND} showcals`, /"name"/);
     });
 
-    test('falls back to help for unknown subcommands', async ({pw}) => {
+    /**
+     * @objective Verify that an unknown subcommand falls back to the help text
+     */
+    test('falls back to help for unknown subcommands', {tag: '@mscalendar_commands'}, async ({pw}) => {
         const channelsPage = await ensureConnected(pw);
 
+        // # Run an unknown subcommand
+        // * Verify the reply is the help text
         await runCommandExpecting(channelsPage, `${COMMAND} nonsense`, 'Read help text for the commands');
     });
 });

@@ -2,16 +2,14 @@
 // See LICENSE.txt for license information.
 
 import {expect, type ChannelsPage, type PlaywrightExtended} from '@mattermost/playwright-lib';
-import type {BrowserContext, Page} from '@playwright/test';
+import type {BrowserContext} from '@playwright/test';
 
 import {loginRegularUser} from './admin';
-import {APP_BAR_ICON, COMMAND, TEAM_NAME, TOWN_SQUARE} from './constants';
+import {CalendarSidebar} from './calendar_sidebar';
+import {COMMAND, TEAM_NAME, TOWN_SQUARE} from './constants';
 import {USER1} from './credentials';
 import {FAKE_URL} from './fake';
-import {signInToMicrosoft} from './ms_login';
-
-const SIDEBAR_CONNECT = 'mscalendar-sidebar-connect';
-const SIDEBAR = 'mscalendar-sidebar';
+import {MicrosoftLoginPage} from './ms_login';
 
 // The plugin sends the browser to the real login host, so serve it from the fake instead.
 export async function routeMicrosoftToFake(context: BrowserContext) {
@@ -32,68 +30,38 @@ export async function openTownSquare(pw: PlaywrightExtended) {
     return channelsPage;
 }
 
-// The app-bar icon is rendered by Mattermost, so it has no data-testid from this plugin.
-export async function openSidebar(page: Page) {
-    const connect = page.getByTestId(SIDEBAR_CONNECT);
-    const sidebar = page.getByTestId(SIDEBAR);
-    if (await connect.isVisible().catch(() => false) || await sidebar.isVisible().catch(() => false)) {
-        return;
-    }
-    await page.locator(APP_BAR_ICON).click();
-    await expect(connect.or(sidebar)).toBeVisible();
+// Clicking send rather than pressing Enter, which would pick a slash-command autocomplete suggestion.
+export async function submitSlashCommand(channelsPage: ChannelsPage, command: string) {
+    const postCreate = channelsPage.centerView.postCreate;
+    await postCreate.input.fill(command);
+    await postCreate.sendMessageButton.click();
 }
 
 export async function runSlashCommand(channelsPage: ChannelsPage, command: string) {
-    const postCreate = channelsPage.centerView.postCreate;
-    await postCreate.input.fill(command);
-
-    // Pressing Enter would pick a slash-command autocomplete suggestion.
-    await postCreate.sendMessageButton.click();
-    await expect(postCreate.input).toHaveValue('');
+    await submitSlashCommand(channelsPage, command);
+    await expect(channelsPage.centerView.postCreate.input).toHaveValue('');
 }
 
-// Earlier commands can leave an identical reply on screen, so wait for one more match.
+// Earlier commands can leave an identical reply on screen, so wait for a new last post.
 export async function runCommandExpecting(channelsPage: ChannelsPage, command: string, reply: string | RegExp) {
-    const replies = channelsPage.page.locator('.post-message__text').filter({hasText: reply});
-    const before = await replies.count();
+    const centerView = channelsPage.centerView;
+    const before = await centerView.getLastPostID();
     await runSlashCommand(channelsPage, command);
-    await expect(replies).toHaveCount(before + 1);
-    return replies.last();
+    await expect.poll(() => centerView.getLastPostID()).not.toBe(before);
+
+    const post = await centerView.getLastPost();
+    await expect(post.body).toContainText(reply);
+    return post;
 }
 
-export async function connectAccount(page: Page) {
-    const popup = await openConnectPopup(page);
-    await signInToMicrosoft(popup, USER1);
-    await expect(page.getByTestId(SIDEBAR)).toBeVisible({timeout: 30000});
-}
-
-export async function disconnectAccount(channelsPage: ChannelsPage) {
-    await runCommandExpecting(channelsPage, `${COMMAND} disconnect`, 'Successfully disconnected your account');
-    await expect(channelsPage.page.getByTestId(SIDEBAR_CONNECT)).toBeVisible();
-}
-
-export async function ensureConnected(pw: PlaywrightExtended) {
-    const channelsPage = await openTownSquare(pw);
-    await openSidebar(channelsPage.page);
-    if (await channelsPage.page.getByTestId(SIDEBAR_CONNECT).isVisible().catch(() => false)) {
-        await connectAccount(channelsPage.page);
-    }
-    await expect(channelsPage.page.getByTestId(SIDEBAR)).toBeVisible();
-    return channelsPage;
-}
-
-export async function ensureDisconnected(pw: PlaywrightExtended) {
-    const channelsPage = await openTownSquare(pw);
-    await openSidebar(channelsPage.page);
-    if (await channelsPage.page.getByTestId(SIDEBAR).isVisible().catch(() => false)) {
-        await disconnectAccount(channelsPage);
-    }
-    return channelsPage;
+export function commandError(channelsPage: ChannelsPage, message: string) {
+    return channelsPage.page.getByText(message);
 }
 
 // Playwright routes never see redirect targets, so letting the popup follow the plugin's redirect
 // would reach the real login host. Open it blank, resolve the redirect here, and navigate directly.
-export async function openConnectPopup(page: Page) {
+export async function openConnectPopup(channelsPage: ChannelsPage) {
+    const page = channelsPage.page;
     await page.evaluate(() => {
         const open = window.open.bind(window);
         window.open = (url, ...rest) => {
@@ -103,7 +71,7 @@ export async function openConnectPopup(page: Page) {
     });
 
     const popupPromise = page.waitForEvent('popup');
-    await page.getByTestId(SIDEBAR_CONNECT).click();
+    await new CalendarSidebar(channelsPage).connectButton.click();
     const popup = await popupPromise;
 
     const connectUrl = await page.evaluate(() => (window as unknown as {connectUrl: string}).connectUrl);
@@ -114,5 +82,37 @@ export async function openConnectPopup(page: Page) {
     }
 
     await popup.goto(authorizeUrl);
-    return popup;
+    return new MicrosoftLoginPage(popup);
+}
+
+export async function connectAccount(channelsPage: ChannelsPage) {
+    const login = await openConnectPopup(channelsPage);
+    await login.signIn(USER1);
+    await expect(new CalendarSidebar(channelsPage).container).toBeVisible({timeout: 30_000});
+}
+
+export async function disconnectAccount(channelsPage: ChannelsPage) {
+    await runCommandExpecting(channelsPage, `${COMMAND} disconnect`, 'Successfully disconnected your account');
+    await expect(new CalendarSidebar(channelsPage).connectButton).toBeVisible();
+}
+
+export async function ensureConnected(pw: PlaywrightExtended) {
+    const channelsPage = await openTownSquare(pw);
+    const sidebar = new CalendarSidebar(channelsPage);
+    await sidebar.open();
+    if (!await sidebar.isConnected()) {
+        await connectAccount(channelsPage);
+    }
+    await expect(sidebar.container).toBeVisible();
+    return channelsPage;
+}
+
+export async function ensureDisconnected(pw: PlaywrightExtended) {
+    const channelsPage = await openTownSquare(pw);
+    const sidebar = new CalendarSidebar(channelsPage);
+    await sidebar.open();
+    if (await sidebar.isConnected()) {
+        await disconnectAccount(channelsPage);
+    }
+    return channelsPage;
 }

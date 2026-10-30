@@ -92,36 +92,34 @@ async function runScenarios(target: Target): Promise<Step[]> {
         steps.push(check('create event', created.status, 'event', created.body));
         eventId = created.body?.id || '';
 
-        const fetched = await call(target, token, 'GET', `/users/${encodeURIComponent(target.user1)}/events/${encodeURIComponent(eventId)}`);
-        steps.push(check('get event', fetched.status, 'event', fetched.body));
+        if (eventId) {
+            const fetched = await call(target, token, 'GET', `/users/${encodeURIComponent(target.user1)}/events/${encodeURIComponent(eventId)}`);
+            steps.push(check('get event', fetched.status, 'event', fetched.body));
 
-        const view = await call(target, token, 'GET', `/users/${encodeURIComponent(target.user1)}/calendarView?startDateTime=${encodeURIComponent(start.toISOString())}&endDateTime=${encodeURIComponent(end.toISOString())}&$top=20`);
-        const found = (view.body?.value || []).find((e: any) => e.id === eventId);
-        steps.push(check('calendar view contains the event', view.status, 'event', found));
+            const viewQuery = `startDateTime=${encodeURIComponent(start.toISOString())}&endDateTime=${encodeURIComponent(end.toISOString())}&$top=20`;
+            const view = await call(target, token, 'GET', `/users/${encodeURIComponent(target.user1)}/calendarView?${viewQuery}`);
+            const found = (view.body?.value || []).find((e: any) => e.id === eventId);
+            steps.push(check('calendar view contains the event', view.status, 'event', found));
+
+            const batch = await call(target, token, 'POST', '/$batch', {
+                requests: [{id: target.user1, method: 'GET', url: `/Users/${encodeURIComponent(target.user1)}/calendarView?${viewQuery}`, headers: {}}],
+            });
+            steps.push(check('batch calendar view envelope', batch.status, undefined, batch.body));
+            const inner = batch.body?.responses?.[0];
+            const batchFound = (inner?.body?.value || []).find((e: any) => e.id === eventId);
+            steps.push(check('batch calendar view item', inner?.status ?? 0, 'event', batchFound));
+        } else {
+            const skipped = {status: 0, violations: ['skipped, no event was created']};
+            for (const name of ['get event', 'calendar view contains the event', 'batch calendar view envelope', 'batch calendar view item']) {
+                steps.push({name, ...skipped});
+            }
+        }
 
         const settings = await call(target, token, 'GET', `/users/${encodeURIComponent(target.user1)}/mailboxSettings`);
         steps.push(check('mailbox settings', settings.status, 'mailboxSettings', settings.body));
 
         const calendars = await call(target, token, 'GET', `/users/${encodeURIComponent(target.user1)}/calendars`);
         steps.push(check('calendars', calendars.status, 'calendar', calendars.body?.value?.[0]));
-
-        const batch = await call(target, token, 'POST', '/$batch', {
-            requests: [{
-                id: target.user1,
-                method: 'POST',
-                url: `/Users/${encodeURIComponent(target.user1)}/getSchedule`,
-                headers: {'Content-Type': 'application/json'},
-                body: {
-                    schedules: [target.user1],
-                    startTime: {dateTime: start.toISOString().replace('Z', ''), timeZone: 'UTC'},
-                    endTime: {dateTime: end.toISOString().replace('Z', ''), timeZone: 'UTC'},
-                    availabilityViewInterval: 15,
-                },
-            }],
-        });
-        steps.push(check('batch getSchedule envelope', batch.status, undefined, batch.body));
-        const inner = batch.body?.responses?.[0];
-        steps.push(check('batch getSchedule item', inner?.status ?? 0, 'schedule', inner?.body?.value?.[0]));
 
         const me = await call(target, token, 'GET', '/me');
         steps.push(check('/me with an app-only token is rejected', me.status, 'graphError', me.body));

@@ -81,7 +81,7 @@ function page(body: string): Result {
 }
 
 function errorPage(status: number, message: string): Result {
-    return {status, headers: {'content-type': 'text/html; charset=utf-8'}, body: `<!doctype html><html><body><h1>Sign in error</h1><p id="service_exception_message">${html(message)}</p></body></html>`};
+    return {status, headers: {'content-type': 'text/html; charset=utf-8'}, body: `<!doctype html><html><body><h1>Sign in error</h1><p id="service_exception_message" role="alert">${html(message)}</p></body></html>`};
 }
 
 function hidden(sid: string) {
@@ -90,7 +90,7 @@ function hidden(sid: string) {
 
 function emailPage(tenant: string, sid: string, error = ''): Result {
     return page(`<form method="post" action="/${tenant}/login/email">${hidden(sid)}
-        <h1>Sign in</h1>${error ? `<div id="usernameError">${html(error)}</div>` : ''}
+        <h1>Sign in</h1>${error ? `<div id="usernameError" role="alert">${html(error)}</div>` : ''}
         <input type="email" name="loginfmt" placeholder="Email, phone, or Skype">
         <input type="submit" id="idSIButton9" value="Next"></form>`);
 }
@@ -98,7 +98,7 @@ function emailPage(tenant: string, sid: string, error = ''): Result {
 function passwordPage(tenant: string, sid: string, email: string, error = ''): Result {
     return page(`<form method="post" action="/${tenant}/login/password">${hidden(sid)}
         <h1>Enter password</h1><div id="displayName">${html(email)}</div>
-        ${error ? `<div id="passwordError">${html(error)}</div>` : ''}
+        ${error ? `<div id="passwordError" role="alert">${html(error)}</div>` : ''}
         <input type="password" name="passwd" placeholder="Password">
         <input type="submit" id="idSIButton9" value="Sign in"></form>`);
 }
@@ -486,29 +486,6 @@ function userRoute(method: string, pathname: string, query: URLSearchParams, bod
 
     if (rest[0] === 'calendars') {
         return calendarsRoute(method, user, original, body);
-    }
-
-    if (rest[0] === 'getschedule' && method === 'POST') {
-        const interval = Number(body.availabilityViewInterval || 30);
-        const from = toUtc(body.startTime.dateTime, body.startTime.timeZone).getTime();
-        const to = toUtc(body.endTime.dateTime, body.endTime.timeZone).getTime();
-        const slots = Math.max(1, Math.ceil((to - from) / (interval * 60000)));
-        const value = (body.schedules || []).map((scheduleId: string) => {
-            const owner = findUser(scheduleId);
-            const events = owner ? mailbox(owner) : [];
-            const view = Array.from({length: slots}, (_, i) => {
-                const slotStart = from + (i * interval * 60000);
-                const busy = events.some((e) => {
-                    const b = eventBounds(e);
-                    return !e.isCancelled && b.start < slotStart + (interval * 60000) && b.end > slotStart;
-                });
-                return busy ? '2' : '0';
-            }).join('');
-            const info = {scheduleId, availabilityView: view, scheduleItems: []};
-            validate('schedule', info, 'getSchedule');
-            return info;
-        });
-        return {status: 200, body: {value}};
     }
 
     if (rest[0] === 'findmeetingtimes' && method === 'POST') {

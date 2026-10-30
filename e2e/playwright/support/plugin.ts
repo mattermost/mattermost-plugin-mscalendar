@@ -90,13 +90,20 @@ export async function configurePlugin(client: Client4, adminUserId: string, forc
 
 // ensureTeam keeps a single team so the channel-header buttons render predictably.
 export async function ensureTeam(client: Client4) {
-    const teams = await client.getMyTeams();
-    if (!teams.some((team) => team.name === TEAM_NAME)) {
+    // Other plugin suites sharing this server archive every team but their own, so restore and rejoin ours.
+    const existing = await client.getTeamByName(TEAM_NAME).catch(() => undefined);
+    if (!existing) {
         await client.createTeam({
             name: TEAM_NAME,
             display_name: 'MS Calendar E2E',
             type: 'O',
         } as Parameters<Client4['createTeam']>[0]);
+    } else {
+        if (existing.delete_at) {
+            await client.unarchiveTeam(existing.id);
+        }
+        const me = await client.getMe();
+        await client.addToTeam(existing.id, me.id);
     }
 
     const others = (await client.getMyTeams()).filter((team) => team.name !== TEAM_NAME);

@@ -7,21 +7,21 @@ import {loginAdmin} from '../support/admin';
 import {COMMAND} from '../support/constants';
 import {loadCredentials} from '../support/credentials';
 import {patchPluginSettings} from '../support/plugin';
-import {connectAccount, disconnectAccount, openSidebar, openTownSquare, runCommandExpecting} from '../support/ui';
+import {connectAccount, disconnectAccount, ensureDisconnected, runCommandExpecting} from '../support/ui';
 
-test('connects and disconnects a regular member through the Microsoft login popup', async ({pw}) => {
-    const channelsPage = await openTownSquare(pw);
-    await openSidebar(channelsPage.page);
+/**
+ * @objective Verify that a regular member can connect and disconnect a Microsoft account through the login popup
+ */
+test('connects and disconnects a regular member through the Microsoft login popup', {tag: '@mscalendar_connect'}, async ({pw}) => {
+    // # Sign in through the connect popup
+    const channelsPage = await ensureDisconnected(pw);
+    await connectAccount(channelsPage);
 
-    if (await channelsPage.page.getByTestId('mscalendar-sidebar').isVisible().catch(() => false)) {
-        await disconnectAccount(channelsPage);
-    }
+    // * Verify the plugin reports the connected mailbox
+    await runCommandExpecting(channelsPage, `${COMMAND} connect`, loadCredentials().user1.email);
 
-    await connectAccount(channelsPage.page);
-
-    const {user1} = loadCredentials();
-    await runCommandExpecting(channelsPage, `${COMMAND} connect`, user1.email);
-
+    // # Disconnect
+    // * Verify the sidebar offers to connect again
     await disconnectAccount(channelsPage);
 });
 
@@ -31,17 +31,20 @@ test.describe('forced consent', () => {
         await patchPluginSettings(client, {oauth2forceconsent: false});
     });
 
-    test('connects when the consent screen is always shown', async ({pw}) => {
+    /**
+     * @objective Verify that connecting succeeds when the consent screen is always shown
+     *
+     * @precondition
+     * The plugin setting that forces the consent screen is enabled.
+     */
+    test('connects when the consent screen is always shown', {tag: '@mscalendar_connect'}, async ({pw}) => {
+        // # Force the consent screen
         const {client} = await loginAdmin();
         await patchPluginSettings(client, {oauth2forceconsent: true});
 
-        const channelsPage = await openTownSquare(pw);
-        await openSidebar(channelsPage.page);
-        if (await channelsPage.page.getByTestId('mscalendar-sidebar').isVisible().catch(() => false)) {
-            await disconnectAccount(channelsPage);
-        }
-
-        // signInToMicrosoft accepts the consent screen that prompt=consent adds.
-        await connectAccount(channelsPage.page);
+        // # Sign in and accept the consent screen
+        // * Verify the calendar sidebar appears
+        const channelsPage = await ensureDisconnected(pw);
+        await connectAccount(channelsPage);
     });
 });

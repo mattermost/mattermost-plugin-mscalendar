@@ -8,7 +8,6 @@ const ChannelHeaderIcon = () => {
 
     return (
         <svg
-            data-testid='mscalendar-channel-header-icon'
             width='24'
             height='24'
             viewBox='0 0 24 24'

@@ -22,7 +22,6 @@ export const CONTRACTS: Record<string, Contract> = {
         name: 'subscription',
         required: ['id', 'resource', 'changeType', 'notificationUrl', 'expirationDateTime', 'clientState'],
     },
-    schedule: {name: 'schedule information', required: ['scheduleId', 'availabilityView']},
     notification: {
         name: 'change notification',
         required: ['subscriptionId', 'subscriptionExpirationDateTime', 'changeType', 'resource', 'resourceData.@odata.type'],

@@ -14,7 +14,7 @@ Built on [`@mattermost/playwright-lib`](https://www.npmjs.com/package/@mattermos
                      ◀── change notifications ─────────────
 ```
 
-- `fake-microsoft/server.ts` serves OAuth v2 (authorize with login, consent and "stay signed in" pages; the authorization-code, refresh-token and client-credentials grants; AADSTS errors) and the Graph v1.0 calls the plugin makes (profile, mailbox settings, calendars, calendar view, events and responses, `getSchedule`, `findMeetingTimes`, `$batch`, subscriptions with the validation handshake, `clientState` and expiry limits). It delivers change notifications to Mattermost like Microsoft does.
+- `fake-microsoft/server.ts` serves OAuth v2 (authorize with login, consent and "stay signed in" pages; the authorization-code, refresh-token and client-credentials grants; AADSTS errors) and the Graph v1.0 calls the plugin makes (profile, mailbox settings, calendars, calendar view, events and responses, `findMeetingTimes`, `$batch`, subscriptions with the validation handshake, `clientState` and expiry limits). It delivers change notifications to Mattermost like Microsoft does.
 - The plugin hardcodes the Microsoft hosts, so Docker Compose gives the fake the network aliases `login.microsoftonline.com` and `graph.microsoft.com`. A throwaway CA, created by `fake-microsoft/gen-certs.sh`, is trusted by Mattermost through `SSL_CERT_FILE`. The browser is redirected to the fake by a Playwright route (`routeMicrosoftToFake` in `support/ui.ts`). Mattermost's `SiteURL` stays `http://localhost:8065`.
 - The fake exposes a control API under `/__control/` (reset, config, token expiry and revocation, subscriptions and notifications, requests log, events per user). `support/fake.ts` wraps it.
 - `fake-microsoft/contract.ts` lists the fields each response must contain. The fake validates its own responses and the plugin's requests against it. Violations are listed at `/__control/violations`, and global teardown fails the run if there are any.
@@ -56,7 +56,7 @@ Fixture events live in the fake and are removed by each spec. `POST /__control/r
 
 ## Contract check against the real service
 
-`npm run contract:compare` runs the same Graph scenarios (token, create, get and list events, mailbox settings, calendars, batch `getSchedule`, error shapes, delete) against the fake and a live tenant. It fails when a response is missing a contract field or when the fake and the live service answer with different status codes. The nightly workflow `e2e-contract.yml` runs it.
+`npm run contract:compare` runs the same Graph scenarios (token, create, get and list events, mailbox settings, calendars, batched calendar view, error shapes, delete) against the fake and a live tenant. It fails when a response is missing a contract field or when the fake and the live service answer with different status codes. The nightly workflow `e2e-contract.yml` runs it.
 
 ```sh
 npm run fake              # start the fake on http://127.0.0.1:8080
