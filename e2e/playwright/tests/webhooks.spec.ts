@@ -78,12 +78,12 @@ test.describe('webhook notifications', () => {
 
     test('renews the subscription when Microsoft recommends it', async () => {
         const sub = await subscription();
-        const before = sub.expirationDateTime;
         const start = new Date(Date.now() + (6 * HOUR_MS));
         const event = await fake.createEvent(USER1.email, eventSubject('webhook renew'), start, new Date(start.getTime() + HOUR_MS), [USER2.email]);
+        const renewals = async () => (await fake.requests()).filter((request) => request.method === 'PATCH' && request.status === 200 && request.path?.endsWith(`/subscriptions/${sub.id}`));
 
         await fake.notify(sub.id, {eventId: event.id, soon: true});
 
-        await expect.poll(async () => (await subscription()).expirationDateTime).not.toBe(before);
+        await expect.poll(async () => (await renewals()).length).toBeGreaterThan(0);
     });
 });

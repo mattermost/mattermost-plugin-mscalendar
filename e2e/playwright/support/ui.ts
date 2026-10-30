@@ -62,10 +62,7 @@ export async function runCommandExpecting(channelsPage: ChannelsPage, command: s
 }
 
 export async function connectAccount(page: Page) {
-    const popupPromise = page.waitForEvent('popup');
-    await page.getByTestId(SIDEBAR_CONNECT).click();
-    const popup = await popupPromise;
-
+    const popup = await openConnectPopup(page);
     await signInToMicrosoft(popup, USER1);
     await expect(page.getByTestId(SIDEBAR)).toBeVisible({timeout: 30000});
 }
@@ -94,8 +91,14 @@ export async function ensureDisconnected(pw: PlaywrightExtended) {
     return channelsPage;
 }
 
+// Context routes attach to a new popup asynchronously, so its first redirect can reach the
+// real login host. Reloading the authorize URL once the popup exists goes through the route.
 export async function openConnectPopup(page: Page) {
     const popupPromise = page.waitForEvent('popup');
     await page.getByTestId(SIDEBAR_CONNECT).click();
-    return popupPromise;
+    const popup = await popupPromise;
+
+    await popup.waitForURL(/^https:\/\/login\.microsoftonline\.com\/.*\/authorize/, {waitUntil: 'commit'});
+    await popup.goto(popup.url());
+    return popup;
 }

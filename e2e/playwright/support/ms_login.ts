@@ -17,8 +17,12 @@ export async function signInToMicrosoft(popup: Page, user: TestUser) {
 // Every Microsoft page uses the same primary button id.
 export async function submitCredentials(popup: Page, user: TestUser) {
     const primary = popup.locator('#idSIButton9');
+    const email = popup.locator('input[name="loginfmt"]');
 
-    await popup.locator('input[name="loginfmt"]').fill(user.email);
+    await email.waitFor({timeout: 15_000}).catch(async () => {
+        throw new Error(`Microsoft sign-in page did not load. Last page: ${await describePage(popup)}`);
+    });
+    await email.fill(user.email);
     await primary.click();
 
     await popup.locator('input[name="passwd"]').fill(user.password);
