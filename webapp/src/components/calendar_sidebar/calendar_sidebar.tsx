@@ -263,6 +263,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
     return (
         <div
             ref={containerRef}
+            data-testid='mscalendar-sidebar'
             className='mscalendar-sidebar'
             style={containerStyle}
         >
