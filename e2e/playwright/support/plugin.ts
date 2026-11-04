@@ -11,7 +11,7 @@ import './env';
 import type {Client4} from '@mattermost/client';
 import {testConfig} from '@mattermost/playwright-lib';
 
-import {ensureRegularUser, isDisposableServer, loginAdmin, loginRegularUser} from './admin';
+import {ensureNonAdminUser, ensureRegularUser, isDisposableServer, loginAdmin, loginNonAdminUser, loginRegularUser, type MemberLogin} from './admin';
 import {COMMAND, PLUGIN_ID, TEAM_NAME, TOWN_SQUARE} from './constants';
 import {FAKE_CLIENT_ID, FAKE_CLIENT_SECRET, FAKE_TENANT_ID} from './credentials';
 import {fake} from './fake';
@@ -83,7 +83,8 @@ export async function configurePlugin(client: Client4, adminUserId: string, forc
         oauth2forceconsent: forceConsent,
         enableexperimentalui: true,
 
-        // The admin-only commands (avail, showcals) are run by the connected regular member.
+        // The admin-only commands (avail, showcals) are run by the connected regular member;
+        // the non-admin member covers their refusal.
         adminuserids: adminUserId,
     });
 }
@@ -124,9 +125,9 @@ export async function executeCommand(client: Client4, command: string) {
     return client.executeCommand(command, {channel_id: channel.id, team_id: team.id});
 }
 
-export async function disconnectRegularUser() {
+export async function disconnectMember(loginMember: MemberLogin = loginRegularUser) {
     try {
-        const {client} = await loginRegularUser();
+        const {client} = await loginMember();
         await executeCommand(client, `${COMMAND} disconnect`);
     } catch {
         // The user may not exist yet or may already be disconnected.
@@ -138,6 +139,7 @@ export async function prepareServer() {
     const {client} = await loginAdmin();
     await ensureTeam(client);
     const regularUser = await ensureRegularUser(client);
+    await ensureNonAdminUser(client);
 
     const bundle = findPluginBundle();
     // eslint-disable-next-line no-console
@@ -146,6 +148,7 @@ export async function prepareServer() {
     await configurePlugin(client, regularUser.id);
     await restartPlugin(client);
 
-    // A previous run may have left the member connected to Microsoft.
-    await disconnectRegularUser();
+    // A previous run may have left the members connected to Microsoft.
+    await disconnectMember();
+    await disconnectMember(loginNonAdminUser);
 }

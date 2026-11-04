@@ -39,7 +39,7 @@ test.describe('webhook notifications', () => {
     /**
      * @objective Verify that enabling notifications creates a Graph subscription secured with a client state
      */
-    test('registers a subscription that the fake validated and secured with a client state', {tag: '@mscalendar_webhooks'}, async () => {
+    test('registers a subscription that the fake validated and secured with a client state', {tag: ['@mscalendar_plugin', '@mscalendar_webhooks']}, async () => {
         // * Verify the subscription has a client state and points at the plugin's webhook
         const sub = await subscription();
         expect(sub.clientState).not.toBe('');
@@ -49,7 +49,7 @@ test.describe('webhook notifications', () => {
     /**
      * @objective Verify that the bot sends a direct message for a new invitation and for its update
      */
-    test('sends a DM when an invitation arrives and when it is updated', {tag: '@mscalendar_webhooks'}, async ({pw}) => {
+    test('sends a DM when an invitation arrives and when it is updated', {tag: ['@mscalendar_plugin', '@mscalendar_webhooks']}, async ({pw}) => {
         const subject = eventSubject('webhook invite');
         const channelsPage = await ensureConnected(pw);
         const start = new Date(Date.now() + (4 * HOUR_MS));
@@ -72,29 +72,33 @@ test.describe('webhook notifications', () => {
     /**
      * @objective Verify that the plugin ignores a change notification whose client state does not match
      */
-    test('ignores a notification with the wrong client state', {tag: '@mscalendar_webhooks'}, async ({pw}) => {
+    test('ignores a notification with the wrong client state', {tag: ['@mscalendar_plugin', '@mscalendar_webhooks']}, async () => {
         const subject = eventSubject('webhook forged');
-        const channelsPage = await ensureConnected(pw);
         const start = new Date(Date.now() + (5 * HOUR_MS));
+        const end = new Date(start.getTime() + HOUR_MS);
+        const eventFetches = async (eventId: string) => (await fake.requests()).filter((request) => request.method === 'GET' && request.path?.toLowerCase().endsWith(`/events/${eventId.toLowerCase()}`));
 
-        // # Create an event and wait for the genuine notification to make the plugin fetch it
-        const created = await fake.createEvent(USER1.email, subject, start, new Date(start.getTime() + HOUR_MS), [USER2.email]);
-        const eventFetches = async () => (await fake.requests()).filter((request) => request.method === 'GET' && request.path?.toLowerCase().endsWith(`/events/${created.id.toLowerCase()}`));
-        await expect.poll(async () => (await eventFetches()).length).toBeGreaterThan(0);
+        // # Create a target event and a sentinel event, and wait for the plugin to fetch both
+        const target = await fake.createEvent(USER1.email, subject, start, end, [USER2.email]);
+        const sentinel = await fake.createEvent(USER1.email, `${subject} sentinel`, start, end, [USER2.email]);
+        await expect.poll(async () => (await eventFetches(target.id)).length).toBeGreaterThan(0);
+        await expect.poll(async () => (await eventFetches(sentinel.id)).length).toBeGreaterThan(0);
         await fake.clearRequests();
 
-        // # Send a notification with a forged client state
-        await fake.notify((await subscription()).id, {eventId: created.id, clientState: 'forged'});
-        await channelsPage.page.waitForTimeout(3000);
+        // # Deliver a forged notification for the target followed by a genuine one for the sentinel
+        await fake.notify((await subscription()).id, {eventId: target.id, clientState: 'forged'}, {eventId: sentinel.id});
 
-        // * Verify the plugin did not fetch the event again
-        expect(await eventFetches()).toHaveLength(0);
+        // * Verify the plugin reached the sentinel, so it has already handled the forged notification
+        await expect.poll(async () => (await eventFetches(sentinel.id)).length).toBeGreaterThan(0);
+
+        // * Verify the plugin did not fetch the target again
+        expect(await eventFetches(target.id)).toHaveLength(0);
     });
 
     /**
      * @objective Verify that the plugin renews its subscription when a notification recommends it
      */
-    test('renews the subscription when Microsoft recommends it', {tag: '@mscalendar_webhooks'}, async () => {
+    test('renews the subscription when Microsoft recommends it', {tag: ['@mscalendar_plugin', '@mscalendar_webhooks']}, async () => {
         const sub = await subscription();
         const start = new Date(Date.now() + (6 * HOUR_MS));
         const event = await fake.createEvent(USER1.email, eventSubject('webhook renew'), start, new Date(start.getTime() + HOUR_MS), [USER2.email]);

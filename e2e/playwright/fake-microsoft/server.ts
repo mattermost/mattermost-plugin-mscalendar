@@ -669,16 +669,16 @@ async function validateEndpoint(notificationUrl: string): Promise<boolean> {
     }
 }
 
-function notifyChange(owner: User, changeType: string, event: Json, extra: Json = {}) {
+function notifyChange(owner: User, changeType: string, event: Json) {
     for (const sub of state.subscriptions.values()) {
         if (sub.creatorEmail === owner.email && String(sub.changeType).split(',').includes(changeType)) {
-            deliver(sub, changeType, event, extra);
+            deliver(sub, [notification(sub, changeType, event)]);
         }
     }
 }
 
-function deliver(sub: Subscription, changeType: string, event: Json, extra: Json = {}) {
-    const notification = {
+function notification(sub: Subscription, changeType: string, event: Json, extra: Json = {}): Json {
+    return {
         subscriptionId: sub.id,
         subscriptionExpirationDateTime: extra.subscriptionExpirationDateTime || sub.expirationDateTime,
         changeType,
@@ -687,14 +687,20 @@ function deliver(sub: Subscription, changeType: string, event: Json, extra: Json
         clientState: extra.clientState === undefined ? sub.clientState : extra.clientState,
         tenantId: TENANT_ID,
     };
-    validate('notification', notification, 'change notification');
-    state.requests.push({kind: 'notification', subscriptionId: sub.id, changeType, eventId: event.id});
+}
+
+// Graph may batch several notifications into one delivery, and the plugin handles them in order.
+function deliver(sub: Subscription, notifications: Json[]) {
+    for (const n of notifications) {
+        validate('notification', n, 'change notification');
+        state.requests.push({kind: 'notification', subscriptionId: sub.id, changeType: n.changeType, eventId: n.resourceData.id});
+    }
 
     setTimeout(() => {
         fetch(deliveryUrl(sub.notificationUrl), {
             method: 'POST',
             headers: {'content-type': 'application/json'},
-            body: JSON.stringify({value: [notification]}),
+            body: JSON.stringify({value: notifications}),
         }).catch((err) => console.error('notification delivery failed', err));
     }, 200);
 }
@@ -745,14 +751,8 @@ async function control(method: string, pathname: string, body: Json): Promise<Re
     if (section === 'violations') {
         return {status: 200, body: {value: state.violations}};
     }
-    if (section === 'tokens' && method === 'POST') {
-        if (ref === 'expire') {
-            state.accessTokens.forEach((t) => {
-                t.expires = 0;
-            });
-        } else if (ref === 'revoke') {
-            state.refreshTokens.clear();
-        }
+    if (section === 'tokens' && ref === 'revoke' && method === 'POST') {
+        state.refreshTokens.clear();
         return {status: 200, body: {ok: true}};
     }
     if (section === 'subscriptions' && !ref && method === 'GET') {
@@ -761,14 +761,21 @@ async function control(method: string, pathname: string, body: Json): Promise<Re
     if (section === 'subscriptions' && ref && sub === 'notify' && method === 'POST') {
         const subscription = state.subscriptions.get(ref);
         const owner = subscription && findUser(subscription.creatorEmail);
-        const event = owner && mailbox(owner).find((e) => e.id === body.eventId);
-        if (!subscription || !event) {
-            return {status: 404, body: {error: 'subscription or event not found'}};
+        if (!subscription || !owner) {
+            return {status: 404, body: {error: 'subscription not found'}};
         }
-        deliver(subscription, body.changeType || 'updated', event, {
-            clientState: body.clientState,
-            subscriptionExpirationDateTime: body.soon ? new Date(Date.now() + (60 * 60 * 1000)).toISOString() : undefined,
-        });
+        const notifications: Json[] = [];
+        for (const n of (body.notifications || []) as Json[]) {
+            const event = mailbox(owner).find((e) => e.id === n.eventId);
+            if (!event) {
+                return {status: 404, body: {error: `event ${n.eventId} not found`}};
+            }
+            notifications.push(notification(subscription, n.changeType || 'updated', event, {
+                clientState: n.clientState,
+                subscriptionExpirationDateTime: n.soon ? new Date(Date.now() + (60 * 60 * 1000)).toISOString() : undefined,
+            }));
+        }
+        deliver(subscription, notifications);
         return {status: 202, body: {ok: true}};
     }
     if (section === 'users' && sub === 'events') {

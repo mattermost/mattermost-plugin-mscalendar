@@ -15,10 +15,18 @@ export function isDisposableServer() {
     return new URL(testConfig.baseURL).origin === DISPOSABLE_SERVER_URL;
 }
 
+type MemberAccount = {username: string; email: string};
+
 // A fixed user, rather than a random one per test, keeps a single Microsoft connection across specs.
-const REGULAR_USER = {
+// Setup lists this member as a plugin admin.
+const REGULAR_USER: MemberAccount = {
     username: 'mscalendar-e2e-user',
     email: 'mscalendar-e2e-user@example.com',
+};
+
+const NON_ADMIN_USER: MemberAccount = {
+    username: 'mscalendar-e2e-non-admin',
+    email: 'mscalendar-e2e-non-admin@example.com',
 };
 
 // The default password is public, so other servers must supply their own.
@@ -45,20 +53,34 @@ export function loginAdmin() {
     return login(testConfig.adminUsername, testConfig.adminPassword);
 }
 
+export type MemberLogin = () => ReturnType<typeof login>;
+
 export function loginRegularUser() {
     return login(REGULAR_USER.username, regularUserPassword());
 }
 
-export async function ensureRegularUser(adminClient: Client4): Promise<UserProfile> {
+export function loginNonAdminUser() {
+    return login(NON_ADMIN_USER.username, regularUserPassword());
+}
+
+export function ensureRegularUser(adminClient: Client4) {
+    return ensureMember(adminClient, REGULAR_USER);
+}
+
+export function ensureNonAdminUser(adminClient: Client4) {
+    return ensureMember(adminClient, NON_ADMIN_USER);
+}
+
+async function ensureMember(adminClient: Client4, account: MemberAccount): Promise<UserProfile> {
     const password = regularUserPassword();
     let user: UserProfile;
     try {
-        user = await adminClient.getUserByUsername(REGULAR_USER.username);
+        user = await adminClient.getUserByUsername(account.username);
     } catch {
-        user = await adminClient.createUser({...REGULAR_USER, password} as UserProfile, '', '');
+        user = await adminClient.createUser({...account, password} as UserProfile, '', '');
     }
     if (user.roles.split(' ').includes('system_admin')) {
-        throw new Error(`${REGULAR_USER.username} must not be a system admin`);
+        throw new Error(`${account.username} must not be a system admin`);
     }
 
     const team = await adminClient.getTeamByName(TEAM_NAME);

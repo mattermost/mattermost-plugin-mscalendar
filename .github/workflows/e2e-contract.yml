@@ -5,8 +5,7 @@ on:
     - cron: "0 5 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: mscal-e2e-contract
@@ -15,9 +14,13 @@ concurrency:
 jobs:
   contract:
     name: Fake Microsoft services vs the live tenant
+    # Stays off until the live tenant is set up.
+    if: vars.MSCAL_E2E_CONTRACT_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: e2e-entra
     timeout-minutes: 15
+    permissions:
+      contents: read
     env:
       MSCAL_E2E_TENANT_ID: ${{ secrets.MSCAL_E2E_TENANT_ID }}
       MSCAL_E2E_CLIENT_ID: ${{ secrets.MSCAL_E2E_CLIENT_ID }}
@@ -26,12 +29,12 @@ jobs:
       MSCAL_E2E_USER2_EMAIL: ${{ secrets.MSCAL_E2E_USER2_EMAIL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm

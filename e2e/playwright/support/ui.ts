@@ -4,10 +4,10 @@
 import {expect, type ChannelsPage, type PlaywrightExtended} from '@mattermost/playwright-lib';
 import type {BrowserContext} from '@playwright/test';
 
-import {loginRegularUser} from './admin';
+import {loginRegularUser, type MemberLogin} from './admin';
 import {CalendarSidebar} from './calendar_sidebar';
 import {COMMAND, TEAM_NAME, TOWN_SQUARE} from './constants';
-import {USER1} from './credentials';
+import {USER1, type TestUser} from './credentials';
 import {FAKE_URL} from './fake';
 import {MicrosoftLoginPage} from './ms_login';
 
@@ -20,9 +20,9 @@ export async function routeMicrosoftToFake(context: BrowserContext) {
     });
 }
 
-// Specs act as a regular member. The plugin treats this member as a plugin admin for admin-only commands.
-export async function openTownSquare(pw: PlaywrightExtended) {
-    const {user} = await loginRegularUser();
+// Specs act as a regular member by default. The plugin treats this member as a plugin admin for admin-only commands.
+export async function openTownSquare(pw: PlaywrightExtended, loginMember: MemberLogin = loginRegularUser) {
+    const {user} = await loginMember();
     const {channelsPage} = await pw.testBrowser.login(user);
     await routeMicrosoftToFake(channelsPage.page.context());
     await channelsPage.goto(TEAM_NAME, TOWN_SQUARE);
@@ -85,9 +85,9 @@ export async function openConnectPopup(channelsPage: ChannelsPage) {
     return new MicrosoftLoginPage(popup);
 }
 
-export async function connectAccount(channelsPage: ChannelsPage) {
+export async function connectAccount(channelsPage: ChannelsPage, microsoftUser: TestUser = USER1) {
     const login = await openConnectPopup(channelsPage);
-    await login.signIn(USER1);
+    await login.signIn(microsoftUser);
     await expect(new CalendarSidebar(channelsPage).container).toBeVisible({timeout: 30_000});
 }
 
@@ -96,12 +96,12 @@ export async function disconnectAccount(channelsPage: ChannelsPage) {
     await expect(new CalendarSidebar(channelsPage).connectButton).toBeVisible();
 }
 
-export async function ensureConnected(pw: PlaywrightExtended) {
-    const channelsPage = await openTownSquare(pw);
+export async function ensureConnected(pw: PlaywrightExtended, loginMember: MemberLogin = loginRegularUser, microsoftUser: TestUser = USER1) {
+    const channelsPage = await openTownSquare(pw, loginMember);
     const sidebar = new CalendarSidebar(channelsPage);
     await sidebar.open();
     if (!await sidebar.isConnected()) {
-        await connectAccount(channelsPage);
+        await connectAccount(channelsPage, microsoftUser);
     }
     await expect(sidebar.container).toBeVisible();
     return channelsPage;

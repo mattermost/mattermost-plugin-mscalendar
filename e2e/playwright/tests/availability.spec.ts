@@ -6,18 +6,17 @@ import {expect, test} from '@mattermost/playwright-lib';
 import {loginRegularUser} from '../support/admin';
 import {BotSettings, openTownSquareChannel} from '../support/bot_dm';
 import {COMMAND} from '../support/constants';
-import {eventSubject, loadCredentials} from '../support/credentials';
+import {eventSubject, USER1, USER2} from '../support/credentials';
 import {createEvent, deleteEventsWithPrefix} from '../support/fake';
 import {ensureConnected, runSlashCommand} from '../support/ui';
 
 const MINUTE_MS = 60 * 1000;
 
 test.describe('availability', () => {
-    const user1 = () => loadCredentials().user1;
     const subject = () => eventSubject('availability fixture');
 
     test.afterAll(async () => {
-        await deleteEventsWithPrefix(user1().email, subject());
+        await deleteEventsWithPrefix(USER1.email, subject());
         const {client, user} = await loginRegularUser();
         await client.updateStatus({user_id: user.id, status: 'online'});
     });
@@ -28,7 +27,7 @@ test.describe('availability', () => {
      * @precondition
      * The sync reads the user's real status, so no other run may use the same mailbox at the same time.
      */
-    test('sets Do Not Disturb from a running event', {tag: '@mscalendar_availability'}, async ({pw}) => {
+    test('sets Do Not Disturb from a running event', {tag: ['@mscalendar_plugin', '@mscalendar_availability']}, async ({pw}) => {
         // # Connect the account and choose Do Not Disturb as the in-meeting status
         const channelsPage = await ensureConnected(pw);
         const settings = new BotSettings(channelsPage);
@@ -36,7 +35,7 @@ test.describe('availability', () => {
         await settings.chooseOption('Update Status', 'Do Not Disturb');
 
         // # Create a running event; the plugin ignores events without attendees
-        await createEvent(user1().email, subject(), new Date(Date.now() - (5 * MINUTE_MS)), new Date(Date.now() + (25 * MINUTE_MS)), [loadCredentials().user2.email]);
+        await createEvent(USER1.email, subject(), new Date(Date.now() - (5 * MINUTE_MS)), new Date(Date.now() + (25 * MINUTE_MS)), [USER2.email]);
 
         // # Reset the status and run the availability sync
         const {client, user} = await loginRegularUser();

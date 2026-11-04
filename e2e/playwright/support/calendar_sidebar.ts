@@ -17,8 +17,7 @@ export class CalendarSidebar {
         // Mattermost renders the app-bar button without an accessible name.
         this.appBarIcon = channelsPage.appBar.container.locator(APP_BAR_ICON);
 
-        // The calendar has no landmark role, so it keeps a test id.
-        this.container = page.getByTestId('mscalendar-sidebar');
+        this.container = page.getByRole('region', {name: 'Microsoft Calendar'});
         this.connectButton = page.getByRole('link', {name: 'Connect account'});
     }
 

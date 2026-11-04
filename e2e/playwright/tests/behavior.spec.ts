@@ -8,14 +8,14 @@ import {CalendarSidebar} from '../support/calendar_sidebar';
 import {COMMAND} from '../support/constants';
 import {USER1} from '../support/credentials';
 import {fake} from '../support/fake';
-import {disconnectRegularUser, patchPluginSettings} from '../support/plugin';
+import {disconnectMember, patchPluginSettings} from '../support/plugin';
 import {commandError, ensureConnected, ensureDisconnected, openConnectPopup, runCommandExpecting, submitSlashCommand} from '../support/ui';
 
 test.describe('sign-in failures', () => {
     /**
      * @objective Verify that a wrong Microsoft password shows an error and leaves the account disconnected
      */
-    test('rejects a wrong password and stays disconnected', {tag: '@mscalendar_sign_in'}, async ({pw}) => {
+    test('rejects a wrong password and stays disconnected', {tag: ['@mscalendar_plugin', '@mscalendar_sign_in']}, async ({pw}) => {
         // # Open the connect popup and submit a wrong password
         const channelsPage = await ensureDisconnected(pw);
         const login = await openConnectPopup(channelsPage);
@@ -43,7 +43,7 @@ test.describe('sign-in failures', () => {
          * @precondition
          * The plugin setting that forces the consent screen is enabled.
          */
-        test('stays disconnected when the user denies consent', {tag: '@mscalendar_sign_in'}, async ({pw}) => {
+        test('stays disconnected when the user denies consent', {tag: ['@mscalendar_plugin', '@mscalendar_sign_in']}, async ({pw}) => {
             // # Force the consent screen
             const {client} = await loginAdmin();
             await patchPluginSettings(client, {oauth2forceconsent: true});
@@ -74,7 +74,7 @@ test.describe('token lifecycle', () => {
 
     test.afterEach(async () => {
         await fake.configure({accessTokenTtlSeconds: 3600});
-        await disconnectRegularUser();
+        await disconnectMember();
     });
 
     /**
@@ -83,7 +83,7 @@ test.describe('token lifecycle', () => {
      * @precondition
      * The fake issues access tokens that fall inside the plugin's refresh window shortly after sign-in.
      */
-    test('refreshes an expired access token transparently', {tag: '@mscalendar_tokens'}, async ({pw}) => {
+    test('refreshes an expired access token transparently', {tag: ['@mscalendar_plugin', '@mscalendar_tokens']}, async ({pw}) => {
         // # Connect and wait until the access token is due for refresh
         const channelsPage = await ensureConnected(pw);
         await channelsPage.page.waitForTimeout(PAST_EXPIRY_MS);
@@ -103,7 +103,7 @@ test.describe('token lifecycle', () => {
      * @precondition
      * The fake issues access tokens that fall inside the plugin's refresh window shortly after sign-in.
      */
-    test('fails the command when the refresh token is revoked', {tag: '@mscalendar_tokens'}, async ({pw}) => {
+    test('fails the command when the refresh token is revoked', {tag: ['@mscalendar_plugin', '@mscalendar_tokens']}, async ({pw}) => {
         // # Connect, revoke the refresh token and wait until a refresh is due
         const channelsPage = await ensureConnected(pw);
         await fake.revokeRefreshTokens();

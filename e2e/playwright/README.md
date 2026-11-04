@@ -16,10 +16,10 @@ Built on [`@mattermost/playwright-lib`](https://www.npmjs.com/package/@mattermos
 
 - `fake-microsoft/server.ts` serves OAuth v2 (authorize with login, consent and "stay signed in" pages; the authorization-code, refresh-token and client-credentials grants; AADSTS errors) and the Graph v1.0 calls the plugin makes (profile, mailbox settings, calendars, calendar view, events and responses, `findMeetingTimes`, `$batch`, subscriptions with the validation handshake, `clientState` and expiry limits). It delivers change notifications to Mattermost like Microsoft does.
 - The plugin hardcodes the Microsoft hosts, so Docker Compose gives the fake the network aliases `login.microsoftonline.com` and `graph.microsoft.com`. A throwaway CA, created by `fake-microsoft/gen-certs.sh`, is trusted by Mattermost through `SSL_CERT_FILE`. The browser is redirected to the fake by a Playwright route (`routeMicrosoftToFake` in `support/ui.ts`). Mattermost's `SiteURL` stays `http://localhost:8065`.
-- The fake exposes a control API under `/__control/` (reset, config, token expiry and revocation, subscriptions and notifications, requests log, events per user). `support/fake.ts` wraps it.
+- The fake exposes a control API under `/__control/` (reset, config, refresh-token revocation, subscriptions and notifications, requests log, events per user). `support/fake.ts` wraps it.
 - `fake-microsoft/contract.ts` lists the fields each response must contain. The fake validates its own responses and the plugin's requests against it. Violations are listed at `/__control/violations`, and global teardown fails the run if there are any.
 
-Test users are `alice@contoso.test` (connected to Mattermost) and `bob@contoso.test` (invited to events).
+Test mailboxes are `alice@contoso.test` (connected by the regular member, who is a plugin admin) and `bob@contoso.test` (invited to events, and connected by a second member who is not a plugin admin to check that admin-only commands are refused).
 
 ## Running
 
@@ -40,6 +40,8 @@ npm run test:headed
 npm run test:ui
 ```
 
+Every test is tagged `@mscalendar_plugin` plus an area tag such as `@mscalendar_webhooks`, so `npx playwright test --grep @mscalendar_plugin` selects the whole suite.
+
 Fixture events live in the fake and are removed by each spec. `POST /__control/reset` clears everything, and global setup calls it.
 
 ### Coverage
@@ -48,7 +50,7 @@ Fixture events live in the fake and are removed by each spec. `POST /__control/r
 | --- | --- |
 | `connect` | Connect and disconnect through the login popup, forced consent |
 | `behavior` | Wrong password, denied consent, access-token refresh, revoked refresh token |
-| `commands` | `help`, `info`, `connect`, `today`, `tomorrow`, `viewcal`, `settings`, `showcals` |
+| `commands` | `help`, `info`, `connect`, `today`, `tomorrow`, `viewcal`, `settings`, `showcals`, admin-only commands refused for a non-admin member |
 | `events` | Create-event modal, invitation reaching the attendee, form validation |
 | `availability` | Status sync (`avail`) sets Do Not Disturb from a running meeting |
 | `sidebar` | Channel header button and the experimental calendar sidebar |
@@ -56,7 +58,7 @@ Fixture events live in the fake and are removed by each spec. `POST /__control/r
 
 ## Contract check against the real service
 
-`npm run contract:compare` runs the same Graph scenarios (token, create, get and list events, mailbox settings, calendars, batched calendar view, error shapes, delete) against the fake and a live tenant. It fails when a response is missing a contract field or when the fake and the live service answer with different status codes. The nightly workflow `e2e-contract.yml` runs it.
+`npm run contract:compare` runs the same Graph scenarios (token, create, get and list events, mailbox settings, calendars, batched calendar view, error shapes, delete) against the fake and a live tenant. It fails when a response is missing a contract field or when the fake and the live service answer with different status codes. The nightly workflow `e2e-contract.yml` runs it once the repository variable `MSCAL_E2E_CONTRACT_ENABLED` is set to `true`, which should happen after the live tenant below is set up.
 
 ```sh
 npm run fake              # start the fake on http://127.0.0.1:8080

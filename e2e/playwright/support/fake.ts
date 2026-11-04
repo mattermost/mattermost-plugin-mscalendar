@@ -20,6 +20,8 @@ export type FakeRequest = {method?: string; path?: string; status?: number; gran
 
 export type FakeSubscription = {id: string; clientState: string; notificationUrl: string; expirationDateTime: string; creatorId: string};
 
+export type FakeNotification = {eventId: string; changeType?: string; clientState?: string; soon?: boolean};
+
 async function control<T>(method: string, path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${FAKE_URL}/__control/${path}`, {
         method,
@@ -47,13 +49,12 @@ export const fake = {
     events: async (email: string) => (await control<{value: FakeEvent[]}>('GET', `users/${encodeURIComponent(email)}/events`)).value,
 
     subscriptions: async () => (await control<{value: FakeSubscription[]}>('GET', 'subscriptions')).value,
-    notify: (subscriptionId: string, body: {eventId: string; changeType?: string; clientState?: string; soon?: boolean}) => control('POST', `subscriptions/${subscriptionId}/notify`, body),
+    notify: (subscriptionId: string, ...notifications: FakeNotification[]) => control('POST', `subscriptions/${subscriptionId}/notify`, {notifications}),
 
     requests: async () => (await control<{value: FakeRequest[]}>('GET', 'requests')).value,
     clearRequests: () => control('DELETE', 'requests'),
     violations: async () => (await control<{value: string[]}>('GET', 'violations')).value,
 
-    expireAccessTokens: () => control('POST', 'tokens/expire'),
     revokeRefreshTokens: () => control('POST', 'tokens/revoke'),
 };
 

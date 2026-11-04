@@ -3,11 +3,13 @@
 
 import './support/env';
 
+import {loginNonAdminUser} from './support/admin';
 import {fake} from './support/fake';
-import {disconnectRegularUser} from './support/plugin';
+import {disconnectMember} from './support/plugin';
 
 export default async function globalTeardown() {
-    await disconnectRegularUser();
+    await disconnectMember();
+    await disconnectMember(loginNonAdminUser);
 
     const violations = await fake.violations();
     if (violations.length > 0) {
