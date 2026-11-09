@@ -340,6 +340,20 @@ func (mr *MockEngineMockRecorder) GetUserSettings(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSettings", reflect.TypeOf((*MockEngine)(nil).GetUserSettings), arg0)
 }
 
+// GetUserTimeFormat mocks base method.
+func (m *MockEngine) GetUserTimeFormat(arg0 string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserTimeFormat", arg0)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetUserTimeFormat indicates an expected call of GetUserTimeFormat.
+func (mr *MockEngineMockRecorder) GetUserTimeFormat(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTimeFormat", reflect.TypeOf((*MockEngine)(nil).GetUserTimeFormat), arg0)
+}
+
 // IsAuthorizedAdmin mocks base method.
 func (m *MockEngine) IsAuthorizedAdmin(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()

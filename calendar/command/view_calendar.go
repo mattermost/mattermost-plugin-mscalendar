@@ -27,6 +27,7 @@ func (c *Command) viewCalendar(_ ...string) (string, bool, error) {
 		return "", false, err
 	}
 
-	out, err := views.RenderCalendarView(events, tz)
+	timeFormat := c.Engine.GetUserTimeFormat(c.user().MattermostUserID)
+	out, err := views.RenderCalendarView(events, tz, timeFormat)
 	return out, false, err
 }

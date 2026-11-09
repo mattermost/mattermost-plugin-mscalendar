@@ -30,11 +30,11 @@ func (processor *notificationProcessor) newSlackAttachment(n *remote.Notificatio
 	}
 }
 
-func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification, timezone string) *model.MessageAttachment {
+func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notification, timezone string, timeFormat ...string) *model.MessageAttachment {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(new) " + sa.Title
 
-	fields := eventToFields(n.Event, timezone)
+	fields := eventToFields(n.Event, timezone, timeFormat...)
 	for _, k := range notificationFieldOrder {
 		v := fields[k]
 
@@ -51,12 +51,12 @@ func (processor *notificationProcessor) newEventSlackAttachment(n *remote.Notifi
 	return sa
 }
 
-func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event, timezone string) (bool, *model.MessageAttachment) {
+func (processor *notificationProcessor) updatedEventSlackAttachment(n *remote.Notification, prior *remote.Event, timezone string, timeFormat ...string) (bool, *model.MessageAttachment) {
 	sa := processor.newSlackAttachment(n)
 	sa.Title = "(updated) " + sa.Title
 
-	newFields := eventToFields(n.Event, timezone)
-	priorFields := eventToFields(prior, timezone)
+	newFields := eventToFields(n.Event, timezone, timeFormat...)
+	priorFields := eventToFields(prior, timezone, timeFormat...)
 	changed, added, updated, deleted := fields.Diff(priorFields, newFields)
 	if !changed {
 		return false, nil
@@ -159,7 +159,12 @@ func NewPostActionForEventResponse(eventID, response, url string) []*model.PostA
 	return []*model.PostAction{pa}
 }
 
-func eventToFields(e *remote.Event, timezone string) fields.Fields {
+func eventToFields(e *remote.Event, timezone string, timeFormat ...string) fields.Fields {
+	tf := views.TimeFormat12Hour
+	if len(timeFormat) > 0 && timeFormat[0] != "" {
+		tf = timeFormat[0]
+	}
+
 	date := func(dtStart, dtEnd *remote.DateTime, isAllDayEvent bool) (time.Time, time.Time, string) {
 		if dtStart == nil || dtEnd == nil {
 			return time.Time{}, time.Time{}, "n/a"
@@ -182,14 +187,14 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 			endDateFormat += ", 2006"
 		}
 
-		startFormat += " · " + views.TimeFormat
+		startFormat += " · " + tf
 
 		var formatted string
 		if tStart.Year() != tEnd.Year() || tStart.Month() != tEnd.Month() || tStart.Day() != tEnd.Day() {
-			endDateFormat += " · " + views.TimeFormat
+			endDateFormat += " · " + tf
 			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(endDateFormat)
 		} else {
-			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(views.TimeFormat)
+			formatted = tStart.Format(startFormat) + " - " + tEnd.Format(tf)
 		}
 
 		return tStart, tEnd, formatted
@@ -239,6 +244,11 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 		attendees = append(attendees, fields.NewStringValue("None"))
 	}
 
+	locationName := ""
+	if e.Location != nil {
+		locationName = e.Location.DisplayName
+	}
+
 	ff := fields.Fields{
 		FieldSubject:     fields.NewStringValue(views.EnsureSubject(e.Subject)),
 		FieldBodyPreview: fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.BodyPreview))),
@@ -248,7 +258,7 @@ func eventToFields(e *remote.Event, timezone string) fields.Fields {
 		FieldOrganizer: fields.NewStringValue(
 			fmt.Sprintf("[%s](mailto:%s)",
 				e.Organizer.EmailAddress.Name, e.Organizer.EmailAddress.Address)),
-		FieldLocation:       fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(e.Location.DisplayName))),
+		FieldLocation:       fields.NewStringValue(views.MarkdownToHTMLEntities(valueOrNotDefined(locationName))),
 		FieldResponseStatus: fields.NewStringValue(e.ResponseStatus.Response),
 		FieldAttendees:      fields.NewMultiValue(attendees...),
 	}

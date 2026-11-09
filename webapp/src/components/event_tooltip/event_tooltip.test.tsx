@@ -62,6 +62,29 @@ describe('EventTooltip', () => {
         expect(timeEl).toBeInTheDocument();
     });
 
+    it('renders 24-hour military time display when useMilitaryTime is true', () => {
+        render(
+            <EventTooltip
+                {...baseProps}
+                useMilitaryTime={true}
+            />
+        );
+        const timeEl = screen.getByText(/09:00 - 09:30/);
+        expect(timeEl).toBeInTheDocument();
+        expect(timeEl.textContent).not.toMatch(/AM|PM/);
+    });
+
+    it('renders 12-hour time display with AM/PM when useMilitaryTime is false', () => {
+        render(
+            <EventTooltip
+                {...baseProps}
+                useMilitaryTime={false}
+            />
+        );
+        const timeEl = screen.getByText(/9:00 AM - 9:30 AM/);
+        expect(timeEl).toBeInTheDocument();
+    });
+
     it('renders location when present', () => {
         const props = {...baseProps, event: makeEvent({location: {displayName: 'Room 42'}})};
         render(<EventTooltip {...props}/>);

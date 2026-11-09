@@ -10,6 +10,7 @@ import (
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine/views"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/remote"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/store"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/bot"
@@ -22,6 +23,7 @@ type Users interface {
 	GetRemoteUser(mattermostUserID string) (*remote.User, error)
 	IsAuthorizedAdmin(mattermostUserID string) (bool, error)
 	GetUserSettings(user *User) (*store.Settings, error)
+	GetUserTimeFormat(mattermostUserID string) string
 }
 
 type User struct {
@@ -242,4 +244,36 @@ func (m *mscalendar) GetUserSettings(user *User) (*store.Settings, error) {
 	}
 
 	return &user.Settings, nil
+}
+
+func (m *mscalendar) GetUserTimeFormat(mattermostUserID string) string {
+	return TimeFormatForUser(m.Env, mattermostUserID)
+}
+
+// TimeFormatForUser is the single source of truth for resolving the time
+// format preferred by a user across views, commands, and notifications.
+// It reads the "use_military_time" display setting and falls back to the
+// 12-hour format when the preference is missing, cannot be retrieved, or
+// the dependencies are not available.
+func TimeFormatForUser(env Env, mattermostUserID string) string {
+	if env.Dependencies == nil || env.PluginAPI == nil || mattermostUserID == "" {
+		return views.TimeFormat12Hour
+	}
+
+	preference, err := env.PluginAPI.GetPreferenceForUser(mattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
+	if err != nil {
+		if env.Logger != nil {
+			env.Logger.With(bot.LogContext{
+				"mattermostUserID": mattermostUserID,
+				"err":              err.Error(),
+			}).Debugf("failed to get military time preference, using default format")
+		}
+		return views.TimeFormat12Hour
+	}
+
+	if preference != nil && preference.Value == "true" {
+		return views.TimeFormat24Hour
+	}
+
+	return views.TimeFormat12Hour
 }

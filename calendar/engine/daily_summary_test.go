@@ -68,6 +68,7 @@ func TestGetDaySummaryForUser(t *testing.T) {
 		}, nil).Times(2)
 
 		mockPluginAPI.EXPECT().GetMattermostUser(user.MattermostUserID)
+		mockPluginAPI.EXPECT().GetPreferenceForUser(user.MattermostUserID, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(nil, nil).Times(1)
 
 		mockRemote.EXPECT().MakeUserClient(context.Background(), nil, gomock.Any(), poster, gomock.Any()).Return(mockClient, nil)
 
@@ -369,6 +370,7 @@ Wednesday February 12, 2020
 			mockRemote := mock_remote.NewMockRemote(ctrl)
 			mockClient := mock_remote.NewMockClient(ctrl)
 			mockPluginAPI := mock_plugin_api.NewMockPluginAPI(ctrl)
+			mockPluginAPI.EXPECT().GetPreferenceForUser(gomock.Any(), model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime).Return(nil, nil).AnyTimes()
 
 			logger := mock_bot.NewMockLogger(ctrl)
 			env := Env{

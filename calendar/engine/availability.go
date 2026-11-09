@@ -601,7 +601,8 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 				}
 			}
 
-			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone)
+			timeFormat := m.GetUserTimeFormat(mattermostUserID)
+			_, attachment, err := views.RenderUpcomingEventAsAttachment(event, timezone, views.TimeFormatOption(timeFormat, timezone))
 			if err != nil {
 				m.Logger.Warnf("notifyUpcomingEvent error rendering schedule item. err=%v", err)
 				continue
@@ -629,7 +630,7 @@ func (m *mscalendar) notifyUpcomingEvents(mattermostUserID string, events []*rem
 						ChannelId: channelID,
 						Message:   "Upcoming event",
 					}
-					attachment, errRender := views.RenderEventAsAttachment(event, timezone, views.ShowTimezoneOption(timezone))
+					attachment, errRender := views.RenderEventAsAttachment(event, timezone, views.ShowTimezoneOption(timezone, timeFormat))
 					if errRender != nil {
 						m.Logger.With(bot.LogContext{"err": errRender}).Errorf("notifyUpcomingEvents error rendering channel post")
 						continue

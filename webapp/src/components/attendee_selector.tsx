@@ -10,6 +10,8 @@ import {useAppDispatch} from '@/hooks';
 import {getStyleForReactSelect} from '@/utils/styles';
 import {autocompleteConnectedUsers} from '@/actions';
 
+const AUTOCOMPLETE_DEBOUNCE_MS = 250;
+
 type SelectOption = {
     label: string;
     value: string;
@@ -32,6 +34,13 @@ export default function AttendeeSelector(props: Props) {
 
     const loadOptions = useCallback(async (input: string): Promise<SelectOption[]> => {
         const requestId = ++requestIdRef.current;
+        if (input) {
+            await new Promise((resolve) => setTimeout(resolve, AUTOCOMPLETE_DEBOUNCE_MS));
+            if (requestId !== requestIdRef.current) {
+                return [];
+            }
+        }
+
         const response = await dispatch(autocompleteConnectedUsers(input));
 
         if (requestId !== requestIdRef.current) {

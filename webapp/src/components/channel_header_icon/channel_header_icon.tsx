@@ -3,150 +3,133 @@ import {useRef} from 'react';
 let idCounter = 0;
 
 const ChannelHeaderIcon = () => {
-    const clipIdRef = useRef(`mscal-clip-${++idCounter}`);
-    const clipId = clipIdRef.current;
+    const idRef = useRef(`mscal-${++idCounter}`);
+    const id = idRef.current;
 
     return (
         <svg
-            width='24'
-            height='24'
-            viewBox='0 0 24 24'
+            width='22'
+            height='22'
+            viewBox='0 0 22 22'
+            fill='none'
             xmlns='http://www.w3.org/2000/svg'
             aria-hidden='true'
             focusable='false'
         >
-            <circle
-                cx='12'
-                cy='12'
-                r='12'
-                fill='#FFFFFF'
+            <path
+                d='M2 7L10.6411 6.03988C10.8796 6.01337 11.1204 6.01337 11.3589 6.03988L20 7V16.75C20 18.5449 18.5449 20 16.75 20H5.25C3.45508 20 2 18.5449 2 16.75V7Z'
+                fill={`url(#${id}-body)`}
             />
-            <g transform='translate(2.5 2) scale(0.0475)'>
-                <g clipPath={`url(#${clipId})`}>
-                    <path
-                        d='M131.589 165.011C124.51 165.011 118.869 168.338 114.704 174.979C110.539 181.62 108.451 190.413 108.451 201.356C108.451 212.463 110.539 221.243 114.704 227.696C118.869 234.162 124.335 237.377 131.088 237.377C138.055 237.377 143.583 234.237 147.66 227.959C151.738 221.68 153.789 212.963 153.789 201.819C153.789 190.2 151.813 181.158 147.848 174.691C143.883 168.238 138.468 165.011 131.589 165.011Z'
-                        fill='#0072C6'
-                    />
-                    <path
-                        d='M33.0327 72.5211V327.352L226.892 368V35L33.0327 72.5211V72.5211ZM162.756 243.017C154.564 253.798 143.883 259.201 130.7 259.201C117.855 259.201 107.4 253.973 99.3075 243.53C91.228 233.074 87.1757 219.466 87.1757 202.682C87.1757 184.959 91.278 170.626 99.4951 159.683C107.712 148.739 118.593 143.261 132.139 143.261C144.933 143.261 155.289 148.489 163.181 158.97C171.085 169.451 175.038 183.258 175.038 200.406C175.05 218.028 170.948 232.236 162.756 243.017Z'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='263'
-                        y='158'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='291'
-                        y='158'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='319'
-                        y='158'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='235'
-                        y='188'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='263'
-                        y='188'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='291'
-                        y='188'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='319'
-                        y='188'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='235'
-                        y='218'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='263'
-                        y='218'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='291'
-                        y='218'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='319'
-                        y='218'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='235'
-                        y='248'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='263'
-                        y='248'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                    <rect
-                        x='291'
-                        y='248'
-                        width='22'
-                        height='23'
-                        fill='#0072C6'
-                    />
-                </g>
+            <path
+                d='M2 5.25C2 3.45507 3.45507 2 5.25 2H16.75C18.5449 2 20 3.45507 20 5.25V7H2V5.25Z'
+                fill={`url(#${id}-header)`}
+            />
+            <g filter={`url(#${id}-shadow)`}>
                 <path
                     fillRule='evenodd'
                     clipRule='evenodd'
-                    d='M234 107H354C359.523 107 364 111.477 364 117V149V262V279V282C364 287.523 359.523 292 354 292H234V280H351V149H234V107Z'
-                    fill='#0072C6'
+                    d='M6.75 9.5C6.05964 9.5 5.5 10.0596 5.5 10.75C5.5 11.4404 6.05964 12 6.75 12C7.44036 12 8 11.4404 8 10.75C8 10.0596 7.44036 9.5 6.75 9.5ZM6.75 13.5C6.05964 13.5 5.5 14.0596 5.5 14.75C5.5 15.4404 6.05964 16 6.75 16C7.44036 16 8 15.4404 8 14.75C8 14.0596 7.44036 13.5 6.75 13.5ZM9.75 10.75C9.75 10.0596 10.3096 9.5 11 9.5C11.6904 9.5 12.25 10.0596 12.25 10.75C12.25 11.4404 11.6904 12 11 12C10.3096 12 9.75 11.4404 9.75 10.75ZM11 13.5C10.3096 13.5 9.75 14.0596 9.75 14.75C9.75 15.4404 10.3096 16 11 16C11.6904 16 12.25 15.4404 12.25 14.75C12.25 14.0596 11.6904 13.5 11 13.5ZM14 10.75C14 10.0596 14.5596 9.5 15.25 9.5C15.9404 9.5 16.5 10.0596 16.5 10.75C16.5 11.4404 15.9404 12 15.25 12C14.5596 12 14 11.4404 14 10.75Z'
+                    fill={`url(#${id}-dots)`}
                 />
-                <defs>
-                    <clipPath id={clipId}>
-                        <rect
-                            width='329.36'
-                            height='333'
-                            fill='white'
-                            transform='translate(33.0327 35)'
-                        />
-                    </clipPath>
-                </defs>
             </g>
+            <defs>
+                <filter
+                    id={`${id}-shadow`}
+                    x='4.83333'
+                    y='9.16667'
+                    width='12.3333'
+                    height='7.83333'
+                    filterUnits='userSpaceOnUse'
+                    colorInterpolationFilters='sRGB'
+                >
+                    <feFlood
+                        floodOpacity='0'
+                        result='BackgroundImageFix'
+                    />
+                    <feColorMatrix
+                        in='SourceAlpha'
+                        type='matrix'
+                        values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0'
+                        result='hardAlpha'
+                    />
+                    <feOffset dy='0.333333'/>
+                    <feGaussianBlur stdDeviation='0.333333'/>
+                    <feColorMatrix
+                        type='matrix'
+                        values='0 0 0 0 0.0156863 0 0 0 0 0.286275 0 0 0 0 0.811765 0 0 0 0.32 0'
+                    />
+                    <feBlend
+                        mode='normal'
+                        in2='BackgroundImageFix'
+                        result='effect1_dropShadow'
+                    />
+                    <feColorMatrix
+                        in='SourceAlpha'
+                        type='matrix'
+                        values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0'
+                        result='hardAlpha'
+                    />
+                    <feOffset dy='0.0666667'/>
+                    <feGaussianBlur stdDeviation='0.0333333'/>
+                    <feColorMatrix
+                        type='matrix'
+                        values='0 0 0 0 0.0156863 0 0 0 0 0.286275 0 0 0 0 0.811765 0 0 0 0.24 0'
+                    />
+                    <feBlend
+                        mode='normal'
+                        in2='effect1_dropShadow'
+                        result='effect2_dropShadow'
+                    />
+                    <feBlend
+                        mode='normal'
+                        in='SourceGraphic'
+                        in2='effect2_dropShadow'
+                        result='shape'
+                    />
+                </filter>
+                <linearGradient
+                    id={`${id}-body`}
+                    x1='11'
+                    y1='20'
+                    x2='11'
+                    y2='8.33333'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#0091EB'/>
+                    <stop
+                        offset='1'
+                        stopColor='#3DCBFF'
+                    />
+                </linearGradient>
+                <linearGradient
+                    id={`${id}-header`}
+                    x1='10.3571'
+                    y1='-0.25'
+                    x2='20.6552'
+                    y2='12.9904'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#0078D4'/>
+                    <stop
+                        offset='1'
+                        stopColor='#0068C6'
+                    />
+                </linearGradient>
+                <linearGradient
+                    id={`${id}-dots`}
+                    x1='11'
+                    y1='9.5'
+                    x2='11'
+                    y2='16'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#EBFBFF'/>
+                    <stop
+                        offset='1'
+                        stopColor='#BDF2FF'
+                    />
+                </linearGradient>
+            </defs>
         </svg>
     );
 };
