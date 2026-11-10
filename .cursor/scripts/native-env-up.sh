@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Docker-free equivalent of `make e2e-env-up` for environments (such as Cursor cloud agents)
-# that run Mattermost 12 natively from /opt/mattermost against a local Postgres.
+# Docker-free equivalent of `make e2e-env-up` for Cursor cloud agent VMs, which have no Docker and
+# run Mattermost natively from /opt/mattermost against a local Postgres.
 #
 # It is idempotent: it brings up the fake Microsoft server on :8080/:443, makes Mattermost
 # trust it, points the plugin at it, and leaves e2e/playwright/.env with the admin password,
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-E2E_DIR="$(dirname "${SCRIPT_DIR}")"
+E2E_DIR="$(cd "${SCRIPT_DIR}/../../e2e/playwright" && pwd)"
 MM_DIR=/opt/mattermost
 MM_CONFIG="${MM_DIR}/config/config.json"
 MM_ADMIN_PASSWORD_FILE="${MM_DIR}/.admin-password"
