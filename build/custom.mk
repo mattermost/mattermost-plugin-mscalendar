@@ -11,6 +11,11 @@ $(E2E_DIR)/node_modules: $(E2E_DIR)/package.json $(E2E_DIR)/package-lock.json
 e2e-env-up:
 	cd $(E2E_DIR) && docker compose up -d --wait
 
+## Starts the E2E environment without Docker, on the native Mattermost and Postgres of a Cursor cloud agent VM.
+.PHONY: e2e-env-up-native
+e2e-env-up-native:
+	$(E2E_DIR)/scripts/native-env-up.sh
+
 ## Stops the E2E server and wipes its data.
 .PHONY: e2e-env-down
 e2e-env-down:
