@@ -31,6 +31,38 @@ fake_https_healthy() {
         https://login.microsoftonline.com/__control/health >/dev/null 2>&1
 }
 fake_ready() { fake_healthy && fake_https_healthy; }
+
+# PIDs of fake Microsoft servers holding its ports, found by listener so unrelated processes are never touched.
+fake_pids() {
+    local pid
+    for pid in $(lsof -nP -t -iTCP:8080 -iTCP:443 -sTCP:LISTEN 2>/dev/null | sort -u); do
+        if tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -q 'fake-microsoft/server.ts'; then
+            echo "${pid}"
+        fi
+    done
+}
+
+stop_fake() {
+    "${TMUX[@]}" kill-session -t e2e-fake-microsoft 2>/dev/null || true
+    local pids
+    pids=$(fake_pids)
+    if [[ -n "${pids}" ]]; then
+        # shellcheck disable=SC2086
+        kill ${pids} 2>/dev/null || true
+        for _ in $(seq 1 10); do
+            [[ -z "$(fake_pids)" ]] && return 0
+            sleep 1
+        done
+        # shellcheck disable=SC2046
+        kill -KILL $(fake_pids) 2>/dev/null || true
+    fi
+    for _ in $(seq 1 10); do
+        [[ -z "$(fake_pids)" ]] && return 0
+        sleep 1
+    done
+    echo "The previous fake Microsoft server is still holding :8080/:443" >&2
+    return 1
+}
 mm_pid() { pgrep -x mattermost | head -1 || true; }
 
 wait_for() {
@@ -46,6 +78,7 @@ wait_for() {
     return 1
 }
 
+command -v lsof >/dev/null || { echo "lsof is required to find a stale fake Microsoft server" >&2; exit 1; }
 [[ -x "${MM_DIR}/bin/mattermost" ]] || { echo "${MM_DIR}/bin/mattermost not found; this script needs the native Mattermost install." >&2; exit 1; }
 
 if ! mm_healthy; then
@@ -75,7 +108,7 @@ sudo sysctl -q -w net.ipv4.ip_unprivileged_port_start=443
 # An already-running fake may have started before the certificates existed and lack its HTTPS listener.
 if ! fake_ready; then
     log "Starting the fake Microsoft server"
-    "${TMUX[@]}" kill-session -t e2e-fake-microsoft 2>/dev/null || true
+    stop_fake
     "${TMUX[@]}" new-session -d -s e2e-fake-microsoft -c "${E2E_DIR}" \
         "FAKE_CERT_DIR=${CERT_DIR} FAKE_MATTERMOST_URL=http://localhost:8065 node fake-microsoft/server.ts 2>&1 | tee /tmp/fake-microsoft.log"
     wait_for "the fake Microsoft server (HTTP and HTTPS)" 15 fake_ready
