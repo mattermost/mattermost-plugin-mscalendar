@@ -26,6 +26,11 @@ log() { echo "[native-e2e] $*"; }
 
 mm_healthy() { curl -sf "${MM_URL}/api/v4/system/ping" >/dev/null 2>&1; }
 fake_healthy() { curl -sf "${FAKE_URL}/__control/health" >/dev/null 2>&1; }
+fake_https_healthy() {
+    curl -sf --noproxy '*' --cacert "${CA_BUNDLE}" --resolve "login.microsoftonline.com:443:127.0.0.1" \
+        https://login.microsoftonline.com/__control/health >/dev/null 2>&1
+}
+fake_ready() { fake_healthy && fake_https_healthy; }
 mm_pid() { pgrep -x mattermost | head -1 || true; }
 
 wait_for() {
@@ -56,19 +61,24 @@ fi
 # The fake and Mattermost both need the throwaway CA and the Microsoft host aliases.
 sudo mkdir -p "${CERT_DIR}"
 sudo chown "$(id -u):$(id -g)" "${CERT_DIR}"
-sh "${E2E_DIR}/fake-microsoft/gen-certs.sh" >/tmp/gen-certs.log 2>&1 || { cat /tmp/gen-certs.log >&2; exit 1; }
+CERT_LOG="$(mktemp)"
+trap 'rm -f "${CERT_LOG}"' EXIT
+sh "${E2E_DIR}/fake-microsoft/gen-certs.sh" >"${CERT_LOG}" 2>&1 || { cat "${CERT_LOG}" >&2; exit 1; }
 
-if ! grep -q "login.microsoftonline.com" /etc/hosts; then
-    echo "127.0.0.1 ${MICROSOFT_HOSTS}" | sudo tee -a /etc/hosts >/dev/null
-fi
+for host in ${MICROSOFT_HOSTS}; do
+    if ! grep -Eq "^[^#]*[[:space:]]${host//./\\.}([[:space:]]|\$)" /etc/hosts; then
+        echo "127.0.0.1 ${host}" | sudo tee -a /etc/hosts >/dev/null
+    fi
+done
 sudo sysctl -q -w net.ipv4.ip_unprivileged_port_start=443
 
-if ! fake_healthy; then
+# An already-running fake may have started before the certificates existed and lack its HTTPS listener.
+if ! fake_ready; then
     log "Starting the fake Microsoft server"
     "${TMUX[@]}" kill-session -t e2e-fake-microsoft 2>/dev/null || true
     "${TMUX[@]}" new-session -d -s e2e-fake-microsoft -c "${E2E_DIR}" \
         "FAKE_CERT_DIR=${CERT_DIR} FAKE_MATTERMOST_URL=http://localhost:8065 node fake-microsoft/server.ts 2>&1 | tee /tmp/fake-microsoft.log"
-    wait_for "the fake Microsoft server" 15 fake_healthy
+    wait_for "the fake Microsoft server (HTTP and HTTPS)" 15 fake_ready
 fi
 
 # The environment start script seeds camel-case plugin settings (a made-up client id) that shadow the
@@ -99,6 +109,11 @@ if ! mm_trusts_fake || ! config_is_current; then
             kill -0 "${pid}" 2>/dev/null || break
             sleep 1
         done
+        if kill -0 "${pid}" 2>/dev/null; then
+            log "Mattermost ignored SIGTERM; killing it"
+            kill -KILL "${pid}"
+            sleep 1
+        fi
     fi
     rm -f /var/tmp/mattermost_local.socket
 
@@ -141,10 +156,12 @@ EOF
     "${TMUX[@]}" new-session -d -s mattermost "bash ${MM_LAUNCHER}"
     wait_for "Mattermost" 60 mm_healthy
     wait_for "the Mattermost local socket" 30 test -S /var/tmp/mattermost_local.socket
+    mm_trusts_fake || { echo "Mattermost started without SSL_CERT_FILE=${CA_BUNDLE}" >&2; exit 1; }
 fi
 
 # Untracked file read by support/env.ts so `make e2e` needs no exported variables.
 ENV_FILE="${E2E_DIR}/.env"
+[[ -s "${MM_ADMIN_PASSWORD_FILE}" ]] || { echo "Admin password file ${MM_ADMIN_PASSWORD_FILE} is missing or empty" >&2; exit 1; }
 ADMIN_PASSWORD="$(tr -d '\n' <"${MM_ADMIN_PASSWORD_FILE}")"
 if ! grep -qx "PW_ADMIN_PASSWORD=${ADMIN_PASSWORD}" "${ENV_FILE}" 2>/dev/null; then
     ( umask 077; grep -v '^PW_ADMIN_PASSWORD=' "${ENV_FILE}" 2>/dev/null >"${ENV_FILE}.tmp" || true
