@@ -85,6 +85,7 @@ if ! mm_healthy; then
     if [[ -f /opt/cursor/cloud-agent-start.sh ]]; then
         log "Mattermost is down; running the environment start script"
         bash /opt/cursor/cloud-agent-start.sh
+        wait_for "Mattermost" 60 mm_healthy
     else
         echo "Mattermost is not running on ${MM_URL}" >&2
         exit 1
@@ -114,7 +115,8 @@ if ! fake_ready; then
     wait_for "the fake Microsoft server (HTTP and HTTPS)" 15 fake_ready
 fi
 
-# The environment start script seeds camel-case plugin settings (a made-up client id) that shadow the
+# The environment start script (/opt/cursor/cloud-agent-start.sh, baked into the environment snapshot rather
+# than this repo) seeds camel-case plugin settings (a made-up client id) on every boot. They shadow the
 # lowercase keys the suite writes, so the plugin would sign in against the wrong app. Keep only the fake's.
 config_is_current() {
     python3 - "${MM_CONFIG}" <<'PY'
@@ -196,9 +198,12 @@ fi
 ENV_FILE="${E2E_DIR}/.env"
 [[ -s "${MM_ADMIN_PASSWORD_FILE}" ]] || { echo "Admin password file ${MM_ADMIN_PASSWORD_FILE} is missing or empty" >&2; exit 1; }
 ADMIN_PASSWORD="$(tr -d '\n' <"${MM_ADMIN_PASSWORD_FILE}")"
-if ! grep -qx "PW_ADMIN_PASSWORD=${ADMIN_PASSWORD}" "${ENV_FILE}" 2>/dev/null; then
+# Single quotes keep `#` and `$` literal for process.loadEnvFile, which has no escape for a quote inside them.
+[[ "${ADMIN_PASSWORD}" != *"'"* ]] || { echo "The admin password contains a single quote, which ${ENV_FILE} cannot hold" >&2; exit 1; }
+ENTRY="PW_ADMIN_PASSWORD='${ADMIN_PASSWORD}'"
+if ! grep -qxF "${ENTRY}" "${ENV_FILE}" 2>/dev/null; then
     ( umask 077; grep -v '^PW_ADMIN_PASSWORD=' "${ENV_FILE}" 2>/dev/null >"${ENV_FILE}.tmp" || true
-      echo "PW_ADMIN_PASSWORD=${ADMIN_PASSWORD}" >>"${ENV_FILE}.tmp"
+      echo "${ENTRY}" >>"${ENV_FILE}.tmp"
       mv "${ENV_FILE}.tmp" "${ENV_FILE}" )
 fi
 
