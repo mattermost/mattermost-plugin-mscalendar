@@ -1,0 +1,23 @@
+---
+description: Running the plugin, builds and the Playwright E2E suite on a Cursor cloud agent VM
+alwaysApply: false
+---
+
+Cloud agent VMs have no Docker. Mattermost 12 runs natively from `/opt/mattermost` on a local Postgres, so `make e2e-env-up` does not work there. The environment start command runs `.cursor/scripts/native-env-up.sh` after the base start script, so a fresh VM is normally ready at boot. It brings up:
+
+- The fake Microsoft Entra ID and Graph server on `:8080` and `:443` (tmux session `e2e-fake-microsoft`).
+- The `/etc/hosts` aliases and throwaway CA in `/certs`, with Mattermost (tmux session `mattermost`) restarted to trust it.
+- Plugin settings in `/opt/mattermost/config/config.json` pointing at the fake tenant. The camel-case settings the base start script seeds are removed, because they shadow the suite's lowercase keys and fail every sign-in with `AADSTS700016`.
+
+The base start script is `/opt/cursor/cloud-agent-start.sh`. It is baked into the environment snapshot, not this repo, and called by the start command in the environment settings (Cursor dashboard, Cloud Agents, Environments, `mattermost/mattermost-plugin-mscalendar`). Changing what it seeds means changing that environment, not this repo.
+- `e2e/playwright/.env` (untracked) with `PW_ADMIN_PASSWORD`.
+
+If something is down, run `bash .cursor/scripts/native-env-up.sh`. It is safe to run repeatedly.
+
+- Lint: `make check-style`. Unit tests: `make test`.
+- Bundle: `make dist`. It generates `server/manifest.go`, so a bare `go build ./...` fails before the first `make apply`.
+- Deploy to the local server: `MM_LOCALSOCKETPATH=/var/tmp/mattermost_local.socket make deploy`.
+- E2E: `make e2e`, or one spec with `cd e2e/playwright && npx playwright test tests/commands.spec.ts`.
+- The suite treats `http://localhost:8065` as disposable and archives every team except its own.
+- Admin login is `sysadmin` with the password in `/opt/mattermost/.admin-password`.
+- Logs: `/tmp/mattermost.log`, `/tmp/fake-microsoft.log`. Failed specs leave traces and videos in `e2e/playwright/results/output`.
