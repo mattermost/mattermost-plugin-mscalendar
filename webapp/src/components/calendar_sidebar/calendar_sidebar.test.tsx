@@ -4,7 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 
 import {mockTheme} from '@/testutils/theme';
 
-import CalendarSidebar, {CalendarSidebarProps, EVENT_MIN_HEIGHT_PX} from './calendar_sidebar';
+import CalendarSidebar, {CalendarSidebarProps, EVENT_MIN_HEIGHT_PX, EVENT_SHORT_HEIGHT_PX} from './calendar_sidebar';
 
 jest.mock('@fullcalendar/react', () => {
     const FakeCalendar = jest.fn(() => <div data-testid='fullcalendar'/>);
@@ -186,5 +186,11 @@ describe('CalendarSidebar', () => {
         render(<CalendarSidebar {...makeProps()}/>);
         const props = (FullCalendar as unknown as jest.Mock).mock.calls[0][0];
         expect(props.eventMinHeight).toBe(EVENT_MIN_HEIGHT_PX);
+    });
+
+    it('uses the single-line layout for events too short for two lines', () => {
+        render(<CalendarSidebar {...makeProps()}/>);
+        const props = (FullCalendar as unknown as jest.Mock).mock.calls[0][0];
+        expect(props.eventShortHeight).toBe(EVENT_SHORT_HEIGHT_PX);
     });
 });
