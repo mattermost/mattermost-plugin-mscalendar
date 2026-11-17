@@ -77,8 +77,12 @@ export const autocompleteUserChannels = (input: string, teamId: string): AppThun
     client.setUrl(siteURL);
 
     try {
-        const channels = await client.autocompleteChannels(teamId, input);
-        const channelsCanWriteTo = channels.filter((c) => haveIChannelPermission(state, teamId, c.id, Permissions.CREATE_POST));
+        // Members only: plain autocomplete also returns unjoined public channels, which can
+        // fill its result limit and then all fail the permission filter below.
+        const channels = await client.autocompleteChannelsForSearch(teamId, input);
+        const channelsCanWriteTo = channels.
+            filter((c) => c.team_id === teamId && haveIChannelPermission(state, teamId, c.id, Permissions.CREATE_POST)).
+            sort((a, b) => a.display_name.localeCompare(b.display_name));
         return {data: channelsCanWriteTo};
     } catch (e: any) {
         const error = e.message || 'An error occurred while searching for channels.';
