@@ -1,4 +1,3 @@
-import {Client4, ClientError} from '@mattermost/client';
 import {PostTypes} from 'mattermost-redux/action_types';
 import {GlobalState} from '@mattermost/types/store';
 import {haveIChannelPermission} from 'mattermost-redux/selectors/entities/roles';
@@ -8,6 +7,7 @@ import {AnyAction, Store} from 'redux';
 import {ThunkAction} from 'redux-thunk';
 
 import {getCurrentChannelId} from 'mattermost-redux/selectors/entities/common';
+import {getAllChannels, getChannelsInTeam, getMyChannelMemberships} from 'mattermost-redux/selectors/entities/channels';
 
 import type {AppDispatch} from '@/hooks';
 
@@ -16,12 +16,10 @@ import {doFetch, doFetchWithResponse} from '../client';
 import {PluginId} from '../plugin_id';
 import {CreateEventPayload} from '../types/calendar_api_types';
 import {RemoteEvent} from '../types/calendar';
-import {getPluginServerRoute, getSiteURL} from '../selectors';
+import {getPluginServerRoute} from '../selectors';
 import type {ProviderConfig} from '../reducers';
 
 type AppThunk<R = void> = ThunkAction<R, GlobalState, undefined, AnyAction>;
-
-const client = new Client4();
 
 export interface CreateEventPreFill {
     channelId?: string;
@@ -71,23 +69,24 @@ export const autocompleteConnectedUsers = (input: string): AppThunk<Promise<Auto
 
 export type AutocompleteChannelsResponse = {data?: Channel[]; error?: string};
 
+const channelMatches = (channel: Channel, term: string) =>
+    !term || channel.display_name.toLowerCase().includes(term) || channel.name.toLowerCase().includes(term);
+
+// Uses the webapp store, which has all of the user's channels in the team. The autocomplete
+// endpoints cap results at 50, and unjoined channels or group messages can fill that cap.
 export const autocompleteUserChannels = (input: string, teamId: string): AppThunk<Promise<AutocompleteChannelsResponse>> => async (_, getState) => {
     const state = getState();
-    const siteURL = getSiteURL(state);
-    client.setUrl(siteURL);
+    const allChannels = getAllChannels(state);
+    const myMembers = getMyChannelMemberships(state);
+    const term = input.trim().toLowerCase();
 
-    try {
-        // Members only: plain autocomplete also returns unjoined public channels, which can
-        // fill its result limit and then all fail the permission filter below.
-        const channels = await client.autocompleteChannelsForSearch(teamId, input);
-        const channelsCanWriteTo = channels.
-            filter((c) => c.team_id === teamId && haveIChannelPermission(state, teamId, c.id, Permissions.CREATE_POST)).
-            sort((a, b) => a.display_name.localeCompare(b.display_name));
-        return {data: channelsCanWriteTo};
-    } catch (e: any) {
-        const error = e.message || 'An error occurred while searching for channels.';
-        return {data: [], error};
-    }
+    const channels = Array.from(getChannelsInTeam(state)[teamId] ?? []).
+        filter((id) => Boolean(myMembers[id])).
+        map((id) => allChannels[id]).
+        filter((c) => c && c.delete_at === 0 && channelMatches(c, term) && haveIChannelPermission(state, teamId, c.id, Permissions.CREATE_POST)).
+        sort((a, b) => a.display_name.localeCompare(b.display_name));
+
+    return {data: channels};
 };
 
 export type CreateCalendarEventResponse = {data?: any; error?: string};
