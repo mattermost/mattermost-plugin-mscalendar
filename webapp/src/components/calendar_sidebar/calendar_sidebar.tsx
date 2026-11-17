@@ -37,6 +37,10 @@ export interface CalendarSidebarProps {
 const EXPANDED_WIDTH_THRESHOLD = 500;
 const POLL_INTERVAL_MS = 60_000;
 
+// Fits one line of event text, so short meetings are not cut off.
+// FullCalendar also uses this height to lay out overlapping events.
+export const EVENT_MIN_HEIGHT_PX = 24;
+
 function getCurrentScrollTime(tz?: string): string {
     const now = new Date();
     let hours: number;
@@ -304,6 +308,7 @@ const CalendarSidebar = ({theme, events, loading, error, timezone, connected, pl
                     height='100%'
                     events={fullCalendarEvents}
                     eventDisplay='block'
+                    eventMinHeight={EVENT_MIN_HEIGHT_PX}
                     slotEventOverlap={false}
                     expandRows={true}
                     eventClick={handleEventClick}
