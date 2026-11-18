@@ -187,6 +187,29 @@
         opacity: 0.85;
     }
 
+    .fc .fc-timegrid-event-short .fc-event-main {
+        padding: 1px 4px;
+        line-height: 1.4;
+    }
+
+    .fc .fc-timegrid-event-short .fc-event-main-frame {
+        align-items: center;
+    }
+
+    .fc .fc-timegrid-event-short .fc-event-time {
+        margin-bottom: 0;
+    }
+
+    .fc .fc-timegrid-event-short .fc-event-title-container {
+        min-width: 0;
+    }
+
+    .fc .fc-timegrid-event-short .fc-event-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     .fc .fc-timegrid-slot {
         height: 3em;
     }
