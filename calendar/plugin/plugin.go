@@ -77,7 +77,7 @@ func (p *Plugin) OnActivate() error {
 		return errors.New("please configure the Mattermost server's SiteURL, then restart the plugin")
 	}
 
-	if errConfig := p.env.Remote.CheckConfiguration(stored); errConfig != nil {
+	if errConfig := checkConfiguration(p.env.Config, stored); errConfig != nil {
 		return errors.Wrap(errConfig, "failed to configure")
 	}
 
@@ -153,6 +153,13 @@ func (p *Plugin) OnConfigurationChange() (err error) {
 	err = p.API.LoadPluginConfiguration(&stored)
 	if err != nil {
 		return errors.WithMessage(err, "failed to load plugin configuration")
+	}
+
+	// Validate before anything is applied, as OnActivate does. An invalid configuration (for example
+	// an unsupported OAuth2TenantType, which would otherwise fall back to the commercial Microsoft
+	// cloud) leaves the previous one in place, and configError blocks command and HTTP handling.
+	if err = checkConfiguration(env.Config, stored); err != nil {
+		return errors.Wrap(err, "invalid plugin configuration")
 	}
 
 	mattermostSiteURL := p.API.GetConfig().ServiceSettings.SiteURL
@@ -441,6 +448,14 @@ func (p *Plugin) notifyUserReconnect(e *Env, mattermostUserID, reason string) {
 			"error", dmErr.Error(),
 		)
 	}
+}
+
+// checkConfiguration validates a stored configuration with the provider's remote. It builds its own
+// remote rather than using env.Remote, which is only set once a configuration has been applied: the
+// server calls OnActivate even when OnConfigurationChange failed. CheckConfiguration only inspects
+// its argument, so the remote needs no logger.
+func checkConfiguration(conf *config.Config, stored config.StoredConfig) error {
+	return remote.Makers[config.Provider.Name](conf, nil).CheckConfiguration(stored)
 }
 
 func (p *Plugin) initEnv(e *Env, pluginURL string) error {
