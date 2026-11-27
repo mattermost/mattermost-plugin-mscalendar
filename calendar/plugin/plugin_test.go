@@ -9,12 +9,78 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin/plugintest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/config"
+	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/engine"
 	"github.com/mattermost/mattermost-plugin-mscalendar/calendar/utils/httputils"
+	"github.com/mattermost/mattermost-plugin-mscalendar/msgraph"
 )
+
+// newConfiguredTestPlugin returns a plugin, as main builds it, whose stored configuration is stored.
+func newConfiguredTestPlugin(t *testing.T, stored config.StoredConfig) *Plugin {
+	t.Helper()
+	previousProvider := config.Provider
+	config.Provider = msgraph.GetMSCalendarProviderConfig()
+	t.Cleanup(func() { config.Provider = previousProvider })
+
+	siteURL := "https://mattermost.example.com"
+	mockAPI := &plugintest.API{}
+	mockAPI.On("LoadPluginConfiguration", mock.AnythingOfType("*config.StoredConfig")).Run(func(args mock.Arguments) {
+		*args.Get(0).(*config.StoredConfig) = stored
+	}).Return(nil)
+	mockAPI.On("GetConfig").Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}}).Maybe()
+
+	p := NewWithEnv(engine.Env{
+		Config:       &config.Config{PluginID: "com.mattermost.mscalendar", Provider: config.Provider},
+		Dependencies: &engine.Dependencies{},
+	})
+	p.SetAPI(mockAPI)
+	return p
+}
+
+func TestOnConfigurationChangeRejectsInvalidConfiguration(t *testing.T) {
+	valid := config.StoredConfig{OAuth2ClientID: "client-id", OAuth2ClientSecret: "client-secret", OAuth2Authority: "tenant-id"}
+	for name, tc := range map[string]struct {
+		mutate  func(*config.StoredConfig)
+		message string
+	}{
+		"unsupported tenant type": {func(c *config.StoredConfig) { c.OAuth2TenantType = "GCCH" }, "OAuth2TenantType"},
+		"missing client secret":   {func(c *config.StoredConfig) { c.OAuth2ClientSecret = "" }, "OAuth2 credentials"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			stored := valid
+			tc.mutate(&stored)
+			p := newConfiguredTestPlugin(t, stored)
+
+			err := p.OnConfigurationChange()
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tc.message)
+
+			env := p.getEnv()
+			assert.Equal(t, err, env.configError, "configError must block command and HTTP handling")
+			assert.Nil(t, env.Remote, "an invalid configuration must not be applied")
+			assert.Equal(t, config.StoredConfig{}, env.StoredConfig, "an invalid configuration must not be applied")
+		})
+	}
+}
+
+func TestOnActivateAfterInvalidConfigurationReturnsError(t *testing.T) {
+	// The server calls OnActivate even when OnConfigurationChange failed, so env.Remote is still unset.
+	p := newConfiguredTestPlugin(t, config.StoredConfig{
+		OAuth2ClientID: "client-id", OAuth2ClientSecret: "client-secret", OAuth2Authority: "tenant-id", OAuth2TenantType: "GCCH",
+	})
+	require.Error(t, p.OnConfigurationChange())
+
+	var err error
+	require.NotPanics(t, func() { err = p.OnActivate() })
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "OAuth2TenantType")
+}
 
 func TestServeHTTPRecoversFromPanic(t *testing.T) {
 	mockAPI := &plugintest.API{}

@@ -99,6 +99,7 @@ func TestInitOAuth2(t *testing.T) {
 		expectURL        string
 		expectError      bool
 		forceConsent     bool
+		tenantType       string
 	}{
 		{
 			name:             "MM user already connected",
@@ -142,12 +143,35 @@ func TestInitOAuth2(t *testing.T) {
 			},
 			expectURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
 		},
+		{
+			name:             "successful redirect for a GCC High tenant",
+			mattermostUserID: fakeID,
+			tenantType:       msgraph.TenantTypeGCCHigh,
+			setup: func(d *Dependencies) {
+				ss := d.Store.(*mock_store.MockStore)
+				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
+				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
+			},
+			expectURL: "https://login.microsoftonline.us/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
+		},
+		{
+			name:             "successful redirect for a DoD tenant",
+			mattermostUserID: fakeID,
+			tenantType:       msgraph.TenantTypeDoD,
+			setup: func(d *Dependencies) {
+				ss := d.Store.(*mock_store.MockStore)
+				ss.EXPECT().LoadUser(fakeID).Return(nil, errors.New("remote user not found")).Times(1)
+				ss.EXPECT().StoreOAuth2State(gomock.Any()).Return(nil).Times(1)
+			},
+			expectURL: "https://login.microsoftonline.us/common/oauth2/v2.0/authorize?access_type=offline&client_id=fakeclientid&redirect_uri=http%3A%2F%2Flocalhost%2Foauth2%2Fcomplete&response_type=code&scope=offline_access+User.Read+Calendars.ReadWrite+Calendars.ReadWrite.Shared+MailboxSettings.Read%40mattermost.com",
+		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			app, env := newOAuth2TestApp(ctrl)
 			env.Config.OAuth2ForceConsent = tc.forceConsent
+			env.Config.OAuth2TenantType = tc.tenantType
 			if tc.setup != nil {
 				tc.setup(env.Dependencies)
 			}

@@ -11,7 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/microsoft"
 
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 
@@ -46,7 +45,7 @@ func (r *impl) makeClient(ctx context.Context, token *oauth2.Token, mattermostUs
 		ctx:              ctx,
 		httpClient:       httpClient,
 		Logger:           r.logger,
-		rbuilder:         msgraph.NewClient(httpClient),
+		rbuilder:         r.newGraphRequestBuilder(httpClient),
 		tokenHelpers:     userTokenHelpers,
 		mattermostUserID: mattermostUserID,
 		Poster:           poster,
@@ -93,7 +92,7 @@ func (r *impl) MakeSuperuserClient(ctx context.Context) (remote.Client, error) {
 		ctx:        ctx,
 		httpClient: httpClient,
 		Logger:     r.logger,
-		rbuilder:   msgraph.NewClient(httpClient),
+		rbuilder:   r.newGraphRequestBuilder(httpClient),
 	}
 	token, err := c.GetSuperuserToken()
 	if err != nil {
@@ -132,8 +131,16 @@ func (r *impl) NewOAuth2Config() *oauth2.Config {
 			"Calendars.ReadWrite.Shared",
 			"MailboxSettings.Read",
 		},
-		Endpoint: microsoft.AzureADEndpoint(r.conf.OAuth2Authority),
+		Endpoint: loginEndpoint(r.conf.OAuth2Authority, r.conf.OAuth2TenantType),
 	}
+}
+
+// newGraphRequestBuilder returns a Microsoft Graph request builder targeting the Graph
+// endpoint of the configured Microsoft cloud.
+func (r *impl) newGraphRequestBuilder(httpClient *http.Client) *msgraph.GraphServiceRequestBuilder {
+	builder := msgraph.NewClient(httpClient)
+	builder.SetURL(graphBaseURL(r.conf.OAuth2TenantType))
+	return builder
 }
 
 func (r *impl) CheckConfiguration(cfg config.StoredConfig) error {
@@ -141,5 +148,5 @@ func (r *impl) CheckConfiguration(cfg config.StoredConfig) error {
 		return fmt.Errorf("OAuth2 credentials to be set in the config")
 	}
 
-	return nil
+	return validateTenantType(cfg.OAuth2TenantType)
 }
